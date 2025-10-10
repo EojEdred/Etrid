@@ -1,0 +1,45 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node.js
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.wasm
+*.so
+*.dylib
+*.dll
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite

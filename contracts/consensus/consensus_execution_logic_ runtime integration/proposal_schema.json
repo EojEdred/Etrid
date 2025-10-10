@@ -1,0 +1,14 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Etrid Proposal Schema",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "proposer": { "type": "string" },
+    "submission_time": { "type": "integer" }
+  },
+  "required": ["id", "title", "description", "proposer"]
+}
