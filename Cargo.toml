@@ -1,43 +1,19 @@
-[package]
-name = "etrid-runtime"
-version = "0.1.0"
-edition = "2021"
+# Minimal E³20 Workspace - Existing Code Only
+[workspace]
+resolver = "2"
 
-[dependencies]
-frame-support = { version = "24", default-features = false }
-frame-system = { version = "24", default-features = false }
-sp-runtime = { version = "24", default-features = false }
-sp-std = { version = "24", default-features = false }
-sp-core = { version = "24", default-features = false }
-sp-io = { version = "24", default-features = false }
-sp-api = { version = "24", default-features = false }
-sp-version = { version = "24", default-features = false }
+members = [
+    "04-accounts/pallet",
+    "08-etwasm-vm/pallet",
+    "09-consensus/pallet",
+    "10-foundation/governance/pallet",
+    "05-multichain/primitives",
+    "05-multichain/partition-burst-chains/pbc-runtime",
+]
 
-pallet-accounts = { path = "../pallets/accounts", default-features = false }
-pallet-governance = { path = "../pallets/governance", default-features = false }
-pallet-consensus = { path = "../pallets/consensus", default-features = false }
-pallet-multichain = { path = "../pallets/multichain", default-features = false }
-pallet-staking = { version = "24", default-features = false }
-pallet-vm = { path = "../pallets/vm", default-features = false }
-
-[lib]
-path = "src/lib.rs"
-crate-type = ["cdylib", "rlib"]
-
-[features]
-default = ["std"]
-std = [
-  "frame-support/std",
-  "frame-system/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "sp-core/std",
-  "sp-io/std",
-  "sp-api/std",
-  "sp-version/std",
-  "pallet-accounts/std",
-  "pallet-governance/std",
-  "pallet-consensus/std",
-  "pallet-multichain/std",
-  "pallet-vm/std"
+exclude = [
+    "_reference",
+    "_backup*",
+    "target",
+    "apps",
 ]

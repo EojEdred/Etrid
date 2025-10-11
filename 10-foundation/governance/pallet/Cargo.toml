@@ -1,0 +1,34 @@
+[package]
+name = "pallet-governance"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+frame-support = { version = "14.0.0", default-features = false }
+frame-system = { version = "14.0.0", default-features = false }
+sp-core = { version = "14.0.0", default-features = false }
+sp-io = { version = "14.0.0", default-features = false }
+sp-runtime = { version = "14.0.0", default-features = false }
+sp-std = { version = "14.0.0", default-features = false }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = [
+  "frame-support/std",
+  "frame-system/std",
+  "sp-runtime/std",
+  "sp-std/std",
+  "sp-core/std",
+  "sp-io/std",
+  "codec/std",
+  "scale-info/std"
+]
+try-runtime = [
+  "frame-support/try-runtime",
+  "frame-system/try-runtime"
+]

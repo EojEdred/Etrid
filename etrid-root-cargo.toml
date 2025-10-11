@@ -1,0 +1,355 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ËTRID MULTICHAIN - ROOT WORKSPACE
+# E³20 (Essential Elements to Operate Reference Implementation)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[workspace]
+resolver = "2"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #1: DETR p2p - Multi-Protocol Network Layer
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Decentralized Ëtrid Transport & Routing
+# Protocols: DPeers, AEComms, DETRP2P, ËtrID, Fluent, StoréD
+# ═══════════════════════════════════════════════════════════════════════════════
+
+members = [
+    "01-detr-p2p/core",
+    "01-detr-p2p/dpeers",              # Node discovery (S/Kademlia)
+    "01-detr-p2p/aecomms",             # TCP transport + ECIES encryption
+    "01-detr-p2p/detrp2p",             # Peer tethering & session negotiation
+    "01-detr-p2p/etrid-protocol",      # Block synchronization protocol
+    "01-detr-p2p/fluent",              # Secure private channels (Lingo) [Phase 2]
+    "01-detr-p2p/stored",              # Distributed storage (DHT + Merkle DAG) [Phase 3]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #2: OpenDID - Identity Layer Protocol
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Self-sovereign identity system
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "02-open-did/registry",            # DID registry smart contract
+    "02-open-did/resolver",            # DID document resolver
+    "02-open-did/types",               # DID document types & verification methods
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #3: Blockchain Security
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Cryptographic primitives & post-quantum security
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "03-security/cryptography",        # Ed25519, Keccak-256, ECIES, RLP encoding
+    "03-security/post-quantum",        # Kyber (KEMs) + Dilithium (signatures) [Phase 5]
+    "03-security/key-management",      # Key generation, HD wallets, keystores
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #4: Accounts
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Account types & balance management
+# Types: EBCA, RCA, RCWA, SCA, SSCA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "04-accounts/types",               # Account type definitions
+    "04-accounts/pallet",              # Account management pallet (ÉTR + ETD balances)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #5: Multichain - Hierarchical Chain Structure
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: FlareChain (root) + Partition Burst Chains + Lightning Bloc Networks
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    # ┌─────────────────────────────────────────────────────────────────────────┐
+    # │ FlareChain (Main Root Chain)                                            │
+    # └─────────────────────────────────────────────────────────────────────────┘
+    "05-multichain/flare-chain/primitives",    # Shared types (Block, Header, etc.)
+    "05-multichain/flare-chain/runtime",       # FlareChain runtime composition
+    "05-multichain/flare-chain/node",          # FlareChain node binary
+
+    # ┌─────────────────────────────────────────────────────────────────────────┐
+    # │ Partition Burst Chains (Parallel Side Chains)                           │
+    # └─────────────────────────────────────────────────────────────────────────┘
+    "05-multichain/partition-burst-chains/pbc-runtime",    # PBC runtime template [Phase 4]
+    "05-multichain/partition-burst-chains/pbc-node",       # PBC node template [Phase 4]
+    "05-multichain/partition-burst-chains/bridge",         # PBC ↔ FlareChain bridge [Phase 4]
+
+    # ┌─────────────────────────────────────────────────────────────────────────┐
+    # │ Lightning Bloc Networks (State Channels)                                │
+    # └─────────────────────────────────────────────────────────────────────────┘
+    "05-multichain/lightning-bloc-networks/channel-manager",   # Channel lifecycle [Phase 4]
+    "05-multichain/lightning-bloc-networks/network",          # Routing + HTLC [Phase 4]
+
+    # ┌─────────────────────────────────────────────────────────────────────────┐
+    # │ Bridge Protocols (External Chains)                                      │
+    # └─────────────────────────────────────────────────────────────────────────┘
+    "05-multichain/bridge-protocols/bitcoin-bridge",      # BTC ↔ Ëtrid [Phase 4]
+    "05-multichain/bridge-protocols/ethereum-bridge",     # ETH ↔ Ëtrid [Phase 4]
+
+    # ┌─────────────────────────────────────────────────────────────────────────┐
+    # │ Multichain Primitives (Shared)                                          │
+    # └─────────────────────────────────────────────────────────────────────────┘
+    "05-multichain/primitives",                           # Cross-chain types
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #6: Native Cryptocurrency
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: ÉTR (coin), ETD (stablecoin), VMw (gas)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "06-native-currency/etr-token",        # Ëtrid Coin (Bite → Gigaétrid denominations)
+    "06-native-currency/etd-stablecoin",   # Ëtrid Dollar (1:1 USD peg) [Phase 3]
+    "06-native-currency/vmw-gas",          # VMWatts gas metering
+    "06-native-currency/economics",        # Supply, inflation, distribution models
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #7: Transactions
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: All transaction types
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "07-transactions/types",               # Transaction primitives
+    "07-transactions/regular",             # Regular transfer transactions
+    "07-transactions/cross-chain",         # Cross-chain transactions [Phase 4]
+    "07-transactions/smart-contract",      # Contract deployment/invocation
+    "07-transactions/lightning-bloc",      # Lightning Bloc txs [Phase 4]
+    "07-transactions/stake-deposit",       # Staking transactions
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #8: ËtwasmVM - Ëtrid WebAssembly Virtual Machine
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Smart contract execution engine
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "08-etwasm-vm/runtime",                # WASM executor (stack, memory, storage)
+    "08-etwasm-vm/opcodes",                # Standard + Ëtrid-specific opcodes
+    "08-etwasm-vm/gas-metering",           # VMw gas accounting
+    "08-etwasm-vm/pallet",                 # Contract management pallet
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #9: FODDoS ASF Consensus Algorithm
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: Ascending Scale of Finality consensus (BFT + POS)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "09-consensus/asf-algorithm",          # Core ASF logic (leader election, PPFA sets)
+    "09-consensus/validator-management",   # Validator registration, rotation, slashing
+    "09-consensus/block-production",       # Block proposal & attestation
+    "09-consensus/finality-gadget",        # Finality implementation [Phase 3]
+    "09-consensus/pallet",                 # Consensus pallet
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #10: Ëtrid Foundation
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: DAO structure, governance, legal framework
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "10-foundation/governance/pallet",         # Governance pallet (proposals, voting)
+    "10-foundation/governance/proposal-types", # Proposal type definitions
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #11: Peer Roles - Network Participants
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: FLARE nodes, VALIDITY nodes, stakers, common peers
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "11-peer-roles/flare-nodes",               # FLARE node logic
+    "11-peer-roles/validity-nodes",            # VALIDITY node logic [Phase 4]
+    "11-peer-roles/staking/pallet",            # Staking pallet (stake, unbond, rewards)
+    "11-peer-roles/staking/types",             # Stake info types
+    "11-peer-roles/decentralized-directors",   # DD election & term management
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #12: Consensus Day - Annual Governance Event
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: December 1st voting, minting, distribution protocol
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "12-consensus-day/voting-protocol",    # Registration, ballot, vote casting, tally
+    "12-consensus-day/minting-logic",      # Annual ÉTR/ETD supply adjustment
+    "12-consensus-day/distribution",       # Distribution Pay calculation & payout
+    "12-consensus-day/proposal-system",    # Proposal submission & campaigning
+    "12-consensus-day/queries",            # Public query APIs
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# E³20 COMPONENT #13: Client Software
+# ═══════════════════════════════════════════════════════════════════════════════
+# Purpose: User-facing clients (CLI, web wallet, mobile wallet, SDKs)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+    "13-clients/cli/etrcpp-console",       # C++ CLI [Phase 2]
+    "13-clients/cli/pye-console",          # Python CLI [Phase 2]
+    "13-clients/sdk/js-sdk",               # JavaScript/TypeScript SDK
+    "13-clients/sdk/rust-sdk",             # Rust SDK
+    "13-clients/sdk/swift-sdk",            # Swift SDK (iOS/macOS) [Phase 3]
+    "13-clients/sdk/python-sdk",           # Python SDK [Phase 3]
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXCLUDED FROM WORKSPACE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+exclude = [
+    "_reference",                          # Reference codebases (not compiled)
+    "target",                              # Build artifacts
+    "apps",                                # Frontend apps (React/Flutter, not Rust)
+    "docs",                                # Documentation
+    "scripts",                             # Utility scripts
+    "13-clients/web-wallet",               # React app (not Rust)
+    "13-clients/mobile-wallet",            # Flutter app (not Rust)
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHARED WORKSPACE DEPENDENCIES
+# ═══════════════════════════════════════════════════════════════════════════════
+# All workspace members can use these via: dependency-name.workspace = true
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[workspace.dependencies]
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Substrate / Polkadot SDK Dependencies                                       │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-system = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-executive = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+sp-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-runtime = { version = "24.0.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-core = { version = "21.0.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-std = { version = "8.0.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-io = { version = "23.0.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-consensus-aura = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-consensus-grandpa = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-block-builder = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-inherents = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-offchain = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-session = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-version = { version = "22.0.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-staking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+pallet-aura = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-sudo = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Serialization & Encoding                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0.188", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1.0.107", default-features = false, features = ["alloc"] }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Cryptography                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Ed25519 signatures
+ed25519-dalek = { version = "2.0", default-features = false }
+schnorrkel = { version = "0.11.4", default-features = false }
+
+# Hashing
+sha3 = { version = "0.10", default-features = false }
+blake2 = { version = "0.10", default-features = false }
+keccak-hash = { version = "0.10", default-features = false }
+
+# ECIES encryption
+ecies = { version = "0.2", default-features = false }
+
+# Post-quantum (Phase 5)
+pqcrypto-kyber = { version = "0.8", optional = true }
+pqcrypto-dilithium = { version = "0.5", optional = true }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Networking                                                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+libp2p = { version = "0.52", default-features = false }
+tokio = { version = "1.32", features = ["full"] }
+futures = { version = "0.3.28", default-features = false }
+async-trait = "0.1.73"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ WASM Runtime                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+wasmi = { version = "0.31", default-features = false }
+wasmtime = { version = "12.0", optional = true }  # Optional: Use for JIT compilation
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Storage & Databases                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Merkle trees
+patricia-trie = { version = "0.16", default-features = false }
+trie-db = { version = "0.29.0", default-features = false }
+hash-db = { version = "0.16.0", default-features = false }
+memory-db = { version = "0.32.0", default-features = false }
+
+# RocksDB (for node storage)
+rocksdb = "0.21"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Utilities                                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+log = { version = "0.4", default-features = false }
+env_logger = "0.10"
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+hex-literal = "0.4"
+arrayref = "0.3"
+smallvec = "1.11"
+static_assertions = "1.1"
+impl-trait-for-tuples = "0.2.2"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+structopt = "0.3"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Testing                                                                      │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+assert_matches = "1.5"
+criterion = "0.5"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD PROFILES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+
+[profile.production]
+inherits = "release"
+lto = true
+codegen-units = 1
+strip = true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATCH SECTION (for dependency overrides)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[patch.crates-io]
+# Schnorrkel fix for Substrate compatibility
+schnorrkel = { version = "0.11.4", git = "https://github.com/w3f/schnorrkel", branch = "master" }
+
+# BIP39 for HD wallets
+substrate-bip39 = { git = "https://github.com/paritytech/substrate-bip39", branch = "master" }
+
+# Trie dependencies
+trie-db = { version = "0.29.0" }
+hash-db = { version = "0.16.0" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# END OF ËTRID ROOT WORKSPACE CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
