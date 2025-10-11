@@ -1,14 +1,24 @@
-# Minimal E³20 Workspace - Existing Code Only
+# ═══════════════════════════════════════════════════════════════════════════════
+# ËTRID MULTICHAIN - ROOT WORKSPACE
+# E³20 (Essential Elements to Operate Reference Implementation)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Phase 1: Only components with actual code
+# ═══════════════════════════════════════════════════════════════════════════════
+
 [workspace]
 resolver = "2"
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# WORKSPACE MEMBERS - Only Components With Code
+# ═══════════════════════════════════════════════════════════════════════════════
+
 members = [
-    "04-accounts/pallet",
-    "08-etwasm-vm/pallet",
-    "09-consensus/pallet",
-    "10-foundation/governance/pallet",
-    "05-multichain/primitives",
-    "05-multichain/partition-burst-chains/pbc-runtime",
+    "04-accounts/pallet",              # Account management pallet
+    "08-etwasm-vm/pallet",             # Smart contract VM pallet
+    "09-consensus/pallet",             # Consensus pallet
+    "10-foundation/governance/pallet", # Governance pallet
+    "05-multichain/primitives",        # Multichain primitives
+    "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime
 ]
 
 exclude = [
@@ -16,4 +26,141 @@ exclude = [
     "_backup*",
     "target",
     "apps",
+    "docs",
+    "scripts",
 ]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHARED WORKSPACE DEPENDENCIES
+# ═══════════════════════════════════════════════════════════════════════════════
+# All workspace members can use these via: dependency-name.workspace = true
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[workspace.dependencies]
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Substrate / Polkadot SDK Dependencies                                       │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-executive = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-benchmarking = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+frame-try-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+sp-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-consensus-grandpa = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-offchain = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-version = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+sp-staking = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+pallet-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-grandpa = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+pallet-sudo = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "master" }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Serialization & Encoding                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0.188", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1.0.107", default-features = false, features = ["alloc"] }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Cryptography                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+ed25519-dalek = { version = "2.0", default-features = false }
+schnorrkel = { version = "0.11.4", default-features = false }
+sha3 = { version = "0.10", default-features = false }
+blake2 = { version = "0.10", default-features = false }
+keccak-hash = { version = "0.10", default-features = false }
+ecies = { version = "0.2", default-features = false }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Networking                                                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+libp2p = { version = "0.52", default-features = false }
+tokio = { version = "1.32", features = ["full"] }
+futures = { version = "0.3.28", default-features = false }
+async-trait = "0.1.73"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ WASM Runtime                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+wasmi = { version = "0.31", default-features = false }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Storage & Databases                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+patricia-trie = { version = "0.16", default-features = false }
+trie-db = { version = "0.29.0", default-features = false }
+hash-db = { version = "0.16.0", default-features = false }
+memory-db = { version = "0.32.0", default-features = false }
+rocksdb = "0.21"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Utilities                                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+log = { version = "0.4", default-features = false }
+env_logger = "0.10"
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+hex-literal = "0.4"
+arrayref = "0.3"
+smallvec = "1.11"
+static_assertions = "1.1"
+impl-trait-for-tuples = "0.2.2"
+clap = { version = "4.4", features = ["derive"] }
+structopt = "0.3"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Testing                                                                      │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+assert_matches = "1.5"
+criterion = "0.5"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD PROFILES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+
+[profile.production]
+inherits = "release"
+lto = true
+codegen-units = 1
+strip = true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATCH SECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[patch.crates-io]
+schnorrkel = { git = "https://github.com/w3f/schnorrkel", branch = "master" }
+substrate-bip39 = { git = "https://github.com/paritytech/substrate-bip39", branch = "master" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOTE: As you build more E³20 components, add them to the members list above
+# ═══════════════════════════════════════════════════════════════════════════════
