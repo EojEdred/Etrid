@@ -5,17 +5,17 @@
 
 ---
 
-## 🚧 Current Blocker: substrate-prometheus-endpoint tokio features
+## 🚧 Current Blocker: substrate-prometheus-endpoint hyper version mismatch
 
 ### Issue
-Workspace fails to compile due to polkadot-sdk internal dependency issue:
+Workspace fails to compile due to hyper API incompatibility in vendored substrate-prometheus-endpoint:
 ```
-error[E0433]: failed to resolve: could not find `TcpListener` in `net`
-  --> substrate/utils/prometheus/src/lib.rs:89:29
+error[E0277]: the trait bound `service::util::ServiceFn<..., hyper::Body>: Service<Request<Incoming>>` is not satisfied
+error[E0599]: the method `into_owned` exists for struct `UpgradeableConnection<...>`, but its trait bounds were not satisfied
 ```
 
 ### Root Cause
-Using `tag = "polkadot-stable2506"` in Cargo.toml - tokio feature configuration issue in substrate-prometheus-endpoint (SDK internal crate).
+Vendored substrate-prometheus-endpoint uses hyper 0.14 API but polkadot-stable2506 expects hyper 1.x types.
 
 ### Impact
 - ❌ `cargo check --workspace` fails on SDK internal crate
@@ -29,12 +29,19 @@ Using `tag = "polkadot-stable2506"` in Cargo.toml - tokio feature configuration 
 - Migrated from `branch = "master"` → `tag = "polkadot-stable2506"`
 - Updated codec: 3.6.1 → 3.6.12 (stable2506 compatible)
 - Updated scale-info: 2.5.0 → 2.11.3 (stable2506 compatible)
+- Downgraded tokio: 1.32 → 1.22.0 (workaround for feature conflicts)
 
 **Code Fixes:**
 - ✅ Added `MaxEncodedLen` + `Copy` to TokenType enum
 - ✅ Updated 05-multichain/primitives to use workspace deps (resolved v14.0.0 conflicts)
 - ✅ Fixed CLI shell completion generation (removed type mismatch)
 - ✅ Cleaned up imports in 08-etwasm-vm
+
+**Vendor Patch Attempts:**
+- ✅ Created vendor/substrate-prometheus-endpoint with local modifications
+- ✅ Fixed tokio `tcp` feature (removed - included in `net`)
+- ✅ Fixed protobuf RepeatedField conversions (added `.into()`)
+- ❌ Hyper 0.14 → 1.x migration still needed (API incompatibilities remain)
 
 **Rejected Approaches:**
 - ❌ API refactoring (transfer_etr/transfer_etd split) - unnecessary architecture change
@@ -43,20 +50,25 @@ Using `tag = "polkadot-stable2506"` in Cargo.toml - tokio feature configuration 
 
 ### Solutions (In Priority Order)
 
-**Option A: Wait for SDK Patch Release** (RECOMMENDED)
-- polkadot-sdk team will fix tokio feature in substrate-prometheus-endpoint
-- Timeline: Monitor polkadot-stable2506 updates or next stable tag
-
-**Option B: Patch tokio Features Locally**
-Add to root Cargo.toml:
+**Option A: Try polkadot-stable2509** (RECOMMENDED)
+Newer stable release may have fixed hyper migration issues:
 ```toml
-[patch."https://github.com/paritytech/polkadot-sdk.git"]
-substrate-prometheus-endpoint = { path = "./local-patches/substrate-prometheus-endpoint" }
+[workspace.dependencies]
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+# ... update all SDK deps to stable2509
 ```
-Requires cloning SDK and adding tokio `net` feature manually.
 
-**Option C: Disable Prometheus (Dev Only)**
-Not recommended - would require extensive SDK changes
+**Option B: Complete hyper 0.14 → 1.x Migration in Vendor Code**
+Fix remaining API incompatibilities in vendor/substrate-prometheus-endpoint:
+- Update `Request<hyper::body::Body>` → `Request<hyper::body::Incoming>`
+- Fix `service_fn` closure types
+- Update `.into_owned()` usage
+
+**Option C: Fork Entire polkadot-sdk** (NUCLEAR)
+Fork https://github.com/paritytech/polkadot-sdk, fix substrate-prometheus-endpoint, point all deps to fork.
+```toml
+frame-support = { git = "https://github.com/YOUR_ORG/polkadot-sdk.git", branch = "etrid-fixes" }
+```
 
 ### Current Workaround
 Development continues on non-Rust components while SDK stabilizes:

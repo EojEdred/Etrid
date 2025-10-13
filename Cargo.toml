@@ -19,7 +19,7 @@ members = [
     "10-foundation/governance/pallet", # Governance pallet
     "05-multichain/primitives",        # Multichain primitives
     "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime
-    "13-clients/cli/etrust-console",   # Rust CLI
+    #"13-clients/cli/etrust-console",   # Rust CLI
 ]
 
 exclude = [
@@ -95,7 +95,7 @@ ecies = { version = "0.2", default-features = false }
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 libp2p = { version = "0.52", default-features = false }
-tokio = { version = "1.32", features = ["full"] }
+tokio = { version = "1.22.0", features = ["full"] }
 futures = { version = "0.3.28", default-features = false }
 async-trait = "0.1.73"
 
@@ -160,7 +160,8 @@ strip = true
 
 [patch.crates-io]
 schnorrkel = { git = "https://github.com/w3f/schnorrkel", branch = "master" }
-
+[patch."https://github.com/paritytech/polkadot-sdk.git"]
+substrate-prometheus-endpoint = { path = "vendor/substrate-prometheus-endpoint" }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NOTE: As you build more E³20 components, add them to the members list above
