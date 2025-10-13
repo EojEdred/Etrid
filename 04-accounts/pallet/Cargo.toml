@@ -2,29 +2,43 @@
 name = "pallet-accounts"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Account management pallet for Ëtrid multichain"
+license = "Apache-2.0"
 
 [dependencies]
-frame-support = { version = "14.0.0", default-features = false }
-frame-system = { version = "14.0.0", default-features = false }
-sp-runtime = { version = "14.0.0", default-features = false }
-sp-std = { version = "14.0.0", default-features = false }
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+# Substrate FRAME dependencies (from workspace)
+frame-support.workspace = true
+frame-system.workspace = true
+sp-runtime.workspace = true
+sp-std.workspace = true
 
-[lib]
-path = "src/lib.rs"
+# Encoding
+codec.workspace = true
+scale-info.workspace = true
+
+# Logging
+log.workspace = true
 
 [features]
 default = ["std"]
+
 std = [
-  "frame-support/std",
-  "frame-system/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "codec/std",
-  "scale-info/std"
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "codec/std",
+    "scale-info/std",
+    "log/std",
 ]
+
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+
 try-runtime = [
-  "frame-support/try-runtime",
-  "frame-system/try-runtime"
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
 ]

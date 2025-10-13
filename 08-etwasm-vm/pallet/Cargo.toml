@@ -1,36 +1,48 @@
 [package]
-name = "pallet-vm"
+name = "pallet-etwasm-vm"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "ËtwasmVM - Ëtrid WebAssembly Virtual Machine pallet"
+license = "Apache-2.0"
 
 [dependencies]
-frame-support = { version = "14.0.0", default-features = false, features = ["std"] }
-frame-system = { version = "14.0.0", default-features = false }
-sp-core = { version = "14.0.0", default-features = false }
-sp-io = { version = "14.0.0", default-features = false }
-sp-runtime = { version = "14.0.0", default-features = false, features = ["std"] }
-sp-std = { version = "14.0.0", default-features = false }
-parity-scale-codec = { version = "3.0.0", features = ["derive"], default-features = false }
-scale-info = { version = "2.1.1", features = ["derive"], default-features = false }
-serde = { version = "1.0", features = ["derive"], optional = true }
+# Substrate FRAME dependencies (from workspace)
+frame-support.workspace = true
+frame-system.workspace = true
+sp-runtime.workspace = true
+sp-std.workspace = true
+sp-io.workspace = true
 
-[lib]
-path = "src/lib.rs"
+# Encoding
+codec.workspace = true
+scale-info.workspace = true
+
+# WASM runtime
+wasmi.workspace = true
+
+# Logging
+log.workspace = true
 
 [features]
 default = ["std"]
+
 std = [
-  "frame-support/std",
-  "frame-system/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "sp-core/std",
-  "sp-io/std",
-  "serde/std",
-  "scale-info/std",
-  "parity-scale-codec/std"
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "codec/std",
+    "scale-info/std",
+    "log/std",
 ]
+
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+
 try-runtime = [
-  "frame-support/try-runtime",
-  "frame-system/try-runtime"
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
 ]

@@ -2,33 +2,41 @@
 name = "pallet-governance"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Governance pallet for Ëtrid Foundation DAO"
+license = "Apache-2.0"
 
 [dependencies]
-frame-support = { version = "14.0.0", default-features = false }
-frame-system = { version = "14.0.0", default-features = false }
-sp-core = { version = "14.0.0", default-features = false }
-sp-io = { version = "14.0.0", default-features = false }
-sp-runtime = { version = "14.0.0", default-features = false }
-sp-std = { version = "14.0.0", default-features = false }
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+frame-support.workspace = true
+frame-system.workspace = true
+sp-runtime.workspace = true
+sp-std.workspace = true
+codec.workspace = true
+scale-info.workspace = true
+log.workspace = true
 
-[lib]
-path = "src/lib.rs"
+# Internal Ëtrid dependencies - FIXED PATH
+pallet-accounts = { path = "../../../04-accounts/pallet", default-features = false }
 
 [features]
 default = ["std"]
 std = [
-  "frame-support/std",
-  "frame-system/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "sp-core/std",
-  "sp-io/std",
-  "codec/std",
-  "scale-info/std"
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "codec/std",
+    "scale-info/std",
+    "log/std",
+    "pallet-accounts/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "pallet-accounts/runtime-benchmarks",
 ]
 try-runtime = [
-  "frame-support/try-runtime",
-  "frame-system/try-runtime"
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+    "pallet-accounts/try-runtime",
 ]

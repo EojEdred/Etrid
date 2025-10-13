@@ -176,6 +176,7 @@ members = [
 # ═══════════════════════════════════════════════════════════════════════════════
 
     "13-clients/cli/etrcpp-console",       # C++ CLI [Phase 2]
+    "13-clients/cli/etrust-console",       # Rust CLI [Phase 1]
     "13-clients/cli/pye-console",          # Python CLI [Phase 2]
     "13-clients/sdk/js-sdk",               # JavaScript/TypeScript SDK
     "13-clients/sdk/rust-sdk",             # Rust SDK
@@ -262,8 +263,9 @@ keccak-hash = { version = "0.10", default-features = false }
 ecies = { version = "0.2", default-features = false }
 
 # Post-quantum (Phase 5)
-pqcrypto-kyber = { version = "0.8", optional = true }
-pqcrypto-dilithium = { version = "0.5", optional = true }
+# Note: These are not workspace dependencies - add to individual crates when needed
+# pqcrypto-kyber = { version = "0.8", optional = true }
+# pqcrypto-dilithium = { version = "0.5", optional = true }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Networking                                                                   │
@@ -279,7 +281,7 @@ async-trait = "0.1.73"
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 wasmi = { version = "0.31", default-features = false }
-wasmtime = { version = "12.0", optional = true }  # Optional: Use for JIT compilation
+# wasmtime = { version = "12.0" }  # Optional: Use for JIT compilation when needed
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Storage & Databases                                                          │

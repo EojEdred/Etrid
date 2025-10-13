@@ -10,7 +10,7 @@ pub mod pallet {
         BoundedVec,
     };
     use frame_system::pallet_prelude::*;
-    use parity_scale_codec::Decode;
+    use codec::Decode;
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
