@@ -61,7 +61,7 @@ pub enum Error {
 }
 
 async fn request_metrics(
-	req: Request<hyper::body::Body>,
+	req: Request<hyper::body::Incoming>,
 	registry: Registry,
 ) -> Result<Response<Body>, Error> {
 	if req.uri().path() == "/metrics" {

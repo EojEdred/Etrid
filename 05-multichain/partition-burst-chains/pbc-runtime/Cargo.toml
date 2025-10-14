@@ -1,10 +1,88 @@
 [package]
-name = "pbc-engine"
+name = "pbc-runtime"
 version = "0.1.0"
+authors = ["Ëtrid Foundation"]
 edition = "2021"
+license = "Apache-2.0"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = "0.4"
-sha3 = "0.10"
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Substrate - Use workspace dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-executive = { workspace = true }
+sp-api = { workspace = true }
+sp-runtime = { workspace = true }
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-io = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-consensus-grandpa = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-transaction-pool = { workspace = true }
+sp-inherents = { workspace = true }
+sp-offchain = { workspace = true }
+sp-session = { workspace = true }
+sp-version = { workspace = true }
+
+# Pallets - Use workspace dependencies
+pallet-aura = { workspace = true }
+pallet-grandpa = { workspace = true }
+pallet-sudo = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-transaction-payment = { workspace = true }
+
+# Balances - NOT in workspace, so explicit dependency
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# RPC Runtime APIs
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Ëtrid Custom
+etrid-primitives = { path = "../../../05-multichain/primitives", default-features = false }
+pallet-accounts = { path = "../../../04-accounts/pallet", default-features = false }
+
+[build-dependencies]
+# Substrate WASM builder - NOT in workspace, so explicit
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
+    "sp-api/std",
+    "sp-runtime/std",
+    "sp-core/std",
+    "sp-std/std",
+    "sp-io/std",
+    "sp-consensus-aura/std",
+    "sp-consensus-grandpa/std",
+    "sp-block-builder/std",
+    "sp-transaction-pool/std",
+    "sp-inherents/std",
+    "sp-offchain/std",
+    "sp-session/std",
+    "sp-version/std",
+    "pallet-aura/std",
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+    "etrid-primitives/std",
+    "pallet-accounts/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "pallet-accounts/runtime-benchmarks",
+]

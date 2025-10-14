@@ -1,171 +1,272 @@
-//! Ëtrid PBC Bridge Pallet - Cross-chain Token Transfer
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use pallet::*;
+//! # Ëtrid Primitives
+//!
+//! Core types and primitives for the Ëtrid Multichain Network.
+//!
+//! This crate provides:
+//! - Core types (AccountId, Balance, Hash, etc.)
+//! - Chain identification types
+//! - Cross-chain messaging primitives
+//! - VMw (VM Watts) computation metering
+//! - FlareChain block structures
+//! - PBC block structures with Ants support
 
-#[frame_support::pallet]
-pub mod pallet {
-    use frame_support::{pallet_prelude::*, traits::{Currency, ReservableCurrency}};
-    use frame_system::pallet_prelude::*;
-    use sp_std::vec::Vec;
-    use codec::{Encode, Decode};
-    use scale_info::TypeInfo;
+use codec::{Decode, Encode};
+use scale_info::TypeInfo;
+use sp_core::H256;
+use sp_runtime::{
+    traits::{BlakeTwo256, IdentifyAccount, Verify},
+    MultiSignature, OpaqueExtrinsic as UncheckedExtrinsic,
+};
 
-    #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-    pub enum TransferStatus {
-        Locked,
-        Verified,
-        Minted,
-        Burned,
-        Unlocked,
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODULE DECLARATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// VM Watts (VMw) - Virtual Machine computation units
+pub mod vmw;
+
+/// FlareChain block structures
+pub mod flare_chain_blocks;
+
+/// PBC (Partitioned Burst Chain) block structures
+pub mod pbc_blocks;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RE-EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Re-export VMw types
+pub use vmw::{BlockVMwLimit, VMw, VMwMetering, VMwPrice};
+
+// Re-export FlareChain types
+pub use flare_chain_blocks::{
+    AttestationRecord, FlareChainBlock, FlareChainBody, FlareChainHeader, PbcStateSubmission,
+    PenalizedNode, StakeDeposit, FLARE_CHAIN_ID,
+};
+
+// Re-export PBC types
+pub use pbc_blocks::{
+    AntBlock, BlockValidationResult, PbcBlock, PbcBlockBody, PbcBlockHeader, TransactionRecord,
+    MAX_ANTS_DEPTH, MAX_ANTS_PER_BLOCK,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CORE TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// An index to a block.
+pub type BlockNumber = u32;
+
+/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
+pub type Signature = MultiSignature;
+
+/// Some way of identifying an account on the chain. We intentionally make it equivalent
+/// to the public key of our transaction signing scheme.
+pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+
+/// Balance of an account.
+pub type Balance = u128;
+
+/// Index of a transaction in the chain.
+pub type Nonce = u32;
+
+/// A hash of some data used by the chain.
+pub type Hash = H256;
+
+/// Type used for expressing timestamp.
+pub type Moment = u64;
+
+/// Opaque block header type.
+pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
+
+/// Opaque block type.
+pub type Block = sp_runtime::generic::Block<Header, UncheckedExtrinsic>;
+
+/// Opaque block identifier type.
+pub type BlockId = sp_runtime::generic::BlockId<Block>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHAIN IDENTIFICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Chain identifier for Ëtrid multichain
+#[derive(
+    Clone,
+    Copy,
+    Encode,
+    Decode,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    codec::MaxEncodedLen,
+    TypeInfo,
+    Debug,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum ChainId {
+    /// FlareChain (root chain)
+    Flare,
+    /// Partitioned Burst Chain with ID
+    Pbc(u8),
+}
+
+impl Default for ChainId {
+    fn default() -> Self {
+        Self::Flare
+    }
+}
+
+impl ChainId {
+    /// Check if this is FlareChain
+    pub fn is_flare(&self) -> bool {
+        matches!(self, ChainId::Flare)
     }
 
-    #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-    #[scale_info(skip_type_params(T))]
-    pub struct CrossChainTransfer<T: Config> {
-        pub source_chain: BoundedVec<u8, ConstU32<64>>,
-        pub dest_chain: BoundedVec<u8, ConstU32<64>>,
-        pub sender: T::AccountId,
-        pub recipient: T::AccountId,
-        pub amount: BalanceOf<T>,
-        pub proof: BoundedVec<u8, ConstU32<256>>,
-        pub status: TransferStatus,
+    /// Check if this is a PBC
+    pub fn is_pbc(&self) -> bool {
+        matches!(self, ChainId::Pbc(_))
     }
 
-    #[pallet::config]
-    pub trait Config: frame_system::Config {
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-        type Currency: ReservableCurrency<Self::AccountId>;
-        type MaxLen: Get<u32>;
-    }
-
-    pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-
-    #[pallet::storage]
-    #[pallet::getter(fn transfers)]
-    pub type Transfers<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, CrossChainTransfer<T>>;
-
-    #[pallet::event]
-    #[pallet::generate_deposit(pub(super) fn deposit_event)]
-    pub enum Event<T: Config> {
-        TokensLocked(T::AccountId, T::Hash),
-        LockVerified(T::Hash),
-        WrappedMinted(T::AccountId, T::Hash),
-        WrappedBurned(T::AccountId, T::Hash),
-        TokensUnlocked(T::AccountId, T::Hash),
-    }
-
-    #[pallet::error]
-    pub enum Error<T> {
-        InvalidProof,
-        TransferNotFound,
-        AlreadyProcessed,
-    }
-
-    #[pallet::pallet]
-    pub struct Pallet<T>(_);
-
-    #[pallet::call]
-    impl<T: Config> Pallet<T> {
-        #[pallet::weight(10_000)]
-        #[pallet::call_index(0)]
-        pub fn lock_tokens(
-            origin: OriginFor<T>,
-            dest_chain: Vec<u8>,
-            recipient: T::AccountId,
-            amount: BalanceOf<T>,
-        ) -> DispatchResult {
-            let sender = ensure_signed(origin)?;
-            T::Currency::reserve(&sender, amount)?;
-
-            let source_chain = BoundedVec::<u8, ConstU32<64>>::try_from(b"Etrid".to_vec())
-                .map_err(|_| Error::<T>::InvalidProof)?;
-            let dest_chain_bounded = BoundedVec::<u8, ConstU32<64>>::try_from(dest_chain)
-                .map_err(|_| Error::<T>::InvalidProof)?;
-
-            let transfer = CrossChainTransfer {
-                source_chain,
-                dest_chain: dest_chain_bounded,
-                sender: sender.clone(),
-                recipient,
-                amount,
-                proof: BoundedVec::default(),
-                status: TransferStatus::Locked,
-            };
-
-            let transfer_bytes = transfer.encode();
-            let hash_bytes = sp_io::hashing::blake2_256(&transfer_bytes);
-            let hash = T::Hash::decode(&mut &hash_bytes[..])
-                .map_err(|_| Error::<T>::InvalidProof)?;
-            Transfers::<T>::insert(hash, transfer);
-
-            Self::deposit_event(Event::TokensLocked(sender, hash));
-            Ok(())
+    /// Get PBC ID if this is a PBC
+    pub fn pbc_id(&self) -> Option<u8> {
+        match self {
+            ChainId::Pbc(id) => Some(*id),
+            _ => None,
         }
+    }
+}
 
-        #[pallet::weight(10_000)]
-        #[pallet::call_index(1)]
-        pub fn verify_lock_proof(
-            origin: OriginFor<T>,
-            hash: T::Hash,
-            proof: Vec<u8>,
-        ) -> DispatchResult{
-            let _ = ensure_signed(origin)?;
+// ═══════════════════════════════════════════════════════════════════════════
+// TOKEN TYPES
+// ═══════════════════════════════════════════════════════════════════════════
 
-            Transfers::<T>::try_mutate(hash, |maybe_transfer| {
-                let transfer = maybe_transfer.as_mut().ok_or(Error::<T>::TransferNotFound)?;
-                ensure!(transfer.status == TransferStatus::Locked, Error::<T>::AlreadyProcessed);
+/// Token types in Ëtrid ecosystem
+#[derive(
+    Clone,
+    Copy,
+    Encode,
+    Decode,
+    Eq,
+    PartialEq,
+    codec::MaxEncodedLen,
+    TypeInfo,
+    Debug,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum TokenType {
+    /// Ëtrid native token (ËTR)
+    Etr,
+    /// Ëtrid Dollar stablecoin (ËTD)
+    Etd,
+}
 
-                let proof_bounded = BoundedVec::<u8, ConstU32<256>>::try_from(proof)
-                    .map_err(|_| Error::<T>::InvalidProof)?;
+impl Default for TokenType {
+    fn default() -> Self {
+        Self::Etr
+    }
+}
 
-                // TODO: Merkle proof validation logic
-                // For now, we accept the proof as valid
-                transfer.proof = proof_bounded;
-                transfer.status = TransferStatus::Verified;
+// ═══════════════════════════════════════════════════════════════════════════
+// CROSS-CHAIN MESSAGING
+// ═══════════════════════════════════════════════════════════════════════════
 
-                Self::deposit_event(Event::LockVerified(hash));
-                Ok(())
-            })
-        }
+/// Cross-chain message between PBCs and FlareChain
+#[derive(Clone, Encode, Decode, Eq, PartialEq, TypeInfo, Debug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct CrossChainMessage {
+    /// Source chain
+    pub source_chain: ChainId,
+    /// Destination chain
+    pub destination_chain: ChainId,
+    /// Nonce for ordering
+    pub nonce: u64,
+    /// Payload data
+    pub payload: sp_std::vec::Vec<u8>,
+}
 
-        #[pallet::weight(10_000)]
-        #[pallet::call_index(2)]
-        pub fn burn_wrapped_tokens(
-            origin: OriginFor<T>,
-            hash: T::Hash,
-        ) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+/// PBC state root for FlareChain aggregation
+#[derive(Clone, Encode, Decode, Eq, PartialEq, TypeInfo, Debug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct PbcStateRoot {
+    /// PBC chain ID
+    pub chain_id: ChainId,
+    /// Block number
+    pub block_number: BlockNumber,
+    /// State root hash
+    pub state_root: Hash,
+    /// Timestamp
+    pub timestamp: Moment,
+}
 
-            Transfers::<T>::try_mutate(hash, |maybe_transfer| {
-                let transfer = maybe_transfer.as_mut().ok_or(Error::<T>::TransferNotFound)?;
-                ensure!(transfer.recipient == caller, Error::<T>::AlreadyProcessed);
-                ensure!(transfer.status == TransferStatus::Minted, Error::<T>::AlreadyProcessed);
+// ═══════════════════════════════════════════════════════════════════════════
+// ACCOUNT TYPES (From Ivory Papers)
+// ═══════════════════════════════════════════════════════════════════════════
 
-                transfer.status = TransferStatus::Burned;
-                Self::deposit_event(Event::WrappedBurned(caller, hash));
-                Ok(())
-            })
-        }
+/// Account types as defined in Ëtrid Ivory Papers
+#[derive(
+    Clone,
+    Copy,
+    Encode,
+    Decode,
+    Eq,
+    PartialEq,
+    codec::MaxEncodedLen,
+    TypeInfo,
+    Debug,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum AccountType {
+    /// External Blockchain Account (non-Ëtrid key pairs)
+    Ebca,
+    /// Root Chain Account (FlareChain account)
+    Rca,
+    /// Root Chain Withdrawal Account (withdrawal-only)
+    Rcwa,
+    /// Side Chain Account (PBC account)
+    Sca,
+    /// Smart Side Chain Account (smart contract on PBC)
+    Ssca,
+}
 
-        #[pallet::weight(10_000)]
-        #[pallet::call_index(3)]
-        pub fn unlock_tokens(
-            origin: OriginFor<T>,
-            hash: T::Hash,
-        ) -> DispatchResult {
-            let _ = ensure_signed(origin)?;
+impl Default for AccountType {
+    fn default() -> Self {
+        Self::Rca
+    }
+}
 
-            Transfers::<T>::try_mutate(hash, |maybe_transfer| {
-                let transfer = maybe_transfer.as_mut().ok_or(Error::<T>::TransferNotFound)?;
-                ensure!(transfer.status == TransferStatus::Burned || transfer.status == TransferStatus::Verified, Error::<T>::AlreadyProcessed);
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTS
+// ═══════════════════════════════════════════════════════════════════════════
 
-                T::Currency::unreserve(&transfer.sender, transfer.amount);
-                transfer.status = TransferStatus::Unlocked;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-                Self::deposit_event(Event::TokensUnlocked(transfer.sender.clone(), hash));
-                Ok(())
-            })
-        }
+    #[test]
+    fn chain_id_works() {
+        let flare = ChainId::Flare;
+        assert!(flare.is_flare());
+        assert!(!flare.is_pbc());
+
+        let pbc = ChainId::Pbc(1);
+        assert!(!pbc.is_flare());
+        assert!(pbc.is_pbc());
+        assert_eq!(pbc.pbc_id(), Some(1));
+    }
+
+    #[test]
+    fn token_type_default_works() {
+        assert_eq!(TokenType::default(), TokenType::Etr);
+    }
+
+    #[test]
+    fn account_type_default_works() {
+        assert_eq!(AccountType::default(), AccountType::Rca);
     }
 }

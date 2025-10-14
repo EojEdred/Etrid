@@ -10,7 +10,18 @@ pub mod pallet {
     use scale_info::TypeInfo;
     use sp_runtime::{RuntimeDebug, traits::AtLeast32BitUnsigned};
 
-    #[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+    #[derive(
+        Encode,
+        Decode,
+        codec::DecodeWithMemTracking,
+        Clone,
+        Copy,
+        Eq,
+        PartialEq,
+        RuntimeDebug,
+        TypeInfo,
+        MaxEncodedLen
+    )]
     pub enum TokenType {
         ETR,
         ETD,

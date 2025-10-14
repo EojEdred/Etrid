@@ -11,6 +11,7 @@ pub mod pallet {
     };
     use frame_system::pallet_prelude::*;
     use codec::Decode;
+    use sp_std::vec::Vec;
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
@@ -72,7 +73,7 @@ pub mod pallet {
         pub fn deploy_contract(origin: OriginFor<T>, code: Vec<u8>) -> DispatchResult {
             let sender = ensure_signed(origin)?;
             ensure!(
-                code.len() <= T::MaxCodeSize::get() as usize,
+                (code.len() as u32) <= T::MaxCodeSize::get(),
                 Error::<T>::CodeTooLarge
             );
 

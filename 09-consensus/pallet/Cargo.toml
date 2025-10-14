@@ -11,11 +11,15 @@ frame-support.workspace = true
 frame-system.workspace = true
 sp-runtime.workspace = true
 sp-std.workspace = true
+sp-io.workspace = true
 codec.workspace = true
 scale-info.workspace = true
 log.workspace = true
 
-# Internal Ëtrid dependencies - FIXED PATH
+# Serde for serialization
+serde = { workspace = true, features = ["alloc", "derive"], default-features = false }
+
+# Internal Ëtrid dependencies
 pallet-accounts = { path = "../../04-accounts/pallet", default-features = false }
 
 [features]
@@ -25,9 +29,12 @@ std = [
     "frame-system/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-io/std",
     "codec/std",
     "scale-info/std",
     "log/std",
+    "serde/std",
+    "serde/alloc",
     "pallet-accounts/std",
 ]
 runtime-benchmarks = [
