@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/wasmtime_cranelift_shared-ccb03aa2bb64940b.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/isa_builder.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/obj.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libwasmtime_cranelift_shared-ccb03aa2bb64940b.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/isa_builder.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/obj.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libwasmtime_cranelift_shared-ccb03aa2bb64940b.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/isa_builder.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/obj.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/isa_builder.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-cranelift-shared-8.0.1/src/obj.rs:

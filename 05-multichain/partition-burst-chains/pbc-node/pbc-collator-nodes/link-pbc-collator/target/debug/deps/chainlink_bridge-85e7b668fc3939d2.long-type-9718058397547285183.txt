@@ -1,0 +1,1 @@
+frame_support::pallet_prelude::StorageMap<_GeneratedPrefixForStorageVRFRequests<T>, frame_support::Blake2_128Concat, sp_core::H256, VRFRequest<<T as frame_system::Config>::AccountId>>

@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/multiaddr-2a8cbd029487aa5c.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/errors.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/onion_addr.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/protocol.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/from_url.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libmultiaddr-2a8cbd029487aa5c.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/errors.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/onion_addr.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/protocol.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/from_url.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/errors.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/onion_addr.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/protocol.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/multiaddr-0.17.1/src/from_url.rs:

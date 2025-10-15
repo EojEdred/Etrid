@@ -1,0 +1,7 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/sc_consensus_aura-c7129a1666969cb8.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/import_queue.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/standalone.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libsc_consensus_aura-c7129a1666969cb8.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/import_queue.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/standalone.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/import_queue.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/aura/src/standalone.rs:

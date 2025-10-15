@@ -1,0 +1,7 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/sc_consensus_slots-af5a97f3ba4c8d24.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/aux_schema.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/slots.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libsc_consensus_slots-af5a97f3ba4c8d24.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/aux_schema.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/slots.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/aux_schema.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/client/consensus/slots/src/slots.rs:

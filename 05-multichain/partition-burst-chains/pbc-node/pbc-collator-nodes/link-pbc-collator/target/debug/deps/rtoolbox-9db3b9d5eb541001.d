@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/rtoolbox-9db3b9d5eb541001.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/atty.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/fix_line_issues.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/print_tty.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_string.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_vec.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/librtoolbox-9db3b9d5eb541001.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/atty.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/fix_line_issues.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/print_tty.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_string.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_vec.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/atty.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/fix_line_issues.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/print_tty.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_string.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rtoolbox-0.0.3/src/safe_vec.rs:

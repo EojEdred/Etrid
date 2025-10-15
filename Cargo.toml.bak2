@@ -1,0 +1,205 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ËTRID MULTICHAIN - ROOT WORKSPACE
+# E³20 (Essential Elements to Operate Reference Implementation)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Phase 1: Only components with actual code
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[workspace]
+resolver = "2"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WORKSPACE MEMBERS - Only Components With Code
+# ═══════════════════════════════════════════════════════════════════════════════
+
+members = [
+    "04-accounts/pallet",                               # Account management pallet
+    "05-multichain/flare-chain/runtime",                # Flare Chain runtime
+    "05-multichain/flare-chain/node",                   # Flare Chain node
+    "05-multichain/primitives",                         # Multichain primitives
+    "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime
+    "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/bridge",   # Bridge
+    "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/channels", # Channels
+    "05-multichain/partition-burst-chains/pbc-chains/btc-pbc/runtime",       # BTC PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/doge-pbc/runtime",      # DOGE PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/eth-pbc/runtime",       # ETH PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/sol-pbc/runtime",       # SOL PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/xlm-pbc/runtime",       # XLM PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/xrp-pbc/runtime",       # XRP PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/bnb-pbc/runtime",       # BNB PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/trx-pbc/runtime",       # TRX PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/ada-pbc/runtime",       # ADA PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/link-pbc/runtime",      # LINK PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/matic-pbc/runtime",     # MATIC PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Smart Contract USDT PBC runtime
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/btc-pbc-collator", # BTC PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/ada-pbc-collator", # ADA PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/bnb-pbc-collator", # BNB PBC collator node
+    "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/doge-pbc-collator", # DOGE PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/eth-pbc-collator", # ETH PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/matic-pbc-collator", # MATIC PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/xlm-pbc-collator", # XLM PBC collator node
+    "05-multichain/bridge-protocols/cardano-bridge",    # Cardano bridge pallet
+    "05-multichain/bridge-protocols/chainlink-bridge",  # Chainlink bridge pallet
+    "05-multichain/bridge-protocols/polygon-bridge",    # Polygon bridge pallet
+    "05-multichain/bridge-protocols/solana-bridge",     # Solana bridge pallet
+    "05-multichain/bridge-protocols/stellar-bridge",    # Stellar bridge pallet
+    "08-etwasm-vm/pallet",                              # Smart contract VM pallet
+    "09-consensus/pallet",                              # Consensus pallet
+    "10-foundation/governance/pallet",                  # Governance pallet
+    #"13-clients/cli/etrust-console",                   # Rust CLI
+    "tests/integration",                                # Integration tests
+]
+
+exclude = [
+    "_reference",
+    "_backup*",
+    "target",
+    "apps",
+    "docs",
+    "scripts",
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHARED WORKSPACE DEPENDENCIES
+# ═══════════════════════════════════════════════════════════════════════════════
+# All workspace members can use these via: dependency-name.workspace = true
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[workspace.dependencies]
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Substrate / Polkadot SDK Dependencies                                       │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-executive = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-benchmarking = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-try-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+sp-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-consensus-grandpa = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-offchain = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-version = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-staking = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+pallet-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-grandpa = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-sudo = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Serialization & Encoding                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+serde = { version = "1.0.208", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1.0.125", default-features = false, features = ["alloc"] }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Cryptography                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+ed25519-dalek = { version = "2.0", default-features = false }
+schnorrkel = { version = "0.11.4", default-features = false }
+sha3 = { version = "0.10", default-features = false }
+blake2 = { version = "0.10", default-features = false }
+keccak-hash = { version = "0.10", default-features = false }
+ecies = { version = "0.2", default-features = false }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Networking                                                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+libp2p = { version = "0.52", default-features = false }
+tokio = { version = "1.22.0", features = ["full"] }
+futures = { version = "0.3.28", default-features = false }
+async-trait = "0.1.73"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ WASM Runtime                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+wasmi = { version = "0.31", default-features = false }
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Storage & Databases                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+patricia-trie = { version = "0.16", default-features = false }
+trie-db = { version = "0.29.0", default-features = false }
+hash-db = { version = "0.16.0", default-features = false }
+memory-db = { version = "0.32.0", default-features = false }
+rocksdb = "0.21"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Utilities                                                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+log = { version = "0.4", default-features = false }
+env_logger = "0.10"
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+hex-literal = "0.4"
+arrayref = "0.3"
+smallvec = "1.11"
+static_assertions = "1.1"
+impl-trait-for-tuples = "0.2.2"
+clap = { version = "4.4", features = ["derive"] }
+structopt = "0.3"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ Testing                                                                      │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+assert_matches = "1.5"
+criterion = "0.5"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD PROFILES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+
+[profile.production]
+inherits = "release"
+lto = true
+codegen-units = 1
+strip = true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATCH SECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[patch.crates-io]
+schnorrkel = { git = "https://github.com/w3f/schnorrkel", branch = "master" }
+[patch."https://github.com/paritytech/polkadot-sdk.git"]
+substrate-prometheus-endpoint = { path = "vendor/substrate-prometheus-endpoint" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOTE: As you build more E³20 components, add them to the members list above
+# ═══════════════════════════════════════════════════════════════════════════════
+# 
+# CHANGELOG (v2 - stable2506 migration):
+# - Changed all polkadot-sdk dependencies from `branch = "master"` to `tag = "polkadot-stable2506"`
+# - Updated codec version: 3.6.1 → 3.6.12 (compatible with stable2506)
+# - Updated scale-info version: 2.5.0 → 2.11.3 (compatible with stable2506)
+# - Updated serde versions for compatibility
+# - All other dependencies unchanged to preserve your custom configuration
+# ═══════════════════════════════════════════════════════════════════════════════

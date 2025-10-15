@@ -1,0 +1,11 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/fragile-ed2b4b736da3dbaf.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/errors.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/fragile.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/registry.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/semisticky.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/sticky.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/thread_id.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libfragile-ed2b4b736da3dbaf.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/errors.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/fragile.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/registry.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/semisticky.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/sticky.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/thread_id.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/errors.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/fragile.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/registry.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/semisticky.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/sticky.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fragile-2.0.1/src/thread_id.rs:

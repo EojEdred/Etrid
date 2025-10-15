@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/pallet_aura-09a056f169dd62df.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/migrations.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/mock.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/tests.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libpallet_aura-09a056f169dd62df.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/migrations.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/mock.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/tests.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/migrations.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/mock.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/aura/src/tests.rs:

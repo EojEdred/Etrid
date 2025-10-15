@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/libsecp256k1-bd59b47273cd488e.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.7.2/src/lib.rs /Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const.rs /Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const_gen.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/liblibsecp256k1-bd59b47273cd488e.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.7.2/src/lib.rs /Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const.rs /Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const_gen.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.7.2/src/lib.rs:
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const.rs:
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out/const_gen.rs:
+
+# env-dep:OUT_DIR=/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/build/libsecp256k1-178b7163b0bcce24/out

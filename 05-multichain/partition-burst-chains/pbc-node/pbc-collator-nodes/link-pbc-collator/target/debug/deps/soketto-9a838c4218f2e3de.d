@@ -1,0 +1,15 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/soketto-9a838c4218f2e3de.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/base.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/connection.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/data.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/extension.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/client.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/http.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/server.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/libsoketto-9a838c4218f2e3de.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/base.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/connection.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/data.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/extension.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/client.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/http.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/server.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/base.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/connection.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/data.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/extension.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/client.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/http.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/soketto-0.7.1/src/handshake/server.rs:
+
+# env-dep:CARGO_PKG_VERSION=0.7.1

@@ -1,0 +1,1 @@
+#![no_std] #![allow(unused_imports)] pub use wasm_project::*;

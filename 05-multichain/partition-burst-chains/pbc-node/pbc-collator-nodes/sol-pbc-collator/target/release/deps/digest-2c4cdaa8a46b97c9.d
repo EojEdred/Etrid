@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/digest-2c4cdaa8a46b97c9.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/dyn_digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/errors.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libdigest-2c4cdaa8a46b97c9.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/dyn_digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/errors.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libdigest-2c4cdaa8a46b97c9.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/dyn_digest.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/errors.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/digest.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/dyn_digest.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/digest-0.8.1/src/errors.rs:

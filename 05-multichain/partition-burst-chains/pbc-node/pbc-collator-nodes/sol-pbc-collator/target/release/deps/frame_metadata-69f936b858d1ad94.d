@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/frame_metadata-69f936b858d1ad94.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v14.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v15.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v16.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libframe_metadata-69f936b858d1ad94.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v14.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v15.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v16.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libframe_metadata-69f936b858d1ad94.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v14.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v15.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v16.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v14.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v15.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/frame-metadata-23.0.0/src/v16.rs:

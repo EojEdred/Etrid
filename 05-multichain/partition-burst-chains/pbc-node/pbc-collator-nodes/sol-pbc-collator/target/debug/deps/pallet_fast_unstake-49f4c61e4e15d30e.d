@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/pallet_fast_unstake-49f4c61e4e15d30e.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/migrations.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/types.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/weights.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libpallet_fast_unstake-49f4c61e4e15d30e.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/migrations.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/types.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/weights.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/migrations.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/types.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/frame/fast-unstake/src/weights.rs:

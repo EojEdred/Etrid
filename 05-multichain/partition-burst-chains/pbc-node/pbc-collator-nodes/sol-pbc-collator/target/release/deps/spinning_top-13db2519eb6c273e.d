@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/spinning_top-13db2519eb6c273e.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/relax.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/rw_spinlock.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/spinlock.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libspinning_top-13db2519eb6c273e.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/relax.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/rw_spinlock.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/spinlock.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/release/deps/libspinning_top-13db2519eb6c273e.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/relax.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/rw_spinlock.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/spinlock.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/relax.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/rw_spinlock.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spinning_top-0.3.0/src/spinlock.rs:

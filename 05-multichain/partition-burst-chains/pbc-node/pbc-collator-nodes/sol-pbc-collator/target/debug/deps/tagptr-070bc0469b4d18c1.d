@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/tagptr-070bc0469b4d18c1.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros/doc.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/atomic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/non_null.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/ptr.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libtagptr-070bc0469b4d18c1.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros/doc.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/atomic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/non_null.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/ptr.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/macros/doc.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/atomic.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/non_null.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tagptr-0.2.0/src/imp/ptr.rs:

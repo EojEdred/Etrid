@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/sp_externalities-cce1671e9ffd9e2a.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/extensions.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/scope_limited.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_externalities-cce1671e9ffd9e2a.rlib: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/extensions.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/scope_limited.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_externalities-cce1671e9ffd9e2a.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/extensions.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/scope_limited.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/extensions.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/externalities/src/scope_limited.rs:

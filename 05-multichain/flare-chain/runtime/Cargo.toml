@@ -11,6 +11,21 @@ pallet-accounts = { path = "../../../04-accounts/pallet", default-features = fal
 pallet-etwasm-vm = { path = "../../../08-etwasm-vm/pallet", default-features = false }
 pallet-consensus = { path = "../../../09-consensus/pallet", default-features = false }
 pallet-governance = { path = "../../../10-foundation/governance/pallet", default-features = false }
+pallet-pbc-router = { path = "../../partition-burst-chains/pbc-node/pbc-router", default-features = false }
+
+# Bridge pallets (12 bridges)
+pallet-bitcoin-bridge = { path = "../../bridge-protocols/bitcoin-bridge", default-features = false }
+eth-bridge = { path = "../../bridge-protocols/ethereum-bridge", default-features = false }
+pallet-doge-bridge = { path = "../../bridge-protocols/doge-bridge", default-features = false }
+stellar-bridge = { path = "../../bridge-protocols/stellar-bridge", default-features = false }
+xrp-bridge = { path = "../../bridge-protocols/xrp-bridge", default-features = false }
+sol-bridge = { path = "../../bridge-protocols/solana-bridge", default-features = false }
+pallet-cardano-bridge = { path = "../../bridge-protocols/cardano-bridge", default-features = false }
+chainlink-bridge = { path = "../../bridge-protocols/chainlink-bridge", default-features = false }
+polygon-bridge = { path = "../../bridge-protocols/polygon-bridge", default-features = false }
+bnb-bridge = { path = "../../bridge-protocols/bnb-bridge", default-features = false }
+trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = false }
+stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
 
 # Substrate core
 codec = { package = "parity-scale-codec", version = "3.6", default-features = false, features = ["derive"] }
@@ -69,6 +84,22 @@ std = [
     "pallet-etwasm-vm/std",
     "pallet-consensus/std",
     "pallet-governance/std",
+    "pallet-pbc-router/std",
+
+    # Bridge pallets
+    "pallet-bitcoin-bridge/std",
+    "eth-bridge/std",
+    "pallet-doge-bridge/std",
+    "stellar-bridge/std",
+    "xrp-bridge/std",
+    "sol-bridge/std",
+    "pallet-cardano-bridge/std",
+    "chainlink-bridge/std",
+    "polygon-bridge/std",
+    "bnb-bridge/std",
+    "trx-bridge/std",
+    "stablecoin-usdt-bridge/std",
+
     "frame-executive/std",
     "frame-support/std",
     "frame-system/std",

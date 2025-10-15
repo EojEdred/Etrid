@@ -1,0 +1,62 @@
+[package]
+name = "validator-management"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Validator orchestration and management for Ëtrid FODDoS ASF consensus"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate primitives
+sp-core = { version = "31.0.0", default-features = false }
+sp-std = { version = "14.0.0", default-features = false }
+sp-runtime = { version = "37.0.0", default-features = false }
+sp-io = { version = "35.0.0", default-features = false }
+sp-keystore = { version = "0.38.0", default-features = false, optional = true }
+
+# Codec
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+
+# Serialization
+serde = { version = "1.0.197", default-features = false, features = ["derive", "alloc"] }
+
+# Logging
+log = { version = "0.4.21", default-features = false }
+
+# Internal dependencies
+asf-algorithm = { path = "../asf-algorithm", default-features = false }
+
+# Async runtime (std only)
+futures = { version = "0.3.30", optional = true }
+tokio = { version = "1.36", features = ["full"], optional = true }
+
+# Networking (std only)
+libp2p = { version = "0.53", optional = true }
+
+# Error handling
+thiserror = { version = "1.0", optional = true }
+
+[dev-dependencies]
+sp-io = { version = "35.0.0" }
+sp-core = { version = "31.0.0" }
+tokio = { version = "1.36", features = ["full", "test-util"] }
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-io/std",
+    "sp-keystore",
+    "codec/std",
+    "scale-info/std",
+    "serde/std",
+    "log/std",
+    "asf-algorithm/std",
+    "futures",
+    "tokio",
+    "libp2p",
+    "thiserror",
+]

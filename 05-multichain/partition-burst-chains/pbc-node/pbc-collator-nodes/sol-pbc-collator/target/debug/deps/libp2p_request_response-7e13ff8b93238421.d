@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libp2p_request_response-7e13ff8b93238421.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/codec.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler/protocol.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/liblibp2p_request_response-7e13ff8b93238421.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/codec.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler/protocol.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/codec.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libp2p-request-response-0.27.0/src/handler/protocol.rs:

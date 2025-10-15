@@ -1,0 +1,29 @@
+[dependencies.wasm-project]
+default-features = false
+features = []
+package = "sol-pbc-runtime"
+path = "/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-chains/sol-pbc/runtime"
+
+[lib]
+crate-type = ["cdylib"]
+name = "sol_pbc_runtime"
+
+[package]
+edition = "2021"
+name = "sol-pbc-runtime-blob"
+version = "1.0.0"
+
+[profile.dev]
+panic = "abort"
+
+[profile.production]
+codegen-units = 1
+inherits = "release"
+lto = "fat"
+
+[profile.release]
+lto = "thin"
+panic = "abort"
+
+[workspace]
+resolver = "2"

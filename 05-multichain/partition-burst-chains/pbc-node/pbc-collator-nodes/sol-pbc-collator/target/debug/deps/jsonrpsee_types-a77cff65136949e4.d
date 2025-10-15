@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/jsonrpsee_types-a77cff65136949e4.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/params.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/request.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/response.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/error.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libjsonrpsee_types-a77cff65136949e4.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/params.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/request.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/response.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/error.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/params.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/request.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/response.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpsee-types-0.16.3/src/error.rs:

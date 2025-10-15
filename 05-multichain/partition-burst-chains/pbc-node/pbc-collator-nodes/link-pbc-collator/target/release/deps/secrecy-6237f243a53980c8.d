@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/secrecy-6237f243a53980c8.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/boxed.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/string.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/vec.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libsecrecy-6237f243a53980c8.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/boxed.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/string.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/vec.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libsecrecy-6237f243a53980c8.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/boxed.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/string.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/vec.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/boxed.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/string.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/secrecy-0.8.0/src/vec.rs:

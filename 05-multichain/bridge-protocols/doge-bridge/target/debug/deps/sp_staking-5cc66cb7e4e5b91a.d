@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/sp_staking-5cc66cb7e4e5b91a.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/offence.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/currency_to_vote.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_staking-5cc66cb7e4e5b91a.rlib: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/offence.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/currency_to_vote.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_staking-5cc66cb7e4e5b91a.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/offence.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/currency_to_vote.rs
+
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/lib.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/offence.rs:
+/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/staking/src/currency_to_vote.rs:

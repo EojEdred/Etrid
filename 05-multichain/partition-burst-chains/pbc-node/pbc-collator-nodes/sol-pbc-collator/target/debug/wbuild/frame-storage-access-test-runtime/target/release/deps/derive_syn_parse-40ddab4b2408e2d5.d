@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/wbuild/frame-storage-access-test-runtime/target/release/deps/derive_syn_parse-40ddab4b2408e2d5.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/wbuild/frame-storage-access-test-runtime/target/release/deps/libderive_syn_parse-40ddab4b2408e2d5.dylib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/error_macros.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/fields.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/derive-syn-parse-0.2.0/src/variants.rs:

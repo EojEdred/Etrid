@@ -1,0 +1,83 @@
+[package]
+name = "eth-pbc-runtime"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "Ethereum Partition Burst Chain runtime for Ëtrid Multichain"
+build = "build.rs"
+
+[dependencies]
+# Substrate Core
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# FRAME Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-executive = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment = { workspace = true }
+
+# Substrate Primitives
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-core = { workspace = true }
+sp-inherents = { workspace = true }
+sp-io = { workspace = true }
+sp-offchain = { workspace = true }
+sp-runtime = { workspace = true }
+sp-session = { workspace = true }
+sp-std = { workspace = true }
+sp-transaction-pool = { workspace = true }
+sp-version = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-consensus-grandpa = { workspace = true }
+
+# FRAME Pallets
+pallet-aura = { workspace = true }
+pallet-grandpa = { workspace = true }
+
+# Custom Pallets
+eth-bridge = { path = "../../../../bridge-protocols/ethereum-bridge", default-features = false }
+
+[build-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
+    "pallet-timestamp/std",
+    "pallet-balances/std",
+    "pallet-transaction-payment/std",
+    "sp-api/std",
+    "sp-block-builder/std",
+    "sp-core/std",
+    "sp-inherents/std",
+    "sp-io/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-std/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "sp-consensus-aura/std",
+    "sp-consensus-grandpa/std",
+    "pallet-aura/std",
+    "pallet-grandpa/std",
+    "eth-bridge/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+    "frame-executive/try-runtime",
+]

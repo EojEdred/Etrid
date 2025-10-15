@@ -1,0 +1,8 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/impl_trait_for_tuples-fb7235fc86f5eb62.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libimpl_trait_for_tuples-fb7235fc86f5eb62.dylib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/full_automatic.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/semi_automatic.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/impl-trait-for-tuples-0.2.3/src/utils.rs:

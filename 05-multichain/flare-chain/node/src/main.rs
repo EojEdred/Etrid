@@ -1,3 +1,4 @@
+#[path = "chain-spec.rs"]
 mod chain_spec;
 mod rpc;
 mod service;

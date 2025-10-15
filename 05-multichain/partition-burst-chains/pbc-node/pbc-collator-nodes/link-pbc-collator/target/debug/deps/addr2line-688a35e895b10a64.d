@@ -1,0 +1,10 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/addr2line-688a35e895b10a64.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/frame.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/function.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/line.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lookup.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/unit.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/debug/deps/libaddr2line-688a35e895b10a64.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/frame.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/function.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/line.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lookup.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/unit.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/frame.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/function.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/line.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/lookup.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/addr2line-0.25.1/src/unit.rs:

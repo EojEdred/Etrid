@@ -1,0 +1,9 @@
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/unsigned_varint-904e1bf2f69b9438.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/decode.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/encode.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/io.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/codec.rs
+
+/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libunsigned_varint-904e1bf2f69b9438.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/decode.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/encode.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/io.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/codec.rs
+
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/lib.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/decode.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/encode.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/io.rs:
+/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/unsigned-varint-0.8.0/src/codec.rs:

@@ -5,8 +5,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use codec::{Decode, Encode, MaxEncodedLen};
-use scale_info::TypeInfo;
 
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -18,7 +16,7 @@ use sp_runtime::{
         AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, MultiSignature,
+    ApplyExtrinsicResult, MultiSignature, Perbill,
 };
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
@@ -261,6 +259,164 @@ impl pallet_governance::Config for Runtime {
     type MinProposalStake = ConstU128<10_000_000_000_000>; // 10 ETR
 }
 
+/// Configure the PBC Router (Partition Burst Chain routing)
+impl pallet_pbc_router::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxPbcs = ConstU32<12>; // 12 PBCs (one per bridge)
+    type MaxPendingMessages = ConstU32<1000>; // Max pending messages per PBC
+    type MaxMessageSize = ConstU32<10240>; // 10KB max message size
+    type RegisterOrigin = frame_system::EnsureRoot<AccountId>;
+    type CollatorOrigin = frame_system::EnsureSigned<AccountId>;
+}
+
+// ========================================
+// BRIDGE PALLETS CONFIGURATION (12 bridges)
+// ========================================
+
+parameter_types! {
+    pub const PolygonBridgePalletId: PalletId = PalletId(*b"py/plygn");
+    pub const DogeBridgePalletId: PalletId = PalletId(*b"py/dogeb");
+    // Bridge authority accounts (use well-known test accounts for now)
+    pub BitcoinBridgeAuthority: AccountId = AccountId::from([1u8; 32]);
+    pub CardanoBridgeAuthority: AccountId = AccountId::from([2u8; 32]);
+    // Doge bridge fee as Perbill (0.1% = 1_000_000 parts per billion)
+    pub const DogeBridgeFee: Perbill = Perbill::from_parts(1_000_000);
+}
+
+/// Configure Bitcoin Bridge
+impl pallet_bitcoin_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<6>;
+    type MinDepositAmount = ConstU64<1_000_000>; // 0.01 BTC in satoshis
+    type MaxDepositAmount = ConstU64<100_000_000_000>; // 1000 BTC in satoshis
+    type BridgeAuthority = BitcoinBridgeAuthority;
+}
+
+/// Configure Ethereum Bridge
+impl eth_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<12>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxGasLimit = ConstU64<10_000_000>;
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure Dogecoin Bridge
+impl pallet_doge_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BridgeFee = DogeBridgeFee;
+    type MinBridgeAmount = ConstU128<100_000_000_000>; // 0.1 ETR
+    type MaxBridgeAmount = ConstU128<100_000_000_000_000_000>; // 100,000 ETR
+    type PalletId = DogeBridgePalletId;
+    type DogeConfirmations = ConstU32<6>;
+    type DogeConversionRate = ConstU64<1000>; // 1 DOGE = 0.001 ETR
+}
+
+/// Configure Stellar (XLM) Bridge
+impl stellar_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<3>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure XRP Bridge
+impl xrp_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<3>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxFeeDrops = ConstU64<1_000_000>; // 1 XRP
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure Solana Bridge
+impl sol_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<32>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxPriorityFee = ConstU64<10_000>;
+    type MaxComputeUnits = ConstU32<1_400_000>;
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure Cardano (ADA) Bridge
+impl pallet_cardano_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<15>;
+    type MinDepositAmount = ConstU64<1_000_000>; // 1 ADA in lovelaces
+    type MaxDepositAmount = ConstU64<1_000_000_000_000>; // 1,000,000 ADA
+    type BridgeAuthority = CardanoBridgeAuthority;
+}
+
+/// Configure Chainlink (LINK) Bridge
+impl chainlink_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<12>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxOracleNodes = ConstU32<100>;
+    type MaxDataFeeds = ConstU32<1000>;
+    type MaxVRFRequests = ConstU32<1000>;
+    type PriceStalenessThreshold = ConstU32<100>; // 100 blocks
+}
+
+/// Configure Polygon (MATIC) Bridge
+impl polygon_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<128>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxGasLimit = ConstU64<10_000_000>;
+    type MinBridgeAmount = ConstU128<1_000_000_000_000>; // 0.001 ETR
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+    type PalletId = PolygonBridgePalletId;
+}
+
+/// Configure BNB Bridge
+impl bnb_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<15>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxGasLimit = ConstU64<10_000_000>;
+    type MaxGasPrice = ConstU128<100_000_000_000>; // 100 Gwei
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure Tron (TRX) Bridge
+impl trx_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinConfirmations = ConstU32<19>;
+    type BridgeFeeRate = ConstU32<10>; // 0.1%
+    type MaxEnergyLimit = ConstU64<100_000_000>;
+    type MaxBandwidth = ConstU64<10_000_000>;
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
+/// Configure USDT Stablecoin Bridge
+impl stablecoin_usdt_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BridgeFeeRate = ConstU32<5>; // 0.05% for stablecoins
+    type MaxDepositsPerAccount = ConstU32<100>;
+    type MaxWithdrawalsPerAccount = ConstU32<100>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime {
@@ -278,6 +434,21 @@ construct_runtime!(
         EtwasmVM: pallet_etwasm_vm,
         Consensus: pallet_consensus,
         Governance: pallet_governance,
+        PbcRouter: pallet_pbc_router,
+
+        // Bridge pallets (12 bridges for multichain support)
+        BitcoinBridge: pallet_bitcoin_bridge,
+        EthereumBridge: eth_bridge,
+        DogeBridge: pallet_doge_bridge,
+        StellarBridge: stellar_bridge,
+        XrpBridge: xrp_bridge,
+        SolanaBridge: sol_bridge,
+        CardanoBridge: pallet_cardano_bridge,
+        ChainlinkBridge: chainlink_bridge,
+        PolygonBridge: polygon_bridge,
+        BnbBridge: bnb_bridge,
+        TronBridge: trx_bridge,
+        UsdtBridge: stablecoin_usdt_bridge,
     }
 );
 

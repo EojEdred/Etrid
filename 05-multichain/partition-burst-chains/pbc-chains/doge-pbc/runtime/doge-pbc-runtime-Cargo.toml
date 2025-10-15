@@ -1,0 +1,111 @@
+[package]
+name = "doge-pbc-runtime"
+version = "0.1.0"
+authors = ["Ëtrid Team <dev@etrid.io>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://etrid.io"
+repository = "https://github.com/etrid/etrid"
+description = "Runtime for Dogecoin (DOGE) Partition Burst Chain"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+
+# Local Dependencies - DOGE Bridge Pallet
+pallet-doge-bridge = { path = "../../../bridge-protocols/doge-bridge", default-features = false }
+
+# Substrate Dependencies
+frame-executive = { version = "35.0.0", default-features = false }
+frame-support = { version = "35.0.0", default-features = false }
+frame-system = { version = "35.0.0", default-features = false }
+frame-system-rpc-runtime-api = { version = "33.0.0", default-features = false }
+frame-try-runtime = { version = "0.41.0", default-features = false, optional = true }
+pallet-aura = { version = "34.0.0", default-features = false }
+pallet-balances = { version = "36.0.0", default-features = false }
+pallet-grandpa = { version = "35.0.0", default-features = false }
+pallet-sudo = { version = "35.0.0", default-features = false }
+pallet-timestamp = { version = "34.0.0", default-features = false }
+pallet-transaction-payment = { version = "35.0.0", default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { version = "35.0.0", default-features = false }
+sp-api = { version = "33.0.0", default-features = false }
+sp-block-builder = { version = "33.0.0", default-features = false }
+sp-consensus-aura = { version = "0.39.0", default-features = false }
+sp-core = { version = "34.0.0", default-features = false }
+sp-genesis-builder = { version = "0.14.0", default-features = false }
+sp-inherents = { version = "33.0.0", default-features = false }
+sp-offchain = { version = "33.0.0", default-features = false }
+sp-runtime = { version = "38.0.0", default-features = false }
+sp-session = { version = "34.0.0", default-features = false }
+sp-std = { version = "14.0.0", default-features = false }
+sp-transaction-pool = { version = "33.0.0", default-features = false }
+sp-version = { version = "36.0.0", default-features = false }
+
+# Used for the runtime benchmarking
+frame-benchmarking = { version = "35.0.0", default-features = false, optional = true }
+frame-system-benchmarking = { version = "35.0.0", default-features = false, optional = true }
+
+# Used for runtime genesis
+serde = { version = "1.0.210", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.128", default-features = false }
+
+[build-dependencies]
+substrate-wasm-builder = { version = "23.0.0" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-executive/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-system-rpc-runtime-api/std",
+    "frame-benchmarking?/std",
+    "frame-system-benchmarking?/std",
+    "pallet-doge-bridge/std",
+    "pallet-aura/std",
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+    "sp-api/std",
+    "sp-block-builder/std",
+    "sp-consensus-aura/std",
+    "sp-core/std",
+    "sp-genesis-builder/std",
+    "sp-inherents/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-std/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "serde/std",
+    "serde_json/std",
+]
+runtime-benchmarks = [
+    "frame-benchmarking/runtime-benchmarks",
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "frame-system-benchmarking/runtime-benchmarks",
+    "pallet-balances/runtime-benchmarks",
+    "pallet-grandpa/runtime-benchmarks",
+    "pallet-sudo/runtime-benchmarks",
+    "pallet-timestamp/runtime-benchmarks",
+    "sp-runtime/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-executive/try-runtime",
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+    "frame-try-runtime/try-runtime",
+    "pallet-aura/try-runtime",
+    "pallet-balances/try-runtime",
+    "pallet-grandpa/try-runtime",
+    "pallet-sudo/try-runtime",
+    "pallet-timestamp/try-runtime",
+    "pallet-transaction-payment/try-runtime",
+]
