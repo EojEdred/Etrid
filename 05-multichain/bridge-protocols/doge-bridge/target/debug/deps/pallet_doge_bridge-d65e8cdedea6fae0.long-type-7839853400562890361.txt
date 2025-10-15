@@ -1,1 +1,0 @@
-frame_support::pallet_prelude::StorageValue<_GeneratedPrefixForStorageDogeBridgeAddress<T>, sp_runtime::Vec<u8>>

@@ -173,40 +173,7 @@ pub mod pallet {
     >;
 
     // ==================== GENESIS ====================
-
-    #[pallet::genesis_config]
-    pub struct GenesisConfig<T: Config> {
-        /// Initial PBCs to register
-        pub initial_pbcs: Vec<(PbcId, BoundedVec<u8, ConstU32<32>>)>,
-        pub _phantom: sp_std::marker::PhantomData<T>,
-    }
-
-    impl<T: Config> Default for GenesisConfig<T> {
-        fn default() -> Self {
-            Self {
-                initial_pbcs: Vec::new(),
-                _phantom: Default::default(),
-            }
-        }
-    }
-
-    // Genesis build disabled for now - will be implemented with proper GenesisBuild trait
-    // #[cfg(feature = "std")]
-    // #[pallet::genesis_build]
-    // impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-    //     fn build(&self) {
-    //         for (pbc_id, name) in &self.initial_pbcs {
-    //             let info = PbcInfo {
-    //                 name: name.clone(),
-    //                 latest_block: 0,
-    //                 latest_state_root: H256::zero(),
-    //                 is_active: true,
-    //                 last_update: 0,
-    //             };
-    //             PbcRegistry::<T>::insert(pbc_id, info);
-    //         }
-    //     }
-    // }
+    // Genesis configuration removed for now - PBCs will be registered via extrinsics
 
     // ==================== EVENTS ====================
 

@@ -1,8 +1,0 @@
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/prioritized_metered_channel-9cbafd2421ad569c.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/bounded.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/oneshot.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/unbounded.rs
-
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libprioritized_metered_channel-9cbafd2421ad569c.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/bounded.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/oneshot.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/unbounded.rs
-
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/lib.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/bounded.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/oneshot.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/prioritized-metered-channel-0.6.1/src/unbounded.rs:

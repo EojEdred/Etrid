@@ -1,2 +1,0 @@
-(sp_runtime::Vec<u8>, <<T as pallet::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance, {type error})
-frame_support::pallet_prelude::StorageMap<_GeneratedPrefixForStorageDogeWithdrawals<T>, frame_support::Blake2_128Concat, <T as frame_system::Config>::AccountId, (sp_runtime::Vec<u8>, <<T as pallet::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance, {type error}), frame_support::pallet_prelude::OptionQuery, {type error}, {type error}>

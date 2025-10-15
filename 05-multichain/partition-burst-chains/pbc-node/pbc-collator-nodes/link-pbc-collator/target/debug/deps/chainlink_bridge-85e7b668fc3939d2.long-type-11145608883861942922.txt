@@ -1,1 +1,0 @@
-frame_support::pallet_prelude::StorageMap<_GeneratedPrefixForStorageDataFeeds<T>, frame_support::Blake2_128Concat, sp_core::H256, OraclePrice>

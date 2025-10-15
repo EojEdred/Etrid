@@ -1,9 +1,0 @@
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/bumpalo-04b85888736ec4e0.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/alloc.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/../README.md
-
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libbumpalo-04b85888736ec4e0.rlib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/alloc.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/../README.md
-
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator/target/release/deps/libbumpalo-04b85888736ec4e0.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/alloc.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/../README.md
-
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/lib.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/alloc.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bumpalo-3.19.0/src/../README.md:

@@ -3,8 +3,7 @@
 use std::sync::Arc;
 
 use flare_chain_runtime::{opaque::Block, AccountId, Balance, Nonce};
-use jsonrpsee::RpcModule;
-
+use sc_rpc::SubscriptionTaskExecutor;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -18,12 +17,14 @@ pub struct FullDeps<C, P> {
     pub pool: Arc<P>,
     /// Whether to deny unsafe calls
     pub deny_unsafe: sc_rpc::DenyUnsafe,
+    /// Executor to spawn subscriptions
+    pub subscription_executor: SubscriptionTaskExecutor,
 }
 
 /// Instantiate all full RPC extensions
 pub fn create_full<C, P>(
     deps: FullDeps<C, P>,
-) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
+) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     C: ProvideRuntimeApi<Block>,
     C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
@@ -36,15 +37,16 @@ where
     use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
     use substrate_frame_rpc_system::{System, SystemApiServer};
 
-    let mut module = RpcModule::new(());
+    let mut io = jsonrpsee::RpcModule::new(());
     let FullDeps {
         client,
         pool,
-        deny_unsafe,
+        deny_unsafe: _,
+        subscription_executor: _,
     } = deps;
 
-    module.merge(System::new(client.clone(), pool).into_rpc())?;
-    module.merge(TransactionPayment::new(client).into_rpc())?;
+    io.merge(System::new(client.clone(), pool).into_rpc())?;
+    io.merge(TransactionPayment::new(client).into_rpc())?;
 
-    Ok(module)
+    Ok(io)
 }

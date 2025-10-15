@@ -1,1 +1,0 @@
-frame_support::pallet_prelude::StorageMap<_GeneratedPrefixForStorageDogeRelayNodes<T>, frame_support::Blake2_128Concat, <T as frame_system::Config>::AccountId, sp_runtime::Vec<u8>>

@@ -212,11 +212,12 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         let client = client.clone();
         let pool = transaction_pool.clone();
 
-        Box::new(move |deny_unsafe, _| {
+        Box::new(move |deny_unsafe, subscription_executor| {
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
                 deny_unsafe,
+                subscription_executor,
             };
 
             crate::rpc::create_full(deps).map_err(Into::into)

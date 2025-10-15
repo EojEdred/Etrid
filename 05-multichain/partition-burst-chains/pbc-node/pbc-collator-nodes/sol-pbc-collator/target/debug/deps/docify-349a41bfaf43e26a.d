@@ -1,5 +1,0 @@
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/docify-349a41bfaf43e26a.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/docify-0.2.9/src/lib.rs
-
-/Users/macbook/Desktop/etrid/05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator/target/debug/deps/libdocify-349a41bfaf43e26a.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/docify-0.2.9/src/lib.rs
-
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/docify-0.2.9/src/lib.rs:

@@ -1,9 +1,0 @@
-/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/parity_bip39-00b0cba0890b481c.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/internal_macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/mod.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/english.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/pbkdf2.rs
-
-/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libparity_bip39-00b0cba0890b481c.rmeta: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/lib.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/internal_macros.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/mod.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/english.rs /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/pbkdf2.rs
-
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/lib.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/internal_macros.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/mod.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/language/english.rs:
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parity-bip39-2.0.1/src/pbkdf2.rs:

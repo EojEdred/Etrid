@@ -1,9 +1,0 @@
-/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/sp_weights-7daec8de5023d8b8.d: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_meter.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_v2.rs
-
-/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_weights-7daec8de5023d8b8.rlib: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_meter.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_v2.rs
-
-/Users/macbook/Desktop/etrid/05-multichain/bridge-protocols/doge-bridge/target/debug/deps/libsp_weights-7daec8de5023d8b8.rmeta: /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/lib.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_meter.rs /Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_v2.rs
-
-/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/lib.rs:
-/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_meter.rs:
-/Users/macbook/.cargo/git/checkouts/polkadot-sdk-dee0edd6eefa0594/6fd693e/substrate/primitives/weights/src/weight_v2.rs:
