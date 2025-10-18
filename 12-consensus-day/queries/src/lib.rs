@@ -10,7 +10,7 @@ use sp_std::vec::Vec;
 use sp_runtime::RuntimeDebug;
 
 use consensus_day_proposal_system::{Proposals, ProposalRecord, ProposalStatus};
-use consensus_day_voting_protocol::{VoteCount, Votes, Ballot, VoteRecord};
+use consensus_day_voting_protocol::{VoteCount, Votes, VoteRecord};
 use consensus_day_minting_logic::{MintEvents, MintRecord};
 use consensus_day_distribution::{Distributions, DistributionRecord};
 
@@ -18,7 +18,7 @@ use consensus_day_distribution::{Distributions, DistributionRecord};
 /// High-Level Query Structures
 /// -----------------------------
 
-#[derive(Clone, Eq, PartialEq, RuntimeDebug)]
+#[derive(Clone, RuntimeDebug)]
 pub struct ProposalSummary<AccountId> {
     pub id: u64,
     pub proposer: AccountId,
@@ -27,8 +27,8 @@ pub struct ProposalSummary<AccountId> {
     pub votes_against: u32,
 }
 
-#[derive(Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct GovernanceSnapshot<AccountId, Balance> {
+#[derive(Clone, RuntimeDebug)]
+pub struct GovernanceSnapshot<AccountId: frame_support::pallet_prelude::MaxEncodedLen, Balance: frame_support::pallet_prelude::MaxEncodedLen> {
     pub proposals: Vec<ProposalSummary<AccountId>>,
     pub mints: Vec<MintRecord<AccountId, Balance>>,
     pub distributions: Vec<DistributionRecord<AccountId, Balance>>,
@@ -69,7 +69,10 @@ pub fn get_full_consensus_snapshot<
     TProp: consensus_day_proposal_system::Config,
     TVote: consensus_day_voting_protocol::Config<AccountId = <TProp as frame_system::Config>::AccountId>,
     TMint: consensus_day_minting_logic::Config<AccountId = <TProp as frame_system::Config>::AccountId>,
-    TDist: consensus_day_distribution::Config<AccountId = <TProp as frame_system::Config>::AccountId>,
+    TDist: consensus_day_distribution::Config<
+        AccountId = <TProp as frame_system::Config>::AccountId,
+        Currency = <TMint as consensus_day_minting_logic::Config>::Currency,
+    >,
 >(
 ) -> GovernanceSnapshot<
     TProp::AccountId,

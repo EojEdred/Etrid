@@ -730,6 +730,7 @@ mod tests {
         type PreInherents = ();
         type PostInherents = ();
         type PostTransactions = ();
+        type ExtensionsWeightInfo = ();
     }
 
     parameter_types! {
@@ -750,6 +751,7 @@ mod tests {
         type MaxFreezes = ();
         type RuntimeHoldReason = ();
         type RuntimeFreezeReason = ();
+        type DoneSlashHandler = ();
     }
 
     parameter_types! {
@@ -783,13 +785,13 @@ mod tests {
     fn test_oracle_node_registration() {
         new_test_ext().execute_with(|| {
             let oracle = 1u64;
-            let eth_addr = [1u8; 20];
-            
+            let eth_addr = H160::from([1u8; 20]);
+
             assert_ok!(LinkBridge::register_oracle_node(
                 RuntimeOrigin::signed(oracle),
                 eth_addr
             ));
-            
+
             assert!(pallet::OracleNodes::<Test>::contains_key(oracle));
         });
     }
@@ -798,26 +800,32 @@ mod tests {
     fn test_oracle_price_submission() {
         new_test_ext().execute_with(|| {
             let operator = 1u64;
-            let feed_id = [0u8; 32];
-            let price_data = pallet::OraclePrice {
-                price: 15_000_000_000_000_000_000, // $15 USD
-                timestamp: 1234567890,
-                round_id: 100,
-                answered_in_round: 100,
-            };
-            
+            let feed_id = H256::from([0u8; 32]);
+            let price = 15_000_000_000_000_000_000u128; // $15 USD
+            let timestamp = 1234567890u64;
+            let round_id = 100u64;
+            let answered_in_round = 100u64;
+
             // Whitelist operator
             assert_ok!(LinkBridge::whitelist_operator(RuntimeOrigin::root(), operator));
-            
+
             // Submit price
             assert_ok!(LinkBridge::submit_oracle_price(
                 RuntimeOrigin::signed(operator),
                 feed_id,
-                price_data.clone()
+                price,
+                timestamp,
+                round_id,
+                answered_in_round
             ));
-            
+
             // Verify price stored
-            assert_eq!(pallet::DataFeeds::<Test>::get(feed_id), Some(price_data));
+            let stored_price = pallet::DataFeeds::<Test>::get(feed_id);
+            assert!(stored_price.is_some());
+            let stored_price = stored_price.unwrap();
+            assert_eq!(stored_price.price, price);
+            assert_eq!(stored_price.timestamp, timestamp);
+            assert_eq!(stored_price.round_id, round_id);
         });
     }
 }

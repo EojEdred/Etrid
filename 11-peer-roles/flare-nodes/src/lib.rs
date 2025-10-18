@@ -6,7 +6,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use peer_roles_staking_types::{Role, RoleInterface};
-use frame_support::dispatch::DispatchResult;
+use frame_support::{dispatch::DispatchResult, ensure};
 use frame_system::ensure_signed;
 use sp_runtime::RuntimeDebug;
 

@@ -1,57 +1,60 @@
 [package]
 name = "matic-pbc-runtime"
 version = "0.1.0"
-authors = ["Ëtrid Team"]
 edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Bitcoin Partition Burst Chain runtime for Ëtrid Multichain"
 license = "Apache-2.0"
-description = "MATIC-PBC Runtime - Polygon Parallel Blockchain for Ëtrid"
-homepage = "https://etrid.io"
-
-[package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
-scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+pallet_polygon_bridge = { package = "polygon-bridge", path = "../../../../../05-multichain/bridge-protocols/polygon-bridge", default-features = false }
+# Substrate Core - Use workspace dependencies
+codec = { workspace = true }
+scale-info = { workspace = true }
 
-# Local dependencies
-polygon-bridge = { path = "../../../../bridge-protocols/polygon-bridge", default-features = false }
+# FRAME Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-executive = { workspace = true }
 
-# Substrate primitives
-sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-session = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-sp-version = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# Substrate Primitives
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-core = { workspace = true }
+sp-inherents = { workspace = true }
+sp-io = { workspace = true }
+sp-offchain = { workspace = true }
+sp-runtime = { workspace = true }
+sp-session = { workspace = true }
+sp-std = { workspace = true }
+sp-transaction-pool = { workspace = true }
+sp-version = { workspace = true }
+sp-consensus-grandpa = { workspace = true }
+sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf", default-features = false }
 
-# Frame dependencies
-frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false, optional = true }
-frame-executive = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-frame-system-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false, optional = true }
-frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-frame-try-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false, optional = true }
+# FRAME Pallets
+pallet-grandpa = { workspace = true }
+pallet-sudo = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-transaction-payment = { workspace = true }
+pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
-# Pallets
-pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# Balances - NOT in workspace, so explicit dependency
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
-# GRANDPA dependencies
-sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# RPC Runtime APIs
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Ëtrid Custom Dependencies
+etrid-primitives = { path = "../../../../primitives", default-features = false }
+pallet-accounts = { path = "../../../../../04-accounts/pallet", default-features = false }
+pallet-consensus = { path = "../../../../../09-consensus/pallet", default-features = false }
+pallet-bitcoin-bridge = { path = "../../../../bridge-protocols/bitcoin-bridge", default-features = false }
+pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
 
 [build-dependencies]
+# Substrate WASM builder - NOT in workspace, so explicit
 substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
 [features]
@@ -59,64 +62,40 @@ default = ["std"]
 std = [
     "codec/std",
     "scale-info/std",
-    
-    # Local dependencies
-    "polygon-bridge/std",
-    
-    # Substrate primitives
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
     "sp-api/std",
     "sp-block-builder/std",
-    "sp-consensus-aura/std",
     "sp-core/std",
     "sp-inherents/std",
+    "sp-io/std",
     "sp-offchain/std",
     "sp-runtime/std",
     "sp-session/std",
     "sp-std/std",
     "sp-transaction-pool/std",
     "sp-version/std",
-    
-    # Frame dependencies
-    "frame-executive/std",
-    "frame-support/std",
-    "frame-system/std",
-    "frame-system-rpc-runtime-api/std",
-    "frame-try-runtime?/std",
-    
-    # Pallets
-    "pallet-aura/std",
+    "sp-consensus-grandpa/std",
+    "sp-consensus-asf/std",
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-sudo/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
+    "pallet-insecure-randomness-collective-flip/std",
+    "frame-system-rpc-runtime-api/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
-
-    # GRANDPA
-    "sp-consensus-grandpa/std",
+    "etrid-primitives/std",
+    "pallet-accounts/std",
+    "pallet-consensus/std",
+    "pallet-bitcoin-bridge/std",
+    "pallet-lightning-channels/std",
+    "pallet_polygon_bridge/std",
 ]
-
 runtime-benchmarks = [
-    "frame-benchmarking/runtime-benchmarks",
     "frame-support/runtime-benchmarks",
     "frame-system/runtime-benchmarks",
-    "frame-system-benchmarking/runtime-benchmarks",
-    "pallet-balances/runtime-benchmarks",
-    "pallet-grandpa/runtime-benchmarks",
-    "pallet-sudo/runtime-benchmarks",
-    "pallet-timestamp/runtime-benchmarks",
-    "sp-runtime/runtime-benchmarks",
-]
-
-try-runtime = [
-    "frame-executive/try-runtime",
-    "frame-support/try-runtime",
-    "frame-system/try-runtime",
-    "frame-try-runtime/try-runtime",
-    "pallet-aura/try-runtime",
-    "pallet-balances/try-runtime",
-    "pallet-grandpa/try-runtime",
-    "pallet-sudo/try-runtime",
-    "pallet-timestamp/try-runtime",
-    "pallet-transaction-payment/try-runtime",
+    "pallet-accounts/runtime-benchmarks",
+    "pallet-consensus/runtime-benchmarks",
 ]

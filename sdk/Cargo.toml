@@ -1,0 +1,283 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# ËTRID SDK - Unified Developer-Friendly API
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This SDK provides a curated, stable API for external developers building on ËTRID.
+#
+# Usage:
+#   [dependencies]
+#   etrid-sdk = { version = "0.1.0", features = ["accounts", "governance"] }
+#
+# Features control which components are compiled, reducing build times.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[package]
+name = "etrid-sdk"
+version = "0.1.0"
+authors = ["ËTRID Foundation"]
+edition = "2021"
+license = "Apache-2.0"
+description = "ËTRID Multichain Protocol - Unified SDK for external developers"
+homepage = "https://etrid.io"
+repository = "https://github.com/etrid/etrid"
+documentation = "https://docs.rs/etrid-sdk"
+readme = "README.md"
+keywords = ["blockchain", "multichain", "substrate", "sdk", "etrid"]
+categories = ["cryptography::cryptocurrencies", "api-bindings"]
+
+[lib]
+name = "etrid_sdk"
+path = "src/lib.rs"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FEATURES - Granular control over compiled components
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[features]
+default = ["std"]
+
+# Standard library support (disable for no_std environments)
+std = [
+    "account-types?/std",
+    "pallet-accounts?/std",
+    "pallet-governance?/std",
+    "pallet-consensus?/std",
+    "peer-roles-staking-types?/std",
+    "consensus-day-proposal-system?/std",
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Component Features - Include only what you need
+# ─────────────────────────────────────────────────────────────────────────────
+
+## Core account management
+accounts = ["dep:account-types", "dep:pallet-accounts"]
+
+## Foundation DAO governance
+governance = ["dep:pallet-governance"]
+
+## FODDoS ASF consensus algorithm
+consensus = [
+    "dep:pallet-consensus",
+    "dep:asf-algorithm",
+    "dep:block-production",
+    "dep:finality-gadget",
+    "dep:validator-management",
+]
+
+## Staking and peer roles (Flare Nodes, Validity Nodes, Directors)
+staking = [
+    "dep:peer-roles-staking-types",
+    "dep:pallet-peer-roles-staking",
+    "dep:decentralized-directors",
+    "dep:flare-nodes",
+    "dep:validity-nodes",
+]
+
+## Annual Consensus Day governance event
+consensus-day = [
+    "dep:consensus-day-proposal-system",
+    "dep:consensus-day-voting-protocol",
+    "dep:consensus-day-distribution",
+    "dep:consensus-day-minting-logic",
+    "dep:consensus-day-queries",
+]
+
+## Native currency (ËTR, ËTD, VMW)
+currency = [
+    "dep:currency-economics",
+    "dep:etr-token",
+    "dep:etd-stablecoin",
+    "dep:vmw-gas",
+]
+
+## Transaction processing
+transactions = [
+    "dep:transaction-types",
+    "dep:tx-processor",
+    "dep:cross-chain-transactions",
+    "dep:lightning-bloc-transactions",
+    "dep:smart-contract-transactions",
+    "dep:stake-deposit-transactions",
+]
+
+## P2P networking (DETR protocol)
+p2p = [
+    "dep:etrid-aecomms",
+    "dep:detrp2p",
+    "dep:dpeers",
+    "dep:etrid-protocol",
+    "dep:fluent",
+    "dep:etrid-p2p-stored",
+]
+
+## Decentralized identity (OpenDID)
+identity = [
+    "dep:open-did-types",
+    "dep:open-did-registry",
+    "dep:open-did-resolver",
+]
+
+## Security primitives
+security = [
+    "dep:etrid-cryptography",
+    "dep:etrid-key-management",
+]
+
+## Smart contract VM (ETWASM)
+vm = ["dep:pallet-etwasm-vm"]
+
+## Multichain support (FlareChain + 12 PBCs)
+multichain = [
+    "dep:multichain-primitives",
+    "dep:flare-chain-runtime",
+    "dep:pbc-runtime",
+]
+
+## Bridge protocols
+bridges = [
+    "dep:cardano-bridge",
+    "dep:chainlink-bridge",
+    "dep:polygon-bridge",
+    "dep:solana-bridge",
+    "dep:stellar-bridge",
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Convenience Feature Bundles
+# ─────────────────────────────────────────────────────────────────────────────
+
+## Everything needed to build a wallet application
+wallet = ["accounts", "currency", "transactions", "identity"]
+
+## Everything needed to run a validator node
+validator = ["consensus", "staking", "p2p", "multichain"]
+
+## Everything needed for governance participation
+dao = ["governance", "consensus-day", "staking"]
+
+## Full SDK - all features (large compile time)
+full = [
+    "accounts",
+    "governance",
+    "consensus",
+    "staking",
+    "consensus-day",
+    "currency",
+    "transactions",
+    "p2p",
+    "identity",
+    "security",
+    "vm",
+    "multichain",
+    "bridges",
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DEPENDENCIES - All workspace members available via features
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[dependencies]
+# ─────────────────────────────────────────────────────────────────────────────
+# 04-accounts
+# ─────────────────────────────────────────────────────────────────────────────
+account-types = { workspace = true, optional = true }
+pallet-accounts = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10-foundation
+# ─────────────────────────────────────────────────────────────────────────────
+pallet-governance = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 09-consensus
+# ─────────────────────────────────────────────────────────────────────────────
+pallet-consensus = { workspace = true, optional = true }
+asf-algorithm = { workspace = true, optional = true }
+block-production = { workspace = true, optional = true }
+finality-gadget = { workspace = true, optional = true }
+validator-management = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 11-peer-roles
+# ─────────────────────────────────────────────────────────────────────────────
+peer-roles-staking-types = { workspace = true, optional = true }
+pallet-peer-roles-staking = { workspace = true, optional = true }
+decentralized-directors = { workspace = true, optional = true }
+flare-nodes = { workspace = true, optional = true }
+validity-nodes = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 12-consensus-day
+# ─────────────────────────────────────────────────────────────────────────────
+consensus-day-proposal-system = { workspace = true, optional = true }
+consensus-day-voting-protocol = { workspace = true, optional = true }
+consensus-day-distribution = { workspace = true, optional = true }
+consensus-day-minting-logic = { workspace = true, optional = true }
+consensus-day-queries = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 06-native-currency
+# ─────────────────────────────────────────────────────────────────────────────
+currency-economics = { workspace = true, optional = true }
+etr-token = { workspace = true, optional = true }
+etd-stablecoin = { workspace = true, optional = true }
+vmw-gas = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 07-transactions
+# ─────────────────────────────────────────────────────────────────────────────
+transaction-types = { workspace = true, optional = true }
+tx-processor = { workspace = true, optional = true }
+cross-chain-transactions = { workspace = true, optional = true }
+lightning-bloc-transactions = { workspace = true, optional = true }
+smart-contract-transactions = { workspace = true, optional = true }
+stake-deposit-transactions = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 01-detr-p2p
+# ─────────────────────────────────────────────────────────────────────────────
+etrid-aecomms = { workspace = true, optional = true }
+detrp2p = { workspace = true, optional = true }
+dpeers = { workspace = true, optional = true }
+etrid-protocol = { workspace = true, optional = true }
+fluent = { workspace = true, optional = true }
+etrid-p2p-stored = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 02-open-did
+# ─────────────────────────────────────────────────────────────────────────────
+open-did-types = { workspace = true, optional = true }
+open-did-registry = { workspace = true, optional = true }
+open-did-resolver = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 03-security
+# ─────────────────────────────────────────────────────────────────────────────
+etrid-cryptography = { workspace = true, optional = true }
+etrid-key-management = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 08-etwasm-vm
+# ─────────────────────────────────────────────────────────────────────────────
+pallet-etwasm-vm = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 05-multichain
+# ─────────────────────────────────────────────────────────────────────────────
+multichain-primitives = { workspace = true, optional = true }
+flare-chain-runtime = { workspace = true, optional = true }
+pbc-runtime = { workspace = true, optional = true }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 05-multichain/bridge-protocols
+# ─────────────────────────────────────────────────────────────────────────────
+cardano-bridge = { workspace = true, optional = true }
+chainlink-bridge = { workspace = true, optional = true }
+polygon-bridge = { workspace = true, optional = true }
+solana-bridge = { workspace = true, optional = true }
+stellar-bridge = { workspace = true, optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

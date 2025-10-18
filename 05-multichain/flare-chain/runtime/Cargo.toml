@@ -13,6 +13,25 @@ pallet-consensus = { path = "../../../09-consensus/pallet", default-features = f
 pallet-governance = { path = "../../../10-foundation/governance/pallet", default-features = false }
 pallet-pbc-router = { path = "../../partition-burst-chains/pbc-node/pbc-router", default-features = false }
 
+# Staking pallets (11-peer-roles)
+pallet-etrid-staking = { path = "../../../11-peer-roles/staking/pallet", default-features = false }
+peer-roles-staking-types = { path = "../../../11-peer-roles/staking/types", default-features = false }
+
+# Consensus Day pallets (12-consensus-day)
+consensus-day-proposal-system = { path = "../../../12-consensus-day/proposal-system", default-features = false }
+consensus-day-voting-protocol = { path = "../../../12-consensus-day/voting-protocol", default-features = false }
+consensus-day-distribution = { path = "../../../12-consensus-day/distribution", default-features = false }
+consensus-day-minting-logic = { path = "../../../12-consensus-day/minting-logic", default-features = false }
+consensus-day-queries = { path = "../../../12-consensus-day/queries", default-features = false }
+
+# Transaction pallets (07-transactions)
+pallet-tx-processor = { path = "../../../07-transactions/tx-processor", default-features = false }
+etrid-smart-contract = { path = "../../../07-transactions/smart-contract", default-features = false }
+etrid-stake-deposit = { path = "../../../07-transactions/stake-deposit", default-features = false }
+etrid-transactions-cross-chain = { path = "../../../07-transactions/cross-chain", default-features = false }
+etrid-lightning-bloc = { path = "../../../07-transactions/lightning-bloc", default-features = false }
+pallet-transaction = { path = "../../../07-transactions/types", default-features = false }
+
 # Bridge pallets (12 bridges)
 pallet-bitcoin-bridge = { path = "../../bridge-protocols/bitcoin-bridge", default-features = false }
 eth-bridge = { path = "../../bridge-protocols/ethereum-bridge", default-features = false }
@@ -28,8 +47,8 @@ trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = f
 stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
 
 # Substrate core
-codec = { package = "parity-scale-codec", version = "3.6", default-features = false, features = ["derive"] }
-scale-info = { version = "2.10", default-features = false, features = ["derive"] }
+codec = { workspace = true }
+scale-info = { workspace = true }
 
 # Frame
 frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
@@ -37,7 +56,7 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polk
 frame-executive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 
 # Frame pallets
-pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+# pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }  # Removed: using ASF consensus
 pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
@@ -48,7 +67,7 @@ pallet-insecure-randomness-collective-flip = { git = "https://github.com/parityt
 # Primitives
 sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
-sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+# sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }  # Removed: using ASF consensus
 sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
@@ -86,6 +105,25 @@ std = [
     "pallet-governance/std",
     "pallet-pbc-router/std",
 
+    # Staking pallets
+    "pallet-etrid-staking/std",
+    "peer-roles-staking-types/std",
+
+    # Consensus Day pallets
+    "consensus-day-proposal-system/std",
+    "consensus-day-voting-protocol/std",
+    "consensus-day-distribution/std",
+    "consensus-day-minting-logic/std",
+    "consensus-day-queries/std",
+
+    # Transaction pallets
+    "pallet-tx-processor/std",
+    "etrid-smart-contract/std",
+    "etrid-stake-deposit/std",
+    "etrid-transactions-cross-chain/std",
+    "etrid-lightning-bloc/std",
+    "pallet-transaction/std",
+
     # Bridge pallets
     "pallet-bitcoin-bridge/std",
     "eth-bridge/std",
@@ -103,7 +141,7 @@ std = [
     "frame-executive/std",
     "frame-support/std",
     "frame-system/std",
-    "pallet-aura/std",
+    # "pallet-aura/std",  # Removed: using ASF consensus
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-sudo/std",
@@ -112,7 +150,7 @@ std = [
     "pallet-insecure-randomness-collective-flip/std",
     "sp-api/std",
     "sp-block-builder/std",
-    "sp-consensus-aura/std",
+    # "sp-consensus-aura/std",  # Removed: using ASF consensus
     "sp-consensus-grandpa/std",
     "sp-core/std",
     "sp-inherents/std",

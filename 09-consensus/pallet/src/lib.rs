@@ -787,6 +787,48 @@ pub mod pallet {
             Ok(())
         }
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // RUNTIME API HELPERS (For ASF Consensus Service)
+        // ═══════════════════════════════════════════════════════════════════════
+        // Note: ppfa_index(), current_epoch(), slot_duration() already exist via #[pallet::getter]
+
+        /// Get current PPFA committee as a vector of AccountIds
+        ///
+        /// Returns the list of validators in the current PPFA committee.
+        /// The committee size is typically 21 validators selected by stake weight.
+        pub fn committee() -> Vec<T::AccountId> {
+            Self::current_committee()
+                .into_iter()
+                .map(|m| m.validator)
+                .collect()
+        }
+
+        /// Check if a validator should propose in the current slot
+        ///
+        /// Returns true if the given validator is the current proposer
+        /// according to the PPFA rotation.
+        pub fn should_propose(validator: T::AccountId) -> bool {
+            let committee = Self::committee();
+            if committee.is_empty() {
+                return false;
+            }
+
+            let ppfa_idx = Self::ppfa_index();
+            let expected_idx = (ppfa_idx as usize) % committee.len();
+
+            committee.get(expected_idx)
+                .map(|expected| expected == &validator)
+                .unwrap_or(false)
+        }
+
+        /// Get all active validators
+        ///
+        /// Returns all validators in the active set (up to 100),
+        /// not just the committee members.
+        pub fn active_validators() -> Vec<T::AccountId> {
+            Self::active_validator_set().to_vec()
+        }
+
         /// Rotate PPFA committee (stake-weighted selection)
         fn rotate_committee() {
             let committee_size = T::CommitteeSize::get();

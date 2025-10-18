@@ -1,0 +1,18 @@
+[package]
+name = "etrid-lightning-bloc"
+version = "0.1.0"
+authors = ["Ëtrid Foundation"]
+description = "Lightning-Bloc: Layer 2 Payment Channel Implementation for ÉTRID - enables fast, off-chain payments with on-chain settlement"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+# No external dependencies required - uses only std library
+# The module implements Layer 2 payment channels using standard Rust collections and types
+
+[dev-dependencies]
+# Test dependencies are handled by standard Rust test framework
+
+[features]
+default = ["std"]
+std = []

@@ -1,176 +1,41 @@
-use flare_chain_runtime::{
-    AccountId, AuraConfig, BalancesConfig, RuntimeGenesisConfig, GrandpaConfig, Signature, SudoConfig,
-    SystemConfig, WASM_BINARY,
-};
+use flare_chain_runtime::WASM_BINARY;
 use sc_service::ChainType;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_consensus_grandpa::AuthorityId as GrandpaId;
-use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Specialized `ChainSpec` for FlareChain
-pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
-
-/// Generate a crypto pair from seed
-pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-    TPublic::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static values are valid; qed")
-        .public()
-}
-
-type AccountPublic = <Signature as Verify>::Signer;
-
-/// Generate an account ID from seed
-pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
-where
-    AccountPublic: From<<TPublic::Pair as Pair>::Public>,
-{
-    AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
-}
-
-/// Generate an Aura authority key
-pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
-    (get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
-}
+pub type ChainSpec = sc_service::GenericChainSpec;
 
 /// Development config (single validator - Alice)
 pub fn development_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Ëtrid FlareChain Development",
-        // ID
-        "flarechain_dev",
-        // Chain type
-        ChainType::Development,
-        move || {
-            testnet_genesis(
-                wasm_binary,
-                // Initial PoA authorities
-                vec![authority_keys_from_seed("Alice")],
-                // Sudo account
-                get_account_id_from_seed::<sr25519::Public>("Alice"),
-                // Pre-funded accounts
-                vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob"),
-                    get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-                ],
-                true,
-            )
-        },
-        // Bootnodes
-        vec![],
-        // Telemetry
+    Ok(ChainSpec::builder(
+        wasm_binary,
         None,
-        // Protocol ID
-        None,
-        // Fork ID
-        None,
-        // Properties
-        None,
-        // Extensions
-        None,
-    ))
+    )
+    .with_name("Ëtrid FlareChain Development")
+    .with_id("flarechain_dev")
+    .with_chain_type(ChainType::Development)
+    .with_genesis_config_preset_name(sp_genesis_builder::DEV_RUNTIME_PRESET)
+    .build())
 }
 
 /// Local testnet config (two validators - Alice & Bob)
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Ëtrid FlareChain Local Testnet",
-        // ID
-        "flarechain_local",
-        // Chain type
-        ChainType::Local,
-        move || {
-            testnet_genesis(
-                wasm_binary,
-                // Initial PoA authorities
-                vec![
-                    authority_keys_from_seed("Alice"),
-                    authority_keys_from_seed("Bob"),
-                ],
-                // Sudo account
-                get_account_id_from_seed::<sr25519::Public>("Alice"),
-                // Pre-funded accounts
-                vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-                    get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-                ],
-                true,
-            )
-        },
-        // Bootnodes
-        vec![],
-        // Telemetry
+    Ok(ChainSpec::builder(
+        wasm_binary,
         None,
-        // Protocol ID
-        Some("flarechain"),
-        // Fork ID
-        None,
-        // Properties
-        None,
-        // Extensions
-        None,
-    ))
+    )
+    .with_name("Ëtrid FlareChain Local Testnet")
+    .with_id("flarechain_local")
+    .with_chain_type(ChainType::Local)
+    .with_protocol_id("flarechain")
+    .with_genesis_config_preset_name(sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET)
+    .build())
 }
 
 /// FlareChain mainnet config
 pub fn flarechain_config() -> Result<ChainSpec, String> {
     ChainSpec::from_json_bytes(&include_bytes!("../res/flarechain.json")[..])
-}
-
-/// Configure initial storage state for FRAME modules
-fn testnet_genesis(
-    _wasm_binary: &[u8],
-    initial_authorities: Vec<(AuraId, GrandpaId)>,
-    root_key: AccountId,
-    endowed_accounts: Vec<AccountId>,
-    _enable_println: bool,
-) -> RuntimeGenesisConfig {
-    RuntimeGenesisConfig {
-        system: SystemConfig {
-            ..Default::default()
-        },
-        balances: BalancesConfig {
-            // Configure endowed accounts with initial balance
-            // 1 Billion ÉTR total supply = 1_000_000_000 * 10^18
-            balances: endowed_accounts
-                .iter()
-                .cloned()
-                .map(|k| (k, 1_000_000_000_000_000_000_000u128)) // 1000 ÉTR each for testing
-                .collect(),
-            dev_accounts: None,
-        },
-        aura: AuraConfig {
-            authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
-        },
-        grandpa: GrandpaConfig {
-            authorities: initial_authorities
-                .iter()
-                .map(|x| (x.1.clone(), 1))
-                .collect(),
-            ..Default::default()
-        },
-        sudo: SudoConfig {
-            // Assign network admin rights
-            key: Some(root_key),
-        },
-        transaction_payment: Default::default(),
-    }
 }

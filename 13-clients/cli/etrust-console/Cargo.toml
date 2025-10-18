@@ -1,9 +1,44 @@
 [package]
-name = "etrid-cli"
+name = "etrust"
 version = "0.1.0"
+authors = ["ËTRID Foundation"]
 edition = "2021"
-publish = false
+license = "Apache-2.0"
+description = "ËTRID Rust CLI - Professional command-line interface for ËTRID Protocol"
+homepage = "https://etrid.io"
+repository = "https://github.com/etrid/etrid"
+
+[[bin]]
+name = "etrust"
+path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
-clap_complete = "4.5"
+# CLI & Async Runtime
+clap = { version = "4.5", features = ["derive", "cargo", "env", "color"] }
+tokio = { version = "1.38", features = ["full"] }
+
+# RPC Client
+jsonrpsee = { version = "0.24", features = ["client", "ws-client"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Utilities
+hex = "0.4"
+log = "0.4"
+env_logger = "0.11"
+colored = "2.1"
+rand = "0.8"
+
+# Substrate Types (using workspace dependencies)
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+codec = { workspace = true }
+
+[dev-dependencies]
+assert_matches = "1.5"

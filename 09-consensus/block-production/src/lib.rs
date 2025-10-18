@@ -35,7 +35,9 @@ pub use validator_management::{
 
 pub mod proposer;
 pub mod author;
+#[path = "slot-timing.rs"]
 pub mod slot_timing;
+#[path = "ant-handler.rs"]
 pub mod ant_handler;
 pub mod validation;
 
@@ -196,17 +198,17 @@ impl BlockProposal {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// Slot information
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SlotInfo {
     /// Slot number
     pub slot: u64,
-    
+
     /// Slot duration (milliseconds)
     pub duration: u64,
-    
+
     /// Expected proposer PPFA index
     pub ppfa_index: u32,
-    
+
     /// Expected proposer validator ID
     pub proposer: ValidatorId,
 }

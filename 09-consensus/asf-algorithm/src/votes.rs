@@ -169,7 +169,7 @@ impl VoteCollection {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// Aggregated vote information for threshold checking
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub struct VoteAggregate {
     /// Block being voted on
     pub block_hash: Hash,

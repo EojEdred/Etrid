@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pye"
+version = "0.1.0"
+description = "pyE - ËTRID's Python Command-Line Interface"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "ËTRID Foundation", email = "dev@etrid.io"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "click>=8.1.0",
+    "requests>=2.31.0",
+    "websocket-client>=1.6.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "cryptography>=41.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+pye = "pye.cli:main"
+
+[project.urls]
+Homepage = "https://etrid.io"
+Documentation = "https://docs.etrid.io/pye"
+Repository = "https://github.com/etrid/etrid"
+Issues = "https://github.com/etrid/etrid/issues"
+
+[tool.setuptools]
+packages = ["pye", "pye.commands"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"

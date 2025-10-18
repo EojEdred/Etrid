@@ -1,0 +1,483 @@
+// BNB-PBC RUNTIME - BNB Chain Partition Burst Chain
+// Integrates: BNB Bridge + Lightning Channels + ASF Consensus + VMw
+// Priority #5 - $81.9B market cap, EVM-compatible, Maxwell Upgrade
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![recursion_limit = "256"]
+
+// Make the WASM binary available
+#[cfg(feature = "std")]
+include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+
+// Re-export dependencies
+pub use frame_support::{
+    construct_runtime, parameter_types,
+    traits::{KeyOwnerProofSystem, Randomness, StorageInfo},
+    weights::{
+        constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND},
+        IdentityFee, Weight,
+    },
+    StorageValue,
+};
+pub use frame_system as system;
+pub use pallet_balances as balances;
+pub use pallet_timestamp as timestamp;
+pub use pallet_transaction_payment;
+pub use sp_api::impl_runtime_apis;
+pub use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+pub use sp_runtime::{
+    create_runtime_str, generic, impl_opaque_keys,
+    traits::{
+        AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
+    },
+    transaction_validity::{TransactionSource, TransactionValidity},
+    ApplyExtrinsicResult, MultiSignature,
+};
+pub use sp_std::prelude::*;
+
+#[cfg(feature = "std")]
+use sp_version::NativeVersion;
+use sp_version::RuntimeVersion;
+
+// Custom pallets - These will be implemented as part of bridge development
+pub use pallet_consensus;
+// pub use pallet_bnb_bridge;
+// pub use pallet_lightning_channels;
+
+pub type Signature = MultiSignature;
+pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+pub type Balance = u128;
+pub type Index = u32;
+pub type Hash = sp_core::H256;
+pub type BlockNumber = u32;
+pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
+pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
+pub type Block = generic::Block<Header, UncheckedExtrinsic>;
+pub type SignedBlock = generic::SignedBlock<Block>;
+pub type BlockId = generic::BlockId<Block>;
+
+pub type SignedExtra = (
+    frame_system::CheckNonZeroSender<Runtime>,
+    frame_system::CheckSpecVersion<Runtime>,
+    frame_system::CheckTxVersion<Runtime>,
+    frame_system::CheckGenesis<Runtime>,
+    frame_system::CheckEra<Runtime>,
+    frame_system::CheckNonce<Runtime>,
+    frame_system::CheckWeight<Runtime>,
+    pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+);
+
+pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
+
+pub type Executive = frame_executive::Executive<
+    Runtime,
+    Block,
+    frame_system::ChainContext<Runtime>,
+    Runtime,
+    AllPalletsWithSystem,
+>;
+
+pub mod opaque {
+    use super::*;
+    pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+    pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
+    pub type Block = generic::Block<Header, UncheckedExtrinsic>;
+    pub type BlockId = generic::BlockId<Block>;
+
+    impl_opaque_keys! {
+        pub struct SessionKeys {}
+    }
+}
+
+pub const VERSION: RuntimeVersion = RuntimeVersion {
+    spec_name: create_runtime_str!("bnb-pbc"),
+    impl_name: create_runtime_str!("bnb-pbc"),
+    authoring_version: 1,
+    spec_version: 100,
+    impl_version: 1,
+    apis: RUNTIME_API_VERSIONS,
+    transaction_version: 1,
+    system_version: 1,
+};
+
+#[cfg(feature = "std")]
+pub fn native_version() -> NativeVersion {
+    NativeVersion {
+        runtime_version: VERSION,
+        can_author_with: Default::default(),
+    }
+}
+
+const NORMAL_DISPATCH_RATIO: sp_runtime::Perbill = sp_runtime::Perbill::from_percent(75);
+
+parameter_types! {
+    pub const Version: RuntimeVersion = VERSION;
+    pub const BlockHashCount: BlockNumber = 2400;
+    pub RuntimeBlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights::with_sensible_defaults(
+        Weight::from_parts(2u64 * WEIGHT_REF_TIME_PER_SECOND, u64::MAX),
+        NORMAL_DISPATCH_RATIO,
+    );
+    pub RuntimeBlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
+        ::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
+    pub const SS58Prefix: u8 = 42;
+}
+
+impl frame_system::Config for Runtime {
+    type BaseCallFilter = frame_support::traits::Everything;
+    type BlockWeights = RuntimeBlockWeights;
+    type BlockLength = RuntimeBlockLength;
+    type AccountId = AccountId;
+    type RuntimeCall = RuntimeCall;
+    type Lookup = AccountIdLookup<AccountId, ()>;
+    type Nonce = Index;
+    type Hash = Hash;
+    type Hashing = BlakeTwo256;
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeOrigin = RuntimeOrigin;
+    type BlockHashCount = BlockHashCount;
+    type DbWeight = RocksDbWeight;
+    type Version = Version;
+    type PalletInfo = PalletInfo;
+    type OnNewAccount = ();
+    type OnKilledAccount = ();
+    type AccountData = pallet_balances::AccountData<Balance>;
+    type SystemWeightInfo = ();
+    type SS58Prefix = SS58Prefix;
+    type OnSetCode = ();
+    type MaxConsumers = frame_support::traits::ConstU32<16>;
+    type Block = Block;
+    type RuntimeTask = ();
+    type SingleBlockMigrations = ();
+    type MultiBlockMigrator = ();
+    type PreInherents = ();
+    type PostInherents = ();
+    type PostTransactions = ();
+    type ExtensionsWeightInfo = ();
+}
+
+parameter_types! {
+    /// 3 second blocks (BNB Chain standard, 49% faster with Maxwell upgrade)
+    pub const MinimumPeriod: u64 = 1500;
+}
+
+impl pallet_timestamp::Config for Runtime {
+    type Moment = u64;
+    type OnTimestampSet = ();
+    type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = ();
+}
+
+parameter_types! {
+    pub const ExistentialDeposit: u128 = 500;
+    pub const MaxLocks: u32 = 50;
+}
+
+impl pallet_balances::Config for Runtime {
+    type MaxLocks = MaxLocks;
+    type MaxReserves = ();
+    type ReserveIdentifier = [u8; 8];
+    type Balance = Balance;
+    type RuntimeEvent = RuntimeEvent;
+    type DustRemoval = ();
+    type ExistentialDeposit = ExistentialDeposit;
+    type AccountStore = System;
+    type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+    type FreezeIdentifier = ();
+    type MaxFreezes = ();
+    type RuntimeHoldReason = ();
+    type RuntimeFreezeReason = ();
+    type DoneSlashHandler = ();
+}
+
+impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
+impl pallet_grandpa::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
+    type MaxAuthorities = frame_support::traits::ConstU32<32>;
+    type MaxSetIdSessionEntries = frame_support::traits::ConstU64<0>;
+    type MaxNominators = frame_support::traits::ConstU32<0>;
+    type KeyOwnerProof = sp_core::Void;
+    type EquivocationReportSystem = ();
+}
+
+// ASF Consensus Configuration
+impl pallet_consensus::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type RandomnessSource = RandomnessCollectiveFlip;
+    type Time = Timestamp;
+    type MinValidityStake = frame_support::traits::ConstU128<64_000_000_000_000_000_000_000>; // 64 ETR
+    type ValidatorReward = frame_support::traits::ConstU128<100_000_000_000_000_000_000>; // 0.1 ETR
+    type CommitteeSize = frame_support::traits::ConstU32<21>; // PPFA committee
+    type EpochDuration = frame_support::traits::ConstU32<2400>; // ~4 hours at 6s/block
+    type BaseSlotDuration = frame_support::traits::ConstU64<6000>; // 6 seconds
+}
+
+parameter_types! {
+    pub FeeMultiplier: pallet_transaction_payment::Multiplier = pallet_transaction_payment::Multiplier::one();
+}
+
+impl pallet_transaction_payment::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type OnChargeTransaction = pallet_transaction_payment::CurrencyAdapter<Balances, ()>;
+    type OperationalFeeMultiplier = frame_support::traits::ConstU8<5>;
+    type WeightToFee = IdentityFee<Balance>;
+    type LengthToFee = IdentityFee<Balance>;
+    type FeeMultiplierUpdate = pallet_transaction_payment::ConstFeeMultiplier<FeeMultiplier>;
+    type WeightInfo = ();
+}
+
+// ============================================================
+// BNB CHAIN BRIDGE CONFIGURATION
+// ============================================================
+// TODO: Implement BNB bridge pallet
+// parameter_types! {
+//     /// BNB Chain requires 15 confirmations (3s blocks)
+//     pub const BnbMinConfirmations: u32 = 15;
+//
+//     /// Bridge fee: 0.1% (10 basis points)
+//     pub const BnbBridgeFeeRate: u32 = 10;
+//
+//     /// Maximum gas limit: 500,000 (EVM compatible)
+//     pub const BnbMaxGasLimit: u64 = 500_000;
+//
+//     /// Maximum gas price: 100 gwei
+//     pub const BnbMaxGasPrice: u128 = 100_000_000_000;
+// }
+//
+// impl pallet_bnb_bridge::Config for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+//     type Currency = Balances;
+//     type MinConfirmations = BnbMinConfirmations;
+//     type BridgeFeeRate = BnbBridgeFeeRate;
+//     type MaxGasLimit = BnbMaxGasLimit;
+//     type MaxGasPrice = BnbMaxGasPrice;
+// }
+
+// ============================================================
+// LIGHTNING CHANNELS CONFIGURATION (Reusable!)
+// ============================================================
+// TODO: Implement Lightning Channels pallet
+// parameter_types! {
+//     /// Minimum channel capacity: 0.1 BNB equivalent
+//     pub const MinChannelCapacity: Balance = 100_000_000_000_000_000; // 0.1 BNB
+//
+//     /// Maximum channel capacity: 1,000 BNB equivalent
+//     pub const MaxChannelCapacity: Balance = 1_000_000_000_000_000_000_000; // 1k BNB
+//
+//     /// Channel timeout: 1 day (28,800 blocks at 3s/block)
+//     pub const ChannelTimeout: BlockNumber = 28_800;
+// }
+//
+// impl pallet_lightning_channels::Config for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+//     type Currency = Balances;
+//     type MinChannelCapacity = MinChannelCapacity;
+//     type MaxChannelCapacity = MaxChannelCapacity;
+//     type ChannelTimeout = ChannelTimeout;
+// }
+
+// ============================================================
+// CONSTRUCT RUNTIME
+// ============================================================
+
+construct_runtime!(
+    pub struct Runtime
+    where
+        Block = Block,
+        NodeBlock = opaque::Block,
+        UncheckedExtrinsic = UncheckedExtrinsic
+    {
+        System: frame_system,
+        RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
+        Timestamp: pallet_timestamp,
+        Grandpa: pallet_grandpa,
+        Balances: pallet_balances,
+
+        // Ëtrid Core
+        Consensus: pallet_consensus,
+        TransactionPayment: pallet_transaction_payment,
+
+        // BNB-PBC Specific (TODO: Implement bridge pallets)
+        // BnbBridge: pallet_bnb_bridge,
+        // LightningChannels: pallet_lightning_channels,
+    }
+);
+
+// ============================================================
+// RUNTIME APIs
+// ============================================================
+
+impl_runtime_apis! {
+    impl sp_api::Core<Block> for Runtime {
+        fn version() -> RuntimeVersion {
+            VERSION
+        }
+
+        fn execute_block(block: Block) {
+            Executive::execute_block(block);
+        }
+
+        fn initialize_block(header: &<Block as BlockT>::Header) -> sp_runtime::ExtrinsicInclusionMode {
+            Executive::initialize_block(header)
+        }
+    }
+
+    impl sp_api::Metadata<Block> for Runtime {
+        fn metadata() -> OpaqueMetadata {
+            OpaqueMetadata::new(Runtime::metadata().into())
+        }
+
+        fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
+            Runtime::metadata_at_version(version)
+        }
+
+        fn metadata_versions() -> sp_std::vec::Vec<u32> {
+            Runtime::metadata_versions()
+        }
+    }
+
+    impl sp_block_builder::BlockBuilder<Block> for Runtime {
+        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
+            Executive::apply_extrinsic(extrinsic)
+        }
+
+        fn finalize_block() -> <Block as BlockT>::Header {
+            Executive::finalize_block()
+        }
+
+        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+            data.create_extrinsics()
+        }
+
+        fn check_inherents(
+            block: Block,
+            data: sp_inherents::InherentData,
+        ) -> sp_inherents::CheckInherentsResult {
+            data.check_extrinsics(&block)
+        }
+    }
+
+    impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
+        fn validate_transaction(
+            source: TransactionSource,
+            tx: <Block as BlockT>::Extrinsic,
+            block_hash: <Block as BlockT>::Hash,
+        ) -> TransactionValidity {
+            Executive::validate_transaction(source, tx, block_hash)
+        }
+    }
+
+    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
+        fn offchain_worker(header: &<Block as BlockT>::Header) {
+            Executive::offchain_worker(header)
+        }
+    }
+
+    impl sp_session::SessionKeys<Block> for Runtime {
+        fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+            opaque::SessionKeys::generate(seed)
+        }
+
+        fn decode_session_keys(
+            encoded: Vec<u8>,
+        ) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
+            opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
+        }
+
+    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+            Grandpa::grandpa_authorities()
+        }
+
+        fn current_set_id() -> sp_consensus_grandpa::SetId {
+            Grandpa::current_set_id()
+        }
+
+        fn submit_report_equivocation_unsigned_extrinsic(
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
+                <Block as BlockT>::Hash,
+                NumberFor<Block>,
+            >,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
+        ) -> Option<()> {
+            None
+        }
+
+        fn generate_key_ownership_proof(
+            _set_id: sp_consensus_grandpa::SetId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
+        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
+            None
+        }
+    }
+    }
+
+    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
+        fn account_nonce(account: AccountId) -> Index {
+            System::account_nonce(account)
+        }
+    }
+
+    impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
+        fn query_info(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_info(uxt, len)
+        }
+        fn query_fee_details(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_fee_details(uxt, len)
+        }
+        fn query_weight_to_fee(weight: Weight) -> Balance {
+            TransactionPayment::weight_to_fee(weight)
+        }
+        fn query_length_to_fee(length: u32) -> Balance {
+            TransactionPayment::length_to_fee(length)
+        }
+    }
+
+    // Aura API implementation (required for consensus)
+    impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
+        fn slot_duration() -> sp_consensus_aura::SlotDuration {
+            sp_consensus_aura::SlotDuration::from_millis(3000)
+        }
+
+        fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
+            Vec::new()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_runtime_version() {
+        assert_eq!(VERSION.spec_name, "bnb-pbc");
+        assert_eq!(VERSION.spec_version, 100);
+    }
+
+    #[test]
+    fn test_bnb_block_time() {
+        // 3 second blocks (Maxwell upgrade = 49% faster)
+        assert_eq!(MinimumPeriod::get(), 1500);
+    }
+
+    // TODO: Uncomment when BNB bridge pallet is implemented
+    // #[test]
+    // fn test_bnb_confirmations() {
+    //     assert_eq!(BnbMinConfirmations::get(), 15);
+    // }
+
+    // #[test]
+    // fn test_evm_compatibility() {
+    //     // EVM-compatible gas limit
+    //     assert_eq!(BnbMaxGasLimit::get(), 500_000);
+    // }
+}

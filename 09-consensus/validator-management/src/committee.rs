@@ -207,6 +207,11 @@ impl CommitteeManager {
             .count()
     }
 
+    /// Get all validator IDs in the pool
+    pub fn all_validator_ids(&self) -> Vec<ValidatorId> {
+        self.validator_pool.keys().cloned().collect()
+    }
+
     /// Force add a validator to committee (for genesis/testing)
     pub fn force_add_to_committee(&mut self, validator: ValidatorId, stake: Balance) -> ValidatorResult<()> {
         if self.current_committee.len() >= MAX_COMMITTEE_SIZE as usize {

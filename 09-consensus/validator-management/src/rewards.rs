@@ -333,6 +333,9 @@ impl Default for RewardsManager {
     }
 }
 
+/// Type alias for use in coordinator
+pub type RewardCalculator = RewardsManager;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // STATISTICS
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -7,7 +7,6 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 
 use sp_api::impl_runtime_apis;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
@@ -60,7 +59,6 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            pub aura: Aura,
             pub grandpa: Grandpa,
         }
     }
@@ -149,14 +147,6 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = ConstU32<16>;
 }
 
-impl pallet_aura::Config for Runtime {
-    type AuthorityId = AuraId;
-    type DisabledValidators = ();
-    type MaxAuthorities = ConstU32<32>;
-    type AllowMultipleBlocksPerSlot = ConstBool<false>;
-    type SlotDuration = ConstU64<6000>; // 6 second block time
-}
-
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
@@ -173,7 +163,7 @@ parameter_types! {
 
 impl pallet_timestamp::Config for Runtime {
     type Moment = u64;
-    type OnTimestampSet = Aura;
+    type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = ();
 }
@@ -231,23 +221,30 @@ impl pallet_accounts::Config for Runtime {
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
+/// Configure the pallet-etrid-staking (peer roles staking system)
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>; // ~2 days at 6 second blocks
+}
+
 /// Configure the pallet-etwasm-vm (smart contract execution)
 impl pallet_etwasm_vm::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxCodeSize = ConstU32<1024>;
 }
 
-/// Configure the pallet-consensus (custom consensus mechanism)
+/// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)
 impl pallet_consensus::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type RandomnessSource = RandomnessCollectiveFlip;
     type Time = Timestamp;
-    type ValidatorReward = ConstU128<100_000_000_000>; // 0.1 ETR
-    type MinValidityStake = ConstU128<64_000_000_000_000>; // 64 ETR (Validity Node minimum)
-    type CommitteeSize = ConstU32<100>; // 100 committee members
-    type EpochDuration = ConstU32<10>; // 10 blocks per epoch
-    type BaseSlotDuration = ConstU64<6000>; // 6 seconds base slot duration
+    type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ETR per block
+    type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ETR (Validity Node minimum)
+    type CommitteeSize = ConstU32<21>; // 21 PPFA committee members (as per Ivory Papers)
+    type EpochDuration = ConstU32<2400>; // 2400 blocks per epoch (~4 hours at 6s blocks)
+    type BaseSlotDuration = ConstU64<6000>; // 6 seconds base slot duration (adaptive)
 }
 
 /// Configure the pallet-governance (DAO governance)
@@ -267,6 +264,58 @@ impl pallet_pbc_router::Config for Runtime {
     type MaxMessageSize = ConstU32<10240>; // 10KB max message size
     type RegisterOrigin = frame_system::EnsureRoot<AccountId>;
     type CollatorOrigin = frame_system::EnsureSigned<AccountId>;
+}
+
+// ========================================
+// CONSENSUS DAY PALLETS CONFIGURATION
+// ========================================
+
+parameter_types! {
+    pub const ConsensusDayRegistrationDeposit: Balance = 1_000_000_000_000; // 0.001 ETR
+    pub FoundationTreasuryAccount: AccountId = AccountId::from([0u8; 32]);
+    pub DirectorAccounts: Vec<AccountId> = vec![]; // To be populated from staking pallet
+    pub ValidatorAccounts: Vec<AccountId> = vec![]; // To be populated from staking pallet
+    pub VoterAccounts: Vec<AccountId> = vec![]; // To be populated from Consensus Day registration
+    pub const AnnualMintCapPercent: u8 = 5; // 5% annual inflation cap
+}
+
+/// Configure Consensus Day Proposal System
+impl consensus_day_proposal_system::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type RegistrationDeposit = ConsensusDayRegistrationDeposit;
+}
+
+/// Configure Consensus Day Voting Protocol
+impl consensus_day_voting_protocol::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+}
+
+/// Configure Consensus Day Distribution
+impl consensus_day_distribution::Config for Runtime {
+    type Currency = Balances;
+    type RuntimeEvent = RuntimeEvent;
+    type FoundationAccount = FoundationTreasuryAccount;
+    type Directors = DirectorAccounts;
+    type Validators = ValidatorAccounts;
+    type Voters = VoterAccounts;
+}
+
+/// Configure Consensus Day Minting Logic
+impl consensus_day_minting_logic::Config for Runtime {
+    type Currency = Balances;
+    type RuntimeEvent = RuntimeEvent;
+    type TreasuryAccount = FoundationTreasuryAccount;
+    type AnnualMintCapPercent = AnnualMintCapPercent;
+}
+
+// ========================================
+// TRANSACTION PALLETS CONFIGURATION
+// ========================================
+
+/// Configure Transaction Processor
+impl pallet_tx_processor::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
 }
 
 // ========================================
@@ -422,7 +471,6 @@ construct_runtime!(
     pub struct Runtime {
         System: frame_system,
         Timestamp: pallet_timestamp,
-        Aura: pallet_aura,
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
@@ -435,6 +483,18 @@ construct_runtime!(
         Consensus: pallet_consensus,
         Governance: pallet_governance,
         PbcRouter: pallet_pbc_router,
+
+        // Staking pallets
+        EtridStaking: pallet_etrid_staking,
+
+        // Consensus Day pallets
+        ConsensusDayProposalSystem: consensus_day_proposal_system,
+        ConsensusDayVotingProtocol: consensus_day_voting_protocol,
+        ConsensusDayDistribution: consensus_day_distribution,
+        ConsensusDayMintingLogic: consensus_day_minting_logic,
+
+        // Transaction pallets
+        TxProcessor: pallet_tx_processor,
 
         // Bridge pallets (12 bridges for multichain support)
         BitcoinBridge: pallet_bitcoin_bridge,
@@ -583,16 +643,6 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
-        fn slot_duration() -> sp_consensus_aura::SlotDuration {
-            sp_consensus_aura::SlotDuration::from_millis(6000)
-        }
-
-        fn authorities() -> Vec<AuraId> {
-            pallet_aura::Authorities::<Runtime>::get().into_inner()
-        }
-    }
-
     impl sp_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
             opaque::SessionKeys::generate(seed)
@@ -665,11 +715,24 @@ impl_runtime_apis! {
         }
 
         fn get_preset(id: &Option<sp_genesis_builder::PresetId>) -> Option<Vec<u8>> {
-            frame_support::genesis_builder_helper::get_preset::<RuntimeGenesisConfig>(id, |_| None)
+            frame_support::genesis_builder_helper::get_preset::<RuntimeGenesisConfig>(id, |name| {
+                match name.as_ref() {
+                    sp_genesis_builder::DEV_RUNTIME_PRESET => {
+                        Some(include_bytes!("../presets/development.json").to_vec())
+                    },
+                    sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET => {
+                        Some(include_bytes!("../presets/local_testnet.json").to_vec())
+                    },
+                    _ => None,
+                }
+            })
         }
 
         fn preset_names() -> Vec<sp_genesis_builder::PresetId> {
-            vec![]
+            vec![
+                sp_genesis_builder::DEV_RUNTIME_PRESET.into(),
+                sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
+            ]
         }
     }
 

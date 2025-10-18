@@ -1,0 +1,37 @@
+[package]
+name = "etrid-decentralized-directors"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Core Contributors"]
+description = "Decentralized Directors module for the Ëtrid peer-roles system"
+license = "MIT"
+
+[dependencies]
+# Local dependencies
+peer-roles-staking-types = { path = "../staking/types", default-features = false }
+
+# Substrate dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# Serialization
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Utilities
+log = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "frame-support/std",
+    "frame-system/std",
+    "log/std",
+    "peer-roles-staking-types/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]

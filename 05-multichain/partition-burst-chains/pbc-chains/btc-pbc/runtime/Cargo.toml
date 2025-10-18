@@ -7,6 +7,7 @@ description = "Bitcoin Partition Burst Chain runtime for Ëtrid Multichain"
 license = "Apache-2.0"
 
 [dependencies]
+pallet_bitcoin_bridge = { package = "pallet-bitcoin-bridge", path = "../../../../../05-multichain/bridge-protocols/bitcoin-bridge", default-features = false }
 # Substrate Core - Use workspace dependencies
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -28,15 +29,15 @@ sp-session = { workspace = true }
 sp-std = { workspace = true }
 sp-transaction-pool = { workspace = true }
 sp-version = { workspace = true }
-sp-consensus-aura = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
+sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf", default-features = false }
 
 # FRAME Pallets
-pallet-aura = { workspace = true }
 pallet-grandpa = { workspace = true }
 pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
 pallet-transaction-payment = { workspace = true }
+pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
 # Balances - NOT in workspace, so explicit dependency
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
@@ -75,14 +76,14 @@ std = [
     "sp-std/std",
     "sp-transaction-pool/std",
     "sp-version/std",
-    "sp-consensus-aura/std",
     "sp-consensus-grandpa/std",
-    "pallet-aura/std",
+    "sp-consensus-asf/std",
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-sudo/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
+    "pallet-insecure-randomness-collective-flip/std",
     "frame-system-rpc-runtime-api/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
     "etrid-primitives/std",
@@ -90,6 +91,7 @@ std = [
     "pallet-consensus/std",
     "pallet-bitcoin-bridge/std",
     "pallet-lightning-channels/std",
+    "pallet_bitcoin_bridge/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

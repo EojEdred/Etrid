@@ -1,0 +1,30 @@
+[package]
+name = "detrp2p"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Team"]
+description = "DETR P2P - Distributed Encrypted Transport for Etrid Network"
+license = "Apache-2.0"
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+bincode = "1.3"
+
+# Cryptography
+ecies = { workspace = true }
+
+# Utilities
+log = { workspace = true }
+hex = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[features]
+default = ["std"]
+std = []

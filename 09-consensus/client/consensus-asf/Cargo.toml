@@ -1,0 +1,70 @@
+[package]
+name = "sc-consensus-asf"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "ASF consensus service for Substrate client"
+license = "Apache-2.0"
+
+[dependencies]
+# Ëtrid primitives
+sp-consensus-asf = { path = "../../primitives/consensus-asf", default-features = false }
+
+# Ëtrid consensus
+pallet-consensus = { path = "../../pallet", default-features = false }
+asf-algorithm = { path = "../../asf-algorithm", default-features = false }
+block-production = { path = "../../block-production", default-features = false }
+
+# Substrate primitives
+sp-api = { workspace = true }
+sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-runtime = { workspace = true }
+sp-core = { workspace = true }
+sp-consensus = { workspace = true }
+sp-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-inherents = { workspace = true }
+sp-timestamp = { workspace = true }
+sp-keystore = { workspace = true }
+sp-application-crypto = { workspace = true }
+
+# Substrate client
+sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sc-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sc-telemetry = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+substrate-prometheus-endpoint = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Codec
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Async
+async-trait = { workspace = true }
+futures = { workspace = true }
+futures-timer = "3.0"
+
+# Logging
+log = { workspace = true }
+
+# Utilities
+parking_lot = "0.12"
+thiserror = "2.0"
+derive_more = { version = "1.0", features = ["full"] }
+
+[features]
+default = ["std"]
+std = [
+    "sp-consensus-asf/std",
+    "pallet-consensus/std",
+    "asf-algorithm/std",
+    "block-production/std",
+    "sp-api/std",
+    "sp-runtime/std",
+    "sp-core/std",
+    "sp-inherents/std",
+    "sp-timestamp/std",
+    "sp-keystore/std",
+    "sp-application-crypto/std",
+    "codec/std",
+    "scale-info/std",
+]

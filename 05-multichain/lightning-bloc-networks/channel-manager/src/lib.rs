@@ -39,7 +39,7 @@ pub mod pallet {
         
         /// Channel timeout (in blocks)
         #[pallet::constant]
-        type ChannelTimeout: Get<Self::BlockNumber>;
+        type ChannelTimeout: Get<BlockNumberFor<Self>>;
     }
 
     /// Lightning channel state
@@ -89,7 +89,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         [u8; 32], // channel_id
-        Channel<T::AccountId, BalanceOf<T>, T::BlockNumber>,
+        Channel<T::AccountId, BalanceOf<T>, BlockNumberFor<T>>,
         OptionQuery,
     >;
 
@@ -100,7 +100,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         [u8; 32], // htlc_id
-        HTLC<T::AccountId, BalanceOf<T>, T::BlockNumber>,
+        HTLC<T::AccountId, BalanceOf<T>, BlockNumberFor<T>>,
         OptionQuery,
     >;
 
@@ -366,7 +366,7 @@ pub mod pallet {
             receiver: T::AccountId,
             amount: BalanceOf<T>,
             hash_lock: [u8; 32],
-            time_lock_blocks: T::BlockNumber,
+            time_lock_blocks: BlockNumberFor<T>,
         ) -> DispatchResult {
             let sender = ensure_signed(origin)?;
 

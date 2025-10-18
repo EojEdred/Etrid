@@ -1,0 +1,18 @@
+[workspace]
+members = [
+    "etr-token",           # Existing ÉTR pallet
+    "etd-stablecoin",      # Existing ETD pallet  
+    "economics",           # New - reference library?
+    "vmw-gas",            # New - reference library?
+]
+resolver = "2"
+
+[workspace.package]
+authors = ["Étrid Foundation"]
+edition = "2021"
+license = "Apache-2.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

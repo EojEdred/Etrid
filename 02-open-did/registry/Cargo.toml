@@ -1,13 +1,18 @@
 [package]
-name = "open-did"
+name = "etrid-did-registry"
 version = "0.1.0"
 edition = "2021"
+authors = ["Etrid Development Team"]
+license = "MIT OR Apache-2.0"
+description = "DID registry for on-chain registration, updates, and access control"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-uuid = { version = "1.2", features = ["v4"] }
+tokio = { workspace = true }
+serde = { workspace = true }
 
-[[bin]]
-name = "open-did"
-path = "src/main.rs"
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[features]
+default = ["std"]
+std = []

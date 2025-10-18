@@ -7,38 +7,34 @@ description = "Account management pallet for Ëtrid multichain"
 license = "Apache-2.0"
 
 [dependencies]
-# Substrate FRAME dependencies (from workspace)
-frame-support.workspace = true
-frame-system.workspace = true
-sp-runtime.workspace = true
-sp-std.workspace = true
-
-# Encoding
-codec.workspace = true
-scale-info.workspace = true
-
-# Logging
-log.workspace = true
+codec = { workspace = true }
+scale-info = { workspace = true }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+[dev-dependencies]
+sp-io = { workspace = true }
 
 [features]
 default = ["std"]
-
 std = [
-    "frame-support/std",
-    "frame-system/std",
-    "sp-runtime/std",
-    "sp-std/std",
-    "codec/std",
-    "scale-info/std",
-    "log/std",
+"codec/std",
+"scale-info/std",
+"frame-support/std",
+"frame-system/std",
+"sp-runtime/std",
+"sp-std/std",
+"sp-core/std",
+"sp-io/std",
 ]
-
 runtime-benchmarks = [
-    "frame-support/runtime-benchmarks",
-    "frame-system/runtime-benchmarks",
+"frame-support/runtime-benchmarks",
+"frame-system/runtime-benchmarks",
 ]
-
 try-runtime = [
-    "frame-support/try-runtime",
-    "frame-system/try-runtime",
+"frame-support/try-runtime",
+"frame-system/try-runtime",
 ]

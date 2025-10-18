@@ -25,12 +25,14 @@ pub use asf_algorithm::{
 };
 
 pub mod committee;
+pub mod coordinator;
 pub mod networking;
 pub mod rewards;
 pub mod health;
 pub mod state_sync;
 
 pub use committee::*;
+pub use coordinator::*;
 pub use networking::*;
 pub use rewards::*;
 pub use health::*;

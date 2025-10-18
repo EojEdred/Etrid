@@ -463,11 +463,11 @@ pub mod pallet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use frame_support::{assert_ok, parameter_types};
+    use frame_support::{assert_ok, parameter_types, PalletId};
     use sp_core::H256;
     use sp_runtime::{
         traits::{BlakeTwo256, IdentityLookup},
-        BuildStorage,
+        BuildStorage, Perbill,
     };
 
     type Block = frame_system::mocking::MockBlock<Test>;
@@ -514,6 +514,7 @@ mod tests {
         type PreInherents = ();
         type PostInherents = ();
         type PostTransactions = ();
+        type ExtensionsWeightInfo = ();
     }
 
     parameter_types! {
@@ -534,6 +535,7 @@ mod tests {
         type MaxFreezes = ();
         type RuntimeHoldReason = ();
         type RuntimeFreezeReason = ();
+        type DoneSlashHandler = ();
     }
 
     parameter_types! {

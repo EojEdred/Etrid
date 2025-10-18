@@ -155,6 +155,15 @@ impl HealthMonitor {
         self.update();
     }
 
+    /// Record block production result (true = produced, false = missed)
+    pub fn record_block_production(&mut self, produced: bool) {
+        if produced {
+            self.record_produced_block();
+        } else {
+            self.record_missed_block();
+        }
+    }
+
     /// Update certificate issuance rate
     pub fn set_certificate_rate(&mut self, rate: u8) {
         self.certificate_rate = rate.min(100);

@@ -1,11 +1,10 @@
-//! BNB-PBC Collator Node
+//! Generic PBC Collator Node
 //!
-//! This collator produces blocks for the BNB Partition Burst Chain (PBC) and
+//! This collator produces blocks for a Partition Burst Chain (PBC) and
 //! submits state roots to FlareChain for multichain state aggregation.
 
 mod chain_spec;
 mod cli;
-mod rpc;
 mod service;
 
 use clap::Parser;

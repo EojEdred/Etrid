@@ -8,23 +8,20 @@ license = "Apache-2.0"
 
 [dependencies]
 # Substrate primitives
-sp-core = { version = "31.0.0", default-features = false }
-sp-std = { version = "14.0.0", default-features = false }
-sp-runtime = { version = "37.0.0", default-features = false }
-sp-io = { version = "35.0.0", default-features = false }
-sp-consensus = { version = "0.36.0", default-features = false }
-sp-timestamp = { version = "30.0.0", default-features = false }
-sp-inherents = { version = "30.0.0", default-features = false }
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-io = { workspace = true }
 
 # Codec
-codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
-scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+codec = { workspace = true }
+scale-info = { workspace = true }
 
 # Serialization
-serde = { version = "1.0.197", default-features = false, features = ["derive", "alloc"] }
+serde = { workspace = true }
 
 # Logging
-log = { version = "0.4.21", default-features = false }
+log = { workspace = true }
 
 # Internal dependencies
 asf-algorithm = { path = "../asf-algorithm", default-features = false }
@@ -41,9 +38,9 @@ thiserror = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true }
 
 [dev-dependencies]
-sp-io = { version = "35.0.0" }
-sp-core = { version = "31.0.0" }
-tokio = { version = "1.36", features = ["full", "test-util"] }
+sp-io = { workspace = true }
+sp-core = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }
 
 [features]
 default = ["std"]
@@ -52,9 +49,6 @@ std = [
     "sp-std/std",
     "sp-runtime/std",
     "sp-io/std",
-    "sp-consensus/std",
-    "sp-timestamp/std",
-    "sp-inherents/std",
     "codec/std",
     "scale-info/std",
     "serde/std",

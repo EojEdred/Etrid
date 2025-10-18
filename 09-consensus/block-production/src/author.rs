@@ -4,12 +4,13 @@
 //! transaction selection, block building, and signing.
 
 use alloc::vec::Vec;
+use codec::Encode;
 use sp_core::hashing::blake2_256;
 
 use crate::{
-    Block, BlockBody, BlockHeader, BlockNumber, BlockProposal, BlockProductionError,
-    BlockProductionResult, BlockType, Hash, TransactionPriority, TransactionStrategy, ValidatorId,
-    MAX_BLOCK_SIZE, MAX_TRANSACTIONS_PER_BLOCK,
+    Block, BlockBody, BlockHeader, BlockNumber, BlockProposal, BlockProductionResult, BlockType,
+    Hash, TransactionPriority, TransactionStrategy, ValidatorId, MAX_BLOCK_SIZE,
+    MAX_TRANSACTIONS_PER_BLOCK,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -280,11 +281,11 @@ impl BlockSigner {
     /// Create signature (simplified - would use real crypto in production)
     fn create_signature(&self, block: &Block) -> Vec<u8> {
         let block_hash = block.hash();
-        
+
         // Dummy signature: hash(validator_id + block_hash)
-        let mut data = self.validator.0.to_vec();
-        data.extend_from_slice(&block_hash.0);
-        
+        let mut data = self.validator.encode();
+        data.extend_from_slice(block_hash.as_ref());
+
         blake2_256(&data).to_vec()
     }
 

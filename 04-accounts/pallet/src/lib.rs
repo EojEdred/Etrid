@@ -9,6 +9,7 @@ pub mod pallet {
     use codec::{Encode, Decode};
     use scale_info::TypeInfo;
     use sp_runtime::{RuntimeDebug, traits::AtLeast32BitUnsigned};
+    use sp_std::vec::Vec;
 
     #[derive(
         Encode,

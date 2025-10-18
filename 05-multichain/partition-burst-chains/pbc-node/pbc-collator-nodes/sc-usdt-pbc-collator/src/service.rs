@@ -1,42 +1,20 @@
-//! Service implementation for SC-USDT-PBC Collator
-//!
-//! This service:
-//! 1. Produces blocks for the SC-USDT-PBC (Stablecoin USDT PBC)
-//! 2. Submits state roots to FlareChain
-//! 3. Processes cross-chain messages from other PBCs
+//! Service implementation for BTC-PBC Collator
 
-use futures::StreamExt;
-use sc_client_api::BlockBackend;
-use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
-use sc_executor::NativeElseWasmExecutor;
-use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
+use futures::FutureExt;
+use sc_client_api::{Backend, HeaderBackend};
+use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
+use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
+use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_core::H256;
-use std::sync::Arc;
+use sc_transaction_pool_api::OffchainTransactionPoolFactory;
+use sp_runtime::traits::Header as HeaderT;
+use std::{marker::PhantomData, sync::Arc, time::Duration};
 
-// SC-USDT-PBC Runtime
-use sc_usdt_pbc_runtime::{self, opaque::Block, RuntimeApi};
+use sc_usdt_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
 
-/// Native executor instance
-pub struct ExecutorDispatch;
+pub type FullClient = TFullClient<Block, RuntimeApi, sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>>;
+pub type FullBackend = TFullBackend<Block>;
 
-impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
-    type ExtendHostFunctions = ();
-
-    fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-        sc_usdt_pbc_runtime::api::dispatch(method, data)
-    }
-
-    fn native_version() -> sc_executor::NativeVersion {
-        sc_usdt_pbc_runtime::native_version()
-    }
-}
-
-type FullClient = sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
-type FullBackend = sc_service::TFullBackend<Block>;
-
-/// Partial node components
 pub fn new_partial(
     config: &Configuration,
 ) -> Result<
@@ -45,28 +23,72 @@ pub fn new_partial(
         FullBackend,
         (),
         sc_consensus::DefaultImportQueue<Block>,
-        sc_transaction_pool::FullPool<Block, FullClient>,
+        sc_transaction_pool::TransactionPoolHandle<Block, FullClient>,
         (Option<Telemetry>,),
     >,
     ServiceError,
 > {
-    // NOTE: This is a template. Implement actual service setup for your PBC runtime.
-    panic!("new_partial not implemented - update for specific PBC runtime")
+    let telemetry = config
+        .telemetry_endpoints
+        .clone()
+        .filter(|x| !x.is_empty())
+        .map(|endpoints| -> Result<_, sc_telemetry::Error> {
+            let worker = TelemetryWorker::new(16)?;
+            let telemetry = worker.handle().new_telemetry(endpoints);
+            Ok((worker, telemetry))
+        })
+        .transpose()?;
+
+    let executor = sc_service::new_wasm_executor::<sp_io::SubstrateHostFunctions>(&config.executor);
+
+    let (client, backend, keystore_container, task_manager) =
+        sc_service::new_full_parts::<Block, RuntimeApi, _>(
+            config,
+            telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
+            executor,
+        )?;
+    let client = Arc::new(client);
+
+    let telemetry = telemetry.map(|(worker, telemetry)| {
+        task_manager
+            .spawn_handle()
+            .spawn("telemetry", None, worker.run());
+        telemetry
+    });
+
+    let transaction_pool = Arc::from(
+        sc_transaction_pool::Builder::new(
+            task_manager.spawn_essential_handle(),
+            client.clone(),
+            config.role.is_authority().into(),
+        )
+        .with_options(config.transaction_pool.clone())
+        .with_prometheus(config.prometheus_registry())
+        .build(),
+    );
+
+    let import_queue = asf_import_queue::<_, _, _, AccountId>(
+        client.clone(),
+        client.clone(),
+        &task_manager.spawn_essential_handle(),
+        config.prometheus_registry(),
+    )
+    .map_err(|e| ServiceError::Other(format!("ASF import queue error: {}", e)))?;
+
+    Ok(sc_service::PartialComponents {
+        client,
+        backend,
+        task_manager,
+        import_queue,
+        keystore_container,
+        select_chain: (),
+        transaction_pool,
+        other: (telemetry,),
+    })
 }
 
 /// Start the collator node
 pub async fn start_collator(config: Configuration) -> Result<TaskManager, ServiceError> {
-    // NOTE: This is where the collator service is set up.
-    // Key responsibilities:
-    // 1. Start block production
-    // 2. Connect to FlareChain via RPC
-    // 3. Submit state roots after each block
-    // 4. Listen for cross-chain messages
-
-    panic!("start_collator not implemented - update for specific PBC runtime")
-
-    // TEMPLATE IMPLEMENTATION (uncomment and update for specific PBC):
-    /*
     let sc_service::PartialComponents {
         client,
         backend,
@@ -78,19 +100,48 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         other: (mut telemetry,),
     } = new_partial(&config)?;
 
-    // Build network
-    let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
+    let mut net_config = sc_network::config::FullNetworkConfiguration::<
+        Block,
+        <Block as sp_runtime::traits::Block>::Hash,
+        sc_network::NetworkWorker<Block, <Block as sp_runtime::traits::Block>::Hash>,
+    >::new(&config.network, config.prometheus_registry().cloned());
+
+    let metrics = sc_network::service::NotificationMetrics::new(config.prometheus_registry());
+
+    let (network, system_rpc_tx, tx_handler_controller, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
+            net_config,
             client: client.clone(),
             transaction_pool: transaction_pool.clone(),
             spawn_handle: task_manager.spawn_handle(),
             import_queue,
             block_announce_validator_builder: None,
-            warp_sync_params: None,
+            warp_sync_config: None,
+            block_relay: None,
+            metrics,
         })?;
 
-    // Start collation
+    if config.offchain_worker.enabled {
+        let offchain_workers = sc_offchain::OffchainWorkers::new(sc_offchain::OffchainWorkerOptions {
+            runtime_api_provider: client.clone(),
+            is_validator: config.role.is_authority(),
+            keystore: Some(keystore_container.keystore()),
+            offchain_db: backend.offchain_storage(),
+            transaction_pool: Some(OffchainTransactionPoolFactory::new(
+                transaction_pool.clone(),
+            )),
+            network_provider: Arc::new(network.clone()),
+            enable_http_requests: true,
+            custom_extensions: |_| vec![],
+        })?;
+        task_manager.spawn_handle().spawn(
+            "offchain-workers-runner",
+            "offchain-worker",
+            offchain_workers.run(client.clone(), task_manager.spawn_handle()).boxed(),
+        );
+    }
+
     let proposer_factory = sc_basic_authorship::ProposerFactory::new(
         task_manager.spawn_handle(),
         client.clone(),
@@ -99,90 +150,80 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         telemetry.as_ref().map(|x| x.handle()),
     );
 
-    let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+    // ASF consensus worker parameters
+    let backoff_authoring_blocks = Some(BackoffAuthoringOnFinalizedHeadLagging::default());
 
-    let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _>(
-        StartAuraParams {
-            slot_duration,
-            client: client.clone(),
-            select_chain: sc_consensus::LongestChain::new(backend.clone()),
-            block_import: import_queue.clone(),
-            proposer_factory,
-            create_inherent_data_providers: move |_, ()| async move {
-                let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-                let slot = sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-                    *timestamp,
-                    slot_duration,
-                );
-                Ok((slot, timestamp))
-            },
-            force_authoring: config.force_authoring,
-            backoff_authoring_blocks: None,
-            keystore: keystore_container.keystore(),
-            sync_oracle: sync_service.clone(),
-            justification_sync_link: sync_service.clone(),
-            block_proposal_slot_portion: SlotProportion::new(2f32 / 3f32),
-            max_block_proposal_slot_portion: None,
-            telemetry: telemetry.as_ref().map(|x| x.handle()),
-            compatibility_mode: Default::default(),
+    let asf_params = AsfWorkerParams {
+        client: client.clone(),
+        block_import: client.clone(),
+        env: proposer_factory,
+        sync_oracle: sync_service.clone(),
+        backoff_authoring_blocks,
+        keystore: keystore_container.keystore(),
+        create_inherent_data_providers: move |_, ()| async move {
+            let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+            Ok((timestamp,))
         },
-    )?;
+        force_authoring: config.force_authoring,
+        block_proposal_slot_portion: 2f32 / 3f32,
+        max_block_proposal_slot_portion: None,
+        justification_sync_link: sync_service.clone(),
+        _phantom: PhantomData,
+    };
 
+    // Start ASF block authoring worker
+    let asf_worker = run_asf_worker(asf_params);
     task_manager.spawn_essential_handle().spawn_blocking(
-        "aura",
+        "asf-worker",
         Some("block-authoring"),
-        aura,
+        asf_worker.map(|res| {
+            if let Err(e) = res {
+                log::error!("ASF worker error: {}", e);
+            }
+        }),
     );
 
-    // State root submission task
     task_manager.spawn_handle().spawn(
         "state-root-submitter",
         None,
         submit_state_roots(client.clone()),
     );
 
-    network_starter.start_network();
     Ok(task_manager)
-    */
 }
 
-/// Task that submits state roots to FlareChain after each block
-async fn submit_state_roots<Client>(client: Arc<Client>)
-where
-    Client: BlockBackend<Block>,
-{
-    // NOTE: This function should:
-    // 1. Watch for new blocks produced by this collator
-    // 2. Extract the state root from each block
-    // 3. Submit it to FlareChain's pbc_router pallet
-    // 4. Use the submit_state_root extrinsic
+async fn submit_state_roots(client: Arc<FullClient>) {
+    log::info!("🔗 BTC-PBC: State root submitter task started");
 
-    log::info!("State root submitter task started");
+    let mut last_block_number = 0u32;
 
-    // TEMPLATE IMPLEMENTATION:
-    /*
     loop {
-        // Wait for new block
-        let block_hash = client.info().best_hash;
-        let block_number = client.info().best_number;
-        
-        // Get state root
-        if let Ok(Some(header)) = client.header(block_hash) {
-            let state_root = *header.state_root();
-            
-            // Submit to FlareChain
-            // TODO: Call FlareChain RPC to submit state root
-            // flarechain_client.submit_state_root(pbc_id, block_number, state_root).await;
-            
-            log::info!(
-                "Submitted state root for block #{}: {:?}",
-                block_number,
-                state_root
-            );
+        tokio::time::sleep(Duration::from_secs(6)).await;
+
+        let best_number = client.info().best_number;
+
+        if best_number > last_block_number {
+            let best_hash = client.info().best_hash;
+
+            match client.header(best_hash) {
+                Ok(Some(header)) => {
+                    let state_root = header.state_root();
+
+                    log::info!(
+                        "🔗 BTC-PBC: Block #{} produced with state root: {:?}",
+                        best_number,
+                        state_root
+                    );
+
+                    last_block_number = best_number;
+                }
+                Ok(None) => {
+                    log::warn!("🔗 BTC-PBC: Header not found for block #{}", best_number);
+                }
+                Err(e) => {
+                    log::error!("🔗 BTC-PBC: Error reading header for block #{}: {:?}", best_number, e);
+                }
+            }
         }
-        
-        // Wait for next block
-        tokio::time::sleep(tokio::time::Duration::from_secs(6)).await;
     }
-    */
 }

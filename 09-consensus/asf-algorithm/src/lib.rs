@@ -36,6 +36,9 @@ pub use safety::*;
 /// Re-export core types
 pub use sp_core::crypto::AccountId32;
 
+/// Type alias for ValidityCertificate for easier imports
+pub type Certificate = ValidityCertificate;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CORE TYPES (From Ivory Papers)
 // ═══════════════════════════════════════════════════════════════════════════════

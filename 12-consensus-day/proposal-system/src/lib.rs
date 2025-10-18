@@ -18,33 +18,60 @@ use frame_support::{
 };
 use frame_system::pallet_prelude::*;
 use scale_info::TypeInfo;
-use sp_runtime::RuntimeDebug;
+use sp_runtime::{RuntimeDebug, traits::UniqueSaturatedInto};
 use sp_std::vec::Vec;
 
 // -------------------- CORE TYPES --------------------
 
 /// Classification of proposals that can be registered.
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
+#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum ProposalCategory {
-    ProtocolUpgrade,
-    EconomicAdjustment,
-    DirectorElection,
-    TreasuryAllocation,
-    General,
+    ProtocolUpgrade = 0,
+    EconomicAdjustment = 1,
+    DirectorElection = 2,
+    TreasuryAllocation = 3,
+    General = 4,
+}
+
+impl ProposalCategory {
+    pub fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(Self::ProtocolUpgrade),
+            1 => Some(Self::EconomicAdjustment),
+            2 => Some(Self::DirectorElection),
+            3 => Some(Self::TreasuryAllocation),
+            4 => Some(Self::General),
+            _ => None,
+        }
+    }
 }
 
 /// Current lifecycle state of a proposal.
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
+#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum ProposalStatus {
-    Pending,
-    Active,
-    Approved,
-    Rejected,
-    Executed,
+    Pending = 0,
+    Active = 1,
+    Approved = 2,
+    Rejected = 3,
+    Executed = 4,
+}
+
+impl ProposalStatus {
+    pub fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(Self::Pending),
+            1 => Some(Self::Active),
+            2 => Some(Self::Approved),
+            3 => Some(Self::Rejected),
+            4 => Some(Self::Executed),
+            _ => None,
+        }
+    }
 }
 
 /// Core on-chain record for a Consensus Day proposal.
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
+#[scale_info(skip_type_params(T))]
 pub struct ProposalRecord<AccountId> {
     pub proposer: AccountId,
     pub category: ProposalCategory,
@@ -96,9 +123,12 @@ pub mod pallet {
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
+        /// A participant has been registered for Consensus Day
         ParticipantRegistered(T::AccountId),
-        ProposalSubmitted(u64, T::AccountId, ProposalCategory),
-        ProposalStatusChanged(u64, ProposalStatus),
+        /// A new proposal has been submitted (proposal_id, submitter)
+        ProposalSubmitted(u64, T::AccountId),
+        /// A proposal's status has been updated (proposal_id)
+        ProposalStatusChanged(u64),
     }
 
     #[pallet::error]
@@ -108,10 +138,12 @@ pub mod pallet {
         ProposalNotFound,
         InvalidStatusChange,
         InsufficientDeposit,
+        InvalidCategory,
+        InvalidStatus,
     }
 
     #[pallet::pallet]
-    #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::call]
@@ -141,19 +173,22 @@ pub mod pallet {
         #[pallet::weight(20_000)]
         pub fn submit_proposal(
             origin: OriginFor<T>,
-            category: ProposalCategory,
+            category: u8,
             title: Vec<u8>,
             description: Vec<u8>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
             ensure!(Participants::<T>::get(&who), Error::<T>::NotRegistered);
 
+            let category_enum = ProposalCategory::from_u8(category)
+                .ok_or(Error::<T>::InvalidCategory)?;
+
             let id = NextProposalId::<T>::get();
-            let now = <frame_system::Pallet<T>>::block_number().saturated_into::<u64>();
+            let now: u64 = <frame_system::Pallet<T>>::block_number().unique_saturated_into();
 
             let record = ProposalRecord {
                 proposer: who.clone(),
-                category,
+                category: category_enum,
                 title,
                 description,
                 created_at: now,
@@ -164,25 +199,29 @@ pub mod pallet {
 
             Proposals::<T>::insert(id, record);
             NextProposalId::<T>::put(id + 1);
-            Self::deposit_event(Event::<T>::ProposalSubmitted(id, who, category));
+            Self::deposit_event(Event::<T>::ProposalSubmitted(id, who));
             Ok(())
         }
 
-        /// Update a proposal’s status (root call – Foundation DAO or Governance pallet).
+        /// Update a proposal's status (root call – Foundation DAO or Governance pallet).
         #[pallet::call_index(2)]
         #[pallet::weight(5_000)]
         pub fn update_status(
             origin: OriginFor<T>,
             proposal_id: u64,
-            new_status: ProposalStatus,
+            new_status: u8,
         ) -> DispatchResult {
             ensure_root(origin)?;
+
+            let new_status_enum = ProposalStatus::from_u8(new_status)
+                .ok_or(Error::<T>::InvalidStatus)?;
+
             Proposals::<T>::try_mutate(proposal_id, |maybe_p| -> DispatchResult {
-                let mut proposal = maybe_p.as_mut().ok_or(Error::<T>::ProposalNotFound)?;
+                let proposal = maybe_p.as_mut().ok_or(Error::<T>::ProposalNotFound)?;
                 // Basic sanity: avoid illegal backward transitions
                 ensure!(
                     matches!(
-                        (proposal.status.clone(), &new_status),
+                        (proposal.status, new_status_enum),
                         (ProposalStatus::Pending, ProposalStatus::Active)
                             | (ProposalStatus::Active, ProposalStatus::Approved)
                             | (ProposalStatus::Active, ProposalStatus::Rejected)
@@ -190,8 +229,8 @@ pub mod pallet {
                     ),
                     Error::<T>::InvalidStatusChange
                 );
-                proposal.status = new_status.clone();
-                Self::deposit_event(Event::<T>::ProposalStatusChanged(proposal_id, new_status));
+                proposal.status = new_status_enum;
+                Self::deposit_event(Event::<T>::ProposalStatusChanged(proposal_id));
                 Ok(())
             })
         }
