@@ -8,3 +8,11 @@ node_modules/
 *.tmp
 .DS_Store
 
+# Multi-node testing artifacts (temporary)
+.local-testnet/
+.peering-test/
+.validator-test/
+.test-network/
+*.log
+collator_test_results.txt
+.peering-test-output.log
