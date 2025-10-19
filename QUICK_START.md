@@ -136,8 +136,15 @@ ps aux | grep flarechain-node
 tail -f .validator-test/logs/alice.log
 ```
 
-### Nodes have 0 peers
-**This is expected!** Currently nodes use separate genesis blocks. This is fine for testing individual node functionality. To enable peering, all nodes must use the same chain spec (see `MULTI_NODE_TESTING.md` for details).
+### Nodes have 0 peers (or peers connect then disconnect)
+**Update:** As of October 19, 2025, nodes now use a shared chain spec and CAN peer together!
+
+**Current Status:**
+- ✅ Shared genesis block implemented
+- ✅ Peers discover each other successfully
+- ⚠️ Connections may be unstable due to dev mode (`--alice`, `--bob`, `--charlie`)
+
+**See:** `PEER_CONNECTIVITY_PROGRESS.md` for details on peer discovery progress and next steps.
 
 ---
 

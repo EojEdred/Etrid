@@ -9,6 +9,7 @@ ETRID_ROOT="/Users/macbook/Desktop/etrid"
 BIN_DIR="$ETRID_ROOT/target/release"
 DATA_DIR="$ETRID_ROOT/.validator-test"
 LOGS_DIR="$DATA_DIR/logs"
+CHAIN_SPEC="$ETRID_ROOT/chain-specs/flarechain-shared.json"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -44,7 +45,7 @@ ALICE_PEER="12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp"
 
 echo -e "${GREEN}Starting Alice (Validator 1)${NC}"
 $BIN_DIR/flarechain-node \
-    --chain local \
+    --chain "$CHAIN_SPEC" \
     --alice \
     --validator \
     --base-path "$DATA_DIR/alice" \
@@ -61,7 +62,7 @@ sleep 3
 
 echo -e "${GREEN}Starting Bob (Validator 2)${NC}"
 $BIN_DIR/flarechain-node \
-    --chain local \
+    --chain "$CHAIN_SPEC" \
     --bob \
     --validator \
     --base-path "$DATA_DIR/bob" \
@@ -79,7 +80,7 @@ sleep 3
 
 echo -e "${GREEN}Starting Charlie (Validator 3)${NC}"
 $BIN_DIR/flarechain-node \
-    --chain local \
+    --chain "$CHAIN_SPEC" \
     --charlie \
     --validator \
     --base-path "$DATA_DIR/charlie" \
