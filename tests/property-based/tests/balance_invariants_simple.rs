@@ -5,9 +5,6 @@
 
 use proptest::prelude::*;
 
-mod mock;
-use mock::*;
-
 /// Property: Balance arithmetic is always safe
 /// No operation should cause overflow or underflow
 #[cfg(test)]
@@ -22,15 +19,13 @@ mod arithmetic_safety {
             balance1 in 0u128..u128::MAX / 2,
             balance2 in 0u128..u128::MAX / 2,
         ) {
-            run_test(|| {
-                // Property: Adding two balances should never overflow
-                let result = balance1.checked_add(balance2);
-                prop_assert!(result.is_some(), "Balance addition should not overflow");
+            // Property: Adding two balances should never overflow
+            let result = balance1.checked_add(balance2);
+            prop_assert!(result.is_some(), "Balance addition should not overflow");
 
-                let sum = result.unwrap();
-                prop_assert!(sum >= balance1, "Sum should be >= first operand");
-                prop_assert!(sum >= balance2, "Sum should be >= second operand");
-            });
+            let sum = result.unwrap();
+            prop_assert!(sum >= balance1, "Sum should be >= first operand");
+            prop_assert!(sum >= balance2, "Sum should be >= second operand");
         }
 
         #[test]
@@ -38,15 +33,13 @@ mod arithmetic_safety {
             larger in 1_000u128..1_000_000,
             smaller in 1u128..999,
         ) {
-            run_test(|| {
-                // Property: Subtracting smaller from larger should always succeed
-                let result = larger.checked_sub(smaller);
-                prop_assert!(result.is_some(), "Subtraction should succeed");
+            // Property: Subtracting smaller from larger should always succeed
+            let result = larger.checked_sub(smaller);
+            prop_assert!(result.is_some(), "Subtraction should succeed");
 
-                let difference = result.unwrap();
-                prop_assert!(difference < larger, "Difference should be less than original");
-                prop_assert_eq!(difference + smaller, larger, "Arithmetic consistency");
-            });
+            let difference = result.unwrap();
+            prop_assert!(difference < larger, "Difference should be less than original");
+            prop_assert_eq!(difference + smaller, larger, "Arithmetic consistency");
         }
 
         #[test]
@@ -54,19 +47,17 @@ mod arithmetic_safety {
             balance in 1u128..1_000_000,
             percentage in 1u128..100, // 1-100%
         ) {
-            run_test(|| {
-                // Property: Multiplying balance by percentage (fee calculation) should be safe
-                let numerator = balance.checked_mul(percentage);
-                prop_assert!(numerator.is_some(), "Multiplication should not overflow");
+            // Property: Multiplying balance by percentage (fee calculation) should be safe
+            let numerator = balance.checked_mul(percentage);
+            prop_assert!(numerator.is_some(), "Multiplication should not overflow");
 
-                if let Some(n) = numerator {
-                    let result = n.checked_div(100);
-                    prop_assert!(result.is_some(), "Division should succeed");
+            if let Some(n) = numerator {
+                let result = n.checked_div(100);
+                prop_assert!(result.is_some(), "Division should succeed");
 
-                    let fee = result.unwrap();
-                    prop_assert!(fee <= balance, "Fee should never exceed balance");
-                }
-            });
+                let fee = result.unwrap();
+                prop_assert!(fee <= balance, "Fee should never exceed balance");
+            }
         }
     }
 }
@@ -86,64 +77,60 @@ mod balance_conservation {
             bob_initial in 1_000u128..1_000_000,
             transfer_amount in 1u128..1_000,
         ) {
-            run_test(|| {
-                // Property: Transfer should not change total balance
-                let total_before = alice_initial.checked_add(bob_initial).unwrap();
+            // Property: Transfer should not change total balance
+            let total_before = alice_initial.checked_add(bob_initial).unwrap();
 
-                // Simulate transfer
-                let alice_after = if transfer_amount <= alice_initial {
-                    alice_initial.checked_sub(transfer_amount).unwrap()
-                } else {
-                    alice_initial // Transfer fails, balance unchanged
-                };
+            // Simulate transfer
+            let alice_after = if transfer_amount <= alice_initial {
+                alice_initial.checked_sub(transfer_amount).unwrap()
+            } else {
+                alice_initial // Transfer fails, balance unchanged
+            };
 
-                let bob_after = if transfer_amount <= alice_initial {
-                    bob_initial.checked_add(transfer_amount).unwrap()
-                } else {
-                    bob_initial // Transfer fails, balance unchanged
-                };
+            let bob_after = if transfer_amount <= alice_initial {
+                bob_initial.checked_add(transfer_amount).unwrap()
+            } else {
+                bob_initial // Transfer fails, balance unchanged
+            };
 
-                let total_after = alice_after.checked_add(bob_after).unwrap();
+            let total_after = alice_after.checked_add(bob_after).unwrap();
 
-                prop_assert_eq!(
-                    total_before,
-                    total_after,
-                    "Total balance should be conserved"
-                );
-            });
+            prop_assert_eq!(
+                total_before,
+                total_after,
+                "Total balance should be conserved"
+            );
         }
 
         #[test]
         fn multiple_transfers_conserve_balance(
             initial_balances in prop::collection::vec(1_000u128..10_000, 3..10),
         ) {
-            run_test(|| {
-                // Property: Multiple transfers should conserve total balance
-                let total_initial: u128 = initial_balances.iter().sum();
+            // Property: Multiple transfers should conserve total balance
+            let total_initial: u128 = initial_balances.iter().sum();
 
-                // Simulate random transfers between accounts
-                let mut balances = initial_balances.clone();
+            // Simulate random transfers between accounts
+            let mut balances = initial_balances.clone();
 
-                // Transfer from account 0 to account 1
-                if balances.len() >= 2 && balances[0] >= 100 {
-                    balances[0] -= 100;
-                    balances[1] += 100;
-                }
+            // Transfer from account 0 to account 1
+            if balances.len() >= 2 && balances[0] >= 100 {
+                balances[0] -= 100;
+                balances[1] += 100;
+            }
 
-                // Transfer from account 1 to account 2
-                if balances.len() >= 3 && balances[1] >= 50 {
-                    balances[1] -= 50;
-                    balances[2] += 50;
-                }
+            // Transfer from account 1 to account 2
+            if balances.len() >= 3 && balances[1] >= 50 {
+                balances[1] -= 50;
+                balances[2] += 50;
+            }
 
-                let total_final: u128 = balances.iter().sum();
+            let total_final: u128 = balances.iter().sum();
 
-                prop_assert_eq!(
-                    total_initial,
-                    total_final,
-                    "Total balance should remain constant after transfers"
-                );
-            });
+            prop_assert_eq!(
+                total_initial,
+                total_final,
+                "Total balance should remain constant after transfers"
+            );
         }
     }
 }
@@ -161,40 +148,34 @@ mod zero_balance_properties {
         fn transfer_from_zero_balance_safe(
             transfer_amount in 1u128..1_000,
         ) {
-            run_test(|| {
-                // Property: Transferring from zero balance should fail gracefully
-                let zero_balance = 0u128;
+            // Property: Transferring from zero balance should fail gracefully
+            let zero_balance = 0u128;
 
-                // Attempt to transfer more than balance
-                let can_transfer = zero_balance >= transfer_amount;
+            // Attempt to transfer more than balance
+            let can_transfer = zero_balance >= transfer_amount;
 
-                prop_assert!(!can_transfer, "Should not be able to transfer from zero balance");
-            });
+            prop_assert!(!can_transfer, "Should not be able to transfer from zero balance");
         }
 
         #[test]
         fn adding_to_zero_balance_safe(
             amount in 1u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: Adding to zero balance should equal the amount
-                let zero_balance = 0u128;
-                let result = zero_balance.checked_add(amount).unwrap();
+            // Property: Adding to zero balance should equal the amount
+            let zero_balance = 0u128;
+            let result = zero_balance.checked_add(amount).unwrap();
 
-                prop_assert_eq!(result, amount, "Zero + amount = amount");
-            });
+            prop_assert_eq!(result, amount, "Zero + amount = amount");
         }
 
         #[test]
         fn subtracting_zero_preserves_balance(
             balance in 1u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: Subtracting zero should not change balance
-                let result = balance.checked_sub(0).unwrap();
+            // Property: Subtracting zero should not change balance
+            let result = balance.checked_sub(0).unwrap();
 
-                prop_assert_eq!(result, balance, "Balance - 0 = balance");
-            });
+            prop_assert_eq!(result, balance, "Balance - 0 = balance");
         }
     }
 }
@@ -212,31 +193,27 @@ mod max_value_properties {
         fn operations_near_max_value_safe(
             offset in 1u128..1_000,
         ) {
-            run_test(|| {
-                // Property: Operations near max value should not overflow
-                let near_max = u128::MAX - offset;
+            // Property: Operations near max value should not overflow
+            let near_max = u128::MAX - offset;
 
-                // Adding small amount to near-max value
-                let result = near_max.checked_add(offset);
+            // Adding small amount to near-max value
+            let result = near_max.checked_add(offset);
 
-                // Should either succeed or return None (no panic)
-                if result.is_some() {
-                    prop_assert!(result.unwrap() <= u128::MAX);
-                }
-            });
+            // Should either succeed or return None (no panic)
+            if result.is_some() {
+                prop_assert!(result.unwrap() <= u128::MAX);
+            }
         }
 
         #[test]
         fn max_value_operations_return_errors(
             amount in 1u128..1_000,
         ) {
-            run_test(|| {
-                // Property: Adding to MAX should fail gracefully
-                let max_balance = u128::MAX;
-                let result = max_balance.checked_add(amount);
+            // Property: Adding to MAX should fail gracefully
+            let max_balance = u128::MAX;
+            let result = max_balance.checked_add(amount);
 
-                prop_assert!(result.is_none(), "Adding to MAX should return None");
-            });
+            prop_assert!(result.is_none(), "Adding to MAX should return None");
         }
     }
 }
@@ -255,17 +232,15 @@ mod percentage_properties {
             amount in 1_000u128..1_000_000,
             fee_percentage in 1u128..100, // 1% to 100%
         ) {
-            run_test(|| {
-                // Property: Fee should never exceed the amount
-                let fee = (amount * fee_percentage) / 100;
+            // Property: Fee should never exceed the amount
+            let fee = (amount * fee_percentage) / 100;
 
-                prop_assert!(fee <= amount, "Fee should not exceed amount");
+            prop_assert!(fee <= amount, "Fee should not exceed amount");
 
-                // Property: Amount minus fee should be positive
-                let net_amount = amount - fee;
-                prop_assert!(net_amount < amount, "Net amount should be less than gross");
-                prop_assert!(net_amount + fee == amount, "Amount = net + fee");
-            });
+            // Property: Amount minus fee should be positive
+            let net_amount = amount - fee;
+            prop_assert!(net_amount < amount, "Net amount should be less than gross");
+            prop_assert!(net_amount + fee == amount, "Amount = net + fee");
         }
 
         #[test]
@@ -273,20 +248,18 @@ mod percentage_properties {
             amount in 1_000u128..1_000_000,
             basis_points in 1u128..10_000, // 0.01% to 100%
         ) {
-            run_test(|| {
-                // Property: Basis point fee calculation (common in DeFi)
-                // 1 basis point = 0.01%
-                let fee = (amount * basis_points) / 10_000;
+            // Property: Basis point fee calculation (common in DeFi)
+            // 1 basis point = 0.01%
+            let fee = (amount * basis_points) / 10_000;
 
-                prop_assert!(fee <= amount, "Fee should not exceed amount");
+            prop_assert!(fee <= amount, "Fee should not exceed amount");
 
-                // Verify precision
-                let reconstructed = (fee * 10_000) / basis_points;
-                prop_assert!(
-                    reconstructed <= amount,
-                    "Reconstructed amount should not exceed original"
-                );
-            });
+            // Verify precision
+            let reconstructed = (fee * 10_000) / basis_points;
+            prop_assert!(
+                reconstructed <= amount,
+                "Reconstructed amount should not exceed original"
+            );
         }
     }
 }
@@ -304,34 +277,32 @@ mod bounded_operations {
         fn balance_always_within_bounds(
             operations in prop::collection::vec(0i128..1_000, 1..100),
         ) {
-            run_test(|| {
-                // Property: Balance should never go negative or exceed MAX
-                let mut balance = 10_000u128;
-                let min_balance = 0u128;
-                let max_balance = 1_000_000u128;
+            // Property: Balance should never go negative or exceed MAX
+            let mut balance = 10_000u128;
+            let min_balance = 0u128;
+            let max_balance = 1_000_000u128;
 
-                for op in operations {
-                    if op >= 0 {
-                        // Add operation
-                        if let Some(new_balance) = balance.checked_add(op as u128) {
-                            if new_balance <= max_balance {
-                                balance = new_balance;
-                            }
-                        }
-                    } else {
-                        // Subtract operation
-                        if let Some(new_balance) = balance.checked_sub((-op) as u128) {
-                            if new_balance >= min_balance {
-                                balance = new_balance;
-                            }
+            for op in operations {
+                if op >= 0 {
+                    // Add operation
+                    if let Some(new_balance) = balance.checked_add(op as u128) {
+                        if new_balance <= max_balance {
+                            balance = new_balance;
                         }
                     }
-
-                    // Invariant: balance is always within bounds
-                    prop_assert!(balance >= min_balance, "Balance should not go below minimum");
-                    prop_assert!(balance <= max_balance, "Balance should not exceed maximum");
+                } else {
+                    // Subtract operation
+                    if let Some(new_balance) = balance.checked_sub((-op) as u128) {
+                        if new_balance >= min_balance {
+                            balance = new_balance;
+                        }
+                    }
                 }
-            });
+
+                // Invariant: balance is always within bounds
+                prop_assert!(balance >= min_balance, "Balance should not go below minimum");
+                prop_assert!(balance <= max_balance, "Balance should not exceed maximum");
+            }
         }
     }
 }

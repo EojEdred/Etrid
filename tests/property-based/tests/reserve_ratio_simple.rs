@@ -4,9 +4,6 @@
 
 use proptest::prelude::*;
 
-mod mock;
-use mock::*;
-
 /// Helper function to calculate reserve ratio
 fn calculate_reserve_ratio(collateral: u128, debt: u128) -> Option<u128> {
     if debt == 0 {
@@ -30,18 +27,16 @@ mod reserve_ratio_properties {
             collateral in 0u128..10_000_000,
             debt in 0u128..10_000_000,
         ) {
-            run_test(|| {
-                // Property: Reserve ratio calculation should never panic
-                let ratio = calculate_reserve_ratio(collateral, debt);
+            // Property: Reserve ratio calculation should never panic
+            let ratio = calculate_reserve_ratio(collateral, debt);
 
-                // Should always return Some or None, never panic
-                if debt > 0 {
-                    prop_assert!(ratio.is_some() || ratio.is_none());
-                } else {
-                    // Zero debt = infinite ratio
-                    prop_assert_eq!(ratio, Some(u128::MAX));
-                }
-            });
+            // Should always return Some or None, never panic
+            if debt > 0 {
+                prop_assert!(ratio.is_some() || ratio.is_none());
+            } else {
+                // Zero debt = infinite ratio
+                prop_assert_eq!(ratio, Some(u128::MAX));
+            }
         }
 
         #[test]
@@ -49,20 +44,19 @@ mod reserve_ratio_properties {
             collateral_multiple in 110u128..200, // 110% to 200%
             debt in 1_000u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: Over-collateralized position has ratio > 100%
-                let collateral = (debt * collateral_multiple) / 100;
-                let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
+            // Property: Over-collateralized position has ratio > 100%
+            let collateral = (debt * collateral_multiple) / 100;
+            let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
 
-                prop_assert!(
-                    ratio >= 100,
-                    "Over-collateralized ratio should be >= 100%"
-                );
-                prop_assert!(
-                    ratio >= collateral_multiple,
-                    "Ratio should match collateral multiple"
-                );
-            });
+            prop_assert!(
+                ratio >= 100,
+                "Over-collateralized ratio should be >= 100%"
+            );
+            // Allow for integer division rounding (within 1%)
+            prop_assert!(
+                ratio >= collateral_multiple - 1 && ratio <= collateral_multiple + 1,
+                "Ratio should approximately match collateral multiple (within rounding error)"
+            );
         }
 
         #[test]
@@ -70,29 +64,25 @@ mod reserve_ratio_properties {
             collateral_percentage in 50u128..99, // 50% to 99%
             debt in 1_000u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: Under-collateralized position has ratio < 100%
-                let collateral = (debt * collateral_percentage) / 100;
-                let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
+            // Property: Under-collateralized position has ratio < 100%
+            let collateral = (debt * collateral_percentage) / 100;
+            let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
 
-                prop_assert!(
-                    ratio < 100,
-                    "Under-collateralized ratio should be < 100%"
-                );
-            });
+            prop_assert!(
+                ratio < 100,
+                "Under-collateralized ratio should be < 100%"
+            );
         }
 
         #[test]
         fn exact_100_percent_collateralization(
             debt in 1_000u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: Exactly 100% collateralized = ratio of 100
-                let collateral = debt;
-                let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
+            // Property: Exactly 100% collateralized = ratio of 100
+            let collateral = debt;
+            let ratio = calculate_reserve_ratio(collateral, debt).unwrap();
 
-                prop_assert_eq!(ratio, 100, "100% collateral = 100% ratio");
-            });
+            prop_assert_eq!(ratio, 100, "100% collateral = 100% ratio");
         }
     }
 }
@@ -117,45 +107,40 @@ mod haircut_properties {
             value in 1_000u128..1_000_000,
             haircut in 1u128..50, // 1% to 50% haircut
         ) {
-            run_test(|| {
-                // Property: Haircut always reduces value
-                let adjusted = apply_haircut(value, haircut).unwrap();
+            // Property: Haircut always reduces value
+            let adjusted = apply_haircut(value, haircut).unwrap();
 
-                prop_assert!(adjusted < value, "Haircut should reduce value");
+            prop_assert!(adjusted < value, "Haircut should reduce value");
 
-                let reduction = value - adjusted;
-                let expected_reduction = (value * haircut) / 100;
+            // Verify the reduction is reasonable (allowing for integer rounding)
+            let reduction = value - adjusted;
+            let expected_reduction = (value * haircut) / 100;
 
-                prop_assert_eq!(
-                    reduction,
-                    expected_reduction,
-                    "Reduction should match haircut percentage"
-                );
-            });
+            // Allow for rounding error of 1
+            prop_assert!(
+                reduction >= expected_reduction.saturating_sub(1) && reduction <= expected_reduction + 1,
+                "Reduction should approximately match haircut percentage (within rounding error)"
+            );
         }
 
         #[test]
         fn zero_haircut_preserves_value(
             value in 1_000u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: 0% haircut = no change
-                let adjusted = apply_haircut(value, 0).unwrap();
+            // Property: 0% haircut = no change
+            let adjusted = apply_haircut(value, 0).unwrap();
 
-                prop_assert_eq!(adjusted, value, "Zero haircut preserves value");
-            });
+            prop_assert_eq!(adjusted, value, "Zero haircut preserves value");
         }
 
         #[test]
         fn max_haircut_zeroes_value(
             value in 1_000u128..1_000_000,
         ) {
-            run_test(|| {
-                // Property: 100% haircut = zero value
-                let adjusted = apply_haircut(value, 100).unwrap();
+            // Property: 100% haircut = zero value
+            let adjusted = apply_haircut(value, 100).unwrap();
 
-                prop_assert_eq!(adjusted, 0, "100% haircut = 0 value");
-            });
+            prop_assert_eq!(adjusted, 0, "100% haircut = 0 value");
         }
 
         #[test]
@@ -163,12 +148,10 @@ mod haircut_properties {
             value in 1u128..u128::MAX / 100,
             haircut in 1u128..100,
         ) {
-            run_test(|| {
-                // Property: Haircut calculation never overflows
-                let result = apply_haircut(value, haircut);
+            // Property: Haircut calculation never overflows
+            let result = apply_haircut(value, haircut);
 
-                prop_assert!(result.is_some(), "Haircut calculation should succeed");
-            });
+            prop_assert!(result.is_some(), "Haircut calculation should succeed");
         }
     }
 }
@@ -178,6 +161,11 @@ mod haircut_properties {
 mod multi_asset_properties {
     use super::*;
 
+    fn apply_haircut(value: u128, haircut_percentage: u128) -> Option<u128> {
+        let multiplier = 100u128.checked_sub(haircut_percentage)?;
+        value.checked_mul(multiplier)?.checked_div(100)
+    }
+
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(1000))]
 
@@ -185,19 +173,17 @@ mod multi_asset_properties {
         fn total_collateral_sum_correct(
             asset_values in prop::collection::vec(1_000u128..100_000, 1..10),
         ) {
-            run_test(|| {
-                // Property: Total collateral = sum of all asset values
-                let total: u128 = asset_values.iter().sum();
+            // Property: Total collateral = sum of all asset values
+            let total: u128 = asset_values.iter().sum();
 
-                // Verify each asset contributes to total
-                for value in &asset_values {
-                    prop_assert!(total >= *value, "Total should include all assets");
-                }
+            // Verify each asset contributes to total
+            for value in &asset_values {
+                prop_assert!(total >= *value, "Total should include all assets");
+            }
 
-                // Verify total is exact sum
-                let manual_sum = asset_values.iter().fold(0u128, |acc, v| acc + v);
-                prop_assert_eq!(total, manual_sum, "Sum should be exact");
-            });
+            // Verify total is exact sum
+            let manual_sum = asset_values.iter().fold(0u128, |acc, v| acc + v);
+            prop_assert_eq!(total, manual_sum, "Sum should be exact");
         }
 
         #[test]
@@ -205,27 +191,20 @@ mod multi_asset_properties {
             asset_values in prop::collection::vec(1_000u128..100_000, 1..5),
             haircuts in prop::collection::vec(5u128..40, 1..5),
         ) {
-            run_test(|| {
-                // Property: Adjusted collateral <= raw collateral
-                let raw_total: u128 = asset_values.iter().sum();
+            // Property: Adjusted collateral <= raw collateral
+            let raw_total: u128 = asset_values.iter().sum();
 
-                let mut adjusted_total = 0u128;
-                for (value, haircut) in asset_values.iter().zip(haircuts.iter()) {
-                    let adjusted = apply_haircut(*value, *haircut).unwrap();
-                    adjusted_total += adjusted;
-                }
+            let mut adjusted_total = 0u128;
+            for (value, haircut) in asset_values.iter().zip(haircuts.iter()) {
+                let adjusted = apply_haircut(*value, *haircut).unwrap();
+                adjusted_total += adjusted;
+            }
 
-                prop_assert!(
-                    adjusted_total <= raw_total,
-                    "Adjusted collateral should be <= raw"
-                );
-            });
+            prop_assert!(
+                adjusted_total <= raw_total,
+                "Adjusted collateral should be <= raw"
+            );
         }
-    }
-
-    fn apply_haircut(value: u128, haircut_percentage: u128) -> Option<u128> {
-        let multiplier = 100u128.checked_sub(haircut_percentage)?;
-        value.checked_mul(multiplier)?.checked_div(100)
     }
 }
 
@@ -241,39 +220,33 @@ mod threshold_properties {
         fn optimal_range_detection(
             ratio in 110u128..130, // Optimal range: 110-130%
         ) {
-            run_test(|| {
-                // Property: Ratios in optimal range should be detected correctly
-                let is_optimal = ratio >= 110 && ratio <= 130;
+            // Property: Ratios in optimal range should be detected correctly
+            let is_optimal = ratio >= 110 && ratio <= 130;
 
-                prop_assert!(is_optimal, "Ratio should be in optimal range");
-                prop_assert!(ratio >= 100, "Should be over-collateralized");
-            });
+            prop_assert!(is_optimal, "Ratio should be in optimal range");
+            prop_assert!(ratio >= 100, "Should be over-collateralized");
         }
 
         #[test]
         fn throttle_zone_detection(
             ratio in 100u128..110, // Throttle zone: 100-110%
         ) {
-            run_test(|| {
-                // Property: Ratios in throttle zone should trigger caution
-                let is_throttle = ratio >= 100 && ratio < 110;
+            // Property: Ratios in throttle zone should trigger caution
+            let is_throttle = ratio >= 100 && ratio < 110;
 
-                prop_assert!(is_throttle, "Ratio should be in throttle zone");
-                prop_assert!(ratio >= 100, "Should still be collateralized");
-                prop_assert!(ratio < 110, "Should be below optimal");
-            });
+            prop_assert!(is_throttle, "Ratio should be in throttle zone");
+            prop_assert!(ratio >= 100, "Should still be collateralized");
+            prop_assert!(ratio < 110, "Should be below optimal");
         }
 
         #[test]
         fn critical_zone_detection(
             ratio in 0u128..100, // Critical: < 100%
         ) {
-            run_test(|| {
-                // Property: Under-collateralized should be critical
-                let is_critical = ratio < 100;
+            // Property: Under-collateralized should be critical
+            let is_critical = ratio < 100;
 
-                prop_assert!(is_critical, "Ratio should be critical");
-            });
+            prop_assert!(is_critical, "Ratio should be critical");
         }
     }
 }
@@ -293,20 +266,18 @@ mod price_update_properties {
             price_increase in 10u128..500,
             debt in 1_000u128..10_000,
         ) {
-            run_test(|| {
-                // Property: Increasing collateral price increases ratio
-                let initial_value = collateral_amount * initial_price;
-                let new_price = initial_price + price_increase;
-                let new_value = collateral_amount * new_price;
+            // Property: Increasing collateral price increases ratio
+            let initial_value = collateral_amount * initial_price;
+            let new_price = initial_price + price_increase;
+            let new_value = collateral_amount * new_price;
 
-                let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
-                let new_ratio = calculate_reserve_ratio(new_value, debt).unwrap();
+            let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
+            let new_ratio = calculate_reserve_ratio(new_value, debt).unwrap();
 
-                prop_assert!(
-                    new_ratio >= initial_ratio,
-                    "Price increase should increase or maintain ratio"
-                );
-            });
+            prop_assert!(
+                new_ratio >= initial_ratio,
+                "Price increase should increase or maintain ratio"
+            );
         }
 
         #[test]
@@ -316,22 +287,20 @@ mod price_update_properties {
             price_decrease in 10u128..400,
             debt in 1_000u128..10_000,
         ) {
-            run_test(|| {
-                // Property: Decreasing collateral price decreases ratio
-                if price_decrease < initial_price {
-                    let initial_value = collateral_amount * initial_price;
-                    let new_price = initial_price - price_decrease;
-                    let new_value = collateral_amount * new_price;
+            // Property: Decreasing collateral price decreases ratio
+            if price_decrease < initial_price {
+                let initial_value = collateral_amount * initial_price;
+                let new_price = initial_price - price_decrease;
+                let new_value = collateral_amount * new_price;
 
-                    let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
-                    let new_ratio = calculate_reserve_ratio(new_value, debt).unwrap();
+                let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
+                let new_ratio = calculate_reserve_ratio(new_value, debt).unwrap();
 
-                    prop_assert!(
-                        new_ratio <= initial_ratio,
-                        "Price decrease should decrease or maintain ratio"
-                    );
-                }
-            });
+                prop_assert!(
+                    new_ratio <= initial_ratio,
+                    "Price decrease should decrease or maintain ratio"
+                );
+            }
         }
     }
 }
