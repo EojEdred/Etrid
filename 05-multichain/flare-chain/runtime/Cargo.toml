@@ -46,6 +46,25 @@ bnb-bridge = { path = "../../bridge-protocols/bnb-bridge", default-features = fa
 trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = false }
 stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
 
+# EDSC pallets (8 pallets)
+# Core EDSC pallets (for reference - mainly on PBC-EDSC)
+pallet-edsc-token = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
+pallet-edsc-receipts = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-receipts", default-features = false }
+pallet-edsc-redemption = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
+pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
+
+# FlareChain-specific EDSC pallets
+pallet-reserve-vault = { path = "../../../pallets/pallet-reserve-vault", default-features = false }
+pallet-custodian-registry = { path = "../../../pallets/pallet-custodian-registry", default-features = false }
+pallet-reserve-oracle = { path = "../../../pallets/pallet-reserve-oracle", default-features = false }
+
+# Cross-chain infrastructure
+pallet-xcm-bridge = { path = "../../../pallets/pallet-xcm-bridge", default-features = false }
+
+# Phase 3: External Bridge Protocol (CCTP-style)
+pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
+pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
+
 # Substrate core
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -66,6 +85,7 @@ pallet-insecure-randomness-collective-flip = { git = "https://github.com/parityt
 
 # Primitives
 sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-arithmetic = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
 # sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }  # Removed: using ASF consensus
 sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
@@ -138,6 +158,18 @@ std = [
     "trx-bridge/std",
     "stablecoin-usdt-bridge/std",
 
+    # EDSC pallets
+    "pallet-edsc-token/std",
+    "pallet-edsc-receipts/std",
+    "pallet-edsc-redemption/std",
+    "pallet-edsc-oracle/std",
+    "pallet-reserve-vault/std",
+    "pallet-custodian-registry/std",
+    "pallet-reserve-oracle/std",
+    "pallet-xcm-bridge/std",
+    "pallet-edsc-bridge-token-messenger/std",
+    "pallet-edsc-bridge-attestation/std",
+
     "frame-executive/std",
     "frame-support/std",
     "frame-system/std",
@@ -149,6 +181,7 @@ std = [
     "pallet-transaction-payment/std",
     "pallet-insecure-randomness-collective-flip/std",
     "sp-api/std",
+    "sp-arithmetic/std",
     "sp-block-builder/std",
     # "sp-consensus-aura/std",  # Removed: using ASF consensus
     "sp-consensus-grandpa/std",

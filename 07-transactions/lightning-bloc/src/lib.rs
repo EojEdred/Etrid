@@ -2,13 +2,22 @@
 //!
 //! Enables fast, off-chain payments with on-chain settlement:
 //! - Bidirectional payment channels
+//! - Multi-hop routing and pathfinding
 //! - State update signatures
 //! - Dispute resolution mechanism
 //! - Settlement finality
 //! - Channel lifecycle management
 
+pub mod routing;
+
 use std::collections::HashMap;
 use std::fmt;
+
+// Re-export routing types
+pub use routing::{
+    NetworkGraph, Router, Route, RouteHop, ChannelEdge,
+    RoutingError, NodeId, ChannelId,
+};
 
 /// Channel state
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -35,7 +44,7 @@ impl fmt::Display for ChannelState {
 }
 
 /// Payment channel
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PaymentChannel {
     pub id: String,
     pub party_a: String,

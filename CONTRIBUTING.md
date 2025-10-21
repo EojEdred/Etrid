@@ -1,375 +1,650 @@
 # Contributing to Ëtrid
 
-First off, **thank you** for considering contributing to Ëtrid! This project is driven by the community, and we welcome contributions of all kinds.
+Thank you for your interest in contributing to Ëtrid! This document provides guidelines for contributing to the project.
+
+## Table of Contents
+
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [How to Contribute](#how-to-contribute)
+- [Development Workflow](#development-workflow)
+- [Code Standards](#code-standards)
+- [Testing](#testing)
+- [Documentation](#documentation)
+- [Community](#community)
 
 ---
 
-## 📜 Code of Conduct
+## Code of Conduct
 
 ### Our Pledge
-We are committed to providing a welcoming and inspiring community for all. Please be respectful, constructive, and collaborative.
+
+We are committed to providing a welcoming and inspiring community for all. We pledge to:
+
+- **Be respectful**: Treat everyone with respect and kindness
+- **Be inclusive**: Welcome diverse perspectives and backgrounds
+- **Be collaborative**: Work together constructively
+- **Be professional**: Focus on technical merit
+- **Be considerate**: Think about how your actions affect others
 
 ### Unacceptable Behavior
-- Harassment, trolling, or discriminatory language
-- Personal attacks or insults
-- Spam or off-topic discussions
+
+- Harassment, discrimination, or intimidation
+- Trolling, insulting comments, or personal attacks
+- Public or private harassment
 - Publishing others' private information
+- Other conduct inappropriate in a professional setting
 
-**Violations**: Report to conduct@etrid.io. Offenders may be banned.
+### Enforcement
 
----
-
-## 🚀 How Can I Contribute?
-
-### 1. Report Bugs
-Found a bug? Create an issue on GitHub with:
-- **Title**: Clear, concise description
-- **Steps to Reproduce**: Exact steps that trigger the bug
-- **Expected Behavior**: What should happen
-- **Actual Behavior**: What actually happens
-- **Environment**: OS, Rust version, browser, etc.
-- **Screenshots**: If applicable
-
-**Label**: `bug`
+Violations of the Code of Conduct may be reported to conduct@etrid.io. All complaints will be reviewed and investigated promptly and fairly.
 
 ---
 
-### 2. Suggest Features
-Have an idea? Create an issue with:
-- **Title**: Feature name
-- **Problem**: What problem does this solve?
-- **Proposed Solution**: How should it work?
-- **Alternatives**: Other approaches considered
-- **Additional Context**: Mockups, diagrams, etc.
-
-**Label**: `enhancement`
-
----
-
-### 3. Improve Documentation
-Documentation is always a priority! You can:
-- Fix typos or unclear explanations
-- Add examples and tutorials
-- Translate docs to other languages
-- Create videos or blog posts
-
-**No code review needed** for minor doc fixes—just submit a PR!
-
----
-
-### 4. Write Code
-See [Development Setup](#development-setup) below.
-
-**Good First Issues**: Look for issues labeled `good first issue` or `help wanted`.
-
-**Major Features**: Discuss in an issue first before starting work.
-
----
-
-## 💻 Development Setup
+## Getting Started
 
 ### Prerequisites
-- **Rust** 1.70+ with `wasm32-unknown-unknown` target
-- **Node.js** 18+ and npm/yarn (for web apps)
-- **Flutter** 3.0+ (for mobile wallet)
-- **Git**
 
-### Setup Steps
+**For Rust/Substrate development**:
+- Rust 1.70+ with `wasm32-unknown-unknown` target
+- Linux or macOS (Windows via WSL)
+- 8GB+ RAM, 50GB+ free disk space
+
+**For JavaScript/TypeScript development**:
+- Node.js 18+
+- npm or yarn
+
+**For smart contracts**:
+- Solidity 0.8.20+
+- Hardhat
+
+### Fork and Clone
+
+1. Fork the repository on GitHub
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/etrid.git
+   cd etrid
+   ```
+
+3. Add upstream remote:
+   ```bash
+   git remote add upstream https://github.com/etrid/etrid.git
+   ```
+
+### Build
+
+**Substrate components**:
+```bash
+# Build EDSC-PBC runtime
+cargo build --release -p edsc-pbc-runtime
+
+# Build node
+cargo build --release -p edsc-pbc-node
+```
+
+**Services**:
+```bash
+# Attestation service
+cd services/attestation-service
+npm install && npm run build
+
+# Relayer service
+cd ../relayer-service
+npm install && npm run build
+```
+
+**Smart contracts**:
+```bash
+cd contracts/ethereum
+npm install
+npx hardhat compile
+```
+
+### Run Tests
 
 ```bash
-# 1. Fork the repo on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/Etrid.git
-cd Etrid
-
-# 2. Add upstream remote
-git remote add upstream https://github.com/EojEdred/Etrid.git
-
-# 3. Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup update
-rustup target add wasm32-unknown-unknown
-
-# 4. Build (when dependencies stabilize)
-cargo build
-
-# 5. Run tests
+# Rust tests
 cargo test --workspace
 
-# 6. Create a branch
-git checkout -b feature/my-awesome-feature
-```
-
----
-
-## 🏗️ Project Structure
-
-```
-etrid/
-├── 01-detr-p2p/          # Networking (Rust)
-├── 04-accounts/pallet/   # Accounts pallet (Rust)
-├── 08-etwasm-vm/pallet/  # VM pallet (Rust)
-├── 09-consensus/pallet/  # Consensus pallet (Rust)
-├── 10-foundation/        # Governance pallet (Rust)
-├── 13-clients/
-│   ├── cli/              # CLI tool (Rust)
-│   ├── web/              # Web dashboard (React/TS)
-│   └── mobile/           # Mobile wallet (Flutter)
-├── apps/                 # Frontend apps
-├── docs/                 # Documentation
-└── scripts/              # Build scripts
-```
-
-**Focus Areas:**
-- **Rust**: Pallets, consensus, VM
-- **Frontend**: React (web), Flutter (mobile)
-- **Docs**: Markdown, tutorials, guides
-
----
-
-## 🧪 Testing
-
-### Rust Tests
-```bash
-# Run all tests
-cargo test --workspace
-
-# Run tests for specific pallet
-cargo test -p pallet-accounts
-
-# Run with output
-cargo test -- --nocapture
-```
-
-### Frontend Tests
-```bash
-# Web (in apps/web/)
+# Service tests
+cd tests
+npm install
 npm test
 
-# Mobile (in 13-clients/mobile/)
-flutter test
-```
-
-### Integration Tests
-```bash
-# Run full stack tests
-./scripts/test-integration.sh
+# Smart contract tests
+cd contracts/ethereum
+npx hardhat test
 ```
 
 ---
 
-## 📝 Coding Standards
+## How to Contribute
+
+### Ways to Contribute
+
+- 🐛 **Bug Reports**: Found a bug? Report it!
+- 💡 **Feature Requests**: Have an idea? Propose it!
+- 📝 **Documentation**: Improve docs, write tutorials
+- 🧪 **Testing**: Write tests, find edge cases
+- 💻 **Code**: Fix bugs, implement features
+- 🎨 **Design**: UX/UI improvements
+- 🌍 **Translation**: Translate documentation
+- 💬 **Community**: Help others, answer questions
+
+### Finding Issues
+
+Good first issues:
+- Label: `good first issue`
+- Label: `help wanted`
+- Label: `documentation`
+
+Browse: https://github.com/etrid/etrid/issues
+
+### Claiming Issues
+
+1. Comment on the issue: "I'd like to work on this"
+2. Wait for assignment (maintainers will respond within 48 hours)
+3. Fork and start working
+4. Submit PR when ready
+
+---
+
+## Development Workflow
+
+### 1. Create a Branch
+
+```bash
+# Update main
+git checkout main
+git pull upstream main
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/bug-description
+```
+
+**Branch naming**:
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation
+- `test/` - Test improvements
+- `refactor/` - Code refactoring
+
+### 2. Make Changes
+
+- Write clean, readable code
+- Follow coding standards (below)
+- Add/update tests
+- Update documentation
+- Commit regularly with clear messages
+
+### 3. Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+type(scope): subject
+
+body (optional)
+
+footer (optional)
+```
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Code style (formatting)
+- `refactor`: Code refactoring
+- `test`: Tests
+- `chore`: Maintenance
+
+**Examples**:
+```
+feat(bridge): add support for batched transfers
+
+fix(attestation): resolve signature verification issue
+
+docs(readme): update installation instructions
+
+test(e2e): add round-trip transfer test
+```
+
+### 4. Push and Create PR
+
+```bash
+# Push to your fork
+git push origin feature/your-feature-name
+
+# Create PR on GitHub
+```
+
+**PR Template**:
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation
+
+## Testing
+How was this tested?
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Tests added/updated
+- [ ] Documentation updated
+- [ ] All tests pass
+- [ ] No new warnings
+```
+
+### 5. Code Review
+
+- Be responsive to feedback
+- Make requested changes
+- Discuss constructively
+- Be patient (reviews take time)
+
+### 6. Merge
+
+Once approved:
+- Maintainer will merge
+- Delete your branch
+- Update your fork
+
+---
+
+## Code Standards
 
 ### Rust
-- **Style**: Use `rustfmt` (run `cargo fmt` before committing)
-- **Linting**: Use `clippy` (run `cargo clippy`)
-- **Documentation**: Every public function must have doc comments
-- **Tests**: Write unit tests for all logic
-- **Error Handling**: Use `Result<T, E>`, no `unwrap()` in production code
 
-**Example:**
+**Style**:
+```bash
+# Format code
+cargo fmt
+
+# Lint
+cargo clippy --all-targets --all-features
+```
+
+**Guidelines**:
+- Use `rustfmt` defaults
+- Fix all `clippy` warnings
+- Prefer explicit types for public APIs
+- Document public functions with `///`
+- Use descriptive variable names
+
+**Example**:
 ```rust
-/// Transfers tokens from one account to another.
+/// Burns EDSC tokens and emits cross-chain message
 ///
-/// # Arguments
-/// * `from` - Source account
-/// * `to` - Destination account
-/// * `amount` - Amount to transfer
+/// # Parameters
+/// - `origin`: Transaction sender
+/// - `amount`: Amount to burn (in smallest unit)
+/// - `recipient`: Destination address
 ///
 /// # Errors
-/// Returns `InsufficientBalance` if `from` has insufficient funds.
-pub fn transfer(from: AccountId, to: AccountId, amount: Balance) -> Result<(), Error> {
+/// - `InsufficientBalance`: Not enough tokens
+/// - `InvalidRecipient`: Invalid destination address
+pub fn burn_and_send(
+    origin: OriginFor<T>,
+    amount: BalanceOf<T>,
+    recipient: Vec<u8>,
+) -> DispatchResult {
     // Implementation
+}
+```
+
+### JavaScript/TypeScript
+
+**Style**:
+```bash
+# Format
+npm run format
+
+# Lint
+npm run lint
+```
+
+**Guidelines**:
+- Use ESLint + Prettier
+- Prefer `const` over `let`
+- Use async/await over promises
+- Add JSDoc comments for exported functions
+- Descriptive variable names
+
+**Example**:
+```typescript
+/**
+ * Fetches attestation from service by nonce
+ * @param sourceDomain - Source chain domain (0=Ethereum, 2=Ëtrid)
+ * @param nonce - Message nonce
+ * @returns Attestation with signatures
+ * @throws Error if not found or network error
+ */
+async function fetchAttestationByNonce(
+  sourceDomain: number,
+  nonce: bigint
+): Promise<Attestation> {
+  // Implementation
+}
+```
+
+### Solidity
+
+**Style**:
+```bash
+# Format
+npx prettier --write 'contracts/**/*.sol'
+```
+
+**Guidelines**:
+- Follow Solidity style guide
+- Use NatSpec comments
+- Explicit visibility modifiers
+- Use SafeMath (or Solidity 0.8+ overflow checks)
+- Emit events for state changes
+
+**Example**:
+```solidity
+/// @notice Burns EDSC and sends cross-chain message
+/// @param recipient Destination address (bytes32)
+/// @param amount Amount to burn
+/// @return nonce Message nonce
+function burnAndSend(
+    bytes calldata recipient,
+    uint256 amount
+) external whenNotPaused returns (uint64 nonce) {
+    // Implementation
+    emit MessageSent(destinationDomain, nonce, msg.sender, recipient, amount);
 }
 ```
 
 ---
 
-### TypeScript/JavaScript
-- **Style**: Use Prettier (run `npm run format`)
-- **Linting**: Use ESLint (run `npm run lint`)
-- **Types**: TypeScript preferred, avoid `any`
-- **Components**: Functional components with hooks
-- **State**: Use Context API or lightweight state lib (Zustand)
+## Testing
 
----
+### Test Requirements
 
-### Dart/Flutter
-- **Style**: Use `dart format`
-- **Linting**: Follow `analysis_options.yaml`
-- **Architecture**: BLoC pattern for state management
-- **Widgets**: Prefer stateless widgets
+All PRs must include tests:
 
----
+- **Unit tests**: Test individual functions
+- **Integration tests**: Test component interactions
+- **E2E tests**: Test full user flows
 
-## 🔀 Git Workflow
+### Running Tests
 
-### Branching Strategy
-- `main` - Stable, production-ready code
-- `develop` - Integration branch for features
-- `feature/xxx` - New features
-- `fix/xxx` - Bug fixes
-- `docs/xxx` - Documentation updates
+**Rust**:
+```bash
+# All tests
+cargo test --workspace
 
-### Commit Messages
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+# Specific pallet
+cargo test -p pallet-token-messenger
 
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
+# With output
+cargo test -- --nocapture
 ```
 
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation only
-- `style`: Formatting, no code change
-- `refactor`: Code restructure, no behavior change
-- `test`: Add or update tests
-- `chore`: Build scripts, dependencies
+**Services**:
+```bash
+cd tests
+npm test
 
-**Examples:**
-```
-feat(accounts): add multi-sig support
+# Watch mode
+npm run test:watch
 
-Implement 2-of-3 multi-signature accounts with threshold voting.
-
-Closes #123
+# Coverage
+npm run test:coverage
 ```
 
+**Smart contracts**:
+```bash
+cd contracts/ethereum
+npx hardhat test
+
+# Coverage
+npx hardhat coverage
 ```
-fix(consensus): correct coinage calculation
 
-Coinage was not resetting after vote. Fixed by clearing coinage storage.
+### Test Guidelines
+
+- **Descriptive names**: `test_burn_with_insufficient_balance_fails()`
+- **Clear arrangement**: Given/When/Then pattern
+- **Edge cases**: Test boundaries, errors, invalid inputs
+- **Mock dependencies**: Use test doubles for external services
+- **Fast tests**: Unit tests should run in <1s
+
+**Example**:
+```rust
+#[test]
+fn test_burn_and_send_success() {
+    new_test_ext().execute_with(|| {
+        // Given: User has sufficient balance
+        let account = 1;
+        let amount = 100;
+        assert_ok!(Balances::set_balance(Origin::root(), account, amount, 0));
+
+        // When: User burns tokens
+        assert_ok!(TokenMessenger::burn_and_send(
+            Origin::signed(account),
+            amount,
+            vec![0; 32], // recipient
+        ));
+
+        // Then: Balance decreased and event emitted
+        assert_eq!(Balances::free_balance(account), 0);
+        assert!(System::events().iter().any(|e| {
+            matches!(e.event, Event::TokenMessenger(TokenMessengerEvent::BurnMessageSent { .. }))
+        }));
+    });
+}
 ```
 
 ---
 
-## 📤 Pull Request Process
+## Documentation
 
-### Before Submitting
-1. ✅ Ensure code compiles: `cargo build`
-2. ✅ Run tests: `cargo test --workspace`
-3. ✅ Run formatter: `cargo fmt`
-4. ✅ Run linter: `cargo clippy`
-5. ✅ Update docs if API changed
-6. ✅ Rebase on latest `develop`: `git rebase upstream/develop`
+### Types of Documentation
 
-### Submitting PR
-1. Push to your fork
-2. Open PR against `develop` (not `main`)
-3. Fill out PR template:
-   - **Title**: Clear description
-   - **Description**: What does this PR do?
-   - **Related Issues**: `Closes #123`, `Fixes #456`
-   - **Testing**: How was this tested?
-   - **Screenshots**: If UI changes
+1. **Code comments**: Explain *why*, not *what*
+2. **API docs**: Public functions, parameters, returns
+3. **README files**: Setup, usage, examples
+4. **User guides**: End-user tutorials
+5. **Technical specs**: Architecture, protocols
 
-### Review Process
-- **Code Review**: At least 1 maintainer approval required
-- **CI Checks**: All tests must pass
-- **Merge**: Squash and merge to keep history clean
+### Writing Documentation
 
-**Timeline**: Expect review within 3-5 business days.
+**Guidelines**:
+- Clear and concise
+- Use examples
+- Keep up-to-date
+- Use proper English
+- Link to related docs
 
----
+**Markdown**:
+```markdown
+# Clear Heading
 
-## 🏷️ Issue Labels
+Brief introduction paragraph.
 
-| Label | Description |
-|-------|-------------|
-| `bug` | Something isn't working |
-| `enhancement` | New feature request |
-| `documentation` | Improvements to docs |
-| `good first issue` | Easy for newcomers |
-| `help wanted` | Need community assistance |
-| `priority: high` | Urgent, blocking |
-| `priority: low` | Nice to have |
-| `wontfix` | Will not be addressed |
-| `duplicate` | Already reported |
+## Subsection
 
----
+- Bullet points for lists
+- Use **bold** for emphasis
+- Use `code` for technical terms
 
-## 🎨 Design Guidelines
+### Code Examples
 
-### UI/UX Principles
-- **Simple**: Don't make users think
-- **Consistent**: Follow design system
-- **Accessible**: WCAG 2.1 AA compliance
-- **Responsive**: Mobile-first design
+\`\`\`rust
+// Always include working code examples
+fn example() {
+    println!("Hello!");
+}
+\`\`\`
 
-### Brand Assets
-- **Colors**: See `docs/design/colors.md`
-- **Fonts**: Inter (sans-serif), JetBrains Mono (mono)
-- **Logo**: Download from `docs/design/logo/`
+## See Also
+
+- [Related Doc](link)
+```
+
+### Documentation Locations
+
+- **Rust docs**: `///` comments above items
+- **Service docs**: `README.md` in service directory
+- **Contract docs**: NatSpec comments in Solidity
+- **User docs**: `docs/` directory
+- **API reference**: Auto-generated from code
 
 ---
 
-## 🌍 Internationalization (i18n)
+## Community
 
-We support multiple languages:
-- English (primary)
-- Spanish, French, German (in progress)
+### Communication Channels
 
-**Contributing Translations:**
-1. Find translation files in `locales/`
-2. Add your language: `locales/fr.json`
-3. Submit PR with translations
+- **Discord**: [discord.gg/etrid](https://discord.gg/etrid)
+  - #development - Technical discussions
+  - #bridge - Bridge-specific chat
+  - #help - Get help
+  - #announcements - Project updates
 
----
+- **GitHub Discussions**: Questions, proposals, ideas
 
-## 📞 Communication Channels
+- **Twitter**: [@EtridMultichain](https://twitter.com/EtridMultichain) - Announcements
 
-- **GitHub Issues**: Bug reports, feature requests
-- **Discord**: Real-time chat, questions (https://discord.gg/etrid)
-- **Forum**: Long-form discussions (https://forum.etrid.io)
-- **Email**: hello@etrid.io (for sensitive matters)
+- **Email**: dev@etrid.io - Direct contact
 
----
+### Weekly Meetings
 
-## 🏆 Recognition
+**Community Call**:
+- When: Every Tuesday 16:00 UTC
+- Where: Discord voice channel
+- Topics: Project updates, Q&A, demos
 
-**Contributors are recognized in:**
+**Developer Sync**:
+- When: Every Friday 14:00 UTC
+- Where: Discord voice channel
+- Topics: Technical discussions, PRs, roadmap
+
+### Recognition
+
+Contributors are recognized in:
 - `CONTRIBUTORS.md` file
 - Release notes
-- "Built by" section on website
-
-**Top contributors may receive:**
-- ÉTR token grants
-- Exclusive NFTs
-- Invitation to core team
+- Social media shoutouts
+- NFT contributor badges (coming soon)
 
 ---
 
-## 📚 Resources
+## Pull Request Process
 
-### Learning Materials
-- [Substrate Documentation](https://docs.substrate.io)
-- [Rust Book](https://doc.rust-lang.org/book/)
-- [React Documentation](https://react.dev)
-- [Flutter Documentation](https://flutter.dev/docs)
+### Before Submitting
 
-### Ëtrid Resources
-- [Whitepaper](docs/whitepaper/)
-- [Architecture Guide](docs/architecture/ARCHITECTURE.md)
-- [API Reference](docs/api/)
+- [ ] Code builds without errors
+- [ ] All tests pass
+- [ ] No new clippy/lint warnings
+- [ ] Documentation updated
+- [ ] Commit messages follow convention
+- [ ] Branch is up-to-date with main
+
+### PR Checklist
+
+- [ ] Title follows format: `type(scope): description`
+- [ ] Description explains changes
+- [ ] Links to related issues
+- [ ] Screenshots (if UI changes)
+- [ ] Breaking changes noted
+- [ ] Backward compatibility considered
+
+### Review Process
+
+1. **Automated checks**: CI must pass
+2. **Code review**: At least 1 maintainer approval
+3. **Testing**: Reviewer tests changes
+4. **Discussion**: Address feedback
+5. **Approval**: Maintainer approves
+6. **Merge**: Maintainer merges
+
+### After Merge
+
+- Branch is deleted
+- Issue is closed (if applicable)
+- Contributors are thanked
+- Changes included in next release
 
 ---
 
-## ⚖️ License
+## Release Process
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+### Versioning
+
+We use [Semantic Versioning](https://semver.org/):
+- **Major**: Breaking changes (2.0.0)
+- **Minor**: New features (1.1.0)
+- **Patch**: Bug fixes (1.0.1)
+
+### Release Checklist
+
+- [ ] All PRs merged
+- [ ] Version bumped
+- [ ] CHANGELOG updated
+- [ ] Tests passing
+- [ ] Documentation current
+- [ ] Security audit (mainnet)
+- [ ] Tag created
+- [ ] Binaries built
+- [ ] Announcement prepared
 
 ---
 
-## 🙏 Thank You!
+## Security
 
-Every contribution, no matter how small, makes a difference. Thank you for helping build the future of decentralized governance!
+### Reporting Vulnerabilities
+
+**Do NOT** create public issues for security vulnerabilities.
+
+**Instead**:
+1. Email: security@etrid.io
+2. Include:
+   - Description
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (optional)
+3. We'll respond within 48 hours
+4. Coordinate disclosure timeline
+
+### Security Best Practices
+
+- Never commit secrets
+- Use environment variables
+- Validate all inputs
+- Handle errors properly
+- Follow principle of least privilege
+- Keep dependencies updated
 
 ---
 
-**Questions?** Open a discussion on GitHub or ask in Discord.
+## License
 
-**Ready to contribute?** Pick an issue and let's build! 🚀
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+## Questions?
+
+- 📧 Email: dev@etrid.io
+- 💬 Discord: #development channel
+- 🐦 Twitter: @EtridMultichain
+
+**Thank you for contributing to Ëtrid!** 🙏
+
+---
+
+<p align="center">
+  <strong>Together we build the future of decentralized finance</strong>
+</p>

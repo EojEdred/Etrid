@@ -7,6 +7,9 @@ description = "Bitcoin Partition Burst Chain runtime for Ëtrid Multichain"
 license = "Apache-2.0"
 
 [dependencies]
+# PBC Common - Shared runtime code
+pbc-common = { path = "../../../pbc-common", default-features = false }
+
 pallet_tron_bridge = { package = "trx-bridge", path = "../../../../../05-multichain/bridge-protocols/tron-bridge", default-features = false }
 # Substrate Core - Use workspace dependencies
 codec = { workspace = true }
@@ -31,6 +34,7 @@ sp-transaction-pool = { workspace = true }
 sp-version = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
 sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf", default-features = false }
+sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
 # FRAME Pallets
 pallet-grandpa = { workspace = true }
@@ -60,6 +64,7 @@ substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git
 [features]
 default = ["std"]
 std = [
+    "pbc-common/std",
     "codec/std",
     "scale-info/std",
     "frame-support/std",
@@ -78,6 +83,7 @@ std = [
     "sp-version/std",
     "sp-consensus-grandpa/std",
     "sp-consensus-asf/std",
+    "sp-genesis-builder/std",
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-sudo/std",

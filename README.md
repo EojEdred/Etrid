@@ -35,7 +35,7 @@ The **Essential Elements to Operate (E³20)** protocol defines 13 core component
 | 03 | **Security** | Post-quantum encryption | 🔴 Planned |
 | 04 | **Accounts** | Account types (EBCA, RCA, SCA) | 🟢 Alpha |
 | 05 | **Multichain** | Flare Chain + PBCs | 🟢 Alpha |
-| 06 | **Crypto** | ÉTR, EDSC, VMw tokens | 🟡 In Progress |
+| 06 | **Crypto** | ÉTR, EDSC (+ Ethereum Bridge), VMw tokens | 🟢 **Bridge Complete** |
 | 07 | **Transactions** | Regular, smart, cross-chain | 🟡 In Progress |
 | 08 | **ËtwasmVM** | WebAssembly runtime | 🟢 Alpha |
 | 09 | **Consensus** | ASF Finality algorithm | 🟢 Alpha |
@@ -86,6 +86,29 @@ cargo test --workspace
 
 ## 💎 Core Features
 
+### 🌉 EDSC Cross-Chain Bridge (NEW!)
+**Production-ready bridge between Ethereum and Ëtrid**
+
+Complete implementation of CCTP-style cross-chain transfer protocol:
+- ✅ **Ethereum Smart Contracts**: ERC-20 EDSC + attestation infrastructure
+- ✅ **Substrate Pallets**: Token Messenger + Attestation pallets
+- ✅ **Attestation Service**: Off-chain M-of-N signature aggregation (3-of-5 threshold)
+- ✅ **Relayer Service**: Permissionless message relay between chains
+- ✅ **Comprehensive Tests**: Integration and E2E test suites
+- ✅ **Deployment Guides**: Complete testnet deployment documentation
+
+**Bridge Features:**
+- Burn-and-mint architecture for secure transfers
+- M-of-N attester signatures (decentralized security)
+- Permissionless relaying (anyone can operate)
+- Duplicate prevention and nonce management
+- Support for high-value transfers
+
+📖 **Get Started**: See [`deployment/README.md`](deployment/README.md) for testnet deployment
+🧪 **Test Suite**: See [`tests/README.md`](tests/README.md) for testing infrastructure
+
+---
+
 ### 1. Adaptive Stake Finality (ASF)
 Novel consensus mechanism that:
 - Combines Proof of Stake with "coinage" (time × stake)
@@ -109,7 +132,7 @@ Annual on-chain governance event:
 
 ### 4. Dual Token Economics
 - **ÉTR**: Native coin for transactions, staking, governance
-- **EDSC**: USD-pegged stablecoin for stable payments
+- **EDSC**: USD-pegged stablecoin for stable payments (now with Ethereum bridge!)
 - **VMw (VMwattage)**: Gas token for smart contract execution
 
 ### 5. Account Types
@@ -122,12 +145,52 @@ Annual on-chain governance event:
 
 ## 📖 Documentation
 
-- **[Whitepaper](docs/whitepaper/)** - Full technical specification
-- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - E³20 component details
-- **[API Reference](docs/api/)** - Pallet APIs and RPC methods
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+### Core Documentation
+- **[Developer Guide](DEVELOPER_GUIDE.md)** - Quick start, architecture, and contributing
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment and security
+- **[Testing Guide](TESTING_GUIDE.md)** - Test scripts and procedures
 - **[Known Issues](KNOWN_ISSUES.md)** - Current blockers and workarounds
-- **[Roadmap](docs/ROADMAP.md)** - Development timeline
+- **[Project History](PROJECT_HISTORY.md)** - Development sessions and milestones
+- **[Value Reference](VALUE_REFERENCE.md)** - Economic and value framework
+- **[Architecture Audit](ARCHITECTURE_AUDIT_COMPLETE_OCT20.md)** - Comprehensive codebase audit
+
+### Component Architecture Documentation (NEW!)
+All 13 E³20 protocol components have comprehensive architecture documentation:
+
+| Component | Documentation | Description |
+|-----------|---------------|-------------|
+| 01-detr-p2p | [ARCHITECTURE.md](01-detr-p2p/ARCHITECTURE.md) | P2P networking, encryption, peer management |
+| 02-open-did | [ARCHITECTURE.md](02-open-did/ARCHITECTURE.md) | OpenDID + AIDID (AI identity) |
+| 03-security | [ARCHITECTURE.md](03-security/ARCHITECTURE.md) | Cryptography & key management |
+| 04-accounts | [ARCHITECTURE.md](04-accounts/ARCHITECTURE.md) | Account types & balance management |
+| 05-multichain | [ARCHITECTURE.md](05-multichain/ARCHITECTURE.md) | FlareChain + 13 PBCs + bridges |
+| 06-native-currency | [ARCHITECTURE.md](06-native-currency/ARCHITECTURE.md) | ÉTR, EDSC, VMw tokens |
+| 07-transactions | [ARCHITECTURE.md](07-transactions/ARCHITECTURE.md) | Transaction processing + Lightning Bloc |
+| 08-etwasm-vm | [ARCHITECTURE.md](08-etwasm-vm/ARCHITECTURE.md) | WebAssembly VM for smart contracts |
+| 09-consensus | [ARCHITECTURE.md](09-consensus/ARCHITECTURE.md) | ASF consensus algorithm |
+| 10-foundation | [ARCHITECTURE.md](10-foundation/ARCHITECTURE.md) | Governance & Foundation DAO |
+| 11-peer-roles | [ARCHITECTURE.md](11-peer-roles/ARCHITECTURE.md) | Staking & validator roles |
+| 12-consensus-day | [ARCHITECTURE.md](12-consensus-day/ARCHITECTURE.md) | Annual governance event |
+| 13-clients | [ARCHITECTURE.md](13-clients/ARCHITECTURE.md) | CLI tools & SDKs |
+
+**Total:** 13,700+ lines of comprehensive technical documentation
+
+### EDSC Bridge Documentation
+- **[Bridge Deployment](deployment/README.md)** - Complete testnet deployment guide
+- **[Ethereum Contracts](deployment/ethereum/DEPLOYMENT.md)** - Sepolia deployment
+- **[Substrate Chain](deployment/substrate/DEPLOYMENT.md)** - Ëtrid testnet setup
+- **[Attestation Services](deployment/services/ATTESTATION_DEPLOYMENT.md)** - Attester setup
+- **[Relayer Services](deployment/services/RELAYER_DEPLOYMENT.md)** - Relayer deployment
+- **[Bridge Tests](tests/README.md)** - Integration and E2E tests
+
+### Lightning Bloc Documentation
+- **[Network Integration](07-transactions/lightning-bloc/NETWORK_INTEGRATION.md)** - Layer 2 integration guide
+- **[Routing Guide](07-transactions/lightning-bloc/ROUTING_GUIDE.md)** - Multi-hop payment routing
+
+### Additional Resources
+- **[Whitepaper](docs/whitepaper/)** - Full technical specification
+- **[API Reference](docs/api/)** - Pallet APIs and RPC methods
+- **[Archive](docs/archive/)** - Historical documentation and session reports
 
 ---
 
@@ -135,32 +198,42 @@ Annual on-chain governance event:
 
 ```
 etrid/
-├── 01-detr-p2p/              # Networking layer
-├── 02-opendid/               # Identity system
-├── 03-security/              # Cryptography
-├── 04-accounts/              # Account management
-│   └── pallet/               # FRAME pallet
-├── 05-multichain/            # Multichain logic
-│   ├── primitives/           # Core types
-│   └── partition-burst-chains/ # PBC implementation
-├── 06-crypto/                # Token economics
-├── 07-transactions/          # Transaction processing
-├── 08-etwasm-vm/             # WebAssembly runtime
-│   └── pallet/               # VM pallet
-├── 09-consensus/             # ASF consensus
-│   └── pallet/               # Consensus pallet
-├── 10-foundation/            # DAO governance
-│   └── governance/pallet/    # Governance pallet
-├── 11-roles/                 # Peer role management
-├── 12-governance/            # Consensus Day logic
-├── 13-clients/               # User interfaces
-│   ├── cli/                  # Command-line tools
-│   ├── web/                  # Web dashboard
-│   └── mobile/               # Mobile wallet
+├── 01-detr-p2p/              # 📡 Networking layer [ARCHITECTURE.md]
+├── 02-open-did/              # 🆔 Identity system [ARCHITECTURE.md]
+├── 03-security/              # 🔐 Cryptography [ARCHITECTURE.md]
+├── 04-accounts/              # 💼 Account management [ARCHITECTURE.md]
+├── 05-multichain/            # ⛓️ Multichain logic [ARCHITECTURE.md]
+│   ├── flare-chain/          # FlareChain (main chain)
+│   ├── bridge-protocols/     # 19 bridge pallets
+│   │   └── edsc-bridge/      # EDSC stablecoin bridge
+│   └── partition-burst-chains/
+│       └── pbc-chains/       # 13 PBCs (BTC, ETH, SOL, etc.)
+├── 06-native-currency/       # 💰 Token economics [ARCHITECTURE.md]
+├── 07-transactions/          # 📝 Transaction processing [ARCHITECTURE.md]
+│   └── lightning-bloc/       # ⚡ Layer 2 payment channels
+├── 08-etwasm-vm/             # 🔧 WebAssembly runtime [ARCHITECTURE.md]
+├── 09-consensus/             # ⚖️ ASF consensus [ARCHITECTURE.md]
+├── 10-foundation/            # 🏛️ DAO governance [ARCHITECTURE.md]
+├── 11-peer-roles/            # 👥 Staking & roles [ARCHITECTURE.md]
+├── 12-consensus-day/         # 🗳️ Annual governance [ARCHITECTURE.md]
+├── 13-clients/               # 🖥️ User interfaces [ARCHITECTURE.md]
 ├── apps/                     # Frontend applications
+│   ├── wallet-web/           # React web wallet
+│   ├── wallet-mobile/        # Flutter mobile wallet
+│   └── governance-ui/        # Governance dashboard
+├── contracts/                # Smart contracts
+│   └── ethereum/             # Ethereum bridge contracts (EDSC)
+├── services/                 # Off-chain services
+│   ├── attestation-service/  # M-of-N attestation
+│   └── relayer-service/      # Permissionless relayer
+├── tests/                    # Testing infrastructure
+├── deployment/               # Deployment guides
 ├── docs/                     # Documentation
+│   └── archive/              # Historical docs & session reports
 └── scripts/                  # Build & deployment scripts
 ```
+
+**Each component directory contains ARCHITECTURE.md** with comprehensive technical documentation.
 
 ---
 

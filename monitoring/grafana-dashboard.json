@@ -1,0 +1,425 @@
+{
+  "dashboard": {
+    "title": "EDSC Bridge Overview",
+    "tags": ["edsc", "bridge", "testnet"],
+    "timezone": "utc",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Bridge Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "bridge:attesters_active:count",
+            "legendFormat": "Active Attesters",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "background",
+          "graphMode": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 3, "color": "yellow"},
+              {"value": 5, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Active Relayers",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "bridge:relayers_active:count",
+            "legendFormat": "Active Relayers",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "background",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "yellow"},
+              {"value": 2, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Messages Relayed (24h)",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(bridge:messages_relayed_success:sum[24h])",
+            "legendFormat": "Total Messages",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Avg Relay Time",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "bridge:relay_duration_seconds:avg",
+            "legendFormat": "Avg Time (s)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "unit": "s",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "background",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 180, "color": "yellow"},
+              {"value": 300, "color": "red"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Messages Per Hour",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(attestation_messages_seen_total{source_domain=\"0\"}[5m])) * 3600",
+            "legendFormat": "ETH → Ëtrid",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(attestation_messages_seen_total{source_domain=\"2\"}[5m])) * 3600",
+            "legendFormat": "Ëtrid → ETH",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Messages/hour",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Relay Latency (P95)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "bridge:relay_duration_seconds:p95{destination=\"ethereum\"}",
+            "legendFormat": "To Ethereum",
+            "refId": "A"
+          },
+          {
+            "expr": "bridge:relay_duration_seconds:p95{destination=\"substrate\"}",
+            "legendFormat": "To Ëtrid",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Seconds",
+            "format": "s"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [300],
+                "type": "gt"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "name": "High Relay Latency"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Relayer ETH Balance",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 12, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "relayer_balance_eth",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "unit": "ETH",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 0.1, "color": "yellow"},
+              {"value": 0.3, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Relayer EDSC Balance",
+        "type": "gauge",
+        "gridPos": {"x": 8, "y": 12, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "relayer_balance_edsc",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "unit": "EDSC",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 10, "color": "yellow"},
+              {"value": 50, "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Success Rate",
+        "type": "graph",
+        "gridPos": {"x": 16, "y": 12, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "bridge:relay_success_rate * 100",
+            "legendFormat": "Success Rate %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Percentage",
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Attestation Service Health",
+        "type": "table",
+        "gridPos": {"x": 0, "y": 18, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "up{job=\"attestation-service\"}",
+            "instant": true,
+            "format": "table",
+            "refId": "A"
+          },
+          {
+            "expr": "attestation_messages_seen_total",
+            "instant": true,
+            "format": "table",
+            "refId": "B"
+          },
+          {
+            "expr": "attestation_signatures_created_total",
+            "instant": true,
+            "format": "table",
+            "refId": "C"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          },
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "instance": "Instance",
+                "Value #A": "Status",
+                "Value #B": "Messages Seen",
+                "Value #C": "Signatures Created"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Chain Block Heights",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 18, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "chain:ethereum_block_height:max",
+            "legendFormat": "Ethereum",
+            "refId": "A"
+          },
+          {
+            "expr": "chain:substrate_block_height:max",
+            "legendFormat": "Substrate",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Block Number",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Relay Failures by Reason",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum by (reason) (increase(relayer_relay_failures_total[1h]))",
+            "legendFormat": "{{reason}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "API Request Rate",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(attestation_api_requests_total{status=\"200\"}[5m]))",
+            "legendFormat": "Success",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(attestation_api_requests_total{status=~\"4..\"}[5m]))",
+            "legendFormat": "Client Errors",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(attestation_api_requests_total{status=~\"5..\"}[5m]))",
+            "legendFormat": "Server Errors",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Requests/sec",
+            "format": "reqps"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "System CPU Usage",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 30, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "CPU %",
+            "format": "percent",
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "System Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 8, "y": 30, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Memory %",
+            "format": "percent",
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Disk Space Available",
+        "type": "graph",
+        "gridPos": {"x": 16, "y": 30, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "(node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Available %",
+            "format": "percent",
+            "max": 100
+          }
+        ]
+      }
+    ]
+  }
+}

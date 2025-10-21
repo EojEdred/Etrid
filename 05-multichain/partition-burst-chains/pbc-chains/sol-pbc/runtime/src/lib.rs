@@ -9,48 +9,11 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-// Re-export all pallets
+// Import common PBC runtime code from pbc-common
+pub use pbc_common::*;
+
+// Re-export Solana bridge pallet
 pub use pallet_solana_bridge;
-pub use pallet_lightning_channels;
-
-use sp_api::impl_runtime_apis;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
-use sp_runtime::{
-    create_runtime_str, generic, impl_opaque_keys,
-    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify},
-    transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, MultiSignature,
-};
-use sp_std::prelude::*;
-#[cfg(feature = "std")]
-use sp_version::NativeVersion;
-use sp_version::RuntimeVersion;
-
-// Frame imports
-use frame_support::{
-    construct_runtime, parameter_types,
-    traits::{ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo},
-    weights::{
-        constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND},
-        IdentityFee, Weight,
-    },
-    StorageValue,
-};
-use frame_system::{
-    limits::{BlockLength, BlockWeights},
-    EnsureRoot,
-};
-pub use pallet_timestamp::Call as TimestampCall;
-use pallet_transaction_payment::{ConstFeeMultiplier, FeeDetails, Multiplier, RuntimeDispatchInfo};
-
-// Ëtrid primitives
-use etrid_primitives::{
-    Balance, BlockNumber, Hash, Moment, Signature, Nonce,
-};
-pub use etrid_primitives::AccountId;
-
-// Import consensus
-pub use pallet_consensus;
 
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
@@ -598,6 +561,33 @@ impl_runtime_apis! {
             select: frame_try_runtime::TryStateSelect,
         ) -> Weight {
             Executive::try_execute_block(block, state_root_check, signature_check, select).unwrap()
+        }
+    }
+
+    impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
+        fn build_state(config: Vec<u8>) -> sp_genesis_builder::Result {
+            frame_support::genesis_builder_helper::build_state::<RuntimeGenesisConfig>(config)
+        }
+
+        fn get_preset(id: &Option<sp_genesis_builder::PresetId>) -> Option<Vec<u8>> {
+            frame_support::genesis_builder_helper::get_preset::<RuntimeGenesisConfig>(id, |name| {
+                match name.as_ref() {
+                    sp_genesis_builder::DEV_RUNTIME_PRESET => {
+                        Some(include_bytes!("../presets/development.json").to_vec())
+                    },
+                    sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET => {
+                        Some(include_bytes!("../presets/local_testnet.json").to_vec())
+                    },
+                    _ => None,
+                }
+            })
+        }
+
+        fn preset_names() -> Vec<sp_genesis_builder::PresetId> {
+            vec![
+                sp_genesis_builder::DEV_RUNTIME_PRESET.into(),
+                sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
+            ]
         }
     }
 }

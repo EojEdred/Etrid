@@ -15,8 +15,9 @@ use sp_runtime::{
         AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, MultiSignature, Perbill,
+    ApplyExtrinsicResult, FixedU128, MultiSignature, Perbill,
 };
+use sp_arithmetic::Permill;
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -92,7 +93,7 @@ pub fn native_version() -> NativeVersion {
 const AVERAGE_ON_INITIALIZE_RATIO: sp_runtime::Perbill = sp_runtime::Perbill::from_percent(10);
 /// We allow for 2 seconds of compute with a 6 second average block time.
 const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
-    WEIGHT_REF_TIME_PER_SECOND.saturating_mul(2),
+    WEIGHT_REF_TIME_PER_SECOND * 2,
     u64::MAX,
 );
 /// Maximum length of block.
@@ -466,6 +467,181 @@ impl stablecoin_usdt_bridge::Config for Runtime {
     type MaxWithdrawalsPerAccount = ConstU32<100>;
 }
 
+// ========================================
+// EDSC PALLETS CONFIGURATION
+// ========================================
+
+/// Configure EDSC Token Pallet
+impl pallet_edsc_token::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxSupply = ConstU128<1_000_000_000_000_000_000_000>; // 1 billion EDSC (18 decimals)
+    type MinBalance = ConstU128<1_000_000_000_000>; // 0.000001 EDSC minimum
+}
+
+/// Configure EDSC Receipts Pallet (SBT registry)
+impl pallet_edsc_receipts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxReceiptsPerWallet = ConstU32<1000>; // Max 1000 receipts per wallet
+    type ReceiptExpiryPeriod = ConstU32<5_256_000>; // ~1 year (at 6s blocks)
+}
+
+parameter_types! {
+    // EDSC Redemption Parameters
+    pub const MinRedemptionFee: Permill = Permill::from_parts(2_500); // 0.25%
+    pub SafetyMultiplier: FixedU128 = FixedU128::from_rational(12u128, 10u128); // 1.2
+    pub const Path1DailyLimit: u128 = 50_000_00; // $50,000 in cents
+    pub const Path2DailyLimit: u128 = 25_000_00; // $25,000 in cents
+    pub const Path3DailyLimit: u128 = 10_000_00; // $10,000 in cents
+    pub const HourlyRedemptionCap: Permill = Permill::from_parts(5_000); // 0.5%
+    pub const DailyRedemptionCap: Permill = Permill::from_parts(5_000); // 0.5%
+    pub ThrottleRedemptionRatio: FixedU128 = FixedU128::from_rational(105u128, 100u128); // 1.05 = 105%
+    pub EmergencyRedemptionRatio: FixedU128 = FixedU128::from_rational(100u128, 100u128); // 1.00 = 100%
+    pub const MaxRedemptionQueueSize: u32 = 10_000;
+}
+
+/// Configure EDSC Redemption Pallet
+impl pallet_edsc_redemption::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MinRedemptionFee = MinRedemptionFee;
+    type SafetyMultiplier = SafetyMultiplier;
+    type Path1DailyLimit = Path1DailyLimit;
+    type Path2DailyLimit = Path2DailyLimit;
+    type Path3DailyLimit = Path3DailyLimit;
+    type HourlyRedemptionCap = HourlyRedemptionCap;
+    type DailyRedemptionCap = DailyRedemptionCap;
+    type ThrottleReserveRatio = ThrottleRedemptionRatio;
+    type EmergencyReserveRatio = EmergencyRedemptionRatio;
+    type MaxQueueSize = MaxRedemptionQueueSize;
+}
+
+parameter_types! {
+    // EDSC Oracle Parameters
+    pub const PrimaryTwapWindow: u32 = 14_400; // 24 hours (at 6s blocks)
+    pub const FallbackTwapWindow: u32 = 100_800; // 7 days (at 6s blocks)
+    pub const MinPriceSources: u32 = 5;
+    pub const OutlierThreshold: Permill = Permill::from_parts(20_000); // 2%
+    pub const StalenessTimeout: u32 = 100; // ~10 minutes
+    pub const MaxPriceHistory: u32 = 10_000; // Keep last 10k price points
+}
+
+/// Configure EDSC Oracle Pallet
+impl pallet_edsc_oracle::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type PrimaryTwapWindow = PrimaryTwapWindow;
+    type FallbackTwapWindow = FallbackTwapWindow;
+    type MinPriceSources = MinPriceSources;
+    type OutlierThreshold = OutlierThreshold;
+    type StalenessTimeout = StalenessTimeout;
+    type MaxPriceHistory = MaxPriceHistory;
+}
+
+parameter_types! {
+    // Reserve Vault Parameters
+    pub OptimalReserveMin: FixedU128 = FixedU128::from_rational(110u128, 100u128); // 1.10 = 110%
+    pub OptimalReserveMax: FixedU128 = FixedU128::from_rational(130u128, 100u128); // 1.30 = 130%
+    pub ThrottleReserveRatio: FixedU128 = FixedU128::from_rational(105u128, 100u128); // 1.05 = 105%
+    pub EmergencyReserveRatio: FixedU128 = FixedU128::from_rational(100u128, 100u128); // 1.00 = 100%
+}
+
+/// Configure Reserve Vault Pallet
+impl pallet_reserve_vault::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type OptimalReserveMin = OptimalReserveMin;
+    type OptimalReserveMax = OptimalReserveMax;
+    type ThrottleReserveRatio = ThrottleReserveRatio;
+    type EmergencyReserveRatio = EmergencyReserveRatio;
+}
+
+parameter_types! {
+    // Custodian Registry Parameters
+    pub const MinCustodianBond: Balance = 100_000_000_000_000_000_000_000; // 100,000 ETR
+    pub const AttestationFrequency: u32 = 1_314_000; // ~3 months (at 6s blocks)
+    pub const MaxMissedAttestations: u32 = 2;
+    pub const CustodianSlashPercentage: Permill = Permill::from_percent(50); // 50% slash for non-compliance
+}
+
+/// Configure Custodian Registry Pallet
+impl pallet_custodian_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinBondAmount = MinCustodianBond;
+    type AttestationFrequency = AttestationFrequency;
+    type MaxMissedAttestations = MaxMissedAttestations;
+    type SlashPercentage = CustodianSlashPercentage;
+}
+
+// Reserve Oracle Configuration (FlareChain - aggregates reserve data)
+parameter_types! {
+    pub const OracleSnapshotInterval: u32 = 100;  // Create snapshot every 100 blocks (~10 minutes)
+    pub const MaxOracleSnapshots: u32 = 10_000;  // Max stored snapshots
+    pub const ReserveOracleOptimalMin: u16 = 11000;  // 110% (11000 basis points)
+    pub const ReserveOracleOptimalMax: u16 = 13000;  // 130% (13000 basis points)
+    pub const ReserveOracleThrottleThreshold: u16 = 10500;  // 105% (10500 basis points)
+    pub const ReserveOracleCriticalThreshold: u16 = 10000;  // 100% (10000 basis points)
+    pub const MaxOraclePriceStaleness: u32 = 1000;  // Max blocks before price is stale
+}
+
+impl pallet_reserve_oracle::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type SnapshotInterval = OracleSnapshotInterval;
+    type MaxSnapshots = MaxOracleSnapshots;
+    type ReserveOptimalMin = ReserveOracleOptimalMin;
+    type ReserveOptimalMax = ReserveOracleOptimalMax;
+    type ReserveThrottleThreshold = ReserveOracleThrottleThreshold;
+    type ReserveCriticalThreshold = ReserveOracleCriticalThreshold;
+    type MaxPriceStaleness = MaxOraclePriceStaleness;
+}
+
+// XCM Bridge Configuration (Cross-chain messaging with PBC-EDSC)
+parameter_types! {
+    pub const FlareChainMaxPayloadSize: u32 = 1024;  // Max message size (bytes)
+    pub const FlareChainMessageTimeout: u32 = 1_000;  // Message expiry (blocks)
+    pub const FlareChainMaxPendingMessages: u32 = 1_000;  // Max queue size
+    pub const FlareChainIdentifier: pallet_xcm_bridge::ChainId = pallet_xcm_bridge::ChainId::FlareChain;
+}
+
+impl pallet_xcm_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxPayloadSize = FlareChainMaxPayloadSize;
+    type MessageTimeout = FlareChainMessageTimeout;
+    type MaxPendingMessages = FlareChainMaxPendingMessages;
+    type ChainIdentifier = FlareChainIdentifier;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Phase 3: External Bridge Protocol (CCTP-style)
+// ════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const FlareTokenMessengerMaxMessageBodySize: u32 = 512;
+    pub const FlareTokenMessengerMaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000;  // 1M EDSC per tx
+    pub const FlareTokenMessengerDailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000;  // 10M EDSC per day
+    pub const FlareTokenMessengerMessageTimeout: u32 = 1000;
+}
+
+impl pallet_edsc_bridge_token_messenger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxMessageBodySize = FlareTokenMessengerMaxMessageBodySize;
+    type MaxBurnAmount = FlareTokenMessengerMaxBurnAmount;
+    type DailyBurnCap = FlareTokenMessengerDailyBurnCap;
+    type MessageTimeout = FlareTokenMessengerMessageTimeout;
+}
+
+parameter_types! {
+    pub const FlareMaxAttesters: u32 = 100;  // Maximum registered attesters
+    pub const FlareMaxAttestersPerMessage: u32 = 10;  // Maximum signatures per message
+    pub const FlareMinSignatureThreshold: u32 = 3;  // Default M-of-N (3-of-5)
+    pub const FlareAttestationMaxAge: u32 = 1000;  // 1000 blocks (~100 minutes)
+}
+
+impl pallet_edsc_bridge_attestation::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxAttesters = FlareMaxAttesters;
+    type MaxAttestersPerMessage = FlareMaxAttestersPerMessage;
+    type MinSignatureThreshold = FlareMinSignatureThreshold;
+    type AttestationMaxAge = FlareAttestationMaxAge;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime {
@@ -509,6 +685,20 @@ construct_runtime!(
         BnbBridge: bnb_bridge,
         TronBridge: trx_bridge,
         UsdtBridge: stablecoin_usdt_bridge,
+
+        // EDSC pallets (Ëtrid Dollar Stablecoin system)
+        EdscToken: pallet_edsc_token,
+        EdscReceipts: pallet_edsc_receipts,
+        EdscRedemption: pallet_edsc_redemption,
+        EdscOracle: pallet_edsc_oracle,
+        ReserveVault: pallet_reserve_vault,
+        CustodianRegistry: pallet_custodian_registry,
+        ReserveOracle: pallet_reserve_oracle,
+        XcmBridge: pallet_xcm_bridge,
+
+        // Phase 3: External Bridge Protocol (CCTP-style)
+        TokenMessenger: pallet_edsc_bridge_token_messenger,
+        BridgeAttestation: pallet_edsc_bridge_attestation,
     }
 );
 

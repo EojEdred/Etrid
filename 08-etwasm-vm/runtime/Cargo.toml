@@ -1,0 +1,38 @@
+[package]
+name = "etwasm-runtime"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "Apache-2.0"
+description = "WASM execution runtime for ETWasm VM"
+
+[dependencies]
+codec = { workspace = true }
+scale-info = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+etwasm-gas-metering = { path = "../gas-metering", default-features = false }
+etwasm-opcodes = { path = "../opcodes", default-features = false }
+
+# WASM runtime
+wasmi = { workspace = true }
+
+# Ethereum types
+primitive-types = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-std/std",
+    "sp-core/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "etwasm-gas-metering/std",
+    "etwasm-opcodes/std",
+    "wasmi/std",
+    "primitive-types/std",
+]

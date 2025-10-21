@@ -1,0 +1,322 @@
+# Alert Rules for EDSC Bridge
+
+groups:
+  ##############################################################################
+  # Service Availability Alerts
+  ##############################################################################
+  - name: service_availability
+    interval: 30s
+    rules:
+      - alert: AttestationServiceDown
+        expr: up{job="attestation-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: attestation
+        annotations:
+          summary: "Attestation service {{ $labels.instance }} is down"
+          description: "Attestation service at {{ $labels.instance }} has been down for more than 2 minutes."
+          runbook: "https://docs.etrid.io/runbooks/attestation-service-down"
+
+      - alert: AttestationThresholdAtRisk
+        expr: count(up{job="attestation-service"} == 1) < 3
+        for: 1m
+        labels:
+          severity: critical
+          component: attestation
+        annotations:
+          summary: "Attestation threshold at risk"
+          description: "Only {{ $value }} attestation services are up. Need at least 3 for threshold."
+          runbook: "https://docs.etrid.io/runbooks/threshold-at-risk"
+
+      - alert: RelayerServiceDown
+        expr: up{job="relayer-service"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          component: relayer
+        annotations:
+          summary: "Relayer service {{ $labels.instance }} is down"
+          description: "Relayer service at {{ $labels.instance }} has been down for more than 5 minutes. Other relayers should compensate."
+
+      - alert: AllRelayersDown
+        expr: count(up{job="relayer-service"} == 1) == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: relayer
+        annotations:
+          summary: "All relayer services are down"
+          description: "No relayers are active. Messages will not be relayed until at least one relayer is restored."
+
+      - alert: SubstrateNodeDown
+        expr: up{job="substrate-node"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: substrate
+        annotations:
+          summary: "Substrate node {{ $labels.instance }} is down"
+          description: "Substrate node at {{ $labels.instance }} has been unreachable for 2 minutes."
+
+  ##############################################################################
+  # Bridge Performance Alerts
+  ##############################################################################
+  - name: bridge_performance
+    interval: 1m
+    rules:
+      - alert: HighMessageRelayLatency
+        expr: histogram_quantile(0.95, rate(relayer_relay_duration_seconds_bucket[5m])) > 300
+        for: 5m
+        labels:
+          severity: warning
+          component: relayer
+        annotations:
+          summary: "Message relay latency is high"
+          description: "95th percentile relay time is {{ $value }}s (threshold: 300s)"
+
+      - alert: AttestationDelayed
+        expr: time() - max(attestation_last_signature_timestamp) > 120
+        for: 3m
+        labels:
+          severity: warning
+          component: attestation
+        annotations:
+          summary: "No new attestations in last 2 minutes"
+          description: "Last attestation was {{ $value }}s ago. Check if messages are being detected."
+
+      - alert: MessagesStuckReady
+        expr: attestation_ready_messages > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: relayer
+        annotations:
+          summary: "{{ $value }} messages stuck in ready state"
+          description: "Messages have attestations but are not being relayed. Check relayer services."
+
+      - alert: HighRelayFailureRate
+        expr: rate(relayer_relay_failures_total[5m]) / rate(relayer_relay_attempts_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: relayer
+        annotations:
+          summary: "High relay failure rate: {{ $value | humanizePercentage }}"
+          description: "More than 10% of relay attempts are failing."
+
+  ##############################################################################
+  # Balance Alerts
+  ##############################################################################
+  - name: balances
+    interval: 1m
+    rules:
+      - alert: RelayerLowEthBalance
+        expr: relayer_balance_eth < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: relayer
+        annotations:
+          summary: "Relayer {{ $labels.instance }} low on ETH"
+          description: "ETH balance is {{ $value }}. Relay operations will fail soon. Please fund the relayer."
+
+      - alert: RelayerVeryLowEthBalance
+        expr: relayer_balance_eth < 0.05
+        for: 1m
+        labels:
+          severity: critical
+          component: relayer
+        annotations:
+          summary: "Relayer {{ $labels.instance }} critically low on ETH"
+          description: "ETH balance is {{ $value }}. Immediate funding required!"
+
+      - alert: RelayerLowEdscBalance
+        expr: relayer_balance_edsc < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: relayer
+        annotations:
+          summary: "Relayer {{ $labels.instance }} low on EDSC"
+          description: "EDSC balance is {{ $value }}. May need funding for Substrate relays."
+
+  ##############################################################################
+  # Chain Connection Alerts
+  ##############################################################################
+  - name: chain_connectivity
+    interval: 30s
+    rules:
+      - alert: EthereumConnectionLost
+        expr: attestation_ethereum_connected == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: attestation
+        annotations:
+          summary: "Attestation service {{ $labels.instance }} lost Ethereum connection"
+          description: "Cannot monitor Ethereum events. Check RPC endpoint."
+
+      - alert: SubstrateConnectionLost
+        expr: attestation_substrate_connected == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: attestation
+        annotations:
+          summary: "Attestation service {{ $labels.instance }} lost Substrate connection"
+          description: "Cannot monitor Substrate events. Check WebSocket endpoint."
+
+      - alert: ChainHeightStale
+        expr: time() - attestation_last_block_timestamp{chain="ethereum"} > 300
+        for: 2m
+        labels:
+          severity: warning
+          component: attestation
+        annotations:
+          summary: "Ethereum block height stale on {{ $labels.instance }}"
+          description: "Haven't received new Ethereum blocks in {{ $value }}s"
+
+      - alert: SubstrateChainHalted
+        expr: rate(substrate_block_height[5m]) == 0
+        for: 3m
+        labels:
+          severity: critical
+          component: substrate
+        annotations:
+          summary: "Substrate chain not producing blocks"
+          description: "No new blocks in last 5 minutes. Chain may be halted."
+
+  ##############################################################################
+  # Gas Price Alerts
+  ##############################################################################
+  - name: gas_prices
+    interval: 1m
+    rules:
+      - alert: HighEthereumGasPrice
+        expr: ethereum_gas_price_gwei > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: ethereum
+        annotations:
+          summary: "Ethereum gas prices are high"
+          description: "Current gas price: {{ $value }} gwei. Consider pausing relayers temporarily."
+
+      - alert: ExtremeEthereumGasPrice
+        expr: ethereum_gas_price_gwei > 200
+        for: 5m
+        labels:
+          severity: critical
+          component: ethereum
+        annotations:
+          summary: "Ethereum gas prices are extremely high"
+          description: "Current gas price: {{ $value }} gwei. Recommend pausing relayers."
+
+  ##############################################################################
+  # System Resource Alerts
+  ##############################################################################
+  - name: system_resources
+    interval: 1m
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Only {{ $value }}% disk space remaining"
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 5
+        for: 1m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Only {{ $value }}% disk space remaining. Immediate action required!"
+
+  ##############################################################################
+  # API Health Alerts
+  ##############################################################################
+  - name: api_health
+    interval: 1m
+    rules:
+      - alert: HighAPIErrorRate
+        expr: rate(attestation_api_requests_total{status=~"5.."}[5m]) / rate(attestation_api_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API error rate on {{ $labels.instance }}"
+          description: "{{ $value | humanizePercentage }} of requests are failing"
+
+      - alert: SlowAPIResponse
+        expr: histogram_quantile(0.95, rate(attestation_api_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Slow API responses on {{ $labels.instance }}"
+          description: "95th percentile response time is {{ $value }}s"
+
+  ##############################################################################
+  # Security Alerts
+  ##############################################################################
+  - name: security
+    interval: 30s
+    rules:
+      - alert: UnauthorizedAccessAttempt
+        expr: rate(attestation_api_requests_total{status="401"}[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Unauthorized access attempts on {{ $labels.instance }}"
+          description: "{{ $value }} unauthorized requests per second"
+
+      - alert: SignatureVerificationFailures
+        expr: rate(attestation_signature_verification_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "High signature verification failure rate"
+          description: "{{ $value }} signature verifications failing per second. Possible attack or misconfiguration."
+
+      - alert: DuplicateMessageAttempt
+        expr: increase(relayer_duplicate_message_attempts_total[10m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Multiple duplicate message relay attempts"
+          description: "{{ $value }} duplicate message relay attempts in last 10 minutes"

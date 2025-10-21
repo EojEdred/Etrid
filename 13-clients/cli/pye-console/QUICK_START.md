@@ -73,7 +73,7 @@ pye consensus vote PROP-001 yes -a alice  # Vote
 ```bash
 export ETRID_NODE_URL=ws://mainnet.etrid.io:9944
 # OR
-pye --node ws://testnet.etrid.io:9944 info
+pye --node ws://ember.etrid.io:9944 info
 ```
 
 ### Set Custom Keystore

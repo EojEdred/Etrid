@@ -50,11 +50,12 @@ members = [
     "01-detr-p2p/stored",                               # Peer storage and caching
 
     # ═════════════════════════════════════════════════════════════════════════════
-    # 02 - Identity (3 modules)
+    # 02 - Identity (4 modules)
     # ═════════════════════════════════════════════════════════════════════════════
     "02-open-did/types",                                # DID type definitions
     "02-open-did/registry",                             # DID registry
     "02-open-did/resolver",                             # DID resolver with caching
+    "02-open-did/aidid",                                # AI Decentralized Identity
 
     # ═════════════════════════════════════════════════════════════════════════════
     # 03 - Security (2 modules)
@@ -74,6 +75,7 @@ members = [
     "05-multichain/flare-chain/runtime",                # Flare Chain runtime
     "05-multichain/flare-chain/node",                   # Flare Chain node
     "05-multichain/primitives",                         # Multichain primitives
+    "05-multichain/partition-burst-chains/pbc-common",  # PBC common runtime code (NEW - shared)
     "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime
     "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/bridge",   # Bridge
     "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/channels", # Channels
@@ -89,6 +91,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-chains/link-pbc/runtime",      # LINK PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/matic-pbc/runtime",     # MATIC PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Smart Contract USDT PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/edsc-pbc/runtime",      # EDSC PBC runtime (Ëtrid Dollar Stablecoin)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/btc-pbc-collator",     # BTC PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/eth-pbc-collator",     # ETH PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/doge-pbc-collator",    # DOGE PBC collator node
@@ -101,11 +104,28 @@ members = [
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/link-pbc-collator",    # LINK PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/matic-pbc-collator",   # MATIC PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sc-usdt-pbc-collator", # SC-USDT PBC collator node
+    "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/edsc-pbc-collator",   # EDSC PBC collator node
     "05-multichain/bridge-protocols/cardano-bridge",    # Cardano bridge pallet
     "05-multichain/bridge-protocols/chainlink-bridge",  # Chainlink bridge pallet
     "05-multichain/bridge-protocols/polygon-bridge",    # Polygon bridge pallet
     "05-multichain/bridge-protocols/solana-bridge",     # Solana bridge pallet
     "05-multichain/bridge-protocols/stellar-bridge",    # Stellar bridge pallet
+
+    # ═════════════════════════════════════════════════════════════════════════════
+    # EDSC Bridge Protocol Pallets (12 pallets)
+    # ═════════════════════════════════════════════════════════════════════════════
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token",                        # EDSC token with mint/burn
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-receipts",                     # SBT receipt system
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption",                   # 3-path redemption engine
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle",                       # TWAP price oracle
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint",                   # State checkpoint synchronization
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger",       # CCTP-style token messenger (Phase 3)
+    "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation",           # M-of-N attestation verification (Phase 3)
+    "pallets/pallet-circuit-breaker",                   # Emergency safety controls
+    "pallets/pallet-reserve-vault",                     # Multi-asset collateral vault
+    "pallets/pallet-custodian-registry",                # Bonded custodian registry
+    "pallets/pallet-reserve-oracle",                    # Reserve data aggregation oracle
+    "pallets/pallet-xcm-bridge",                        # XCM/DETRP2P cross-chain messaging
 
     # ═════════════════════════════════════════════════════════════════════════════
     # 06 - Native Currency (4 modules)
@@ -127,8 +147,11 @@ members = [
     "07-transactions/tx-processor",                     # Transaction processor
 
     # ═════════════════════════════════════════════════════════════════════════════
-    # 08 - WASM VM (1 module)
+    # 08 - ETWasm VM (4 modules)
     # ═════════════════════════════════════════════════════════════════════════════
+    "08-etwasm-vm/gas-metering",                        # VMW gas cost calculation
+    "08-etwasm-vm/opcodes",                             # EVM opcode definitions
+    "08-etwasm-vm/runtime",                             # EVM bytecode interpreter
     "08-etwasm-vm/pallet",                              # Smart contract VM pallet
 
     # ═════════════════════════════════════════════════════════════════════════════
@@ -301,6 +324,7 @@ static_assertions = "1.1"
 impl-trait-for-tuples = "0.2.2"
 clap = { version = "4.4", features = ["derive"] }
 structopt = "0.3"
+primitive-types = { version = "0.12", default-features = false }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Testing                                                                      │

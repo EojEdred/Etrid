@@ -180,7 +180,7 @@ export ETRID_NODE_URL=ws://mainnet.etrid.io:9944
 pye query chain
 
 # Via command option
-pye query chain --node ws://testnet.etrid.io:9944
+pye query chain --node ws://ember.etrid.io:9944
 ```
 
 ### Keystore Location

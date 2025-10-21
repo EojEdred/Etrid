@@ -89,12 +89,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -185,6 +187,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "aidid"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -1636,12 +1653,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -1815,12 +1834,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -3785,12 +3806,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -3925,6 +3948,107 @@ dependencies = [
  "sha2 0.10.9",
  "subtle 2.6.1",
  "zeroize",
+]
+
+[[package]]
+name = "edsc-pbc-collator"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "cumulus-client-cli",
+ "cumulus-client-collator",
+ "cumulus-client-consensus-aura",
+ "cumulus-client-consensus-common",
+ "cumulus-client-service",
+ "cumulus-primitives-core",
+ "cumulus-relay-chain-interface",
+ "edsc-pbc-runtime",
+ "frame-system",
+ "futures",
+ "jsonrpsee 0.16.3",
+ "log",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc",
+ "sc-basic-authorship",
+ "sc-cli",
+ "sc-client-api",
+ "sc-consensus",
+ "sc-consensus-asf",
+ "sc-consensus-grandpa",
+ "sc-consensus-slots",
+ "sc-executor",
+ "sc-network",
+ "sc-network-sync",
+ "sc-offchain",
+ "sc-rpc",
+ "sc-rpc-api",
+ "sc-service",
+ "sc-telemetry",
+ "sc-transaction-pool",
+ "sc-transaction-pool-api",
+ "serde",
+ "serde_json",
+ "sp-api",
+ "sp-block-builder",
+ "sp-blockchain",
+ "sp-consensus-asf",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-genesis-builder",
+ "sp-inherents",
+ "sp-io",
+ "sp-keyring",
+ "sp-runtime",
+ "sp-timestamp",
+ "substrate-build-script-utils",
+ "substrate-frame-rpc-system",
+ "tokio",
+]
+
+[[package]]
+name = "edsc-pbc-runtime"
+version = "0.1.0"
+dependencies = [
+ "etrid-primitives",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-rpc-runtime-api",
+ "pallet-balances",
+ "pallet-circuit-breaker",
+ "pallet-consensus",
+ "pallet-edsc-bridge-attestation",
+ "pallet-edsc-bridge-token-messenger",
+ "pallet-edsc-checkpoint",
+ "pallet-edsc-oracle",
+ "pallet-edsc-receipts",
+ "pallet-edsc-redemption",
+ "pallet-edsc-token",
+ "pallet-grandpa",
+ "pallet-insecure-randomness-collective-flip",
+ "pallet-sudo",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-xcm-bridge",
+ "parity-scale-codec",
+ "pbc-common",
+ "scale-info",
+ "sp-api",
+ "sp-arithmetic",
+ "sp-block-builder",
+ "sp-consensus-asf",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-genesis-builder",
+ "sp-inherents",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -4188,12 +4312,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -4566,6 +4692,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "etwasm-gas-metering"
+version = "0.1.0"
+dependencies = [
+ "etrid-economics",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-std",
+]
+
+[[package]]
+name = "etwasm-opcodes"
+version = "0.1.0"
+dependencies = [
+ "etwasm-gas-metering",
+ "parity-scale-codec",
+ "primitive-types 0.12.2",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "etwasm-runtime"
+version = "0.1.0"
+dependencies = [
+ "etwasm-gas-metering",
+ "etwasm-opcodes",
+ "parity-scale-codec",
+ "primitive-types 0.12.2",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "wasmi 0.31.2",
+]
+
+[[package]]
 name = "event-listener"
 version = "2.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4829,25 +4994,36 @@ dependencies = [
  "pallet-bitcoin-bridge",
  "pallet-cardano-bridge",
  "pallet-consensus",
+ "pallet-custodian-registry",
  "pallet-doge-bridge",
+ "pallet-edsc-bridge-attestation",
+ "pallet-edsc-bridge-token-messenger",
+ "pallet-edsc-oracle",
+ "pallet-edsc-receipts",
+ "pallet-edsc-redemption",
+ "pallet-edsc-token",
  "pallet-etrid-staking",
  "pallet-etwasm-vm",
  "pallet-governance",
  "pallet-grandpa",
  "pallet-insecure-randomness-collective-flip",
  "pallet-pbc-router",
+ "pallet-reserve-oracle",
+ "pallet-reserve-vault",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-tx-processor",
+ "pallet-xcm-bridge",
  "parity-scale-codec",
  "peer-roles-staking-types",
  "polygon-bridge",
  "scale-info",
  "sol-bridge",
  "sp-api",
+ "sp-arithmetic",
  "sp-block-builder",
  "sp-consensus-grandpa",
  "sp-core",
@@ -7755,12 +7931,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -8113,6 +8291,7 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "polygon-bridge",
  "scale-info",
  "sp-api",
@@ -8120,6 +8299,7 @@ dependencies = [
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -9107,6 +9287,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-circuit-breaker"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-collator-selection"
 version = "22.0.0"
 source = "git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2506#6fd693e6d9cfa46cd2acbcb41cd5b0451a62d67c"
@@ -9142,12 +9337,132 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-custodian-registry"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-reserve-vault",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-doge-bridge"
 version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
  "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-bridge-attestation"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-bridge-token-messenger"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-checkpoint"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-oracle"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-edsc-redemption",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-receipts"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-redemption"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-edsc-receipts",
+ "pallet-edsc-token",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-edsc-token"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
  "parity-scale-codec",
  "scale-info",
  "sp-core",
@@ -9221,6 +9536,9 @@ dependencies = [
 name = "pallet-etwasm-vm"
 version = "0.1.0"
 dependencies = [
+ "etwasm-gas-metering",
+ "etwasm-opcodes",
+ "etwasm-runtime",
  "frame-support",
  "frame-system",
  "log",
@@ -9367,6 +9685,41 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-reserve-oracle"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-custodian-registry",
+ "pallet-edsc-token",
+ "pallet-reserve-vault",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-reserve-vault"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-edsc-redemption",
+ "pallet-edsc-token",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -9666,6 +10019,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-xcm-bridge"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "parachains-common"
 version = "22.0.0"
 source = "git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2506#6fd693e6d9cfa46cd2acbcb41cd5b0451a62d67c"
@@ -9839,6 +10206,41 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "pbc-common"
+version = "0.1.0"
+dependencies = [
+ "etrid-primitives",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-rpc-runtime-api",
+ "pallet-balances",
+ "pallet-consensus",
+ "pallet-grandpa",
+ "pallet-insecure-randomness-collective-flip",
+ "pallet-lightning-channels",
+ "pallet-sudo",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-asf",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+]
 
 [[package]]
 name = "pbc-runtime"
@@ -13834,12 +14236,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -14931,6 +15335,7 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sol-bridge",
  "sp-api",
@@ -14938,6 +15343,7 @@ dependencies = [
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -17032,12 +17438,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -18533,12 +18941,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",
@@ -18663,12 +19073,14 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
+ "pbc-common",
  "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-asf",
  "sp-consensus-grandpa",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-offchain",

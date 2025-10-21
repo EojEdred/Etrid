@@ -24,6 +24,11 @@ wasmi.workspace = true
 # Logging
 log.workspace = true
 
+# ETWasm VM modules
+etwasm-gas-metering = { path = "../gas-metering", default-features = false }
+etwasm-opcodes = { path = "../opcodes", default-features = false }
+etwasm-runtime = { path = "../runtime", default-features = false }
+
 [features]
 default = ["std"]
 
@@ -35,6 +40,9 @@ std = [
     "codec/std",
     "scale-info/std",
     "log/std",
+    "etwasm-gas-metering/std",
+    "etwasm-opcodes/std",
+    "etwasm-runtime/std",
 ]
 
 runtime-benchmarks = [
