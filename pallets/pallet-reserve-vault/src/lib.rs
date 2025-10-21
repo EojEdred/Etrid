@@ -45,6 +45,7 @@ pub mod pallet {
 
 	/// Supported collateral asset types
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	#[derive(serde::Serialize, serde::Deserialize)]
 	#[codec(dumb_trait_bound)]
 	pub enum AssetType {
 		/// Native token (ÉTR)
@@ -574,33 +575,6 @@ pub mod pallet {
 				// Attempt recalculation (ignore errors)
 				let _ = Self::calculate_and_update_reserve_ratio();
 			}
-		}
-	}
-
-	/// Genesis configuration
-	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config> {
-		pub _phantom: sp_std::marker::PhantomData<T>,
-	}
-
-	impl<T: Config> Default for GenesisConfig<T> {
-		fn default() -> Self {
-			Self {
-				_phantom: Default::default(),
-			}
-		}
-	}
-
-	#[pallet::genesis_build]
-	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-		fn build(&self) {
-			// Initialize default haircuts
-			Haircuts::<T>::insert(AssetType::ETR, Permill::from_percent(40));  // 40% haircut (volatile)
-			Haircuts::<T>::insert(AssetType::BTC, Permill::from_percent(10));  // 10% haircut
-			Haircuts::<T>::insert(AssetType::ETH, Permill::from_percent(15));  // 15% haircut
-			Haircuts::<T>::insert(AssetType::USDC, Permill::from_percent(5));  // 5% haircut
-			Haircuts::<T>::insert(AssetType::USDT, Permill::from_percent(5));  // 5% haircut
-			Haircuts::<T>::insert(AssetType::DAI, Permill::from_percent(5));   // 5% haircut
 		}
 	}
 }

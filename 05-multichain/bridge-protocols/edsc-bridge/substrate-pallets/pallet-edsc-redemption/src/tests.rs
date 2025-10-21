@@ -18,6 +18,7 @@ use frame_system as system;
 use sp_arithmetic::{FixedU128, Permill};
 use sp_core::H256;
 use sp_runtime::{
+	BuildStorage,
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
@@ -70,6 +71,7 @@ impl system::Config for Test {
 	type PreInherents = ();
 	type PostInherents = ();
 	type PostTransactions = ();
+	type ExtensionsWeightInfo = ();
 }
 
 parameter_types! {
@@ -129,6 +131,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	pallet_edsc_redemption::GenesisConfig::<Test> {
 		initial_reserve_ratio: FixedU128::from_rational(110u128, 100u128),
 		initial_oracle_price: 100, // $1.00
+		_phantom: Default::default(),
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
@@ -137,9 +140,9 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 }
 
 // Test accounts
-const ALICE: u64 = 1;
-const BOB: u64 = 2;
-const CHARLIE: u64 = 3;
+pub const ALICE: u64 = 1;
+pub const BOB: u64 = 2;
+pub const CHARLIE: u64 = 3;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TEST MODULE 1: Zero-Value Edge Cases
@@ -431,7 +434,7 @@ fn test_path1_sbt_has_zero_fee() {
 		EdscToken::mint(RuntimeOrigin::signed(ALICE), ALICE, 10_000).unwrap();
 
 		// Create receipt
-		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), 10_000, 100).unwrap();
+		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), ALICE, 10_000, 100).unwrap();
 		let receipt_id = 0;
 
 		// Set oracle price (depegged to $0.98)

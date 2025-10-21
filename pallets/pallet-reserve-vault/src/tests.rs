@@ -18,6 +18,7 @@ use frame_system as system;
 use sp_arithmetic::{FixedU128, Permill};
 use sp_core::H256;
 use sp_runtime::{
+	BuildStorage,
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
@@ -30,6 +31,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system,
 		EdscToken: pallet_edsc_token,
+		EdscReceipts: pallet_edsc_receipts,
 		EdscRedemption: pallet_edsc_redemption,
 		ReserveVault: pallet_reserve_vault,
 	}
@@ -69,6 +71,7 @@ impl system::Config for Test {
 	type PreInherents = ();
 	type PostInherents = ();
 	type PostTransactions = ();
+	type ExtensionsWeightInfo = ();
 }
 
 parameter_types! {
@@ -80,6 +83,17 @@ impl pallet_edsc_token::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type MaxSupply = MaxSupply;
 	type MinBalance = MinBalance;
+}
+
+parameter_types! {
+	pub const MaxReceiptsPerWallet: u32 = 1000;
+	pub const ReceiptExpiryPeriod: u32 = 5_256_000;
+}
+
+impl pallet_edsc_receipts::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
+	type MaxReceiptsPerWallet = MaxReceiptsPerWallet;
+	type ReceiptExpiryPeriod = ReceiptExpiryPeriod;
 }
 
 parameter_types! {
@@ -140,6 +154,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 			(AssetType::ETH, 300000),  // $3,000
 			(AssetType::USDC, 100),    // $1.00
 		],
+		_phantom: Default::default(),
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
@@ -295,7 +310,7 @@ fn test_reserve_ratio_calculation() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		// Reserve ratio should be: $54,000 / $100,000 = 0.54 = 54%
 		let ratio = ReserveVault::reserve_ratio();
@@ -321,7 +336,7 @@ fn test_reserve_ratio_optimal_range() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -352,7 +367,7 @@ fn test_reserve_ratio_with_custodian_value() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		// Total reserve = $54,000 + $66,000 = $120,000
 		// Ratio = $120,000 / $100,000 = 120% (optimal)
@@ -426,7 +441,7 @@ fn test_withdraw_when_reserve_ratio_too_low_fails() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		// Try to withdraw - should fail as it would drop ratio below safe level
 		assert_err!(
@@ -555,7 +570,7 @@ fn test_reserve_critical_triggers_redemption_pause() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -581,7 +596,7 @@ fn test_reserve_throttle_triggers_queue_mode() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -608,7 +623,7 @@ fn test_reserve_optimal_normal_operation() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio(RuntimeOrigin::signed(ALICE)));
+		assert_ok!(ReserveVault::calculate_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
