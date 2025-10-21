@@ -5253,6 +5253,8 @@ dependencies = [
  "pallet-transaction-payment 41.0.0",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-tx-processor",
+ "pallet-validator-committee",
+ "pallet-validator-committee-runtime-api",
  "pallet-xcm-bridge",
  "parity-scale-codec",
  "peer-roles-staking-types",
@@ -10592,6 +10594,35 @@ dependencies = [
  "pallet-transaction",
  "parity-scale-codec",
  "scale-info",
+]
+
+[[package]]
+name = "pallet-validator-committee"
+version = "0.1.0"
+dependencies = [
+ "asf-algorithm",
+ "frame-benchmarking 43.0.0",
+ "frame-support 43.0.0",
+ "frame-system 43.0.0",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core 38.1.0",
+ "sp-io 43.0.0",
+ "sp-runtime 44.0.0",
+ "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2509)",
+ "validator-management",
+]
+
+[[package]]
+name = "pallet-validator-committee-runtime-api"
+version = "0.1.0"
+dependencies = [
+ "asf-algorithm",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api 39.0.0",
+ "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2509)",
+ "validator-management",
 ]
 
 [[package]]

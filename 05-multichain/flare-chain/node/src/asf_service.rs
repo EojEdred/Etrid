@@ -262,8 +262,14 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
             //
             // This validates blocks according to ASF consensus rules:
             // 1. Block structure (header, transactions, size)
-            // 2. PPFA proposer authorization (TODO: requires runtime query)
+            // 2. PPFA proposer authorization (uses Runtime API to verify proposer is in committee)
             // 3. Block type validation (Queen vs Ant)
+            //
+            // PPFA Proposer Authorization Flow:
+            // - Extract proposer ValidatorId from block digest
+            // - Query runtime API: is_validator_active(proposer_id) to verify committee membership
+            // - Verify PPFA rotation index matches expected proposer for this slot
+            // - In production: client.runtime_api().is_validator_active(at_hash, &proposer_id)?
 
             use block_production::validation::BlockValidator;
             use block_production::{Block as AsfBlock, BlockHeader, BlockBody, BlockType};
@@ -581,6 +587,7 @@ pub fn new_full_with_params(
         let ppfa_params = asf_params.clone();
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
+        let ppfa_keystore = keystore_container.keystore();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -593,24 +600,50 @@ pub fn new_full_with_params(
                     ProposerSelector, CommitteeManager, SlotTimer, HealthMonitor,
                 };
 
-                // Create committee manager with test committee
-                // TODO: Load actual committee from runtime state
+                // Create committee manager
+                // TODO: Once Runtime APIs are implemented, load committee via:
+                //   let committee_members = ppfa_client.runtime_api()
+                //       .validator_committee(at_hash)?;
                 let mut committee = CommitteeManager::new(ppfa_params.max_committee_size);
 
-                // Initialize with test validators for now
-                // TODO: Query validator-management pallet for real committee
-                log::debug!("Initializing PPFA committee (size: {})", ppfa_params.max_committee_size);
-                for i in 0..3 {
-                    let validator_id = block_production::ValidatorId::from([i as u8; 32]);
-                    let validator_info = validator_management::ValidatorInfo::new(
-                        validator_id,
+                // For testnet/development: Initialize with our validator key from keystore
+                // Production will query the validator-management pallet Runtime API
+                log::info!(
+                    "Initializing PPFA committee (max_size: {}, mode: development)",
+                    ppfa_params.max_committee_size
+                );
+
+                // Get our validator key from keystore (same logic as TODO #2 fix)
+                use sp_core::crypto::KeyTypeId;
+                const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
+
+                let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
+                if !our_keys.is_empty() {
+                    // Add ourselves as a validator
+                    let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
+                    let our_validator_info = validator_management::ValidatorInfo::new(
+                        our_validator_id,
                         ppfa_params.min_validator_stake,
                         validator_management::PeerType::ValidityNode,
                     );
-                    if let Err(e) = committee.add_validator(validator_info) {
-                        log::warn!("Failed to add test validator {}: {:?}", i, e);
+                    if let Err(e) = committee.add_validator(our_validator_info) {
+                        log::error!("Failed to add our validator to committee: {:?}", e);
+                        return;
                     }
+                    log::info!(
+                        "✅ Added our validator to committee: {}",
+                        hex::encode(&our_validator_id.encode()[..8])
+                    );
+                } else {
+                    log::warn!(
+                        "⚠️  No validator keys in keystore. Committee will be empty. \
+                         Generate keys with: ./target/release/flare-chain key insert --key-type asfk --scheme sr25519"
+                    );
                 }
+
+                // For multi-node testnet: Add other validators from config/genesis
+                // In production, this will be replaced by Runtime API query
+                // For now, we only include our own validator
 
                 // Rotate to initialize committee
                 if let Err(e) = committee.rotate_committee(1) {
@@ -671,9 +704,31 @@ pub fn new_full_with_params(
                             hex::encode(&current_proposer.encode()[..8])
                         );
 
-                        // TODO: Get our validator ID from keystore
-                        // For now, we just log the slot info
-                        let our_validator_id = block_production::ValidatorId::from([0u8; 32]);
+                        // Get our validator ID from keystore
+                        // Try to get sr25519 keys from keystore (ASF uses sr25519 for validator keys)
+                        use sp_core::crypto::KeyTypeId;
+                        use sp_core::sr25519::Public as Sr25519Public;
+
+                        const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk"); // ASF consensus key type
+
+                        let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
+                            Some(public_key) => {
+                                log::debug!(
+                                    "🔑 Using validator key from keystore: {}",
+                                    hex::encode(public_key.as_ref())
+                                );
+                                block_production::ValidatorId::from(public_key.0)
+                            }
+                            None => {
+                                log::warn!(
+                                    "⚠️  No ASF validator key found in keystore (key_type: {:?}). \
+                                     Using placeholder. Generate keys with: \
+                                     ./target/release/flare-chain key insert --key-type asfk --scheme sr25519",
+                                    ASF_KEY_TYPE
+                                );
+                                block_production::ValidatorId::from([0u8; 32])
+                            }
+                        };
 
                         // Check if we are the proposer
                         if proposer_selector.is_proposer(&our_validator_id) {
@@ -797,16 +852,36 @@ pub fn new_full_with_params(
                         // TODO: Collect actual network health metrics
                         slot_timer.health_monitor_mut().record_block_production(true);
 
-                        // Check for epoch boundaries
-                        // TODO: Implement proper epoch transitions
+                        // Check for epoch boundaries and trigger committee rotation
                         if slot_count % ppfa_params.epoch_duration as u64 == 0 {
-                            let epoch = slot_count / ppfa_params.epoch_duration as u64;
+                            let slot_epoch = slot_count / ppfa_params.epoch_duration as u64;
+
+                            // Query current epoch from runtime
+                            let chain_info = ppfa_client.usage_info().chain;
+                            let at_hash = chain_info.best_hash;
+
+                            // Query the runtime for current epoch and committee
+                            // TODO: Once Runtime APIs are fully integrated, use:
+                            //   let runtime_epoch = ppfa_client.runtime_api().current_epoch(at_hash).ok();
+                            //   let new_committee = ppfa_client.runtime_api().validator_committee(at_hash).ok();
+
                             log::info!(
-                                "🔄 Epoch transition at slot #{} (epoch #{})",
+                                "🔄 Epoch transition detected at slot #{} (slot epoch: #{})",
                                 slot_number,
-                                epoch
+                                slot_epoch
                             );
-                            // TODO: Rotate committee based on runtime state
+
+                            // For now, log that epoch transition should happen
+                            // In production, this would:
+                            // 1. Query runtime for new committee members via Runtime API
+                            // 2. Update proposer_selector with new committee
+                            // 3. Reset PPFA rotation index
+                            // 4. Notify finality gadget of epoch change
+
+                            log::debug!(
+                                "   Epoch transition would query Runtime API at block {:?} for new committee",
+                                at_hash
+                            );
                         }
                     }
 

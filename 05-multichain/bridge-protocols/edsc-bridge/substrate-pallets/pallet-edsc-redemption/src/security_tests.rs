@@ -175,6 +175,7 @@ fn test_receipt_cannot_be_reused() {
 		// Create receipt
 		EdscReceipts::create_receipt(
 			RuntimeOrigin::signed(ALICE),
+			ALICE,
 			10_000_00,
 			100
 		).unwrap();
@@ -280,9 +281,9 @@ fn test_queue_request_cannot_be_processed_twice() {
 fn test_receipt_id_uniqueness() {
 	new_test_ext().execute_with(|| {
 		// Create multiple receipts
-		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), 1_000_00, 100).unwrap();
-		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), 2_000_00, 100).unwrap();
-		EdscReceipts::create_receipt(RuntimeOrigin::signed(BOB), 3_000_00, 100).unwrap();
+		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), ALICE, 1_000_00, 100).unwrap();
+		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), ALICE, 2_000_00, 100).unwrap();
+		EdscReceipts::create_receipt(RuntimeOrigin::signed(BOB), BOB, 3_000_00, 100).unwrap();
 
 		// Verify each receipt has unique ID
 		assert!(EdscReceipts::is_valid_receipt(0, &ALICE).is_ok());
@@ -361,6 +362,7 @@ fn test_daily_limit_prevents_per_wallet_drain() {
 		// Create receipt for Path 1
 		EdscReceipts::create_receipt(
 			RuntimeOrigin::signed(ALICE),
+			ALICE,
 			100_000_00,
 			100
 		).unwrap();

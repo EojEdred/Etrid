@@ -61,6 +61,10 @@ pallet-reserve-oracle = { path = "../../../pallets/pallet-reserve-oracle", defau
 # Cross-chain infrastructure
 pallet-xcm-bridge = { path = "../../../pallets/pallet-xcm-bridge", default-features = false }
 
+# ASF Consensus pallets
+pallet-validator-committee = { path = "../../../pallets/pallet-validator-committee", default-features = false }
+pallet-validator-committee-runtime-api = { path = "../../../pallets/pallet-validator-committee/runtime-api", default-features = false }
+
 # Phase 3: External Bridge Protocol (CCTP-style)
 pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
 pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
@@ -169,6 +173,10 @@ std = [
     "pallet-xcm-bridge/std",
     "pallet-edsc-bridge-token-messenger/std",
     "pallet-edsc-bridge-attestation/std",
+
+    # ASF Consensus pallets
+    "pallet-validator-committee/std",
+    "pallet-validator-committee-runtime-api/std",
 
     "frame-executive/std",
     "frame-support/std",

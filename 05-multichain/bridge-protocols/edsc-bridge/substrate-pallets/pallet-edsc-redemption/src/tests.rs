@@ -190,6 +190,7 @@ fn test_exceeds_daily_limit_path1() {
 		// Create receipt for Path 1
 		EdscReceipts::create_receipt(
 			RuntimeOrigin::signed(ALICE),
+			ALICE,
 			100_000_00,
 			100, // $1.00 purchase price
 		)

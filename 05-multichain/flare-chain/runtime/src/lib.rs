@@ -642,6 +642,21 @@ impl pallet_edsc_bridge_attestation::Config for Runtime {
     type AttestationMaxAge = FlareAttestationMaxAge;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ASF CONSENSUS PALLETS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const MaxCommitteeSize: u32 = 100;
+    pub const MinValidatorStake: u128 = 1_000_000_000_000_000_000; // 1 ËTRID
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = MaxCommitteeSize;
+    type MinValidatorStake = MinValidatorStake;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime {
@@ -699,6 +714,9 @@ construct_runtime!(
         // Phase 3: External Bridge Protocol (CCTP-style)
         TokenMessenger: pallet_edsc_bridge_token_messenger,
         BridgeAttestation: pallet_edsc_bridge_attestation,
+
+        // ASF Consensus pallets
+        ValidatorCommittee: pallet_validator_committee,
     }
 );
 
@@ -896,6 +914,29 @@ impl_runtime_apis! {
         }
         fn query_length_to_fee(length: u32) -> Balance {
             TransactionPayment::length_to_fee(length)
+        }
+    }
+
+    // ASF Consensus Runtime APIs
+    impl pallet_validator_committee_runtime_api::ValidatorCommitteeApi<Block> for Runtime {
+        fn validator_committee() -> sp_std::vec::Vec<validator_management::ValidatorInfo> {
+            ValidatorCommittee::get_committee()
+        }
+
+        fn validator_info(validator_id: asf_algorithm::ValidatorId) -> Option<validator_management::ValidatorInfo> {
+            ValidatorCommittee::get_validator(&validator_id)
+        }
+
+        fn is_validator_active(validator_id: asf_algorithm::ValidatorId) -> bool {
+            ValidatorCommittee::is_validator_active(&validator_id)
+        }
+
+        fn current_epoch() -> u64 {
+            ValidatorCommittee::get_current_epoch()
+        }
+
+        fn committee_size_limit() -> u32 {
+            ValidatorCommittee::committee_size_limit()
         }
     }
 
