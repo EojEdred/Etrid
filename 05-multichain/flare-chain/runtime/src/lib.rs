@@ -74,7 +74,15 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     authoring_version: 1,
     spec_version: 100,
     impl_version: 1,
-    apis: RUNTIME_API_VERSIONS,
+    apis: sp_version::create_apis_vec![[
+        BLOCK_BUILDER,
+        TRANSACTION_PAYMENT_API,
+        ACCOUNT_NONCE_API,
+        METADATA,
+        OFFCHAIN_WORKER_API,
+        SESSION_KEYS,
+        GRANDPA_API,
+    ]],
     transaction_version: 1,
     system_version: 1,
 };
@@ -94,7 +102,7 @@ const AVERAGE_ON_INITIALIZE_RATIO: sp_runtime::Perbill = sp_runtime::Perbill::fr
 /// We allow for 2 seconds of compute with a 6 second average block time.
 const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
     WEIGHT_REF_TIME_PER_SECOND * 2,
-    u64::MAX,
+    core::u64::MAX,
 );
 /// Maximum length of block.
 const MAXIMUM_BLOCK_LENGTH: u32 = 5 * 1024 * 1024;
@@ -233,6 +241,8 @@ impl pallet_etrid_staking::Config for Runtime {
 impl pallet_etwasm_vm::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxCodeSize = ConstU32<1024>;
+    type DefaultGasLimit = ConstU64<1_000_000>; // Default gas limit for contract calls
+    type MaxGasLimit = ConstU64<10_000_000>; // Maximum gas limit for contract calls
 }
 
 /// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)

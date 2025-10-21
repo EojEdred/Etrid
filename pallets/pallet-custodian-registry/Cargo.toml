@@ -8,18 +8,18 @@ description = "Custodian registry for off-chain EDSC reserves with bonding and s
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
 scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
-frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Local pallets
 pallet-reserve-vault = { path = "../pallet-reserve-vault", default-features = false }
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 [features]
 default = ["std"]

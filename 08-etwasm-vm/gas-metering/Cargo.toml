@@ -9,7 +9,7 @@ description = "Gas metering and cost calculation for ETWasm VM"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11", default-features = false, features = ["derive"] }
-sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
 etrid-economics = { path = "../../06-native-currency/economics", default-features = false }
 
 [features]
