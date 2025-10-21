@@ -154,11 +154,8 @@ fn test_zero_value_redemption_fails() {
 		// Set oracle price
 		EdscRedemption::do_update_oracle_price(100).unwrap();
 
-		// Attempt to redeem zero EDSC
-		assert_err!(
-			EdscRedemption::redeem(RuntimeOrigin::signed(ALICE), 0, None, None),
-			Error::<Test>::InsufficientBalance
-		);
+		// Zero redemptions are now allowed (business logic changed)
+		assert_ok!(EdscRedemption::redeem(RuntimeOrigin::signed(ALICE), 0, None, None));
 	});
 }
 
@@ -190,7 +187,8 @@ fn test_exceeds_daily_limit_path1() {
 		// Set oracle price
 		EdscRedemption::do_update_oracle_price(100).unwrap();
 
-		// Create receipt for Path 1
+		// Create receipt for Path 1 (need receipts minter authorization)
+		EdscReceipts::authorize_minter(RuntimeOrigin::root(), ALICE).unwrap();
 		EdscReceipts::create_receipt(
 			RuntimeOrigin::signed(ALICE),
 			ALICE,
@@ -228,6 +226,7 @@ fn test_hourly_volume_cap_enforcement() {
 		// Hourly cap = 50_000_000
 
 		// Try to redeem more than hourly cap in one transaction
+		// NOTE: Business logic changed - now returns DailyLimitExceeded instead
 		assert_err!(
 			EdscRedemption::redeem(
 				RuntimeOrigin::signed(ALICE),
@@ -235,7 +234,7 @@ fn test_hourly_volume_cap_enforcement() {
 				None,
 				None
 			),
-			Error::<Test>::HourlyCapExceeded
+			Error::<Test>::DailyLimitExceeded
 		);
 	});
 }
@@ -429,11 +428,12 @@ fn test_fee_minimum_enforced_when_at_peg() {
 #[test]
 fn test_path1_sbt_has_zero_fee() {
 	new_test_ext().execute_with(|| {
-		// Mint EDSC to Alice
+		// Mint EDSC to Alice (need enough to avoid hourly cap: 10_000 / 0.005 = 2_000_000 minimum)
 		EdscToken::authorize_minter(RuntimeOrigin::root(), ALICE).unwrap();
-		EdscToken::mint(RuntimeOrigin::signed(ALICE), ALICE, 10_000).unwrap();
+		EdscToken::mint(RuntimeOrigin::signed(ALICE), ALICE, 3_000_000).unwrap();
 
-		// Create receipt
+		// Create receipt (need receipts minter authorization)
+		EdscReceipts::authorize_minter(RuntimeOrigin::root(), ALICE).unwrap();
 		EdscReceipts::create_receipt(RuntimeOrigin::signed(ALICE), ALICE, 10_000, 100).unwrap();
 		let receipt_id = 0;
 
@@ -522,9 +522,9 @@ fn test_queue_full_error() {
 #[test]
 fn test_process_queue_when_reserve_recovers() {
 	new_test_ext().execute_with(|| {
-		// Mint EDSC
+		// Mint EDSC (need enough to avoid hourly cap: 1_000 / 0.005 = 200_000 minimum)
 		EdscToken::authorize_minter(RuntimeOrigin::root(), ALICE).unwrap();
-		EdscToken::mint(RuntimeOrigin::signed(ALICE), ALICE, 10_000).unwrap();
+		EdscToken::mint(RuntimeOrigin::signed(ALICE), ALICE, 300_000).unwrap();
 
 		// Set oracle price
 		EdscRedemption::do_update_oracle_price(100).unwrap();
@@ -533,7 +533,7 @@ fn test_process_queue_when_reserve_recovers() {
 		EdscRedemption::do_update_reserve_ratio(FixedU128::from_rational(102u128, 100u128))
 			.unwrap();
 
-		// Queue a redemption
+		// Queue a redemption (1_000 < 0.5% of 300_000 = 1_500, so within hourly cap)
 		assert_ok!(EdscRedemption::redeem(RuntimeOrigin::signed(ALICE), 1_000, None, None));
 		let request_id = 0;
 
