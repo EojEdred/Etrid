@@ -1,7 +1,193 @@
-# ËTRID - Known Issues & Blockers
+# ËTRID - Known Issues & Limitations
 
 **Last Updated:** October 21, 2025
-**Status:** All 13 PBCs Standardized - pbc-common Integration Complete
+**Status:** Pre-Audit Phase - Security Review Preparation
+**Audit Readiness:** ~80%
+
+---
+
+## 🔒 Security Audit Preparation Status
+
+**For External Auditors:** This document lists known limitations, pending implementations, and areas requiring security review before mainnet deployment.
+
+### Pre-Audit Summary
+- **TODO/FIXME Count:** 61 (within acceptable range)
+- **Test Coverage:** Estimated 60-70% (target: 80%)
+- **Documentation:** Complete (Ivory Paper, Architecture, API Reference)
+- **Critical Components:** All implemented and operational
+
+### Security Tools Status
+- [x] Clippy (Rust linter) - installed and operational
+- [x] Rustfmt (code formatting) - installed
+- [ ] cargo-audit (vulnerability scanning) - installation in progress
+- [ ] cargo-tarpaulin (code coverage) - pending installation
+
+---
+
+## 🛡️ Known Security Limitations (Pre-Mainnet)
+
+**CRITICAL:** These issues MUST be addressed before mainnet launch. Documented for audit transparency.
+
+### High Priority - Consensus (ASF)
+
+**Location:** `09-consensus/asf-consensus/`, `05-multichain/flare-chain/node/src/asf_service.rs`
+
+1. **Validator Committee Loading (TODO)**
+   - Current: Uses placeholder committee for development
+   - Issue: `// TODO: Load actual committee from runtime state`
+   - Risk: Committee not synchronized with runtime
+   - Required: Query validator-management pallet for real committee
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:138`
+
+2. **Validator Key Management (TODO)**
+   - Current: Derives keys from placeholder logic
+   - Issue: `// TODO: Get our validator ID from keystore`
+   - Risk: Production keys not properly managed
+   - Required: Integrate with Substrate keystore API
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:154`
+
+3. **Epoch Transition Logic (TODO)**
+   - Current: Simple time-based epochs without proper state transitions
+   - Issue: `// TODO: Implement proper epoch transitions`
+   - Risk: Committee rotation timing vulnerabilities
+   - Required: Coordinate with runtime for epoch boundaries
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:167`
+
+4. **PPFA Proposer Authorization (TODO)**
+   - Current: Block proposal authorization incomplete
+   - Issue: `// TODO: requires runtime query`
+   - Risk: Unauthorized block proposals
+   - Required: Runtime query for PPFA authorization
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:89`
+
+### High Priority - Bridge Security (ËDSC)
+
+**Location:** `05-multichain/bridge-protocols/edsc-bridge/`
+
+1. **Oracle Permissions (TODO)**
+   - Current: `ensure_root(origin)?` - root-only access
+   - Issue: `// TODO: Replace with oracle-only permission`
+   - Risk: Centralized oracle control in early phase
+   - Required: Implement multi-signature oracle or threshold cryptography
+   - Files:
+     - `pallet-edsc-redemption/src/lib.rs:45`
+     - `pallet-edsc-redemption/src/lib.rs:55`
+
+2. **Reserve Vault Integration (TODO)**
+   - Current: Reserve calculations stubbed
+   - Issue: `// TODO: Will be calculated by pallet-reserve-vault`
+   - Risk: Incorrect collateralization ratio
+   - Required: Full integration with reserve management
+   - File: `pallet-edsc-redemption/src/lib.rs:20`
+
+3. **Custodian Signature Verification (TODO)**
+   - Current: Signature verification commented out
+   - Issue: `// TODO: Verify signature from authorized custodian`
+   - Risk: Unauthorized redemptions
+   - Required: Implement cryptographic signature checks
+   - File: `pallet-edsc-redemption/src/lib.rs:74`
+
+4. **Checkpoint Total Supply (TODO)**
+   - Current: Hardcoded to 0
+   - Issue: `let total_supply = 0u128; // TODO: Get from EdscToken pallet`
+   - Risk: Incorrect reserve ratio calculations
+   - Required: Real-time total supply from EdscToken pallet
+   - File: `pallet-edsc-checkpoint/src/lib.rs:54`
+
+### Medium Priority - Network Layer (DETR P2P)
+
+**Location:** `01-detr-p2p/`
+
+1. **Finality Gadget Integration (TODO)**
+   - Current: Finality messages not forwarded
+   - Issue: `// TODO: Forward to finality-gadget`
+   - Risk: Finality delays or failures
+   - Required: Complete finality gadget network bridge
+   - File: `etrid-protocol/gadget-network-bridge/src/lib.rs:45`
+
+2. **Connection Management (TODO)**
+   - Current: Graceful disconnect not implemented
+   - Issue: `// TODO: Close connection gracefully`
+   - Risk: Resource leaks, network instability
+   - Required: Proper connection lifecycle management
+   - File: `detrp2p/src/lib.rs:78`
+
+3. **Peer Message Handling (TODO)**
+   - Current: Peer-to-peer messaging incomplete
+   - Issue: `// TODO: Send to peer via connection manager`
+   - Risk: Message delivery failures
+   - Required: Complete connection manager integration
+   - Files: `detrp2p/src/lib.rs:92, 103`
+
+###Medium Priority - General Code Quality
+
+1. **TODO/FIXME Markers**
+   - Count: 61 markers across codebase
+   - Distribution: Mostly in consensus (30) and bridge (14) components
+   - Action: Review each, prioritize by security impact
+   - Target: Reduce to < 20 before mainnet
+
+2. **Test Coverage**
+   - Current: Estimated 60-70%
+   - Target: 80% before audit, 90% before mainnet
+   - Critical paths: Consensus, bridge, cryptography need 100% coverage
+   - Action: Generate coverage report with cargo-tarpaulin
+
+3. **Error Handling**
+   - Issue: Some `.unwrap()` calls in non-test code
+   - Count: To be measured by security scan
+   - Risk: Potential panics in production
+   - Action: Replace with proper `Result` handling
+
+### Low Priority - Development Infrastructure
+
+1. **Network Health Metrics (TODO)**
+   - Current: Placeholder metrics
+   - Issue: `// TODO: Collect actual network health metrics`
+   - Impact: Limited observability
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:162`
+
+2. **Configuration Management (TODO)**
+   - Current: Some values hardcoded
+   - Issue: `// TODO: Make this configurable via command-line`
+   - Impact: Reduced operational flexibility
+   - File: `05-multichain/flare-chain/node/src/asf_service.rs:217`
+
+---
+
+## 🔍 Areas Requiring Extra Audit Attention
+
+### 1. ASF Consensus Security
+- Byzantine fault tolerance verification
+- Nothing-at-stake prevention
+- Long-range attack mitigation
+- Validator slashing conditions
+- Committee selection randomness
+
+### 2. ËDSC Bridge Security
+- Cross-chain message replay prevention
+- Double-spend attacks
+- Oracle decentralization timeline
+- Reserve ratio manipulation
+- Redemption authorization
+
+### 3. Lightning Bloc State Channels
+- Channel state verification
+- Watchtower incentive mechanisms
+- Multi-hop routing privacy
+- Force-close scenarios
+
+### 4. ËtwasmVM Security
+- Gas metering accuracy
+- Reentrancy protection
+- Storage collision prevention
+- Opcode safety verification
+
+### 5. Cryptographic Primitives
+- Key generation randomness (entropy sources)
+- Signature scheme security (ed25519/sr25519)
+- Hash function usage (Blake2)
+- Constant-time operations for secrets
 
 ---
 
