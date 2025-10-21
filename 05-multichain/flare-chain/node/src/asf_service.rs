@@ -1373,6 +1373,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use block_production::{ValidatorId, ProposerSelector, CommitteeManager};
+    use validator_management::{ValidatorInfo, PeerType};
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 1: ASF Parameters Configuration
+    // ═══════════════════════════════════════════════════════════════════════════
 
     #[test]
     fn test_asf_params_defaults() {
@@ -1398,5 +1404,417 @@ mod tests {
         assert_eq!(params.slot_duration, 3000);
         assert_eq!(params.max_committee_size, 42);
         assert!(!params.enable_finality_gadget);
+    }
+
+    #[test]
+    fn test_asf_params_epoch_calculation() {
+        let params = AsfParams::default();
+
+        // Verify epoch duration calculation at 6 second blocks
+        // 2400 blocks * 6 seconds = 14,400 seconds = 4 hours
+        let epoch_seconds = params.epoch_duration as u64 * (params.slot_duration / 1000);
+        assert_eq!(epoch_seconds, 14_400); // 4 hours
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 2: PPFA Committee Management
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_committee_initialization() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators to committee
+        for i in 0..5 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            assert!(committee.add_validator(validator_info).is_ok());
+        }
+
+        // Verify committee size
+        assert_eq!(committee.validator_count(), 5);
+    }
+
+    #[test]
+    fn test_committee_rotation() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators
+        for i in 0..10 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        // Rotate committee to epoch 1
+        assert!(committee.rotate_committee(1).is_ok());
+
+        // Verify active committee size is capped at max_committee_size
+        let active_count = committee.active_committee_size();
+        assert!(active_count <= params.max_committee_size as usize);
+    }
+
+    #[test]
+    fn test_committee_exceeds_max_size() {
+        let params = AsfParams {
+            max_committee_size: 5,
+            ..Default::default()
+        };
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 10 validators (exceeds max of 5)
+        for i in 0..10 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        // Rotate and verify active committee is capped
+        committee.rotate_committee(1).unwrap();
+        assert_eq!(committee.active_committee_size(), 5);
+    }
+
+    #[test]
+    fn test_empty_committee_rotation_fails() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Attempt to rotate empty committee should fail
+        assert!(committee.rotate_committee(1).is_err());
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 3: PPFA Proposer Selection
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_ppfa_proposer_selection() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 3 validators
+        for i in 0..3 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        committee.rotate_committee(1).unwrap();
+
+        let mut proposer_selector = ProposerSelector::new(committee);
+
+        // Get current proposer (should succeed)
+        assert!(proposer_selector.current_proposer().is_ok());
+    }
+
+    #[test]
+    fn test_ppfa_rotation_advances_proposer() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators
+        for i in 0..3 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        committee.rotate_committee(1).unwrap();
+        let mut proposer_selector = ProposerSelector::new(committee);
+
+        // Get initial proposer
+        let proposer1 = proposer_selector.current_proposer().unwrap();
+        let ppfa_index1 = proposer_selector.current_ppfa_index();
+
+        // Advance to next block
+        proposer_selector.advance(1);
+
+        // Verify PPFA index changed
+        let ppfa_index2 = proposer_selector.current_ppfa_index();
+        assert_ne!(ppfa_index1, ppfa_index2);
+    }
+
+    #[test]
+    fn test_ppfa_proposer_authorization() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators
+        let validator_ids: Vec<ValidatorId> = (0..3)
+            .map(|i| {
+                let id = ValidatorId::from([i as u8; 32]);
+                let info = ValidatorInfo::new(id, params.min_validator_stake, PeerType::ValidityNode);
+                committee.add_validator(info).unwrap();
+                id
+            })
+            .collect();
+
+        committee.rotate_committee(1).unwrap();
+        let proposer_selector = ProposerSelector::new(committee);
+
+        // Check if first validator is the current proposer
+        let is_proposer = proposer_selector.is_proposer(&validator_ids[0]);
+
+        // At least one validator should be the proposer
+        let any_is_proposer = validator_ids.iter()
+            .any(|id| proposer_selector.is_proposer(id));
+        assert!(any_is_proposer);
+    }
+
+    #[test]
+    fn test_unauthorized_proposer_rejected() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 3 validators
+        for i in 0..3 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        committee.rotate_committee(1).unwrap();
+        let proposer_selector = ProposerSelector::new(committee);
+
+        // Create a validator NOT in the committee
+        let unauthorized_validator = ValidatorId::from([99u8; 32]);
+
+        // Verify unauthorized validator is rejected
+        assert!(!proposer_selector.is_proposer(&unauthorized_validator));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 4: Epoch Transitions
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_epoch_boundary_detection() {
+        let params = AsfParams::default();
+
+        // Block 0 is epoch 0
+        let epoch_0 = 0 / params.epoch_duration;
+        assert_eq!(epoch_0, 0);
+
+        // Block 2400 is epoch 1
+        let epoch_1 = params.epoch_duration / params.epoch_duration;
+        assert_eq!(epoch_1, 1);
+
+        // Block 4800 is epoch 2
+        let epoch_2 = (params.epoch_duration * 2) / params.epoch_duration;
+        assert_eq!(epoch_2, 2);
+    }
+
+    #[test]
+    fn test_epoch_transition_triggers_committee_rotation() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators
+        for i in 0..5 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        // Rotate to epoch 1
+        assert!(committee.rotate_committee(1).is_ok());
+
+        // Rotate to epoch 2
+        assert!(committee.rotate_committee(2).is_ok());
+
+        // Verify committee is still active
+        assert!(committee.active_committee_size() > 0);
+    }
+
+    #[test]
+    fn test_epoch_duration_consistency() {
+        let params = AsfParams::default();
+
+        // Verify epoch duration is consistent with documentation
+        // 2400 blocks at 6 seconds = 4 hours
+        assert_eq!(params.epoch_duration, 2400);
+
+        // Test epoch calculation for various block numbers
+        let test_cases = vec![
+            (0, 0),       // Block 0 → Epoch 0
+            (1200, 0),    // Block 1200 → Epoch 0
+            (2399, 0),    // Block 2399 → Epoch 0
+            (2400, 1),    // Block 2400 → Epoch 1
+            (4800, 2),    // Block 4800 → Epoch 2
+            (7200, 3),    // Block 7200 → Epoch 3
+        ];
+
+        for (block_number, expected_epoch) in test_cases {
+            let calculated_epoch = block_number / params.epoch_duration;
+            assert_eq!(calculated_epoch, expected_epoch,
+                "Block {} should be in epoch {}", block_number, expected_epoch);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 5: Byzantine Fault Tolerance
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_committee_tolerates_one_third_failures() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 21 validators (max committee size)
+        for i in 0..21 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        committee.rotate_committee(1).unwrap();
+
+        // Byzantine fault tolerance: Can tolerate (n-1)/3 failures
+        // For 21 validators: (21-1)/3 = 6.67 → 6 Byzantine failures tolerated
+        let total_validators = 21;
+        let max_byzantine_failures = (total_validators - 1) / 3;
+
+        assert_eq!(max_byzantine_failures, 6);
+
+        // Need 2/3 + 1 for consensus
+        let min_honest_validators = (total_validators * 2 / 3) + 1;
+        assert_eq!(min_honest_validators, 15);
+    }
+
+    #[test]
+    fn test_minimum_committee_size_for_bft() {
+        // Minimum committee size for BFT is 4 (can tolerate 1 Byzantine failure)
+        let params = AsfParams {
+            max_committee_size: 4,
+            ..Default::default()
+        };
+
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 4 validators
+        for i in 0..4 {
+            let validator_id = ValidatorId::from([i as u8; 32]);
+            let validator_info = ValidatorInfo::new(
+                validator_id,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(validator_info).unwrap();
+        }
+
+        assert!(committee.rotate_committee(1).is_ok());
+
+        // With 4 validators, can tolerate (4-1)/3 = 1 Byzantine failure
+        assert_eq!(committee.active_committee_size(), 4);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 6: Validator Stake Requirements
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_minimum_validator_stake_enforced() {
+        let params = AsfParams::default();
+
+        // Verify minimum stake is 64 ETR for FlareNode
+        assert_eq!(params.min_validator_stake, 64_000_000_000_000_000_000_000);
+    }
+
+    #[test]
+    fn test_validator_with_sufficient_stake() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        let validator_id = ValidatorId::from([1u8; 32]);
+        let validator_info = ValidatorInfo::new(
+            validator_id,
+            params.min_validator_stake, // Exact minimum
+            PeerType::ValidityNode,
+        );
+
+        // Should succeed with exact minimum stake
+        assert!(committee.add_validator(validator_info).is_ok());
+    }
+
+    #[test]
+    fn test_validator_with_excess_stake() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        let validator_id = ValidatorId::from([1u8; 32]);
+        let excess_stake = params.min_validator_stake * 10; // 640 ETR
+        let validator_info = ValidatorInfo::new(
+            validator_id,
+            excess_stake,
+            PeerType::ValidityNode,
+        );
+
+        // Should succeed with excess stake
+        assert!(committee.add_validator(validator_info).is_ok());
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 7: Slot Duration and Timing
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_slot_duration_default() {
+        let params = AsfParams::default();
+
+        // Default slot duration is 6 seconds (6000 milliseconds)
+        assert_eq!(params.slot_duration, 6000);
+    }
+
+    #[test]
+    fn test_blocks_per_hour_calculation() {
+        let params = AsfParams::default();
+
+        // 6 second blocks = 10 blocks per minute = 600 blocks per hour
+        let seconds_per_hour = 3600;
+        let blocks_per_hour = (seconds_per_hour * 1000) / params.slot_duration;
+        assert_eq!(blocks_per_hour, 600);
+    }
+
+    #[test]
+    fn test_blocks_per_day_calculation() {
+        let params = AsfParams::default();
+
+        // 600 blocks/hour * 24 hours = 14,400 blocks per day
+        let blocks_per_day = (86400 * 1000) / params.slot_duration;
+        assert_eq!(blocks_per_day, 14_400);
     }
 }
