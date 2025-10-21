@@ -1,0 +1,54 @@
+[package]
+name = "etrid-property-tests"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "Property-based tests for Ëtrid Protocol invariants"
+
+[dependencies]
+# Property testing frameworks
+proptest = "1.4.0"
+quickcheck = "1.0"
+
+# Substrate dependencies
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Ëtrid pallets
+pallet-edsc-token = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token" }
+pallet-edsc-redemption = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption" }
+pallet-edsc-checkpoint = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "sp-io/std",
+    "sp-core/std",
+    "pallet-edsc-token/std",
+    "pallet-edsc-redemption/std",
+    "pallet-edsc-checkpoint/std",
+]
+
+[[test]]
+name = "edsc_token_properties"
+path = "tests/edsc_token_properties.rs"
+
+[[test]]
+name = "reserve_ratio_properties"
+path = "tests/reserve_ratio_properties.rs"
+
+[[test]]
+name = "bridge_invariants"
+path = "tests/bridge_invariants.rs"

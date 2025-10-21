@@ -1,0 +1,401 @@
+name: Test Coverage & Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy Lints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component:
+          - all
+          - edsc-bridge
+          - flare-chain
+          - consensus
+          - pallets
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-test-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run all tests
+        if: matrix.component == 'all'
+        run: cargo test --all --release
+
+      - name: Run ËDSC bridge tests
+        if: matrix.component == 'edsc-bridge'
+        run: |
+          cd 05-multichain/bridge-protocols/edsc-bridge/substrate-pallets
+          cargo test --all --release
+
+      - name: Run FlareChain tests
+        if: matrix.component == 'flare-chain'
+        run: |
+          cd 05-multichain/flare-chain
+          cargo test --all --release
+
+      - name: Run consensus tests
+        if: matrix.component == 'consensus'
+        run: |
+          cd 09-consensus/asf-consensus
+          cargo test --release
+
+      - name: Run pallet tests
+        if: matrix.component == 'pallets'
+        run: cargo test -p pallet-custodian-registry -p pallet-reserve-vault -p pallet-circuit-breaker --release
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Generate coverage report
+        run: |
+          cargo tarpaulin --out Xml --out Html --output-dir coverage --timeout 600 --exclude-files "*/tests/*" "*/mock.rs" --verbose
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: coverage/
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage/cobertura.xml
+          fail_ci_if_error: false
+
+      - name: Check 80% coverage threshold
+        run: |
+          if [ -f coverage/cobertura.xml ]; then
+            # Extract line coverage rate from cobertura.xml
+            coverage=$(grep -oP 'line-rate="\K[0-9.]+' coverage/cobertura.xml | head -1)
+            coverage_percent=$(echo "$coverage * 100" | bc -l)
+            echo "Current coverage: ${coverage_percent}%"
+
+            # Check if coverage meets 80% threshold
+            if (( $(echo "$coverage < 0.80" | bc -l) )); then
+              echo "❌ Coverage ${coverage_percent}% is below 80% threshold"
+              echo "Please add more tests to reach the minimum coverage requirement."
+              exit 1
+            else
+              echo "✅ Coverage ${coverage_percent}% meets the 80% threshold"
+            fi
+          else
+            echo "⚠️  Coverage report not found, skipping threshold check"
+            exit 1
+          fi
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run security audit
+        run: cargo audit --deny warnings
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "Checking for high-priority security issues..."
+          cargo audit --json > audit-report.json
+
+          # Check if there are any vulnerabilities
+          vulns=$(jq '.vulnerabilities.count' audit-report.json)
+          if [ "$vulns" -gt 0 ]; then
+            echo "⚠️  Found $vulns vulnerabilities"
+            jq '.vulnerabilities.list[] | "[\(.advisory.id)] \(.advisory.title) - Severity: \(.advisory.severity)"' audit-report.json
+          else
+            echo "✅ No known vulnerabilities found"
+          fi
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-audit-report
+          path: audit-report.json
+
+  build-nodes:
+    name: Build Node Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node:
+          - flare-chain
+          - btc-pbc
+          - eth-pbc
+          - sol-pbc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ matrix.node }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build FlareChain node
+        if: matrix.node == 'flare-chain'
+        run: |
+          cd 05-multichain/flare-chain
+          cargo build --release --bin flarechain-node
+
+      - name: Build BTC PBC node
+        if: matrix.node == 'btc-pbc'
+        run: |
+          cd 05-multichain/partition-burst-chains/pbc-chains/btc-pbc
+          cargo build --release --bin btc-pbc-node
+
+      - name: Build ETH PBC node
+        if: matrix.node == 'eth-pbc'
+        run: |
+          cd 05-multichain/partition-burst-chains/pbc-chains/eth-pbc
+          cargo build --release --bin eth-pbc-node
+
+      - name: Build SOL PBC node
+        if: matrix.node == 'sol-pbc'
+        run: |
+          cd 05-multichain/partition-burst-chains/pbc-chains/sol-pbc
+          cargo build --release --bin sol-pbc-node
+
+  property-tests:
+    name: Property-Based Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run property-based tests
+        run: |
+          # Run property tests with increased iterations for CI
+          cargo test --release --features proptest -- --test-threads=1
+        continue-on-error: true  # Allow failure until property tests are fully implemented
+
+  benchmark:
+    name: Runtime Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run benchmarks
+        run: |
+          cargo bench --features runtime-benchmarks --no-fail-fast
+        continue-on-error: true  # Allow failure until benchmarks are fully implemented
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [fmt, clippy, test, coverage, security-audit]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "## Test Suite Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ${{ needs.fmt.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Clippy | ${{ needs.clippy.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | ${{ needs.coverage.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ needs.security-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.fmt.result }}" == "failure" || "${{ needs.clippy.result }}" == "failure" || "${{ needs.test.result }}" == "failure" || "${{ needs.coverage.result }}" == "failure" || "${{ needs.security-audit.result }}" == "failure" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **One or more checks failed. Please review the logs above.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All checks passed!**" >> $GITHUB_STEP_SUMMARY
+          fi

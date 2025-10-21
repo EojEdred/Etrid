@@ -25,6 +25,9 @@
 
 pub use pallet::*;
 
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -247,6 +250,24 @@ pub mod pallet {
 		Underflow,
 		/// Oracle price stale or invalid
 		OracleInvalid,
+	}
+
+	/// Genesis configuration
+	#[pallet::genesis_config]
+	#[derive(frame_support::DefaultNoBound)]
+	pub struct GenesisConfig<T: Config> {
+		pub initial_reserve_ratio: FixedU128,
+		pub initial_oracle_price: u128,
+		#[serde(skip)]
+		pub _phantom: sp_std::marker::PhantomData<T>,
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+		fn build(&self) {
+			ReserveRatio::<T>::put(self.initial_reserve_ratio);
+			OraclePrice::<T>::put(self.initial_oracle_price);
+		}
 	}
 
 	#[pallet::call]
