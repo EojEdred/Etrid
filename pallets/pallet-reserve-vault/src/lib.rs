@@ -29,6 +29,9 @@
 
 pub use pallet::*;
 
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -182,6 +185,34 @@ pub mod pallet {
 		Overflow,
 		/// Arithmetic underflow
 		Underflow,
+	}
+
+	/// Genesis configuration
+	#[pallet::genesis_config]
+	#[derive(frame_support::DefaultNoBound)]
+	pub struct GenesisConfig<T: Config> {
+		pub initial_haircuts: Vec<(AssetType, Permill)>,
+		pub initial_prices: Vec<(AssetType, u128)>,
+		#[serde(skip)]
+		pub _phantom: sp_std::marker::PhantomData<T>,
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+		fn build(&self) {
+			// Initialize haircuts
+			for (asset, haircut) in &self.initial_haircuts {
+				Haircuts::<T>::insert(asset, haircut);
+			}
+
+			// Initialize prices
+			for (asset, price) in &self.initial_prices {
+				AssetPrices::<T>::insert(asset, price);
+			}
+
+			// Initialize reserve ratio to 0
+			ReserveRatio::<T>::put(FixedU128::zero());
+		}
 	}
 
 	#[pallet::call]
