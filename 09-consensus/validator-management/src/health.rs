@@ -4,6 +4,7 @@
 //! based on network conditions (adaptive slot duration, etc.)
 
 use alloc::collections::VecDeque;
+use alloc::vec::Vec;
 use codec::{Decode, Encode};
 
 use crate::{BlockNumber, ValidatorId};

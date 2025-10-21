@@ -20,6 +20,7 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polk
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
 # Ëtrid consensus dependencies
 validator-management = { path = "../../09-consensus/validator-management", default-features = false }
@@ -39,6 +40,7 @@ std = [
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-api/std",
     "validator-management/std",
     "asf-algorithm/std",
 ]
