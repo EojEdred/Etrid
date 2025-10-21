@@ -52,3 +52,11 @@ path = "tests/reserve_ratio_properties.rs"
 [[test]]
 name = "bridge_invariants"
 path = "tests/bridge_invariants.rs"
+
+[[test]]
+name = "balance_invariants_simple"
+path = "tests/balance_invariants_simple.rs"
+
+[[test]]
+name = "reserve_ratio_simple"
+path = "tests/reserve_ratio_simple.rs"
