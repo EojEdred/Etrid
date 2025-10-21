@@ -17,22 +17,22 @@ block-production = { path = "../../block-production", default-features = false }
 
 # Substrate primitives
 sp-api = { workspace = true }
-sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-runtime = { workspace = true }
 sp-core = { workspace = true }
 sp-consensus = { workspace = true }
-sp-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-inherents = { workspace = true }
 sp-timestamp = { workspace = true }
 sp-keystore = { workspace = true }
 sp-application-crypto = { workspace = true }
 
 # Substrate client
-sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sc-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-sc-telemetry = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-substrate-prometheus-endpoint = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sc-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sc-telemetry = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+substrate-prometheus-endpoint = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Codec
 codec = { workspace = true }

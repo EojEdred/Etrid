@@ -36,21 +36,21 @@ sp-transaction-pool = { workspace = true }
 sp-version = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
 sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf", default-features = false }
-sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # FRAME Pallets
 pallet-grandpa = { workspace = true }
 pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
 pallet-transaction-payment = { workspace = true }
-pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Balances - NOT in workspace, so explicit dependency
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # RPC Runtime APIs
-frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
-pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Ëtrid Custom Dependencies
 etrid-primitives = { path = "../../../../primitives", default-features = false }
@@ -61,7 +61,7 @@ pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channe
 
 [build-dependencies]
 # Substrate WASM builder - NOT in workspace, so explicit
-substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 [features]
 default = ["std"]

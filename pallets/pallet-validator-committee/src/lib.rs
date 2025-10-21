@@ -386,7 +386,7 @@ sp_api::decl_runtime_apis! {
         BlockNumber: codec::Codec,
     {
         /// Get all active committee members
-        fn get_committee() -> Vec<ValidatorInfo>;
+        fn get_committee() -> sp_std::vec::Vec<ValidatorInfo>;
 
         /// Get specific validator info by ID
         fn get_validator(validator_id: ValidatorId) -> Option<ValidatorInfo>;
@@ -401,7 +401,7 @@ sp_api::decl_runtime_apis! {
         fn next_epoch_start() -> BlockNumber;
 
         /// Get validators for next epoch (pre-computed)
-        fn get_next_epoch_validators() -> Vec<ValidatorInfo>;
+        fn get_next_epoch_validators() -> sp_std::vec::Vec<ValidatorInfo>;
 
         /// Check if proposer was authorized for specific block/ppfa_index
         fn is_proposer_authorized(
