@@ -1,0 +1,50 @@
+[package]
+name = "bnb-bridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "BNB Chain bridge pallet for Ëtrid Multichain"
+
+[dependencies]
+# Substrate Core
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# FRAME Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-benchmarking = { workspace = true, optional = true }
+
+# Substrate Primitives
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# EVM-compatible (BEP-20 support)
+ethereum = { version = "0.15.0", default-features = false }
+ethereum-types = { version = "0.14.1", default-features = false }
+rlp = { version = "0.5.2", default-features = false }
+
+# Serialization
+serde = { version = "1.0", default-features = false, optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-benchmarking?/std",
+    "sp-core/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "ethereum/std",
+    "ethereum-types/std",
+    "rlp/std",
+    "serde/std",
+]
+runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]

@@ -1,0 +1,13 @@
+[package]
+name = "etrid-p2p-fluent"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Team"]
+license = "MIT OR Apache-2.0"
+description = "Message flow control for Etrid P2P - handles message queuing, priority routing, rate limiting, and flow control"
+
+[dependencies]
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }

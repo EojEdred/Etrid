@@ -1,0 +1,21 @@
+{
+  "name": "Ëtrid FlareChain",
+  "id": "flarechain",
+  "chainType": "Live",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "flarechain",
+  "properties": {
+    "tokenSymbol": "ÉTR",
+    "tokenDecimals": 18,
+    "ss58Format": 42
+  },
+  "forkId": null,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": null,
+    "raw": {
+      "top": {}
+    }
+  }
+}

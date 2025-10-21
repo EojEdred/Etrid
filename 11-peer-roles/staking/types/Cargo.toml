@@ -1,0 +1,22 @@
+[package]
+name = "peer-roles-staking-types"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Foundation"]
+license = "Apache-2.0"
+description = "Shared type definitions for Etrid peer roles and staking system"
+
+[dependencies]
+codec = { package = "parity-scale-codec", workspace = true }
+scale-info = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]

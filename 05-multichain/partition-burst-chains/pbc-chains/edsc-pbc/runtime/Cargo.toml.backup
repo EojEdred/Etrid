@@ -1,0 +1,113 @@
+[package]
+name = "edsc-pbc-runtime"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "MIT"
+publish = false
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", workspace = true }
+scale-info = { workspace = true }
+
+# Substrate Core
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-executive = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-core = { workspace = true }
+sp-inherents = { workspace = true }
+sp-offchain = { workspace = true }
+sp-runtime = { workspace = true }
+sp-session = { workspace = true }
+sp-std = { workspace = true }
+sp-transaction-pool = { workspace = true }
+sp-version = { workspace = true }
+
+# Substrate Primitives - explicit git dependencies
+sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-consensus-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# FRAME pallets - explicit git dependencies
+pallet-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-sudo = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-transaction-payment = { workspace = true }
+
+# RPC Runtime APIs
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Ëtrid multichain
+# etrid-multichain-primitives = { path = "../../../primitives", default-features = false }
+# pallet-bridge = { path = "../../../pallets/pallet-bridge", default-features = false }
+
+# EDSC pallets for PBC-EDSC (9 pallets total)
+# Note: Reserve Vault and Custodian Registry belong on FlareChain main chain
+pallet-edsc-token = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
+pallet-edsc-receipts = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-receipts", default-features = false }
+pallet-edsc-redemption = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
+pallet-edsc-oracle = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
+pallet-edsc-checkpoint = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint", default-features = false }
+pallet-circuit-breaker = { path = "../../../../../pallets/pallet-circuit-breaker", default-features = false }
+pallet-xcm-bridge = { path = "../../../../../pallets/pallet-xcm-bridge", default-features = false }
+pallet-edsc-bridge-token-messenger = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
+pallet-edsc-bridge-attestation = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
+
+[build-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
+    "sp-api/std",
+    "sp-arithmetic/std",
+    "sp-block-builder/std",
+    "sp-consensus-aura/std",
+    "sp-core/std",
+    "sp-inherents/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-std/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "sp-genesis-builder/std",
+    "pallet-aura/std",
+    "pallet-balances/std",
+    "pallet-session/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+    # "etrid-multichain-primitives/std",
+    # "pallet-bridge/std",
+
+    # EDSC pallets
+    "pallet-edsc-token/std",
+    "pallet-edsc-receipts/std",
+    "pallet-edsc-redemption/std",
+    "pallet-edsc-oracle/std",
+    "pallet-edsc-checkpoint/std",
+    "pallet-circuit-breaker/std",
+    "pallet-xcm-bridge/std",
+    "pallet-edsc-bridge-token-messenger/std",
+    "pallet-edsc-bridge-attestation/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]

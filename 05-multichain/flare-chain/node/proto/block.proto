@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package flare;
+
+message Block {
+	int32 height = 1;
+	int64 timestamp = 2;
+	string hash = 3;
+	string prev_hash = 4;
+	string data = 5;
+}

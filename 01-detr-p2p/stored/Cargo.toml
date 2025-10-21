@@ -1,0 +1,20 @@
+[package]
+name = "etrid-p2p-stored"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Core Team"]
+description = "Peer storage and caching module for Etrid P2P network"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[lib]
+path = "src/lib.rs"
+
+[[test]]
+name = "integration"
+path = "src/lib.rs"

@@ -1,0 +1,12 @@
+[package]
+name = "etrid-bridge-interface"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+[features]
+default = ["std"]
+std = ["codec/std", "scale-info/std"]

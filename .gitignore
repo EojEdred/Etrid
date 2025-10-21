@@ -1,0 +1,47 @@
+
+target/
+node_modules/
+*.rlib
+*.rmeta
+*.wasm
+*.log
+*.tmp
+.DS_Store
+
+# Multi-node testing artifacts (temporary)
+.local-testnet/
+.peering-test/
+.validator-test/
+.test-network/
+.bridge-test/
+*.log
+collator_test_results.txt
+.peering-test-output.log
+
+# Build logs from PBC compilation
+.*-build.log
+.*.log
+
+# Backup files
+*.bak
+*.bak2
+*~
+
+# Frontend build artifacts
+.next/
+dist/
+build/
+out/
+.cache/
+.vite/
+.turbo/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Chain spec generated files
+*.raw.json
+flarechain-shared-raw.json

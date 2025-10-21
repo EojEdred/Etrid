@@ -1,0 +1,42 @@
+[package]
+name = "pallet-reserve-oracle"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "Reserve oracle pallet - Aggregates reserve data from vault and custodians for EDSC system"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Local pallets
+pallet-reserve-vault = { path = "../pallet-reserve-vault", default-features = false }
+pallet-custodian-registry = { path = "../pallet-custodian-registry", default-features = false }
+pallet-edsc-token = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-io/std",
+	"sp-arithmetic/std",
+	"pallet-reserve-vault/std",
+	"pallet-custodian-registry/std",
+	"pallet-edsc-token/std",
+]
+runtime-benchmarks = ["frame-support/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]

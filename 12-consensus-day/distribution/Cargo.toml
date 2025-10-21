@@ -1,0 +1,38 @@
+[package]
+name = "consensus-day-distribution"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Team"]
+description = "Consensus-Day Distribution - Handles fiscal payout scheduling and execution following approved minting events"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Workspace dependencies - Substrate/Polkadot SDK
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# Workspace dependencies - Serialization & Encoding
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Local dependencies - Consensus Day
+consensus-day-minting-logic = { path = "../minting-logic", default-features = false }
+
+# Local dependencies - Peer Roles
+peer-roles-staking-types = { path = "../../11-peer-roles/staking/types", default-features = false }
+
+[features]
+default = ["std"]
+
+std = [
+    "codec/std",
+    "consensus-day-minting-logic/std",
+    "frame-support/std",
+    "frame-system/std",
+    "peer-roles-staking-types/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]

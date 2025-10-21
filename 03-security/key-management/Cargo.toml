@@ -1,0 +1,31 @@
+[package]
+name = "etrid-key-management"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Core Team"]
+description = "Secure key storage, rotation, and backup/restore functionality for Etrid"
+license = "Apache-2.0"
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["sync", "rt", "macros"] }
+async-trait = { workspace = true }
+
+# Cryptography
+ed25519-dalek = { workspace = true }
+
+# Encoding
+base64 = "0.21"
+
+# Local dependencies
+etrid-cryptography = { path = "../cryptography" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+
+[features]
+default = ["std"]
+std = []

@@ -1,0 +1,56 @@
+[package]
+name = "pallet-etwasm-vm"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "ËtwasmVM - Ëtrid WebAssembly Virtual Machine pallet"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate FRAME dependencies (from workspace)
+frame-support.workspace = true
+frame-system.workspace = true
+sp-runtime.workspace = true
+sp-std.workspace = true
+sp-io.workspace = true
+
+# Encoding
+codec.workspace = true
+scale-info.workspace = true
+
+# WASM runtime
+wasmi.workspace = true
+
+# Logging
+log.workspace = true
+
+# ETWasm VM modules
+etwasm-gas-metering = { path = "../gas-metering", default-features = false }
+etwasm-opcodes = { path = "../opcodes", default-features = false }
+etwasm-runtime = { path = "../runtime", default-features = false }
+
+[features]
+default = ["std"]
+
+std = [
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "codec/std",
+    "scale-info/std",
+    "log/std",
+    "etwasm-gas-metering/std",
+    "etwasm-opcodes/std",
+    "etwasm-runtime/std",
+]
+
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+]

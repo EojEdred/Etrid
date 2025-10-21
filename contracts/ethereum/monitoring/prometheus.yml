@@ -1,0 +1,49 @@
+# Prometheus configuration for EDSC Bridge monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'edsc-bridge-local'
+    env: 'development'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Attestation Service 1
+  - job_name: 'attestation-service-1'
+    static_configs:
+      - targets: ['attestation-1:9090']
+        labels:
+          service: 'attestation'
+          instance: 'attestation-1'
+          attester_id: '0'
+
+  # Attestation Service 2
+  - job_name: 'attestation-service-2'
+    static_configs:
+      - targets: ['attestation-2:9090']
+        labels:
+          service: 'attestation'
+          instance: 'attestation-2'
+          attester_id: '1'
+
+  # Attestation Service 3
+  - job_name: 'attestation-service-3'
+    static_configs:
+      - targets: ['attestation-3:9090']
+        labels:
+          service: 'attestation'
+          instance: 'attestation-3'
+          attester_id: '2'
+
+  # Relayer Service
+  - job_name: 'relayer-service'
+    static_configs:
+      - targets: ['relayer:9091']
+        labels:
+          service: 'relayer'
+          instance: 'relayer-1'

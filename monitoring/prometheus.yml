@@ -1,0 +1,114 @@
+# Prometheus Configuration for EDSC Bridge Monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'edsc-bridge-testnet'
+    environment: 'testnet'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Load alert rules
+rule_files:
+  - 'alerts.yml'
+  - 'recording_rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Attestation Services
+  - job_name: 'attestation-service'
+    static_configs:
+      - targets:
+          - 'attestation-0.etrid.io:3000'
+          - 'attestation-1.etrid.io:3000'
+          - 'attestation-2.etrid.io:3000'
+          - 'attestation-3.etrid.io:3000'
+          - 'attestation-4.etrid.io:3000'
+        labels:
+          service: 'attestation'
+    metrics_path: '/metrics'
+    scheme: 'https'
+
+  # Relayer Services
+  - job_name: 'relayer-service'
+    static_configs:
+      - targets:
+          - 'relayer-1.etrid.io:3001'
+          - 'relayer-2.etrid.io:3001'
+          - 'relayer-3.etrid.io:3001'
+        labels:
+          service: 'relayer'
+    metrics_path: '/metrics'
+    scheme: 'https'
+
+  # Substrate Node Metrics
+  - job_name: 'substrate-node'
+    static_configs:
+      - targets:
+          - 'validator-1.etrid.io:9615'
+          - 'validator-2.etrid.io:9615'
+          - 'validator-3.etrid.io:9615'
+          - 'rpc-1.etrid.io:9615'
+        labels:
+          service: 'substrate'
+    metrics_path: '/metrics'
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+          - 'attestation-0.etrid.io:9100'
+          - 'attestation-1.etrid.io:9100'
+          - 'attestation-2.etrid.io:9100'
+          - 'attestation-3.etrid.io:9100'
+          - 'attestation-4.etrid.io:9100'
+          - 'relayer-1.etrid.io:9100'
+          - 'relayer-2.etrid.io:9100'
+          - 'relayer-3.etrid.io:9100'
+          - 'validator-1.etrid.io:9100'
+          - 'validator-2.etrid.io:9100'
+          - 'validator-3.etrid.io:9100'
+        labels:
+          service: 'system'
+    metrics_path: '/metrics'
+
+  # Nginx Exporter
+  - job_name: 'nginx'
+    static_configs:
+      - targets:
+          - 'attestation-0.etrid.io:9113'
+          - 'attestation-1.etrid.io:9113'
+          - 'attestation-2.etrid.io:9113'
+          - 'attestation-3.etrid.io:9113'
+          - 'attestation-4.etrid.io:9113'
+        labels:
+          service: 'nginx'
+
+  # PostgreSQL Exporter (if using database)
+  - job_name: 'postgres'
+    static_configs:
+      - targets:
+          - 'db-1.etrid.io:9187'
+        labels:
+          service: 'database'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+  # Ethereum RPC Monitor (custom exporter)
+  - job_name: 'ethereum-rpc'
+    static_configs:
+      - targets:
+          - 'monitoring.etrid.io:9545'
+        labels:
+          service: 'ethereum'
+          network: 'sepolia'

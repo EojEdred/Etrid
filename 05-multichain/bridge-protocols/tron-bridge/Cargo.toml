@@ -1,0 +1,48 @@
+[package]
+name = "trx-bridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "TRON bridge pallet for Ëtrid Multichain"
+
+[dependencies]
+# Substrate Core
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# FRAME Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-benchmarking = { workspace = true, optional = true }
+
+# Substrate Primitives
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# TRON-specific dependencies (TRC-20 support)
+bs58 = { version = "0.5.0", default-features = false }
+sha3 = { version = "0.10.8", default-features = false }
+
+# Serialization
+serde = { version = "1.0", default-features = false, optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-benchmarking?/std",
+    "sp-core/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "bs58/std",
+    "sha3/std",
+    "serde/std",
+]
+runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]

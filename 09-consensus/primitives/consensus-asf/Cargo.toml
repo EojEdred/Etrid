@@ -1,0 +1,37 @@
+[package]
+name = "sp-consensus-asf"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Primitives for ASF (Adaptive Stake-weighted Finality) consensus"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate primitives
+sp-api = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-inherents = { workspace = true }
+sp-consensus-slots = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+sp-timestamp = { workspace = true }
+
+# Codec
+codec = { workspace = true, features = ["derive"] }
+scale-info = { workspace = true, features = ["derive"] }
+
+# Async (std only)
+async-trait = { workspace = true, optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-api/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-inherents/std",
+    "sp-consensus-slots/std",
+    "sp-timestamp/std",
+    "async-trait",
+]

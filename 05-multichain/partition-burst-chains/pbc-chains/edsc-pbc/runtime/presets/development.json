@@ -1,0 +1,31 @@
+{
+  "name": "EDSC-PBC Development",
+  "id": "edsc_pbc_dev",
+  "chainType": "Development",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "edsc-pbc",
+  "properties": {
+    "tokenSymbol": "EDSC",
+    "tokenDecimals": 12,
+    "ss58Format": 42
+  },
+  "consensusEngine": null,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": ""
+      },
+      "balances": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 1000000000000000]
+        ]
+      },
+      "sudo": {
+        "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+      }
+    }
+  }
+}

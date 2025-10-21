@@ -1,0 +1,208 @@
+[package]
+name = "flare-chain-runtime"
+version = "0.1.0"
+authors = ["Ëtrid Foundation"]
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+# Local pallets
+pallet-accounts = { path = "../../../04-accounts/pallet", default-features = false }
+pallet-etwasm-vm = { path = "../../../08-etwasm-vm/pallet", default-features = false }
+pallet-consensus = { path = "../../../09-consensus/pallet", default-features = false }
+pallet-governance = { path = "../../../10-foundation/governance/pallet", default-features = false }
+pallet-pbc-router = { path = "../../partition-burst-chains/pbc-node/pbc-router", default-features = false }
+
+# Staking pallets (11-peer-roles)
+pallet-etrid-staking = { path = "../../../11-peer-roles/staking/pallet", default-features = false }
+peer-roles-staking-types = { path = "../../../11-peer-roles/staking/types", default-features = false }
+
+# Consensus Day pallets (12-consensus-day)
+consensus-day-proposal-system = { path = "../../../12-consensus-day/proposal-system", default-features = false }
+consensus-day-voting-protocol = { path = "../../../12-consensus-day/voting-protocol", default-features = false }
+consensus-day-distribution = { path = "../../../12-consensus-day/distribution", default-features = false }
+consensus-day-minting-logic = { path = "../../../12-consensus-day/minting-logic", default-features = false }
+consensus-day-queries = { path = "../../../12-consensus-day/queries", default-features = false }
+
+# Transaction pallets (07-transactions)
+pallet-tx-processor = { path = "../../../07-transactions/tx-processor", default-features = false }
+etrid-smart-contract = { path = "../../../07-transactions/smart-contract", default-features = false }
+etrid-stake-deposit = { path = "../../../07-transactions/stake-deposit", default-features = false }
+etrid-transactions-cross-chain = { path = "../../../07-transactions/cross-chain", default-features = false }
+etrid-lightning-bloc = { path = "../../../07-transactions/lightning-bloc", default-features = false }
+pallet-transaction = { path = "../../../07-transactions/types", default-features = false }
+
+# Bridge pallets (12 bridges)
+pallet-bitcoin-bridge = { path = "../../bridge-protocols/bitcoin-bridge", default-features = false }
+eth-bridge = { path = "../../bridge-protocols/ethereum-bridge", default-features = false }
+pallet-doge-bridge = { path = "../../bridge-protocols/doge-bridge", default-features = false }
+stellar-bridge = { path = "../../bridge-protocols/stellar-bridge", default-features = false }
+xrp-bridge = { path = "../../bridge-protocols/xrp-bridge", default-features = false }
+sol-bridge = { path = "../../bridge-protocols/solana-bridge", default-features = false }
+pallet-cardano-bridge = { path = "../../bridge-protocols/cardano-bridge", default-features = false }
+chainlink-bridge = { path = "../../bridge-protocols/chainlink-bridge", default-features = false }
+polygon-bridge = { path = "../../bridge-protocols/polygon-bridge", default-features = false }
+bnb-bridge = { path = "../../bridge-protocols/bnb-bridge", default-features = false }
+trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = false }
+stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
+
+# EDSC pallets (8 pallets)
+# Core EDSC pallets (for reference - mainly on PBC-EDSC)
+pallet-edsc-token = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
+pallet-edsc-receipts = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-receipts", default-features = false }
+pallet-edsc-redemption = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
+pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
+
+# FlareChain-specific EDSC pallets
+pallet-reserve-vault = { path = "../../../pallets/pallet-reserve-vault", default-features = false }
+pallet-custodian-registry = { path = "../../../pallets/pallet-custodian-registry", default-features = false }
+pallet-reserve-oracle = { path = "../../../pallets/pallet-reserve-oracle", default-features = false }
+
+# Cross-chain infrastructure
+pallet-xcm-bridge = { path = "../../../pallets/pallet-xcm-bridge", default-features = false }
+
+# ASF Consensus pallets
+pallet-validator-committee = { path = "../../../pallets/pallet-validator-committee", default-features = false }
+pallet-validator-committee-runtime-api = { path = "../../../pallets/pallet-validator-committee/runtime-api", default-features = false }
+
+# Phase 3: External Bridge Protocol (CCTP-style)
+pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
+pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
+
+# Substrate core
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Frame
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+frame-executive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+
+# Frame pallets
+# pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }  # Removed: using ASF consensus
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-insecure-randomness-collective-flip = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+
+# Primitives
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-arithmetic = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+# sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }  # Removed: using ASF consensus
+sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-session = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-storage = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-version = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+sp-genesis-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+
+# RPC
+frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506", default-features = false }
+
+[build-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "pallet-accounts/runtime-benchmarks",
+    "pallet-consensus/runtime-benchmarks",
+    "pallet-governance/runtime-benchmarks",
+]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "pallet-accounts/std",
+    "pallet-etwasm-vm/std",
+    "pallet-consensus/std",
+    "pallet-governance/std",
+    "pallet-pbc-router/std",
+
+    # Staking pallets
+    "pallet-etrid-staking/std",
+    "peer-roles-staking-types/std",
+
+    # Consensus Day pallets
+    "consensus-day-proposal-system/std",
+    "consensus-day-voting-protocol/std",
+    "consensus-day-distribution/std",
+    "consensus-day-minting-logic/std",
+    "consensus-day-queries/std",
+
+    # Transaction pallets
+    "pallet-tx-processor/std",
+    "etrid-smart-contract/std",
+    "etrid-stake-deposit/std",
+    "etrid-transactions-cross-chain/std",
+    "etrid-lightning-bloc/std",
+    "pallet-transaction/std",
+
+    # Bridge pallets
+    "pallet-bitcoin-bridge/std",
+    "eth-bridge/std",
+    "pallet-doge-bridge/std",
+    "stellar-bridge/std",
+    "xrp-bridge/std",
+    "sol-bridge/std",
+    "pallet-cardano-bridge/std",
+    "chainlink-bridge/std",
+    "polygon-bridge/std",
+    "bnb-bridge/std",
+    "trx-bridge/std",
+    "stablecoin-usdt-bridge/std",
+
+    # EDSC pallets
+    "pallet-edsc-token/std",
+    "pallet-edsc-receipts/std",
+    "pallet-edsc-redemption/std",
+    "pallet-edsc-oracle/std",
+    "pallet-reserve-vault/std",
+    "pallet-custodian-registry/std",
+    "pallet-reserve-oracle/std",
+    "pallet-xcm-bridge/std",
+    "pallet-edsc-bridge-token-messenger/std",
+    "pallet-edsc-bridge-attestation/std",
+
+    # ASF Consensus pallets
+    "pallet-validator-committee/std",
+    "pallet-validator-committee-runtime-api/std",
+
+    "frame-executive/std",
+    "frame-support/std",
+    "frame-system/std",
+    # "pallet-aura/std",  # Removed: using ASF consensus
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "pallet-insecure-randomness-collective-flip/std",
+    "sp-api/std",
+    "sp-arithmetic/std",
+    "sp-block-builder/std",
+    # "sp-consensus-aura/std",  # Removed: using ASF consensus
+    "sp-consensus-grandpa/std",
+    "sp-core/std",
+    "sp-inherents/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-std/std",
+    "sp-storage/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "sp-genesis-builder/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+]
