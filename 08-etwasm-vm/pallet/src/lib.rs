@@ -22,6 +22,7 @@ pub mod pallet {
     use codec::Decode;
     use sp_std::prelude::*;
     use sp_core::H256;
+    use sp_runtime::traits::SaturatedConversion;
 
     use etwasm_gas_metering::VMw;
     use etwasm_runtime::{

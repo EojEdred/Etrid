@@ -984,6 +984,48 @@ impl_runtime_apis! {
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // VALIDATOR COMMITTEE RUNTIME API IMPLEMENTATION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    impl pallet_validator_committee::ValidatorCommitteeApi<Block, asf_algorithm::ValidatorId, BlockNumber> for Runtime {
+        fn get_committee() -> Vec<validator_management::ValidatorInfo> {
+            ValidatorCommittee::get_committee()
+        }
+
+        fn get_validator(validator_id: asf_algorithm::ValidatorId) -> Option<validator_management::ValidatorInfo> {
+            ValidatorCommittee::get_validator(&validator_id)
+        }
+
+        fn is_in_committee(validator_id: asf_algorithm::ValidatorId) -> bool {
+            ValidatorCommittee::is_validator_active(&validator_id)
+        }
+
+        fn current_epoch() -> u64 {
+            ValidatorCommittee::get_current_epoch()
+        }
+
+        fn next_epoch_start() -> BlockNumber {
+            ValidatorCommittee::next_epoch_start()
+        }
+
+        fn get_next_epoch_validators() -> Vec<validator_management::ValidatorInfo> {
+            ValidatorCommittee::get_next_epoch_validators()
+        }
+
+        fn is_proposer_authorized(
+            block_number: BlockNumber,
+            ppfa_index: u32,
+            proposer_id: asf_algorithm::ValidatorId,
+        ) -> bool {
+            ValidatorCommittee::is_proposer_authorized(block_number, ppfa_index, &proposer_id)
+        }
+
+        fn epoch_duration() -> BlockNumber {
+            ValidatorCommittee::get_epoch_duration()
+        }
+    }
+
     #[cfg(feature = "runtime-benchmarks")]
     impl frame_benchmarking::Benchmark<Block> for Runtime {
         fn benchmark_metadata(extra: bool) -> (

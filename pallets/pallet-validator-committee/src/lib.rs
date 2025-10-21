@@ -44,7 +44,7 @@ pub mod pallet {
     pub type Epoch = u64;
 
     /// Simplified validator data for storage (codec-compatible)
-    #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, sp_core::RuntimeDebug)]
+    #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, sp_core::RuntimeDebug, MaxEncodedLen)]
     pub struct StoredValidatorInfo {
         pub validator_id: ValidatorId,
         pub stake: Balance,
@@ -65,8 +65,10 @@ pub mod pallet {
         pub fn to_validator_info(&self) -> ValidatorInfo {
             let peer_type = match self.peer_type {
                 0 => PeerType::ValidityNode,
-                1 => PeerType::PerformanceNode,
-                2 => PeerType::ArchiveNode,
+                1 => PeerType::FlareNode,
+                2 => PeerType::DecentralizedDirector,
+                3 => PeerType::StakingCommon,
+                4 => PeerType::Common,
                 _ => PeerType::ValidityNode, // Default
             };
             ValidatorInfo::new(self.validator_id.clone(), self.stake, peer_type)
@@ -115,6 +117,28 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn committee_size_limit)]
     pub type CommitteeSizeLimit<T: Config> = StorageValue<_, u32, ValueQuery>;
+
+    /// Next epoch validators (pre-selected for next rotation)
+    #[pallet::storage]
+    #[pallet::getter(fn next_epoch_validators)]
+    pub type NextEpochValidators<T: Config> = StorageValue<_, BoundedVec<ValidatorId, T::MaxCommitteeSize>, ValueQuery>;
+
+    /// PPFA authorization history: (block_number, ppfa_index) => validator_id
+    /// Stores which validator was authorized to propose at specific slots
+    #[pallet::storage]
+    #[pallet::getter(fn ppfa_history)]
+    pub type PPFAHistory<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        (BlockNumberFor<T>, u32), // (block_number, ppfa_index)
+        ValidatorId,
+        OptionQuery,
+    >;
+
+    /// Epoch duration in blocks
+    #[pallet::storage]
+    #[pallet::getter(fn epoch_duration)]
+    pub type EpochDuration<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
@@ -293,5 +317,100 @@ pub mod pallet {
         pub fn get_current_epoch() -> Epoch {
             CurrentEpoch::<T>::get()
         }
+
+        /// Record PPFA authorization for a block
+        pub fn record_ppfa_authorization(
+            block_number: BlockNumberFor<T>,
+            ppfa_index: u32,
+            proposer_id: ValidatorId,
+        ) {
+            PPFAHistory::<T>::insert((block_number, ppfa_index), proposer_id);
+        }
+
+        /// Check if proposer was authorized for specific block/ppfa_index
+        pub fn is_proposer_authorized(
+            block_number: BlockNumberFor<T>,
+            ppfa_index: u32,
+            proposer_id: &ValidatorId,
+        ) -> bool {
+            PPFAHistory::<T>::get((block_number, ppfa_index))
+                .map(|authorized| &authorized == proposer_id)
+                .unwrap_or(false)
+        }
+
+        /// Get next epoch start block (based on current epoch and duration)
+        pub fn next_epoch_start() -> BlockNumberFor<T> {
+            let current_epoch: u64 = CurrentEpoch::<T>::get() as u64;
+            let epoch_duration = EpochDuration::<T>::get();
+            let next_epoch_number = current_epoch + 1;
+
+            // Convert u64 to BlockNumberFor<T>
+            let next_epoch_u64 = next_epoch_number * TryInto::<u64>::try_into(epoch_duration).unwrap_or(0);
+            next_epoch_u64.try_into().unwrap_or_else(|_| epoch_duration)
+        }
+
+        /// Get validators for next epoch
+        pub fn get_next_epoch_validators() -> Vec<ValidatorInfo> {
+            NextEpochValidators::<T>::get()
+                .into_iter()
+                .filter_map(|validator_id| {
+                    Validators::<T>::get(&validator_id).map(|stored| stored.to_validator_info())
+                })
+                .collect()
+        }
+
+        /// Set epoch duration (can be called during genesis or governance)
+        pub fn set_epoch_duration(duration: BlockNumberFor<T>) {
+            EpochDuration::<T>::put(duration);
+        }
+
+        /// Get epoch duration
+        pub fn get_epoch_duration() -> BlockNumberFor<T> {
+            EpochDuration::<T>::get()
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RUNTIME API DEFINITION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+sp_api::decl_runtime_apis! {
+    /// Runtime API for validator committee management
+    ///
+    /// This API allows the node service layer (especially asf_service.rs) to query
+    /// validator committee state without directly accessing runtime storage.
+    pub trait ValidatorCommitteeApi<ValidatorId, BlockNumber>
+    where
+        ValidatorId: codec::Codec,
+        BlockNumber: codec::Codec,
+    {
+        /// Get all active committee members
+        fn get_committee() -> Vec<ValidatorInfo>;
+
+        /// Get specific validator info by ID
+        fn get_validator(validator_id: ValidatorId) -> Option<ValidatorInfo>;
+
+        /// Check if validator is in active committee
+        fn is_in_committee(validator_id: ValidatorId) -> bool;
+
+        /// Get current epoch number
+        fn current_epoch() -> Epoch;
+
+        /// Get next epoch start block
+        fn next_epoch_start() -> BlockNumber;
+
+        /// Get validators for next epoch (pre-computed)
+        fn get_next_epoch_validators() -> Vec<ValidatorInfo>;
+
+        /// Check if proposer was authorized for specific block/ppfa_index
+        fn is_proposer_authorized(
+            block_number: BlockNumber,
+            ppfa_index: u32,
+            proposer_id: ValidatorId,
+        ) -> bool;
+
+        /// Get epoch duration in blocks
+        fn epoch_duration() -> BlockNumber;
     }
 }

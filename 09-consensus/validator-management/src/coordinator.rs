@@ -7,6 +7,9 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::time::Duration;
 
+#[cfg(feature = "std")]
+use tokio;
+
 use crate::{
     committee::CommitteeManager,
     health::HealthMonitor,
@@ -283,6 +286,7 @@ impl ValidatorCoordinator {
 ///
 /// This function is called by the FlareChain node to run the validator management worker.
 /// It processes blocks and coordinates all validator-related activities.
+#[cfg(feature = "std")]
 pub async fn run_coordinator(
     config: CoordinatorConfig,
     genesis_validators: Vec<ValidatorInfo>,
