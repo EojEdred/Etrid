@@ -459,7 +459,7 @@ pub mod pallet {
 
 		/// Calculate reserve ratio
 		/// RR = (Vault Value + Custodian Value) / Total EDSC Supply
-		fn calculate_reserve_ratio() -> Result<FixedU128, DispatchError> {
+		pub fn calculate_reserve_ratio() -> Result<FixedU128, DispatchError> {
 			// Get total vault value
 			let vault_value = Self::calculate_total_vault_value()?;
 
