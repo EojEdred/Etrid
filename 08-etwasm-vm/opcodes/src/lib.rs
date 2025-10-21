@@ -8,7 +8,7 @@
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_std::prelude::*;
-use etwasm_gas_metering::{VMw, GasOperation};
+use etwasm_gas_metering::VMw;
 
 /// EVM Opcode byte value
 pub type Opcode = u8;
@@ -307,7 +307,7 @@ pub fn get_opcode_gas_cost(opcode: Opcode) -> VMw {
 }
 
 /// Opcode information
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, TypeInfo)]
 pub struct OpcodeInfo {
     pub opcode: Opcode,
     pub name: &'static str,

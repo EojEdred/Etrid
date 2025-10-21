@@ -203,6 +203,7 @@ members = [
     # ═════════════════════════════════════════════════════════════════════════════
     "tests/integration",                                # Integration tests
     "tests/e2e",                                        # End-to-end tests
+    "tests/property-based",                             # Property-based tests
 ]
 
 exclude = [
