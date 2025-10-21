@@ -4378,6 +4378,16 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+dependencies = [
+ "log",
+ "regex",
+]
+
+[[package]]
+name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4cd405aab171cb85d6735e5c8d9db038c17d3ca007a4d2c25f337935c3d90580"
@@ -4816,6 +4826,25 @@ dependencies = [
  "sp-core 38.1.0",
  "sp-runtime 44.0.0",
  "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2509)",
+]
+
+[[package]]
+name = "etrid-property-tests"
+version = "1.0.0"
+dependencies = [
+ "frame-support 41.0.0",
+ "frame-system 41.0.0",
+ "pallet-edsc-checkpoint",
+ "pallet-edsc-redemption",
+ "pallet-edsc-token",
+ "parity-scale-codec",
+ "proptest",
+ "quickcheck",
+ "scale-info",
+ "sp-core 37.0.0",
+ "sp-io 41.0.1",
+ "sp-runtime 42.0.0",
+ "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2506)",
 ]
 
 [[package]]
@@ -12850,6 +12879,17 @@ dependencies = [
  "quick-protobuf",
  "thiserror 1.0.69",
  "unsigned-varint 0.8.0",
+]
+
+[[package]]
+name = "quickcheck"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "588f6378e4dd99458b60ec275b4477add41ce4fa9f64dcba6f15adccb19b50d6"
+dependencies = [
+ "env_logger 0.8.4",
+ "log",
+ "rand 0.8.5",
 ]
 
 [[package]]
