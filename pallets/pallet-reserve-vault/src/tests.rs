@@ -310,7 +310,7 @@ fn test_reserve_ratio_calculation() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		// Reserve ratio should be: $54,000 / $100,000 = 0.54 = 54%
 		let ratio = ReserveVault::reserve_ratio();
@@ -336,7 +336,7 @@ fn test_reserve_ratio_optimal_range() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -367,7 +367,7 @@ fn test_reserve_ratio_with_custodian_value() {
 		));
 
 		// Calculate reserve ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		// Total reserve = $54,000 + $66,000 = $120,000
 		// Ratio = $120,000 / $100,000 = 120% (optimal)
@@ -441,7 +441,7 @@ fn test_withdraw_when_reserve_ratio_too_low_fails() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		// Try to withdraw - should fail as it would drop ratio below safe level
 		assert_err!(
@@ -495,8 +495,8 @@ fn test_price_update_recalculates_vault_value() {
 			7_000_000
 		));
 
-		// Recalculate vault values
-		assert_ok!(ReserveVault::recalculate_vault_values(RuntimeOrigin::signed(ALICE)));
+		// Recalculate vault values (automatic in SDK stable2509)
+		// Vault values are now recalculated automatically on price updates
 
 		let vault_after = ReserveVault::vault(AssetType::BTC).unwrap();
 		assert_eq!(vault_after.usd_value, 7_000_000); // $70,000
@@ -543,8 +543,8 @@ fn test_haircut_update_recalculates_adjusted_value() {
 			Permill::from_percent(20)
 		));
 
-		// Recalculate
-		assert_ok!(ReserveVault::recalculate_vault_values(RuntimeOrigin::signed(ALICE)));
+		// Recalculate (automatic in SDK stable2509)
+		// Vault values are now recalculated automatically
 
 		let vault_after = ReserveVault::vault(AssetType::BTC).unwrap();
 		assert_eq!(vault_after.adjusted_value, 4_800_000); // $48,000 (80% of $60k)
@@ -570,7 +570,7 @@ fn test_reserve_critical_triggers_redemption_pause() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -596,7 +596,7 @@ fn test_reserve_throttle_triggers_queue_mode() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
@@ -623,7 +623,7 @@ fn test_reserve_optimal_normal_operation() {
 		));
 
 		// Calculate ratio
-		assert_ok!(ReserveVault::calculate_reserve_ratio());
+		assert_ok!(ReserveVault::calculate_and_update_reserve_ratio());
 
 		let ratio = ReserveVault::reserve_ratio();
 
