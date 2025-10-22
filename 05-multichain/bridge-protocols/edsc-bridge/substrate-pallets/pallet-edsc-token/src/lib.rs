@@ -10,6 +10,16 @@
 
 pub use pallet::*;
 
+// Placeholder WeightInfo trait
+pub trait WeightInfo {}
+impl WeightInfo for () {}
+
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -33,6 +43,9 @@ pub mod pallet {
 		/// Minimum balance to prevent dust accounts
 		#[pallet::constant]
 		type MinBalance: Get<u128>;
+
+		/// Weight information for extrinsics
+		type WeightInfo: crate::WeightInfo;
 	}
 
 	#[pallet::pallet]

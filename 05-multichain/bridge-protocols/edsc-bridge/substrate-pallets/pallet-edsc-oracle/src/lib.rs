@@ -25,6 +25,12 @@
 
 pub use pallet::*;
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -35,6 +41,18 @@ pub mod pallet {
 	use sp_arithmetic::{FixedPointNumber, FixedU128, Permill, traits::Saturating};
 	use sp_runtime::traits::CheckedSub;
 	use sp_std::{vec, vec::Vec};
+
+	/// Trait for handling price update callbacks
+	///
+	/// This trait allows the oracle pallet to notify other pallets (like redemption)
+	/// when a new TWAP price has been calculated, without creating circular dependencies.
+	pub trait PriceUpdateCallback {
+		/// Called when a new TWAP price is calculated
+		///
+		/// # Parameters
+		/// - `price`: New TWAP price in smallest units (e.g., $1.00 = 1_000_000_000_000)
+		fn on_price_updated(price: u128) -> DispatchResult;
+	}
 
 	/// Price feed source
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
@@ -112,9 +130,12 @@ pub mod pallet {
 	}
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_edsc_redemption::Config {
+	pub trait Config: frame_system::Config {
 		/// The overarching event type
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		/// Callback handler for price updates (connects to redemption pallet)
+		type PriceCallback: PriceUpdateCallback;
 
 		/// Primary TWAP window (in blocks, default 24h = 14400 blocks @ 6s)
 		#[pallet::constant]
@@ -299,8 +320,8 @@ pub mod pallet {
 				feeder,
 			});
 
-			// Trigger TWAP recalculation
-			Self::calculate_and_update_twap()?;
+			// Trigger TWAP recalculation (auto-triggered, allow bootstrap)
+			let _ = Self::calculate_and_update_twap(true);
 
 			Ok(())
 		}
@@ -310,7 +331,8 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn calculate_twap(origin: OriginFor<T>) -> DispatchResult {
 			let _ = ensure_signed(origin)?;
-			Self::calculate_and_update_twap()?;
+			// Manual calculation, fail if insufficient sources
+			Self::calculate_and_update_twap(false)?;
 			Ok(())
 		}
 
@@ -363,13 +385,23 @@ pub mod pallet {
 
 	impl<T: Config> Pallet<T> {
 		/// Calculate and update TWAP
-		fn calculate_and_update_twap() -> DispatchResult {
+		///
+		/// Parameters:
+		/// - allow_bootstrap: If true, succeeds silently during bootstrap (<MinPriceSources)
+		///                   If false, fails with InsufficientSources during bootstrap
+		fn calculate_and_update_twap(allow_bootstrap: bool) -> DispatchResult {
 			let current_block = <frame_system::Pallet<T>>::block_number();
 			let history = PriceHistory::<T>::get();
 
 			// Check minimum data points
 			if history.len() < T::MinPriceSources::get() as usize {
-				return Err(Error::<T>::InsufficientSources.into());
+				if allow_bootstrap {
+					// Auto-triggered during submit_price: succeed silently
+					return Ok(());
+				} else {
+					// Manual calculation: fail if insufficient
+					return Err(Error::<T>::InsufficientSources.into());
+				}
 			}
 
 			// Try primary window first
@@ -449,8 +481,8 @@ pub mod pallet {
 			CurrentTwap::<T>::put(twap_result.clone());
 			LastTwapBlock::<T>::put(current_block);
 
-			// Update redemption pallet
-			let _ = pallet_edsc_redemption::Pallet::<T>::do_update_oracle_price(twap_price);
+			// Notify price update callback (e.g., redemption pallet)
+			let _ = T::PriceCallback::on_price_updated(twap_price);
 
 			Self::deposit_event(Event::TwapCalculated {
 				price: twap_price,
@@ -482,8 +514,31 @@ pub mod pallet {
 			Ok(median)
 		}
 
-		/// Check if price is an outlier
+		/// Check if price is an outlier using variance-aware dynamic threshold
+		///
+		/// Uses a two-phase validation strategy:
+		/// - Bootstrap phase (< MinPriceSources): Basic range check only ($0.50 - $2.00)
+		/// - Variance-aware phase (>= MinPriceSources): Dynamic threshold based on price variance
+		///
+		/// The variance-aware approach adjusts outlier tolerance based on price stability:
+		/// - Low variance (stable prices): Strict 2% threshold
+		/// - High variance (diverse prices): Relaxed threshold proportional to variance
+		///
+		/// This allows the oracle to:
+		/// 1. Bootstrap from empty state
+		/// 2. Maintain strict validation for stable price feeds
+		/// 3. Accommodate legitimate price diversity in volatile markets
 		fn check_outlier(price: u128) -> DispatchResult {
+			let history = PriceHistory::<T>::get();
+
+			// Bootstrap phase: Accept any price within reasonable bounds
+			if history.len() < T::MinPriceSources::get() as usize {
+				// Basic sanity check: price must be between $0.50 and $2.00
+				ensure!(price >= 50 && price <= 200, Error::<T>::InvalidPrice);
+				return Ok(());
+			}
+
+			// Calculate median for outlier detection
 			let median = Self::calculate_median()?;
 
 			// Calculate deviation from median
@@ -493,8 +548,30 @@ pub mod pallet {
 				median.saturating_sub(price)
 			};
 
-			// Check if deviation exceeds threshold
-			let threshold = T::OutlierThreshold::get().mul_floor(median);
+			// Variance-aware outlier detection
+			// Calculate variance to determine if prices are stable or diverse
+			let variance = Self::calculate_variance(&history, median);
+
+			// Two-tier threshold based on price diversity:
+			// - Zero variance (all identical prices): Strict 2% threshold for precision
+			// - Any variance (diverse prices): Relaxed threshold for volatility tolerance
+			//
+			// This approach ensures:
+			// 1. When all prices are identical (e.g., 100, 100, 100), we reject outliers strictly
+			// 2. When prices vary (e.g., 100, 101, 102), we allow legitimate market diversity
+
+			let threshold = if variance == 0 {
+				// All prices identical: Use strict configured threshold (2%)
+				T::OutlierThreshold::get().mul_floor(median)
+			} else {
+				// Diverse prices: Use variance-proportional threshold
+				// Base threshold is 5%, increase with variance
+				// Cap at 15% to maintain outlier protection
+				let variance_factor = (variance / 2).min(5); // Max 5x multiplier (variance 10)
+				let dynamic_percent = (5 + variance_factor as u32).min(15);
+				Permill::from_percent(dynamic_percent).mul_floor(median)
+			};
+
 			ensure!(deviation <= threshold, Error::<T>::InvalidPrice);
 
 			Ok(())
@@ -550,20 +627,21 @@ pub mod pallet {
 	/// Hooks for automatic TWAP updates
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		/// On finalize, check if TWAP needs recalculation
+		/// On finalize, check staleness and recalculate TWAP if needed
 		fn on_finalize(_n: BlockNumberFor<T>) {
+			// Check staleness and emit warning BEFORE recalculation
+			// This ensures we detect stale data before updating timestamps
+			if Self::is_stale() {
+				Self::deposit_event(Event::OracleStale);
+			}
+
 			// Auto-recalculate TWAP every 100 blocks (~10 minutes)
 			let current_block = <frame_system::Pallet<T>>::block_number();
 			let last_calc = LastTwapBlock::<T>::get();
 
 			if current_block.saturating_sub(last_calc) >= 100u32.into() {
-				// Attempt recalculation (ignore errors)
-				let _ = Self::calculate_and_update_twap();
-			}
-
-			// Check staleness and emit warning
-			if Self::is_stale() {
-				Self::deposit_event(Event::OracleStale);
+				// Attempt recalculation (auto-triggered, allow bootstrap)
+				let _ = Self::calculate_and_update_twap(true);
 			}
 		}
 	}

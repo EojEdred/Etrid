@@ -447,6 +447,7 @@ pub struct Connection {
 
 pub struct ConnectionManager {
     active_connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
+    active_streams: Arc<RwLock<HashMap<PeerId, Arc<Mutex<TcpStream>>>>>,
     pending_connections: Arc<Mutex<VecDeque<PeerId>>>,
     max_connections: usize,
     connection_timeout: Duration,
@@ -463,6 +464,7 @@ impl ConnectionManager {
     ) -> Self {
         Self {
             active_connections: Arc::new(RwLock::new(HashMap::new())),
+            active_streams: Arc::new(RwLock::new(HashMap::new())),
             pending_connections: Arc::new(Mutex::new(VecDeque::new())),
             max_connections,
             connection_timeout,
@@ -485,7 +487,7 @@ impl ConnectionManager {
 
         match tokio::time::timeout(self.connection_timeout, TcpStream::connect(peer.address)).await
         {
-            Ok(Ok(_stream)) => {
+            Ok(Ok(stream)) => {
                 let conn = Connection {
                     peer_id: peer.id,
                     address: peer.address,
@@ -496,6 +498,11 @@ impl ConnectionManager {
                 let mut conns = self.active_connections.write().await;
                 if conns.len() < self.max_connections {
                     conns.insert(peer.id, conn);
+
+                    // Store the TCP stream for later use
+                    let mut streams = self.active_streams.write().await;
+                    streams.insert(peer.id, Arc::new(Mutex::new(stream)));
+
                     self.reputation
                         .record_event(peer.id, ReputationEvent::ValidMessage)
                         .await;
@@ -533,20 +540,132 @@ impl ConnectionManager {
     }
 
     pub async fn disconnect(&self, peer_id: PeerId) {
+        // Close the TCP stream gracefully before removing
+        if let Some(stream_arc) = self.active_streams.write().await.remove(&peer_id) {
+            let stream = stream_arc.lock().await;
+            // Shutdown the connection gracefully (tokio TcpStream Drop handles this)
+            drop(stream);
+            println!("🔌 Gracefully closed connection to peer {:?}", peer_id);
+        }
+
         self.active_connections.write().await.remove(&peer_id);
         self.encryption.remove_session(peer_id).await;
     }
 
     pub async fn cleanup_idle_connections(&self) {
-        let mut conns = self.active_connections.write().await;
-        conns.retain(|peer_id, conn| {
-            if conn.last_activity.elapsed() > self.idle_timeout {
-                // TODO: Close connection gracefully
-                false
-            } else {
-                true
+        let mut to_disconnect = Vec::new();
+
+        // Identify idle connections
+        {
+            let conns = self.active_connections.read().await;
+            for (peer_id, conn) in conns.iter() {
+                if conn.last_activity.elapsed() > self.idle_timeout {
+                    to_disconnect.push(*peer_id);
+                }
             }
-        });
+        }
+
+        // Gracefully close idle connections
+        for peer_id in to_disconnect {
+            println!(
+                "⏱️ Closing idle connection to peer {:?} (idle for {:?})",
+                peer_id,
+                self.idle_timeout
+            );
+
+            // Close TCP stream gracefully (tokio TcpStream Drop handles shutdown)
+            if let Some(stream_arc) = self.active_streams.write().await.remove(&peer_id) {
+                let stream = stream_arc.lock().await;
+                drop(stream);
+            }
+
+            // Remove connection metadata
+            self.active_connections.write().await.remove(&peer_id);
+
+            // Clean up encryption session
+            self.encryption.remove_session(peer_id).await;
+
+            println!("✅ Idle connection cleanup complete for peer {:?}", peer_id);
+        }
+    }
+
+    /// Send a message to a specific peer via the connection manager
+    pub async fn send_message(&self, peer_id: PeerId, data: &[u8]) -> Result<(), String> {
+        // Check if connected
+        if !self.is_connected(peer_id).await {
+            return Err("Not connected to peer".to_string());
+        }
+
+        // Get the stream
+        let streams = self.active_streams.read().await;
+        let stream = streams
+            .get(&peer_id)
+            .ok_or_else(|| "No stream found for peer".to_string())?;
+
+        // Send message through TCP stream
+        let mut stream_guard = stream.lock().await;
+
+        // Send message length first (4 bytes)
+        let len = data.len() as u32;
+        stream_guard
+            .write_all(&len.to_be_bytes())
+            .await
+            .map_err(|e| format!("Failed to send message length: {}", e))?;
+
+        // Send message data
+        stream_guard
+            .write_all(data)
+            .await
+            .map_err(|e| format!("Failed to send message data: {}", e))?;
+
+        // Flush to ensure data is sent
+        stream_guard
+            .flush()
+            .await
+            .map_err(|e| format!("Failed to flush stream: {}", e))?;
+
+        // Update last activity
+        let mut conns = self.active_connections.write().await;
+        if let Some(conn) = conns.get_mut(&peer_id) {
+            conn.last_activity = Instant::now();
+        }
+
+        Ok(())
+    }
+
+    /// Receive a message from a specific peer via the connection manager
+    pub async fn receive_message(&self, peer_id: PeerId) -> Result<Vec<u8>, String> {
+        // Get the stream
+        let streams = self.active_streams.read().await;
+        let stream = streams
+            .get(&peer_id)
+            .ok_or_else(|| "No stream found for peer".to_string())?;
+
+        let mut stream_guard = stream.lock().await;
+
+        // Read message length (4 bytes)
+        let mut len_buf = [0u8; 4];
+        stream_guard
+            .read_exact(&mut len_buf)
+            .await
+            .map_err(|e| format!("Failed to read message length: {}", e))?;
+
+        let len = u32::from_be_bytes(len_buf) as usize;
+
+        // Read message data
+        let mut data = vec![0u8; len];
+        stream_guard
+            .read_exact(&mut data)
+            .await
+            .map_err(|e| format!("Failed to read message data: {}", e))?;
+
+        // Update last activity
+        let mut conns = self.active_connections.write().await;
+        if let Some(conn) = conns.get_mut(&peer_id) {
+            conn.last_activity = Instant::now();
+        }
+
+        Ok(data)
     }
 }
 
@@ -656,10 +775,31 @@ impl P2PNetwork {
 
     pub async fn broadcast(&self, msg: Message) -> Result<(), String> {
         let peers = self.get_connected_peers().await;
+        let encoded = msg.encode()?;
+
+        let mut success_count = 0;
+        let mut failure_count = 0;
+
         for peer_id in peers {
-            let encoded = msg.encode()?;
-            // TODO: Send to peer via connection manager
+            // Send message to each connected peer via connection manager
+            match self.connection_manager.send_message(peer_id, &encoded).await {
+                Ok(()) => {
+                    success_count += 1;
+                    println!("📤 Broadcast message sent to peer {:?}", peer_id);
+                }
+                Err(e) => {
+                    failure_count += 1;
+                    eprintln!("❌ Failed to send broadcast to peer {:?}: {}", peer_id, e);
+                    // Don't fail the entire broadcast if one peer fails
+                }
+            }
         }
+
+        println!(
+            "📡 Broadcast complete: {} successful, {} failed",
+            success_count, failure_count
+        );
+
         Ok(())
     }
 
@@ -669,7 +809,14 @@ impl P2PNetwork {
         }
 
         let encoded = msg.encode()?;
-        // TODO: Send to peer via connection manager
+
+        // Send message to specific peer via connection manager
+        self.connection_manager
+            .send_message(peer_id, &encoded)
+            .await?;
+
+        println!("📤 Unicast message sent to peer {:?}", peer_id);
+
         Ok(())
     }
 
@@ -741,7 +888,7 @@ mod tests {
         assert_eq!(plaintext, &decrypted[..13]);
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_reputation_scoring() {
         let rep = ReputationManager::new();
         let peer_id = PeerId::new([1u8; 32]);
@@ -757,7 +904,7 @@ mod tests {
         assert!(score > 0.0); // Still positive but lower
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_connection_manager_lifecycle() {
         let cm = ConnectionManager::new(
             100,
@@ -772,5 +919,229 @@ mod tests {
 
         // Won't actually connect (no server), but tests the interface
         let _ = cm.connect(peer).await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_connection_lifecycle_complete() {
+        use tokio::net::TcpListener;
+
+        // Start a test server
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let server_addr = listener.local_addr().unwrap();
+
+        // Accept connections in background
+        tokio::spawn(async move {
+            while let Ok((_stream, _addr)) = listener.accept().await {
+                // Server accepts but does nothing - just for testing connection
+            }
+        });
+
+        let cm = ConnectionManager::new(
+            100,
+            Duration::from_secs(5),
+            Duration::from_secs(300),
+        );
+
+        let peer = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: server_addr,
+        };
+
+        // Test connect
+        let result = cm.connect(peer.clone()).await;
+        assert!(result.is_ok(), "Connection should succeed");
+
+        // Test is_connected
+        assert!(cm.is_connected(peer.id).await);
+
+        // Test get_connected_peers
+        let peers = cm.get_connected_peers().await;
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0], peer.id);
+
+        // Test disconnect (graceful close)
+        cm.disconnect(peer.id).await;
+        assert!(!cm.is_connected(peer.id).await);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_idle_connection_cleanup() {
+        use tokio::net::TcpListener;
+
+        // Start a test server
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let server_addr = listener.local_addr().unwrap();
+
+        tokio::spawn(async move {
+            while let Ok((_stream, _addr)) = listener.accept().await {}
+        });
+
+        // Use very short idle timeout for testing
+        let cm = ConnectionManager::new(
+            100,
+            Duration::from_secs(5),
+            Duration::from_millis(100), // 100ms idle timeout
+        );
+
+        let peer = PeerAddr {
+            id: PeerId::new([2u8; 32]),
+            address: server_addr,
+        };
+
+        // Connect
+        cm.connect(peer.clone()).await.ok();
+        assert!(cm.is_connected(peer.id).await);
+
+        // Wait for connection to become idle
+        sleep(Duration::from_millis(150)).await;
+
+        // Run cleanup
+        cm.cleanup_idle_connections().await;
+
+        // Connection should be removed
+        assert!(!cm.is_connected(peer.id).await);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_message_routing_broadcast() {
+        let router = MessageRouter::new();
+
+        let peer1 = PeerId::new([1u8; 32]);
+        let peer2 = PeerId::new([2u8; 32]);
+
+        let msg1 = Message::Ping { nonce: 123 };
+        let msg2 = Message::Pong { nonce: 456 };
+
+        // Route messages
+        router.route_message(peer1, msg1.clone()).await;
+        router.route_message(peer2, msg2.clone()).await;
+
+        // Retrieve messages in order
+        let (from1, msg1_recv) = router.get_message().await.unwrap();
+        assert_eq!(from1, peer1);
+        match msg1_recv {
+            Message::Ping { nonce } => assert_eq!(nonce, 123),
+            _ => panic!("Wrong message type"),
+        }
+
+        let (from2, msg2_recv) = router.get_message().await.unwrap();
+        assert_eq!(from2, peer2);
+        match msg2_recv {
+            Message::Pong { nonce } => assert_eq!(nonce, 456),
+            _ => panic!("Wrong message type"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_p2p_network_message_encoding() {
+        // Test message encoding/decoding for peer-to-peer routing
+        let msg = Message::Vote {
+            data: vec![0xAA, 0xBB, 0xCC],
+        };
+
+        let encoded = msg.encode().unwrap();
+        let decoded = Message::decode(&encoded).unwrap();
+
+        match decoded {
+            Message::Vote { data } => {
+                assert_eq!(data, vec![0xAA, 0xBB, 0xCC]);
+            }
+            _ => panic!("Wrong message type after decode"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_connection_send_receive_message() {
+        use tokio::net::TcpListener;
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        // Start a test server that echoes back messages
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let server_addr = listener.local_addr().unwrap();
+
+        tokio::spawn(async move {
+            while let Ok((mut stream, _addr)) = listener.accept().await {
+                tokio::spawn(async move {
+                    // Read length
+                    let mut len_buf = [0u8; 4];
+                    if stream.read_exact(&mut len_buf).await.is_ok() {
+                        let len = u32::from_be_bytes(len_buf) as usize;
+
+                        // Read data
+                        let mut data = vec![0u8; len];
+                        if stream.read_exact(&mut data).await.is_ok() {
+                            // Echo back
+                            let _ = stream.write_all(&len_buf).await;
+                            let _ = stream.write_all(&data).await;
+                        }
+                    }
+                });
+            }
+        });
+
+        let cm = ConnectionManager::new(
+            100,
+            Duration::from_secs(5),
+            Duration::from_secs(300),
+        );
+
+        let peer = PeerAddr {
+            id: PeerId::new([3u8; 32]),
+            address: server_addr,
+        };
+
+        // Connect
+        cm.connect(peer.clone()).await.unwrap();
+
+        // Send message
+        let test_data = vec![0x01, 0x02, 0x03, 0x04];
+        let send_result = cm.send_message(peer.id, &test_data).await;
+        assert!(send_result.is_ok(), "Send should succeed");
+
+        // Receive echo
+        let recv_result = cm.receive_message(peer.id).await;
+        assert!(recv_result.is_ok(), "Receive should succeed");
+        assert_eq!(recv_result.unwrap(), test_data);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_max_connections_limit() {
+        use tokio::net::TcpListener;
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let server_addr = listener.local_addr().unwrap();
+
+        tokio::spawn(async move {
+            while let Ok((_stream, _addr)) = listener.accept().await {}
+        });
+
+        // Connection manager with max 2 connections
+        let cm = ConnectionManager::new(
+            2,
+            Duration::from_secs(5),
+            Duration::from_secs(300),
+        );
+
+        // Try to connect 3 peers
+        let peer1 = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: server_addr,
+        };
+        let peer2 = PeerAddr {
+            id: PeerId::new([2u8; 32]),
+            address: server_addr,
+        };
+        let peer3 = PeerAddr {
+            id: PeerId::new([3u8; 32]),
+            address: server_addr,
+        };
+
+        assert!(cm.connect(peer1).await.is_ok());
+        assert!(cm.connect(peer2).await.is_ok());
+
+        // Third connection should fail due to max limit
+        let result3 = cm.connect(peer3).await;
+        assert!(result3.is_err());
+        assert!(result3.unwrap_err().contains("Max connections"));
     }
 }

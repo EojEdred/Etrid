@@ -74,15 +74,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     authoring_version: 1,
     spec_version: 100,
     impl_version: 1,
-    apis: sp_version::create_apis_vec![[
-        BLOCK_BUILDER,
-        TRANSACTION_PAYMENT_API,
-        ACCOUNT_NONCE_API,
-        METADATA,
-        OFFCHAIN_WORKER_API,
-        SESSION_KEYS,
-        GRANDPA_API,
-    ]],
+    apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
     system_version: 1,
 };
@@ -102,7 +94,7 @@ const AVERAGE_ON_INITIALIZE_RATIO: sp_runtime::Perbill = sp_runtime::Perbill::fr
 /// We allow for 2 seconds of compute with a 6 second average block time.
 const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
     WEIGHT_REF_TIME_PER_SECOND * 2,
-    core::u64::MAX,
+    u64::MAX,
 );
 /// Maximum length of block.
 const MAXIMUM_BLOCK_LENGTH: u32 = 5 * 1024 * 1024;
@@ -241,8 +233,8 @@ impl pallet_etrid_staking::Config for Runtime {
 impl pallet_etwasm_vm::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxCodeSize = ConstU32<1024>;
-    type DefaultGasLimit = ConstU64<1_000_000>; // Default gas limit for contract calls
-    type MaxGasLimit = ConstU64<10_000_000>; // Maximum gas limit for contract calls
+    type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
+    type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
 }
 
 /// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)
@@ -486,6 +478,7 @@ impl pallet_edsc_token::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxSupply = ConstU128<1_000_000_000_000_000_000_000>; // 1 billion EDSC (18 decimals)
     type MinBalance = ConstU128<1_000_000_000_000>; // 0.000001 EDSC minimum
+    type WeightInfo = ();
 }
 
 /// Configure EDSC Receipts Pallet (SBT registry)
@@ -537,6 +530,7 @@ parameter_types! {
 /// Configure EDSC Oracle Pallet
 impl pallet_edsc_oracle::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+    type PriceCallback = EdscRedemption;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
     type MinPriceSources = MinPriceSources;
@@ -929,15 +923,15 @@ impl_runtime_apis! {
 
     // ASF Consensus Runtime APIs
     impl pallet_validator_committee_runtime_api::ValidatorCommitteeApi<Block> for Runtime {
-        fn validator_committee() -> sp_std::vec::Vec<validator_management::ValidatorInfo> {
+        fn validator_committee() -> sp_std::vec::Vec<pallet_validator_committee_runtime_api::ValidatorInfo> {
             ValidatorCommittee::get_committee()
         }
 
-        fn validator_info(validator_id: asf_algorithm::ValidatorId) -> Option<validator_management::ValidatorInfo> {
+        fn validator_info(validator_id: pallet_validator_committee_runtime_api::ValidatorId) -> Option<pallet_validator_committee_runtime_api::ValidatorInfo> {
             ValidatorCommittee::get_validator(&validator_id)
         }
 
-        fn is_validator_active(validator_id: asf_algorithm::ValidatorId) -> bool {
+        fn is_validator_active(validator_id: pallet_validator_committee_runtime_api::ValidatorId) -> bool {
             ValidatorCommittee::is_validator_active(&validator_id)
         }
 
@@ -947,6 +941,26 @@ impl_runtime_apis! {
 
         fn committee_size_limit() -> u32 {
             ValidatorCommittee::committee_size_limit()
+        }
+
+        fn next_epoch_start() -> u32 {
+            ValidatorCommittee::next_epoch_start()
+        }
+
+        fn next_epoch_validators() -> sp_std::vec::Vec<pallet_validator_committee_runtime_api::ValidatorInfo> {
+            ValidatorCommittee::get_next_epoch_validators()
+        }
+
+        fn is_proposer_authorized(
+            block_number: u32,
+            ppfa_index: u32,
+            proposer_id: pallet_validator_committee_runtime_api::ValidatorId,
+        ) -> bool {
+            ValidatorCommittee::is_proposer_authorized(block_number, ppfa_index, &proposer_id)
+        }
+
+        fn epoch_duration() -> u32 {
+            ValidatorCommittee::get_epoch_duration()
         }
     }
 
@@ -995,47 +1009,6 @@ impl_runtime_apis! {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // VALIDATOR COMMITTEE RUNTIME API IMPLEMENTATION
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    impl pallet_validator_committee::ValidatorCommitteeApi<Block, asf_algorithm::ValidatorId, BlockNumber> for Runtime {
-        fn get_committee() -> Vec<validator_management::ValidatorInfo> {
-            ValidatorCommittee::get_committee()
-        }
-
-        fn get_validator(validator_id: asf_algorithm::ValidatorId) -> Option<validator_management::ValidatorInfo> {
-            ValidatorCommittee::get_validator(&validator_id)
-        }
-
-        fn is_in_committee(validator_id: asf_algorithm::ValidatorId) -> bool {
-            ValidatorCommittee::is_validator_active(&validator_id)
-        }
-
-        fn current_epoch() -> u64 {
-            ValidatorCommittee::get_current_epoch()
-        }
-
-        fn next_epoch_start() -> BlockNumber {
-            ValidatorCommittee::next_epoch_start()
-        }
-
-        fn get_next_epoch_validators() -> Vec<validator_management::ValidatorInfo> {
-            ValidatorCommittee::get_next_epoch_validators()
-        }
-
-        fn is_proposer_authorized(
-            block_number: BlockNumber,
-            ppfa_index: u32,
-            proposer_id: asf_algorithm::ValidatorId,
-        ) -> bool {
-            ValidatorCommittee::is_proposer_authorized(block_number, ppfa_index, &proposer_id)
-        }
-
-        fn epoch_duration() -> BlockNumber {
-            ValidatorCommittee::get_epoch_duration()
-        }
-    }
-
     #[cfg(feature = "runtime-benchmarks")]
     impl frame_benchmarking::Benchmark<Block> for Runtime {
         fn benchmark_metadata(extra: bool) -> (

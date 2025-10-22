@@ -84,9 +84,9 @@ The 13-clients component democratizes access to Etrid Protocol by providing:
 │   ├── python_etrid_sdk/     # Python SDK
 │   └── SwiftEtridSDK/        # Swift SDK (iOS/macOS)
 │
-├── web-wallet/               # Browser-based wallet
-├── mobile-wallet/            # iOS/Android wallet app
-└── ui-generated/             # Reusable UI components
+├── web-wallet/               # Browser-based wallet (planned)
+├── mobile-wallet/            # iOS/Android wallet app (planned)
+└── ui-generated/             # Reusable UI components (planned)
 ```
 
 ---
@@ -945,11 +945,12 @@ class WalletViewModel: ObservableObject {
 
 ### A. web-wallet
 
-**Location:** `/Users/macbook/Desktop/etrid/13-clients/web-wallet/`
+**Status:** 🔜 Planned for future development
+**Location:** `/Users/macbook/Desktop/etrid/13-clients/web-wallet/` (stub removed)
 **Technology:** React/Next.js, TypeScript, TailwindCSS
 **Purpose:** Browser-based wallet for ETR/ETD/VMW tokens
 
-**Features:**
+**Planned Features:**
 - Account creation and import (BIP39 mnemonics)
 - Token transfers (ETR, ETD, VMW)
 - Staking and unstaking
@@ -958,15 +959,18 @@ class WalletViewModel: ObservableObject {
 - Address book
 - QR code generation and scanning
 
+**Implementation Note:** Empty stub directory removed during October 2025 cleanup. To be implemented as standalone project using `apps/wallet-web/` as reference.
+
 ---
 
 ### B. mobile-wallet
 
-**Location:** `/Users/macbook/Desktop/etrid/13-clients/mobile-wallet/`
+**Status:** 🔜 Planned for future development
+**Location:** `/Users/macbook/Desktop/etrid/13-clients/mobile-wallet/` (stub removed)
 **Technology:** React Native / Swift (iOS), Kotlin (Android)
 **Purpose:** Mobile wallet for iOS and Android
 
-**Features:**
+**Planned Features:**
 - Biometric authentication (Face ID, Touch ID, Fingerprint)
 - Push notifications for transactions
 - QR code scanning for addresses
@@ -974,20 +978,25 @@ class WalletViewModel: ObservableObject {
 - Multi-account support
 - Dark mode support
 
+**Implementation Note:** Empty stub directory removed during October 2025 cleanup. To be implemented as standalone project using `apps/wallet-mobile/` as reference.
+
 ---
 
 ### C. ui-generated
 
-**Location:** `/Users/macbook/Desktop/etrid/13-clients/ui-generated/`
+**Status:** 🔜 Planned for future development
+**Location:** `/Users/macbook/Desktop/etrid/13-clients/ui-generated/` (stub removed)
 **Purpose:** Reusable UI components for Etrid applications
 
-**Components:**
+**Planned Components:**
 - AccountCard (display account info)
 - BalanceDisplay (token balances with icons)
 - TransactionList (transaction history table)
 - StakingWidget (staking status and controls)
 - ProposalCard (governance proposal display)
 - NetworkSelector (choose network/chain)
+
+**Implementation Note:** Empty stub directory removed during October 2025 cleanup. To be implemented as component library package.
 
 ---
 

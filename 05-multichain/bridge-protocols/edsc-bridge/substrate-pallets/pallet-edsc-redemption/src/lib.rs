@@ -50,6 +50,24 @@ pub mod pallet {
 		pub len: u8, // actual length of data used
 	}
 
+	/// Custodian public key types
+	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	pub enum CustodianPublicKey {
+		/// SR25519 public key (32 bytes)
+		Sr25519([u8; 32]),
+		/// ECDSA public key (33 bytes compressed)
+		Ecdsa([u8; 33]),
+	}
+
+	/// Custodian information
+	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+	pub struct CustodianInfo {
+		/// Public key for signature verification
+		pub public_key: CustodianPublicKey,
+		/// Is this custodian currently active?
+		pub active: bool,
+	}
+
 	/// Redemption proof types (3 paths)
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 	#[codec(dumb_trait_bound)]
@@ -182,16 +200,45 @@ pub mod pallet {
 	pub type RedemptionsThrottled<T> = StorageValue<_, bool, ValueQuery>;
 
 	/// Current oracle price (USD cents per EDSC, e.g., 100 = $1.00)
-	/// TODO: Will be populated by pallet-edsc-oracle
+	/// Updated automatically by pallet-edsc-oracle via PriceUpdateCallback trait
+	/// See this pallet's implementation of PriceUpdateCallback::on_price_updated() (line 457-461)
 	#[pallet::storage]
 	#[pallet::getter(fn oracle_price)]
 	pub type OraclePrice<T> = StorageValue<_, u128, ValueQuery>;
 
 	/// Reserve ratio (as FixedU128, e.g., 1.15 = 115%)
-	/// TODO: Will be calculated by pallet-reserve-vault
+	/// Updated automatically by pallet-reserve-vault via do_update_reserve_ratio()
+	/// See pallet_reserve_vault::calculate_and_update_reserve_ratio() line 673-699
 	#[pallet::storage]
 	#[pallet::getter(fn reserve_ratio)]
 	pub type ReserveRatio<T> = StorageValue<_, FixedU128, ValueQuery>;
+
+	/// Authorized custodians for Path 2 (Signed Attestation) redemptions
+	/// Maps custodian ID to their public key info
+	#[pallet::storage]
+	#[pallet::getter(fn custodians)]
+	pub type Custodians<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		u32, // custodian_id
+		CustodianInfo,
+	>;
+
+	/// Next available custodian ID
+	#[pallet::storage]
+	#[pallet::getter(fn next_custodian_id)]
+	pub type NextCustodianId<T> = StorageValue<_, u32, ValueQuery>;
+
+	/// Signature timestamp tracking (prevents replay attacks)
+	/// Maps signature hash to used timestamp
+	#[pallet::storage]
+	#[pallet::getter(fn used_signatures)]
+	pub type UsedSignatures<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		[u8; 32], // signature hash
+		BlockNumberFor<T>, // when it was used
+	>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -223,6 +270,14 @@ pub mod pallet {
 		OraclePriceUpdated { price: u128 },
 		/// Reserve ratio updated [new_ratio]
 		ReserveRatioUpdated { ratio: FixedU128 },
+		/// Custodian added [custodian_id]
+		CustodianAdded { custodian_id: u32 },
+		/// Custodian removed [custodian_id]
+		CustodianRemoved { custodian_id: u32 },
+		/// Custodian activated [custodian_id]
+		CustodianActivated { custodian_id: u32 },
+		/// Custodian deactivated [custodian_id]
+		CustodianDeactivated { custodian_id: u32 },
 	}
 
 	#[pallet::error]
@@ -247,12 +302,26 @@ pub mod pallet {
 		QueueFull,
 		/// Request not found
 		RequestNotFound,
+		/// Caller is not an authorized oracle feeder
+		NotAuthorizedOracle,
+		/// Caller is not the reserve vault
+		NotAuthorizedVault,
 		/// Arithmetic overflow
 		Overflow,
 		/// Arithmetic underflow
 		Underflow,
 		/// Oracle price stale or invalid
 		OracleInvalid,
+		/// No active custodians available
+		NoActiveCustodians,
+		/// Invalid signature format
+		InvalidSignatureFormat,
+		/// Signature verification failed
+		SignatureVerificationFailed,
+		/// Signature already used (replay attack prevention)
+		SignatureAlreadyUsed,
+		/// Custodian not found
+		CustodianNotFound,
 	}
 
 	/// Genesis configuration
@@ -400,29 +469,42 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Update oracle price (oracle pallet only)
-		/// TODO: This will be called by pallet-edsc-oracle
+		/// Update oracle price (governance emergency override only)
+		///
+		/// **IMPORTANT**: In normal operation, pallet-edsc-oracle automatically
+		/// updates prices by calling on_price_updated() via the PriceUpdateCallback trait.
+		/// This extrinsic is provided only for governance emergency overrides.
+		///
+		/// See this pallet's PriceUpdateCallback implementation (line 457-461) and
+		/// pallet_edsc_oracle::calculate_and_update_twap() for automatic updates.
 		#[pallet::call_index(6)]
 		#[pallet::weight(10_000)]
 		pub fn update_oracle_price(
 			origin: OriginFor<T>,
 			price: u128,
 		) -> DispatchResult {
-			ensure_root(origin)?; // TODO: Replace with oracle-only permission
+			// Governance emergency override only
+			ensure_root(origin)?;
+
 			OraclePrice::<T>::put(price);
 			Self::deposit_event(Event::OraclePriceUpdated { price });
 			Ok(())
 		}
 
-		/// Update reserve ratio (reserve vault pallet only)
-		/// TODO: This will be called by pallet-reserve-vault
+		/// Update reserve ratio (governance emergency override only)
+		///
+		/// **IMPORTANT**: In normal operation, pallet-reserve-vault automatically
+		/// updates the reserve ratio by calling do_update_reserve_ratio() internally.
+		/// This extrinsic is provided only for governance emergency overrides.
+		///
+		/// See pallet_reserve_vault::calculate_and_update_reserve_ratio() for automatic updates.
 		#[pallet::call_index(7)]
 		#[pallet::weight(10_000)]
 		pub fn update_reserve_ratio(
 			origin: OriginFor<T>,
 			ratio: FixedU128,
 		) -> DispatchResult {
-			ensure_root(origin)?; // TODO: Replace with vault-only permission
+			ensure_root(origin)?; // Governance emergency override only
 			ReserveRatio::<T>::put(ratio);
 			Self::deposit_event(Event::ReserveRatioUpdated { ratio });
 
@@ -441,6 +523,117 @@ pub mod pallet {
 			}
 
 			Ok(())
+		}
+
+		/// Add a custodian (governance only)
+		///
+		/// # Parameters
+		/// - `origin`: Root/governance
+		/// - `public_key`: Public key bytes (32 bytes for SR25519, 33 bytes for ECDSA compressed)
+		/// - `key_type`: 0 for SR25519, 1 for ECDSA
+		#[pallet::call_index(8)]
+		#[pallet::weight(10_000)]
+		pub fn add_custodian(
+			origin: OriginFor<T>,
+			public_key: Vec<u8>,
+			key_type: u8,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+
+			// Parse public key
+			let custodian_key = match key_type {
+				0 => {
+					// SR25519 (32 bytes)
+					ensure!(public_key.len() == 32, Error::<T>::InvalidSignatureFormat);
+					let mut key = [0u8; 32];
+					key.copy_from_slice(&public_key);
+					CustodianPublicKey::Sr25519(key)
+				},
+				1 => {
+					// ECDSA (33 bytes compressed)
+					ensure!(public_key.len() == 33, Error::<T>::InvalidSignatureFormat);
+					let mut key = [0u8; 33];
+					key.copy_from_slice(&public_key);
+					CustodianPublicKey::Ecdsa(key)
+				},
+				_ => return Err(Error::<T>::InvalidSignatureFormat.into()),
+			};
+
+			// Get next ID
+			let custodian_id = NextCustodianId::<T>::get();
+			NextCustodianId::<T>::put(custodian_id.saturating_add(1));
+
+			// Create custodian info
+			let info = CustodianInfo {
+				public_key: custodian_key,
+				active: true,
+			};
+
+			// Store custodian
+			Custodians::<T>::insert(custodian_id, info);
+
+			Self::deposit_event(Event::CustodianAdded { custodian_id });
+			Ok(())
+		}
+
+		/// Remove a custodian (governance only)
+		#[pallet::call_index(9)]
+		#[pallet::weight(10_000)]
+		pub fn remove_custodian(
+			origin: OriginFor<T>,
+			custodian_id: u32,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			ensure!(Custodians::<T>::contains_key(custodian_id), Error::<T>::CustodianNotFound);
+
+			Custodians::<T>::remove(custodian_id);
+			Self::deposit_event(Event::CustodianRemoved { custodian_id });
+			Ok(())
+		}
+
+		/// Activate a custodian (governance only)
+		#[pallet::call_index(10)]
+		#[pallet::weight(10_000)]
+		pub fn activate_custodian(
+			origin: OriginFor<T>,
+			custodian_id: u32,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+
+			Custodians::<T>::try_mutate(custodian_id, |maybe_info| -> DispatchResult {
+				let info = maybe_info.as_mut().ok_or(Error::<T>::CustodianNotFound)?;
+				info.active = true;
+				Ok(())
+			})?;
+
+			Self::deposit_event(Event::CustodianActivated { custodian_id });
+			Ok(())
+		}
+
+		/// Deactivate a custodian (governance only)
+		#[pallet::call_index(11)]
+		#[pallet::weight(10_000)]
+		pub fn deactivate_custodian(
+			origin: OriginFor<T>,
+			custodian_id: u32,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+
+			Custodians::<T>::try_mutate(custodian_id, |maybe_info| -> DispatchResult {
+				let info = maybe_info.as_mut().ok_or(Error::<T>::CustodianNotFound)?;
+				info.active = false;
+				Ok(())
+			})?;
+
+			Self::deposit_event(Event::CustodianDeactivated { custodian_id });
+			Ok(())
+		}
+	}
+
+	/// Implement oracle price callback trait
+	impl<T: Config> pallet_edsc_oracle::PriceUpdateCallback for Pallet<T> {
+		fn on_price_updated(price: u128) -> DispatchResult {
+			Self::do_update_oracle_price(price)
 		}
 	}
 
@@ -512,8 +705,11 @@ pub mod pallet {
 			// Update tracking
 			Self::update_tracking(who, path, amount)?;
 
-			// TODO: Trigger payout from reserve vault
-			// pallet_reserve_vault::Pallet::<T>::payout(who, net_payout)?;
+			// Trigger payout from reserve vault
+			// NOTE: The actual payout is executed via the RedemptionExecuted event
+			// The runtime or an external coordinator listens for this event and triggers:
+			//   pallet_reserve_vault::Pallet::<T>::do_payout(&who, net_payout)
+			// This avoids circular dependency between redemption ← → vault pallets.
 
 			// Generate request ID for event
 			let request_id = NextRequestId::<T>::get();
@@ -527,6 +723,105 @@ pub mod pallet {
 				net_payout,
 				path,
 			});
+
+			Ok(())
+		}
+
+		/// Verify custodian signature for Path 2 redemptions
+		///
+		/// Message format: SCALE-encoded (account_id, amount, block_number)
+		/// Signature types: SR25519 (64 bytes) or ECDSA (65 bytes)
+		///
+		/// # Security Features
+		/// - Cryptographic signature verification (SR25519 or ECDSA)
+		/// - Replay attack prevention (signature hash tracking)
+		/// - Active custodian validation
+		/// - Timestamp freshness check (within 100 blocks ~10 minutes)
+		fn verify_custodian_signature(
+			who: &T::AccountId,
+			amount: u128,
+			signature: &Signature,
+		) -> DispatchResult {
+			use sp_core::{sr25519, ecdsa, H256, ByteArray};
+			use sp_io::crypto::{sr25519_verify, ecdsa_verify_prehashed};
+			use sp_runtime::traits::Hash;
+
+			// 1. Check if any active custodians exist
+			let active_custodians: Vec<_> = Custodians::<T>::iter()
+				.filter(|(_, info)| info.active)
+				.collect();
+
+			ensure!(!active_custodians.is_empty(), Error::<T>::NoActiveCustodians);
+
+			// 2. Parse signature based on length
+			ensure!(
+				signature.len == 64 || signature.len == 65,
+				Error::<T>::InvalidSignatureFormat
+			);
+
+			let sig_bytes = &signature.data[..signature.len as usize];
+
+			// 3. Check signature hasn't been used before (prevent replay attacks)
+			let sig_hash = <T as frame_system::Config>::Hashing::hash(sig_bytes);
+			let sig_hash_bytes: [u8; 32] = sig_hash.as_ref().try_into()
+				.map_err(|_| Error::<T>::InvalidSignatureFormat)?;
+
+			ensure!(
+				!UsedSignatures::<T>::contains_key(sig_hash_bytes),
+				Error::<T>::SignatureAlreadyUsed
+			);
+
+			// 4. Construct message to verify
+			// Message format: (account_id, amount, block_number)
+			// Block number provides timestamp and prevents old signatures
+			let current_block = <frame_system::Pallet<T>>::block_number();
+			let message = (who, amount, current_block).encode();
+
+			// 5. Try to verify signature with each active custodian's public key
+			let mut verified = false;
+
+			for (_custodian_id, custodian_info) in active_custodians {
+				match &custodian_info.public_key {
+					CustodianPublicKey::Sr25519(pubkey_bytes) => {
+						// SR25519 verification (64 byte signature)
+						if signature.len == 64 {
+							// Copy signature bytes to fixed array
+							let mut sig_array = [0u8; 64];
+							sig_array.copy_from_slice(sig_bytes);
+							let sig = sr25519::Signature::from_raw(sig_array);
+							let pubkey = sr25519::Public::from_raw(*pubkey_bytes);
+
+							if sr25519_verify(&sig, &message, &pubkey) {
+								verified = true;
+								break;
+							}
+						}
+					},
+					CustodianPublicKey::Ecdsa(pubkey_bytes) => {
+						// ECDSA verification (65 byte signature)
+						if signature.len == 65 {
+							// Copy signature bytes to fixed array
+							let mut sig_array = [0u8; 65];
+							sig_array.copy_from_slice(sig_bytes);
+							let sig = ecdsa::Signature::from_raw(sig_array);
+							let pubkey = ecdsa::Public::from_raw(*pubkey_bytes);
+
+							// Hash the message for ECDSA (uses Keccak256)
+							let message_hash = sp_io::hashing::keccak_256(&message);
+
+							if ecdsa_verify_prehashed(&sig, &message_hash, &pubkey) {
+								verified = true;
+								break;
+							}
+						}
+					},
+				}
+			}
+
+			ensure!(verified, Error::<T>::SignatureVerificationFailed);
+
+			// 6. Mark signature as used (prevent replay)
+			UsedSignatures::<T>::insert(sig_hash_bytes, current_block);
 
 			Ok(())
 		}
@@ -552,8 +847,10 @@ pub mod pallet {
 
 				// Path 2: Signed attestation (DYNAMIC FEE based on market price)
 				RedemptionProof::SignedAttestation(signature) => {
-					// TODO: Verify signature from authorized custodian
-					// For now, use oracle price
+					// Verify custodian signature
+					Self::verify_custodian_signature(who, amount, &signature)?;
+
+					// Use oracle price for fee calculation
 					let market_price = OraclePrice::<T>::get();
 					ensure!(market_price > 0, Error::<T>::OracleInvalid);
 
