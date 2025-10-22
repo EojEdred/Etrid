@@ -18,6 +18,11 @@ log.workspace = true
 # Internal Ëtrid dependencies - FIXED PATH
 pallet-accounts = { path = "../../../04-accounts/pallet", default-features = false }
 
+[dev-dependencies]
+sp-core.workspace = true
+sp-io.workspace = true
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
 [features]
 default = ["std"]
 std = [

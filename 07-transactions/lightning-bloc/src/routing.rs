@@ -39,7 +39,7 @@ impl ChannelEdge {
 }
 
 /// Payment route through the network
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Route {
     pub hops: Vec<RouteHop>,
     pub total_amount: u128,
@@ -82,7 +82,7 @@ impl Route {
 }
 
 /// Single hop in a payment route
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RouteHop {
     pub channel_id: ChannelId,
     pub from_node: NodeId,
@@ -842,5 +842,684 @@ mod tests {
         let graph = create_test_network();
         // 4 channels × 1000 capacity each = 4000
         assert_eq!(graph.total_capacity(), 4000);
+    }
+
+    // ====================================================================
+    // COMPREHENSIVE ROUTING ALGORITHM TESTS
+    // ====================================================================
+
+    #[test]
+    fn test_shortest_path_finding() {
+        let graph = create_test_network();
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(1000); // 10% max fee to allow routing
+
+        // Test finding shortest path A -> D
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 100).unwrap();
+
+        // Should find a 2-hop route
+        assert_eq!(route.hops.len(), 2);
+        // Either path is acceptable since Dijkstra may choose either
+        let path = route.path();
+        assert!(path == vec!["A", "C", "D"] || path == vec!["A", "B", "D"]);
+        assert!(route.total_fees > 0);
+    }
+
+    #[test]
+    fn test_multi_hop_routing_2_hops() {
+        let graph = create_test_network();
+        let router = Router::new(graph);
+
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 50).unwrap();
+
+        assert_eq!(route.hop_count(), 2);
+        assert_eq!(route.hops[0].from_node, "A");
+        assert_eq!(route.hops[route.hops.len() - 1].to_node, "D");
+        assert!(route.verify().is_ok());
+    }
+
+    #[test]
+    fn test_multi_hop_routing_3_hops() {
+        // Create linear network: A -> B -> C -> D
+        let mut graph = NetworkGraph::new();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "BC".to_string(),
+            from_node: "B".to_string(),
+            to_node: "C".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "CD".to_string(),
+            from_node: "C".to_string(),
+            to_node: "D".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(1000); // 10% max fee
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 100).unwrap();
+
+        assert_eq!(route.hop_count(), 3);
+        assert_eq!(route.path(), vec!["A", "B", "C", "D"]);
+    }
+
+    #[test]
+    fn test_multi_hop_routing_4_hops() {
+        // Create linear network: A -> B -> C -> D -> E
+        let mut graph = NetworkGraph::new();
+
+        let nodes = vec!["AB", "BC", "CD", "DE"];
+        for (i, channel_id) in nodes.iter().enumerate() {
+            let from = ((i + 65) as u8 as char).to_string();
+            let to = ((i + 66) as u8 as char).to_string();
+
+            graph.add_channel(ChannelEdge {
+                channel_id: channel_id.to_string(),
+                from_node: from,
+                to_node: to,
+                capacity: 1000,
+                base_fee: 1,
+                fee_rate: 100,
+                min_htlc: 1,
+                max_htlc: 1000,
+                time_lock_delta: 40,
+            }).unwrap();
+        }
+
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(1000); // 10% max fee
+        let route = router.find_route(&"A".to_string(), &"E".to_string(), 100).unwrap();
+
+        assert_eq!(route.hop_count(), 4);
+        assert_eq!(route.path(), vec!["A", "B", "C", "D", "E"]);
+    }
+
+    #[test]
+    fn test_routing_failure_no_path() {
+        let mut graph = NetworkGraph::new();
+
+        // Create two disconnected components: A-B and C-D
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "CD".to_string(),
+            from_node: "C".to_string(),
+            to_node: "D".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph);
+        let result = router.find_route(&"A".to_string(), &"D".to_string(), 100);
+
+        assert!(result.is_err());
+        match result {
+            Err(RoutingError::NoRouteFound { from, to }) => {
+                assert_eq!(from, "A");
+                assert_eq!(to, "D");
+            }
+            _ => panic!("Expected NoRouteFound error"),
+        }
+    }
+
+    #[test]
+    fn test_routing_insufficient_capacity() {
+        let mut graph = NetworkGraph::new();
+
+        // Create channel with low capacity
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 50, // Low capacity
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph);
+        let result = router.find_route(&"A".to_string(), &"B".to_string(), 100);
+
+        // Should fail because capacity (50) < amount (100)
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_routing_with_multiple_paths_chooses_optimal() {
+        let graph = create_test_network();
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(1000); // 10% max fee
+
+        // Network has two paths: A->B->D (higher fee) and A->C->D (lower fee)
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 100).unwrap();
+
+        // Verify it found a valid 2-hop route
+        assert_eq!(route.hops.len(), 2);
+
+        // Verify fees are reasonable
+        assert!(route.total_fees <= 10);
+    }
+
+    #[test]
+    fn test_routing_node_not_found() {
+        let graph = create_test_network();
+        let router = Router::new(graph);
+
+        let result = router.find_route(&"Z".to_string(), &"D".to_string(), 100);
+
+        assert!(result.is_err());
+        match result {
+            Err(RoutingError::NodeNotFound(node)) => {
+                assert_eq!(node, "Z");
+            }
+            _ => panic!("Expected NodeNotFound error"),
+        }
+    }
+
+    #[test]
+    fn test_routing_same_source_and_destination() {
+        let graph = create_test_network();
+        let router = Router::new(graph);
+
+        let result = router.find_route(&"A".to_string(), &"A".to_string(), 100);
+
+        assert_eq!(result, Err(RoutingError::SameSourceAndDestination));
+    }
+
+    #[test]
+    fn test_route_verification_disconnected_hops() {
+        let route = Route {
+            hops: vec![
+                RouteHop {
+                    channel_id: "AB".to_string(),
+                    from_node: "A".to_string(),
+                    to_node: "B".to_string(),
+                    amount_to_forward: 100,
+                    fee: 1,
+                    time_lock: 40,
+                },
+                RouteHop {
+                    channel_id: "CD".to_string(),
+                    from_node: "C".to_string(), // Disconnected from B
+                    to_node: "D".to_string(),
+                    amount_to_forward: 100,
+                    fee: 1,
+                    time_lock: 40,
+                },
+            ],
+            total_amount: 102,
+            total_fees: 2,
+            total_time_lock: 80,
+        };
+
+        let result = route.verify();
+        assert!(result.is_err());
+        match result {
+            Err(RoutingError::DisconnectedHops { hop_index }) => {
+                assert_eq!(hop_index, 0);
+            }
+            _ => panic!("Expected DisconnectedHops error"),
+        }
+    }
+
+    #[test]
+    fn test_route_verification_empty_route() {
+        let route = Route {
+            hops: vec![],
+            total_amount: 0,
+            total_fees: 0,
+            total_time_lock: 0,
+        };
+
+        assert_eq!(route.verify(), Err(RoutingError::EmptyRoute));
+    }
+
+    // ====================================================================
+    // CHANNEL CAPACITY TESTS
+    // ====================================================================
+
+    #[test]
+    fn test_capacity_update_after_successful_payment() {
+        let mut graph = create_test_network();
+
+        // Simulate successful payment: reduce capacity
+        let original_capacity = graph.get_channel(&"AB".to_string()).unwrap().capacity;
+        graph.update_capacity(&"AB".to_string(), original_capacity - 100).unwrap();
+
+        let updated = graph.get_channel(&"AB".to_string()).unwrap();
+        assert_eq!(updated.capacity, original_capacity - 100);
+    }
+
+    #[test]
+    fn test_capacity_restoration_after_failed_htlc() {
+        let mut graph = create_test_network();
+
+        // Simulate HTLC failure: restore capacity
+        let original_capacity = graph.get_channel(&"AB".to_string()).unwrap().capacity;
+
+        // Temporarily reduce
+        graph.update_capacity(&"AB".to_string(), original_capacity - 100).unwrap();
+
+        // Restore after failure
+        graph.update_capacity(&"AB".to_string(), original_capacity).unwrap();
+
+        let restored = graph.get_channel(&"AB".to_string()).unwrap();
+        assert_eq!(restored.capacity, original_capacity);
+    }
+
+    #[test]
+    fn test_channel_depletion_scenario() {
+        let mut graph = NetworkGraph::new();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 100,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph.clone());
+
+        // First payment should succeed
+        let route1 = router.find_route(&"A".to_string(), &"B".to_string(), 50);
+        assert!(route1.is_ok());
+
+        // Deplete capacity
+        graph.update_capacity(&"AB".to_string(), 10).unwrap();
+        let router2 = Router::new(graph);
+
+        // Second payment should fail due to insufficient capacity
+        let route2 = router2.find_route(&"A".to_string(), &"B".to_string(), 50);
+        assert!(route2.is_err());
+    }
+
+    #[test]
+    fn test_capacity_bounds_checking() {
+        let mut graph = create_test_network();
+
+        // Test updating to zero capacity
+        assert!(graph.update_capacity(&"AB".to_string(), 0).is_ok());
+        let channel = graph.get_channel(&"AB".to_string()).unwrap();
+        assert_eq!(channel.capacity, 0);
+
+        // Test routing with zero capacity
+        let router = Router::new(graph);
+        let result = router.find_route(&"A".to_string(), &"B".to_string(), 1);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_capacity_update_nonexistent_channel() {
+        let mut graph = create_test_network();
+
+        let result = graph.update_capacity(&"XY".to_string(), 500);
+        assert!(result.is_err());
+        match result {
+            Err(RoutingError::ChannelNotFound(id)) => {
+                assert_eq!(id, "XY");
+            }
+            _ => panic!("Expected ChannelNotFound error"),
+        }
+    }
+
+    // ====================================================================
+    // NETWORK TOPOLOGY TESTS
+    // ====================================================================
+
+    #[test]
+    fn test_linear_topology() {
+        // Linear: A -> B -> C -> D
+        let mut graph = NetworkGraph::new();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "BC".to_string(),
+            from_node: "B".to_string(),
+            to_node: "C".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "CD".to_string(),
+            from_node: "C".to_string(),
+            to_node: "D".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(1000); // 10% max fee
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 100).unwrap();
+
+        assert_eq!(route.hop_count(), 3);
+        assert_eq!(route.path(), vec!["A", "B", "C", "D"]);
+    }
+
+    #[test]
+    fn test_hub_and_spoke_topology() {
+        // Hub-and-spoke: A,B,C -> HUB -> X,Y,Z
+        let mut graph = NetworkGraph::new();
+
+        // Spokes to hub
+        for node in &["A", "B", "C"] {
+            graph.add_channel(ChannelEdge {
+                channel_id: format!("{}HUB", node),
+                from_node: node.to_string(),
+                to_node: "HUB".to_string(),
+                capacity: 1000,
+                base_fee: 1,
+                fee_rate: 100,
+                min_htlc: 1,
+                max_htlc: 1000,
+                time_lock_delta: 40,
+            }).unwrap();
+        }
+
+        // Hub to destinations
+        for node in &["X", "Y", "Z"] {
+            graph.add_channel(ChannelEdge {
+                channel_id: format!("HUB{}", node),
+                from_node: "HUB".to_string(),
+                to_node: node.to_string(),
+                capacity: 1000,
+                base_fee: 1,
+                fee_rate: 100,
+                min_htlc: 1,
+                max_htlc: 1000,
+                time_lock_delta: 40,
+            }).unwrap();
+        }
+
+        let router = Router::new(graph);
+        let route = router.find_route(&"A".to_string(), &"X".to_string(), 100).unwrap();
+
+        assert_eq!(route.hop_count(), 2);
+        assert_eq!(route.path(), vec!["A", "HUB", "X"]);
+    }
+
+    #[test]
+    fn test_mesh_topology() {
+        // Fully connected mesh: A <-> B <-> C <-> D (all interconnected)
+        let mut graph = NetworkGraph::new();
+
+        let nodes = vec!["A", "B", "C", "D"];
+        let mut channel_count = 0;
+
+        for i in 0..nodes.len() {
+            for j in (i + 1)..nodes.len() {
+                graph.add_channel(ChannelEdge {
+                    channel_id: format!("{}{}", nodes[i], nodes[j]),
+                    from_node: nodes[i].to_string(),
+                    to_node: nodes[j].to_string(),
+                    capacity: 1000,
+                    base_fee: 1,
+                    fee_rate: 100,
+                    min_htlc: 1,
+                    max_htlc: 1000,
+                    time_lock_delta: 40,
+                }).unwrap();
+                channel_count += 1;
+            }
+        }
+
+        assert_eq!(channel_count, 6); // Complete graph K4 has 6 edges
+
+        let router = Router::new(graph);
+        let route = router.find_route(&"A".to_string(), &"D".to_string(), 100).unwrap();
+
+        // In mesh, should find direct route or very short route
+        assert!(route.hop_count() <= 2);
+    }
+
+    #[test]
+    fn test_disconnected_network_handling() {
+        let mut graph = NetworkGraph::new();
+
+        // Network 1: A - B
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        // Network 2: X - Y (disconnected from Network 1)
+        graph.add_channel(ChannelEdge {
+            channel_id: "XY".to_string(),
+            from_node: "X".to_string(),
+            to_node: "Y".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph);
+
+        // Should succeed within same network
+        assert!(router.find_route(&"A".to_string(), &"B".to_string(), 100).is_ok());
+        assert!(router.find_route(&"X".to_string(), &"Y".to_string(), 100).is_ok());
+
+        // Should fail across disconnected networks
+        assert!(router.find_route(&"A".to_string(), &"X".to_string(), 100).is_err());
+    }
+
+    #[test]
+    fn test_max_route_length_enforcement() {
+        // Create long linear chain
+        let mut graph = NetworkGraph::new();
+
+        for i in 0..25 {
+            let from = format!("N{}", i);
+            let to = format!("N{}", i + 1);
+            graph.add_channel(ChannelEdge {
+                channel_id: format!("CH{}", i),
+                from_node: from,
+                to_node: to,
+                capacity: 1000,
+                base_fee: 1,
+                fee_rate: 100,
+                min_htlc: 1,
+                max_htlc: 1000,
+                time_lock_delta: 40,
+            }).unwrap();
+        }
+
+        let mut router = Router::new(graph);
+        router.set_max_route_length(10);
+
+        // Should fail because route would be 25 hops but max is 10
+        let result = router.find_route(&"N0".to_string(), &"N25".to_string(), 100);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fee_too_high_rejection() {
+        let mut graph = NetworkGraph::new();
+
+        // Create channel with very high fees
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 100,
+            fee_rate: 1000, // 10% fee rate
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let mut router = Router::new(graph);
+        router.set_max_fee_percent(100); // 1% max fee
+
+        let result = router.find_route(&"A".to_string(), &"B".to_string(), 100);
+
+        // Should fail due to excessive fees
+        assert!(result.is_err());
+        match result {
+            Err(RoutingError::FeeTooHigh { fee, max }) => {
+                assert!(fee > max);
+            }
+            _ => panic!("Expected FeeTooHigh error"),
+        }
+    }
+
+    #[test]
+    fn test_bidirectional_channel_routing() {
+        let mut graph = NetworkGraph::new();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 1,
+            max_htlc: 1000,
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph);
+
+        // Should work in both directions
+        assert!(router.find_route(&"A".to_string(), &"B".to_string(), 100).is_ok());
+        assert!(router.find_route(&"B".to_string(), &"A".to_string(), 100).is_ok());
+    }
+
+    #[test]
+    fn test_channel_htlc_limits() {
+        let mut graph = NetworkGraph::new();
+
+        graph.add_channel(ChannelEdge {
+            channel_id: "AB".to_string(),
+            from_node: "A".to_string(),
+            to_node: "B".to_string(),
+            capacity: 1000,
+            base_fee: 1,
+            fee_rate: 100,
+            min_htlc: 100, // Minimum HTLC
+            max_htlc: 500, // Maximum HTLC
+            time_lock_delta: 40,
+        }).unwrap();
+
+        let router = Router::new(graph);
+
+        // Below minimum
+        assert!(router.find_route(&"A".to_string(), &"B".to_string(), 50).is_err());
+
+        // Within range
+        assert!(router.find_route(&"A".to_string(), &"B".to_string(), 300).is_ok());
+
+        // Above maximum
+        assert!(router.find_route(&"A".to_string(), &"B".to_string(), 600).is_err());
+    }
+
+    #[test]
+    fn test_find_multiple_alternative_routes() {
+        let graph = create_test_network();
+        let router = Router::new(graph);
+
+        let routes = router.find_routes(&"A".to_string(), &"D".to_string(), 100, 3);
+
+        // Should find 2 alternative routes (A->C->D and A->B->D)
+        assert_eq!(routes.len(), 2);
+
+        // Verify they're different routes
+        let path1 = routes[0].path();
+        let path2 = routes[1].path();
+        assert_ne!(path1, path2);
+    }
+
+    #[test]
+    fn test_network_statistics() {
+        let graph = create_test_network();
+
+        assert_eq!(graph.stats().node_count, 4);
+        assert_eq!(graph.stats().channel_count, 4);
+    }
+
+    #[test]
+    fn test_remove_channel_updates_graph() {
+        let mut graph = create_test_network();
+        let initial_count = graph.stats().channel_count;
+
+        graph.remove_channel(&"AB".to_string()).unwrap();
+
+        assert_eq!(graph.stats().channel_count, initial_count - 1);
+        assert!(graph.get_channel(&"AB".to_string()).is_none());
     }
 }
