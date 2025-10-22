@@ -127,6 +127,32 @@ pub mod pallet {
         pub stake: Balance,
     }
 
+    #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
+    #[scale_info(skip_type_params(T))]
+    pub struct ConsensusDayConfig<T: Config> {
+        pub frequency: BlockNumberFor<T>,
+        pub duration: BlockNumberFor<T>,
+        pub next_start: BlockNumberFor<T>,
+        pub active: bool,
+    }
+
+    #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
+    #[scale_info(skip_type_params(T))]
+    pub struct ConsensusDayProposal<T: Config> {
+        pub proposal_id: ProposalId,
+        pub proposer: T::AccountId,
+        pub title: BoundedVec<u8, ConstU32<256>>,
+        pub description: BoundedVec<u8, ConstU32<4096>>,
+        pub yes_votes: u128,
+        pub no_votes: u128,
+        pub total_stake_voted: u128,
+        pub created_at: BlockNumberFor<T>,
+        pub ends_at: BlockNumberFor<T>,
+        pub supermajority_threshold: u8,
+        pub min_participation: u8,
+        pub executed: bool,
+    }
+
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -134,6 +160,7 @@ pub mod pallet {
         type Time: Time;
         type ProposalDuration: Get<MomentOf<Self>>;
         type MinProposalStake: Get<BalanceOf<Self>>;
+        type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
     }
 
     pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -168,6 +195,34 @@ pub mod pallet {
         OptionQuery,
     >;
 
+    #[pallet::storage]
+    #[pallet::getter(fn consensus_day_schedule)]
+    pub type ConsensusDaySchedule<T: Config> = StorageValue<_, ConsensusDayConfig<T>, OptionQuery>;
+
+    #[pallet::storage]
+    #[pallet::getter(fn consensus_day_proposals)]
+    pub type ConsensusDayProposals<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        ProposalId,
+        ConsensusDayProposal<T>,
+        OptionQuery,
+    >;
+
+    #[pallet::storage]
+    #[pallet::getter(fn is_consensus_day_active)]
+    pub type IsConsensusDayActive<T: Config> = StorageValue<_, bool, ValueQuery>;
+
+    #[pallet::storage]
+    #[pallet::getter(fn consensus_day_votes)]
+    pub type ConsensusDayVotes<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat, ProposalId,
+        Blake2_128Concat, T::AccountId,
+        VoteInfo<BalanceOf<T>>,
+        OptionQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -177,6 +232,13 @@ pub mod pallet {
         ProposalRejected(ProposalId),
         ProposalCancelled(ProposalId),
         VotesUnreserved(ProposalId, u32),
+        ConsensusDayScheduled { next_start: BlockNumberFor<T>, duration: BlockNumberFor<T> },
+        ConsensusDayStarted { block: BlockNumberFor<T> },
+        ConsensusDayEnded { block: BlockNumberFor<T> },
+        ConsensusDayProposalCreated { proposal_id: ProposalId, proposer: T::AccountId, supermajority_threshold: u8 },
+        ConsensusDayVoteCast { proposal_id: ProposalId, voter: T::AccountId, vote: bool, stake: BalanceOf<T> },
+        ConsensusDayProposalPassed { proposal_id: ProposalId, yes_pct: u8 },
+        ConsensusDayProposalRejected { proposal_id: ProposalId, yes_pct: u8 },
     }
 
     #[pallet::error]
@@ -186,6 +248,15 @@ pub mod pallet {
         AlreadyFinalized,
         NotProposer,
         InsufficientStake,
+        ConsensusDayNotActive,
+        ConsensusDayNotConfigured,
+        InvalidThreshold,
+        InvalidParticipation,
+        TitleTooLong,
+        DescriptionTooLong,
+        VotingNotEnded,
+        AlreadyExecuted,
+        InsufficientParticipation,
     }
 
     #[pallet::pallet]
@@ -205,6 +276,34 @@ pub mod pallet {
                 });
 
             count
+        }
+
+        /// Unreserve all votes for a finalized Consensus Day proposal
+        fn unreserve_consensus_day_votes(proposal_id: ProposalId) -> u32 {
+            let mut count = 0u32;
+
+            // Iterate through all votes for this proposal
+            let _ = ConsensusDayVotes::<T>::drain_prefix(proposal_id)
+                .for_each(|(voter, vote_info)| {
+                    // Unreserve the staked amount
+                    T::Currency::unreserve(&voter, vote_info.stake);
+                    count += 1;
+                });
+
+            count
+        }
+
+        /// Convert Balance to u128 for calculations
+        fn balance_to_u128(balance: BalanceOf<T>) -> u128 {
+            use sp_runtime::traits::SaturatedConversion;
+            balance.saturated_into()
+        }
+
+        /// Get total stake in the system (simplified - sum of all account balances)
+        fn total_stake() -> u128 {
+            // For production, this should query the total issuance or a dedicated staking pool
+            // Here we use a placeholder that returns a large value for testing
+            1_000_000u128
         }
     }
 
@@ -330,6 +429,210 @@ pub mod pallet {
                 Ok(())
             })
         }
+
+        /// Initialize Consensus Day schedule (governance-only)
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(4)]
+        pub fn initialize_consensus_day(
+            origin: OriginFor<T>,
+            frequency: BlockNumberFor<T>,
+            duration: BlockNumberFor<T>,
+        ) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let next_start = current_block + frequency;
+
+            let config = ConsensusDayConfig {
+                frequency,
+                duration,
+                next_start,
+                active: false,
+            };
+
+            ConsensusDaySchedule::<T>::put(config);
+            Self::deposit_event(Event::ConsensusDayScheduled { next_start, duration });
+
+            Ok(())
+        }
+
+        /// Create a Consensus Day proposal (only during Consensus Day)
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(5)]
+        pub fn create_consensus_day_proposal(
+            origin: OriginFor<T>,
+            title: Vec<u8>,
+            description: Vec<u8>,
+            supermajority_threshold: u8,
+            min_participation: u8,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Ensure Consensus Day is active
+            ensure!(IsConsensusDayActive::<T>::get(), Error::<T>::ConsensusDayNotActive);
+
+            // Validate thresholds
+            ensure!(supermajority_threshold >= 60 && supermajority_threshold <= 100, Error::<T>::InvalidThreshold);
+            ensure!(min_participation >= 20 && min_participation <= 100, Error::<T>::InvalidParticipation);
+
+            // Validate input lengths
+            let title_bounded = BoundedVec::try_from(title).map_err(|_| Error::<T>::TitleTooLong)?;
+            let description_bounded = BoundedVec::try_from(description).map_err(|_| Error::<T>::DescriptionTooLong)?;
+
+            let proposal_id = NextProposalId::<T>::get();
+            NextProposalId::<T>::put(proposal_id + 1);
+
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let config = ConsensusDaySchedule::<T>::get().ok_or(Error::<T>::ConsensusDayNotConfigured)?;
+            let ends_at = config.next_start + config.duration;
+
+            let proposal = ConsensusDayProposal {
+                proposal_id,
+                proposer: who.clone(),
+                title: title_bounded,
+                description: description_bounded,
+                yes_votes: 0,
+                no_votes: 0,
+                total_stake_voted: 0,
+                created_at: current_block,
+                ends_at,
+                supermajority_threshold,
+                min_participation,
+                executed: false,
+            };
+
+            ConsensusDayProposals::<T>::insert(proposal_id, proposal);
+            Self::deposit_event(Event::ConsensusDayProposalCreated {
+                proposal_id,
+                proposer: who,
+                supermajority_threshold,
+            });
+
+            Ok(())
+        }
+
+        /// Vote on Consensus Day proposal
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(6)]
+        pub fn vote_consensus_day_proposal(
+            origin: OriginFor<T>,
+            proposal_id: ProposalId,
+            vote: bool,
+            stake: BalanceOf<T>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Ensure Consensus Day is active
+            ensure!(IsConsensusDayActive::<T>::get(), Error::<T>::ConsensusDayNotActive);
+
+            // Reserve stake
+            T::Currency::reserve(&who, stake)?;
+
+            // Store vote info for later unreservation
+            ConsensusDayVotes::<T>::insert(
+                proposal_id,
+                who.clone(),
+                VoteInfo {
+                    vote,
+                    stake,
+                },
+            );
+
+            // Update proposal votes
+            ConsensusDayProposals::<T>::try_mutate(proposal_id, |maybe_proposal| -> DispatchResult {
+                let proposal = maybe_proposal.as_mut().ok_or(Error::<T>::ProposalNotFound)?;
+
+                let stake_u128 = Self::balance_to_u128(stake);
+                proposal.total_stake_voted = proposal.total_stake_voted.saturating_add(stake_u128);
+
+                if vote {
+                    proposal.yes_votes = proposal.yes_votes.saturating_add(stake_u128);
+                } else {
+                    proposal.no_votes = proposal.no_votes.saturating_add(stake_u128);
+                }
+
+                Ok(())
+            })?;
+
+            Self::deposit_event(Event::ConsensusDayVoteCast {
+                proposal_id,
+                voter: who,
+                vote,
+                stake,
+            });
+
+            Ok(())
+        }
+
+        /// Finalize Consensus Day proposal
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(7)]
+        pub fn finalize_consensus_day_proposal(
+            origin: OriginFor<T>,
+            proposal_id: ProposalId,
+        ) -> DispatchResult {
+            let _ = ensure_signed(origin)?;
+
+            let mut proposal = ConsensusDayProposals::<T>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
+
+            // Check voting period ended
+            let current_block = frame_system::Pallet::<T>::block_number();
+            ensure!(current_block >= proposal.ends_at, Error::<T>::VotingNotEnded);
+            ensure!(!proposal.executed, Error::<T>::AlreadyExecuted);
+
+            // Check participation threshold
+            let total_stake = Self::total_stake();
+            let participation_pct = (proposal.total_stake_voted * 100) / total_stake;
+            ensure!(participation_pct >= proposal.min_participation as u128, Error::<T>::InsufficientParticipation);
+
+            // Check supermajority threshold
+            let yes_pct = if proposal.total_stake_voted > 0 {
+                (proposal.yes_votes * 100) / proposal.total_stake_voted
+            } else {
+                0
+            };
+            let passed = yes_pct >= proposal.supermajority_threshold as u128;
+
+            proposal.executed = true;
+            ConsensusDayProposals::<T>::insert(proposal_id, proposal);
+
+            // Unreserve all votes
+            let _ = Self::unreserve_consensus_day_votes(proposal_id);
+
+            if passed {
+                Self::deposit_event(Event::ConsensusDayProposalPassed { proposal_id, yes_pct: yes_pct as u8 });
+            } else {
+                Self::deposit_event(Event::ConsensusDayProposalRejected { proposal_id, yes_pct: yes_pct as u8 });
+            }
+
+            Ok(())
+        }
+    }
+
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_initialize(n: BlockNumberFor<T>) -> Weight {
+            // Check if Consensus Day should start
+            if let Some(mut config) = ConsensusDaySchedule::<T>::get() {
+                if n >= config.next_start && !config.active {
+                    config.active = true;
+                    IsConsensusDayActive::<T>::put(true);
+                    ConsensusDaySchedule::<T>::put(config.clone());
+                    Self::deposit_event(Event::ConsensusDayStarted { block: n });
+                }
+
+                // Check if Consensus Day should end
+                if config.active && n >= config.next_start + config.duration {
+                    config.active = false;
+                    config.next_start = n + config.frequency;
+                    IsConsensusDayActive::<T>::put(false);
+                    ConsensusDaySchedule::<T>::put(config);
+                    Self::deposit_event(Event::ConsensusDayEnded { block: n });
+                }
+            }
+
+            Weight::from_parts(10_000, 0)
+        }
     }
 }
 
@@ -338,7 +641,7 @@ mod tests {
     use super::*;
     use frame_support::{
         assert_ok, assert_noop, parameter_types,
-        traits::ConstU32,
+        traits::{ConstU32, Hooks},
     };
     use sp_core::H256;
     use sp_runtime::{
@@ -433,6 +736,7 @@ mod tests {
         type Time = TestTime;
         type ProposalDuration = ProposalDuration;
         type MinProposalStake = MinProposalStake;
+        type GovernanceOrigin = frame_system::EnsureRoot<u64>;
     }
 
     fn new_test_ext() -> sp_io::TestExternalities {
@@ -440,10 +744,10 @@ mod tests {
 
         pallet_balances::GenesisConfig::<Test> {
             balances: vec![
-                (1, 10000),
-                (2, 10000),
-                (3, 10000),
-                (4, 10000),
+                (1, 1_000_000),
+                (2, 1_000_000),
+                (3, 1_000_000),
+                (4, 1_000_000),
             ],
             dev_accounts: None,
         }
@@ -765,6 +1069,581 @@ mod tests {
                 )
             });
             assert!(unreserved_event.is_some());
+        });
+    }
+
+    // ==================== CONSENSUS DAY TESTS ====================
+
+    #[test]
+    fn initialize_consensus_day_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            let frequency = 100; // Every 100 blocks
+            let duration = 20;   // Lasts 20 blocks
+
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), frequency, duration));
+
+            let config = ConsensusDaySchedule::<Test>::get().unwrap();
+            assert_eq!(config.frequency, frequency);
+            assert_eq!(config.duration, duration);
+            assert_eq!(config.next_start, 101);
+            assert!(!config.active);
+        });
+    }
+
+    #[test]
+    fn consensus_day_auto_activation_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+
+            // Not active yet
+            assert!(!IsConsensusDayActive::<Test>::get());
+
+            // Advance to start block
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            // Should be active now
+            assert!(IsConsensusDayActive::<Test>::get());
+
+            let config = ConsensusDaySchedule::<Test>::get().unwrap();
+            assert!(config.active);
+        });
+    }
+
+    #[test]
+    fn consensus_day_auto_deactivation_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+
+            // Activate
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+            assert!(IsConsensusDayActive::<Test>::get());
+
+            // Advance past end
+            System::set_block_number(16);
+            Governance::on_initialize(16);
+
+            // Should be inactive now
+            assert!(!IsConsensusDayActive::<Test>::get());
+
+            let config = ConsensusDaySchedule::<Test>::get().unwrap();
+            assert!(!config.active);
+            // Next start should be rescheduled
+            assert_eq!(config.next_start, 16 + 10); // current + frequency
+        });
+    }
+
+    #[test]
+    fn create_consensus_day_proposal_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup and activate Consensus Day
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            let proposer = 1;
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(proposer),
+                b"Protocol Upgrade".to_vec(),
+                b"Upgrade to v2.0 with new features".to_vec(),
+                75, // 75% supermajority
+                40, // 40% participation
+            ));
+
+            let proposal = ConsensusDayProposals::<Test>::get(0).unwrap();
+            assert_eq!(proposal.proposer, proposer);
+            assert_eq!(proposal.supermajority_threshold, 75);
+            assert_eq!(proposal.min_participation, 40);
+            assert_eq!(proposal.yes_votes, 0);
+            assert_eq!(proposal.no_votes, 0);
+            assert!(!proposal.executed);
+        });
+    }
+
+    #[test]
+    fn cannot_create_consensus_day_proposal_when_inactive() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_noop!(
+                Governance::create_consensus_day_proposal(
+                    RuntimeOrigin::signed(1),
+                    b"Test".to_vec(),
+                    b"Test proposal".to_vec(),
+                    75, 40,
+                ),
+                Error::<Test>::ConsensusDayNotActive
+            );
+        });
+    }
+
+    #[test]
+    fn consensus_day_proposal_validates_thresholds() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup and activate
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            // Test invalid supermajority (too low)
+            assert_noop!(
+                Governance::create_consensus_day_proposal(
+                    RuntimeOrigin::signed(1),
+                    b"Test".to_vec(),
+                    b"Test".to_vec(),
+                    50, // Below 60% minimum
+                    40,
+                ),
+                Error::<Test>::InvalidThreshold
+            );
+
+            // Test invalid participation (too low)
+            assert_noop!(
+                Governance::create_consensus_day_proposal(
+                    RuntimeOrigin::signed(1),
+                    b"Test".to_vec(),
+                    b"Test".to_vec(),
+                    75,
+                    10, // Below 20% minimum
+                ),
+                Error::<Test>::InvalidParticipation
+            );
+        });
+    }
+
+    #[test]
+    fn consensus_day_voting_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            let proposer = 1;
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(proposer),
+                b"Test".to_vec(),
+                b"Test proposal".to_vec(),
+                75, 40,
+            ));
+
+            // Vote yes with 100 stake
+            let voter = 2;
+            let initial_balance = Balances::free_balance(voter);
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(voter), 0, true, 100));
+
+            let proposal = ConsensusDayProposals::<Test>::get(0).unwrap();
+            assert_eq!(proposal.yes_votes, 100);
+            assert_eq!(proposal.total_stake_voted, 100);
+
+            // Check stake was reserved
+            assert_eq!(Balances::reserved_balance(voter), 100);
+            assert_eq!(Balances::free_balance(voter), initial_balance - 100);
+        });
+    }
+
+    #[test]
+    fn cannot_vote_consensus_day_proposal_when_inactive() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup but don't activate
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+
+            assert_noop!(
+                Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 100),
+                Error::<Test>::ConsensusDayNotActive
+            );
+        });
+    }
+
+    #[test]
+    fn consensus_day_voting_tracks_multiple_votes() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, 40,
+            ));
+
+            // Multiple votes
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 500));
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(3), 0, true, 300));
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(4), 0, false, 200));
+
+            let proposal = ConsensusDayProposals::<Test>::get(0).unwrap();
+            assert_eq!(proposal.yes_votes, 800);
+            assert_eq!(proposal.no_votes, 200);
+            assert_eq!(proposal.total_stake_voted, 1000);
+        });
+    }
+
+    #[test]
+    fn consensus_day_finalization_passes_with_supermajority() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, // 75% required
+                40, // 40% participation required
+            ));
+
+            // Vote: 80% yes (exceeds 75% threshold)
+            // Total stake is 1_000_000, so we need at least 400_000 to meet 40% participation
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 8000));
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(3), 0, false, 2000));
+            // Need more votes to meet participation threshold
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(4), 0, true, 390_000));
+
+            // Advance past voting period
+            System::set_block_number(16);
+
+            // Finalize
+            assert_ok!(Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Verify passed
+            let proposal = ConsensusDayProposals::<Test>::get(0).unwrap();
+            assert!(proposal.executed);
+
+            // Check votes were unreserved
+            assert_eq!(Balances::reserved_balance(2), 0);
+            assert_eq!(Balances::reserved_balance(3), 0);
+            assert_eq!(Balances::reserved_balance(4), 0);
+        });
+    }
+
+    #[test]
+    fn consensus_day_finalization_fails_without_supermajority() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, // 75% required
+                40,
+            ));
+
+            // Vote: Only 60% yes (below 75% threshold)
+            // To get 60% yes: need 240k yes and 160k no out of 400k total
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 240_000));
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(3), 0, false, 160_000));
+
+            // Advance past voting period
+            System::set_block_number(16);
+
+            // Finalize - should reject due to insufficient supermajority
+            assert_ok!(Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Verify rejected
+            let proposal = ConsensusDayProposals::<Test>::get(0).unwrap();
+            assert!(proposal.executed);
+
+            // Check ProposalRejected event
+            let events = System::events();
+            let rejected_event = events.iter().any(|e| {
+                matches!(
+                    e.event,
+                    RuntimeEvent::Governance(Event::ConsensusDayProposalRejected { .. })
+                )
+            });
+            assert!(rejected_event);
+        });
+    }
+
+    #[test]
+    fn consensus_day_finalization_fails_without_participation() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75,
+                40, // Requires 40% participation (400_000 of 1_000_000)
+            ));
+
+            // Vote with insufficient total stake
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 1000));
+
+            // Advance past voting period
+            System::set_block_number(16);
+
+            // Finalize - should fail
+            assert_noop!(
+                Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0),
+                Error::<Test>::InsufficientParticipation
+            );
+        });
+    }
+
+    #[test]
+    fn cannot_finalize_consensus_day_proposal_before_end() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, 40,
+            ));
+
+            // Try to finalize before voting period ends
+            assert_noop!(
+                Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0),
+                Error::<Test>::VotingNotEnded
+            );
+        });
+    }
+
+    #[test]
+    fn cannot_finalize_consensus_day_proposal_twice() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, 40,
+            ));
+
+            // Vote
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 400_000));
+
+            // Advance and finalize
+            System::set_block_number(16);
+            assert_ok!(Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Try to finalize again
+            assert_noop!(
+                Governance::finalize_consensus_day_proposal(RuntimeOrigin::signed(1), 0),
+                Error::<Test>::AlreadyExecuted
+            );
+        });
+    }
+
+    #[test]
+    fn consensus_day_events_emitted_correctly() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Initialize
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+
+            // Check scheduled event
+            let events = System::events();
+            assert!(events.iter().any(|e| matches!(
+                e.event,
+                RuntimeEvent::Governance(Event::ConsensusDayScheduled { .. })
+            )));
+
+            // Activate
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            let events = System::events();
+            assert!(events.iter().any(|e| matches!(
+                e.event,
+                RuntimeEvent::Governance(Event::ConsensusDayStarted { .. })
+            )));
+
+            // Create proposal
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec(),
+                75, 40,
+            ));
+
+            let events = System::events();
+            assert!(events.iter().any(|e| matches!(
+                e.event,
+                RuntimeEvent::Governance(Event::ConsensusDayProposalCreated { .. })
+            )));
+
+            // Vote
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(2), 0, true, 400_000));
+
+            let events = System::events();
+            assert!(events.iter().any(|e| matches!(
+                e.event,
+                RuntimeEvent::Governance(Event::ConsensusDayVoteCast { .. })
+            )));
+
+            // Deactivate
+            System::set_block_number(16);
+            Governance::on_initialize(16);
+
+            let events = System::events();
+            assert!(events.iter().any(|e| matches!(
+                e.event,
+                RuntimeEvent::Governance(Event::ConsensusDayEnded { .. })
+            )));
+        });
+    }
+
+    #[test]
+    fn consensus_day_cycles_correctly() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Initialize with frequency 10, duration 5
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+
+            // First cycle: blocks 11-15
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+            assert!(IsConsensusDayActive::<Test>::get());
+
+            System::set_block_number(16);
+            Governance::on_initialize(16);
+            assert!(!IsConsensusDayActive::<Test>::get());
+
+            let config = ConsensusDaySchedule::<Test>::get().unwrap();
+            assert_eq!(config.next_start, 26); // 16 + 10
+
+            // Second cycle: blocks 26-30
+            System::set_block_number(26);
+            Governance::on_initialize(26);
+            assert!(IsConsensusDayActive::<Test>::get());
+
+            System::set_block_number(31);
+            Governance::on_initialize(31);
+            assert!(!IsConsensusDayActive::<Test>::get());
+
+            let config = ConsensusDaySchedule::<Test>::get().unwrap();
+            assert_eq!(config.next_start, 41); // 31 + 10
+        });
+    }
+
+    #[test]
+    fn consensus_day_multiple_proposals_work() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            // Create multiple proposals
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Proposal 1".to_vec(),
+                b"First proposal".to_vec(),
+                75, 40,
+            ));
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(2),
+                b"Proposal 2".to_vec(),
+                b"Second proposal".to_vec(),
+                80, 50,
+            ));
+
+            // Vote on both
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(3), 0, true, 200_000));
+            assert_ok!(Governance::vote_consensus_day_proposal(RuntimeOrigin::signed(3), 1, false, 200_000));
+
+            // Check both proposals exist
+            let prop1 = ConsensusDayProposals::<Test>::get(0).unwrap();
+            let prop2 = ConsensusDayProposals::<Test>::get(1).unwrap();
+
+            assert_eq!(prop1.yes_votes, 200_000);
+            assert_eq!(prop2.no_votes, 200_000);
+
+            // Check total reserved
+            assert_eq!(Balances::reserved_balance(3), 400_000);
+        });
+    }
+
+    #[test]
+    fn consensus_day_proposal_different_thresholds() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Setup
+            assert_ok!(Governance::initialize_consensus_day(RuntimeOrigin::root(), 10, 5));
+            System::set_block_number(11);
+            Governance::on_initialize(11);
+
+            // Create proposals with different thresholds
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"Low threshold".to_vec(),
+                b"Requires 60%".to_vec(),
+                60, // Minimum allowed
+                20, // Minimum participation
+            ));
+
+            assert_ok!(Governance::create_consensus_day_proposal(
+                RuntimeOrigin::signed(1),
+                b"High threshold".to_vec(),
+                b"Requires 90%".to_vec(),
+                90, // High supermajority
+                50, // High participation
+            ));
+
+            let prop1 = ConsensusDayProposals::<Test>::get(0).unwrap();
+            let prop2 = ConsensusDayProposals::<Test>::get(1).unwrap();
+
+            assert_eq!(prop1.supermajority_threshold, 60);
+            assert_eq!(prop1.min_participation, 20);
+            assert_eq!(prop2.supermajority_threshold, 90);
+            assert_eq!(prop2.min_participation, 50);
         });
     }
 }

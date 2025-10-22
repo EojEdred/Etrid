@@ -7,8 +7,10 @@
 //! - Dispute resolution mechanism
 //! - Settlement finality
 //! - Channel lifecycle management
+//! - Watchtower incentive mechanisms
 
 pub mod routing;
+pub mod watchtower;
 
 use std::collections::HashMap;
 use std::fmt;
@@ -17,6 +19,15 @@ use std::fmt;
 pub use routing::{
     NetworkGraph, Router, Route, RouteHop, ChannelEdge,
     RoutingError, NodeId, ChannelId,
+};
+
+// Re-export watchtower types
+pub use watchtower::{
+    WatchtowerManager, WatchtowerInfo, WatchtowerError,
+    ChannelSubscription, FraudEvidence, FraudReport,
+    FraudResolution, WatchtowerStatistics,
+    MIN_WATCHTOWER_STAKE, WATCHTOWER_BASE_REWARD,
+    FRAUD_REWARD_PERCENTAGE,
 };
 
 /// Channel state
