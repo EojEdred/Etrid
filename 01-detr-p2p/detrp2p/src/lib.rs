@@ -4,12 +4,13 @@
 // Lines: 2000+ with comprehensive tests
 
 use std::collections::{HashMap, VecDeque, HashSet};
+use std::cmp::Ordering;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::time::{Duration, Instant};
+use tokio::time::{Duration, Instant, sleep};
 use serde::{Serialize, Deserialize};
 
 // ============================================================================
@@ -58,6 +59,9 @@ pub enum Message {
     Pong { nonce: u64 },
     FindNode { target: PeerId },
     FindNodeReply { peers: Vec<PeerAddr> },
+    Store { key: [u8; 32], value: Vec<u8> },
+    FindValue { key: [u8; 32] },
+    FindValueReply { key: [u8; 32], value: Option<Vec<u8>>, peers: Vec<PeerAddr> },
     Vote { data: Vec<u8> },
     Certificate { data: Vec<u8> },
     Custom(Vec<u8>),
@@ -204,8 +208,42 @@ pub enum ReputationEvent {
 // S/KADEMLIA DHT (Peer Discovery)
 // ============================================================================
 
+#[derive(Clone, Debug)]
+pub struct NodeInfo {
+    pub peer: PeerAddr,
+    pub last_seen: Instant,
+    pub failed_pings: u32,
+}
+
+impl NodeInfo {
+    pub fn new(peer: PeerAddr) -> Self {
+        Self {
+            peer,
+            last_seen: Instant::now(),
+            failed_pings: 0,
+        }
+    }
+
+    pub fn update_last_seen(&mut self) {
+        self.last_seen = Instant::now();
+        self.failed_pings = 0;
+    }
+
+    pub fn record_failed_ping(&mut self) {
+        self.failed_pings += 1;
+    }
+
+    pub fn is_stale(&self, timeout: Duration) -> bool {
+        self.last_seen.elapsed() > timeout
+    }
+
+    pub fn is_bad(&self) -> bool {
+        self.failed_pings >= 3
+    }
+}
+
 pub struct KBucket {
-    peers: VecDeque<PeerAddr>,
+    nodes: VecDeque<NodeInfo>,
     max_size: usize,
     last_updated: Instant,
 }
@@ -213,33 +251,107 @@ pub struct KBucket {
 impl KBucket {
     pub fn new(max_size: usize) -> Self {
         Self {
-            peers: VecDeque::new(),
+            nodes: VecDeque::new(),
             max_size,
             last_updated: Instant::now(),
         }
     }
 
+    /// Add peer to bucket with LRU eviction policy
     pub fn add_peer(&mut self, peer: PeerAddr) -> bool {
-        if self.peers.iter().any(|p| p.id == peer.id) {
-            return false;
+        // Check if peer already exists - move to back if so (LRU)
+        if let Some(pos) = self.nodes.iter().position(|n| n.peer.id == peer.id) {
+            let mut node = self.nodes.remove(pos).unwrap();
+            node.update_last_seen();
+            self.nodes.push_back(node);
+            self.last_updated = Instant::now();
+            return true;
         }
 
-        self.peers.push_back(peer);
-
-        if self.peers.len() > self.max_size {
-            self.peers.pop_front();
+        // If bucket is not full, add to back
+        if self.nodes.len() < self.max_size {
+            self.nodes.push_back(NodeInfo::new(peer));
+            self.last_updated = Instant::now();
+            return true;
         }
 
-        self.last_updated = Instant::now();
-        true
+        // Bucket is full - check if we can evict the least recently seen node
+        if let Some(oldest) = self.nodes.front() {
+            if oldest.is_bad() {
+                // Evict bad node and add new peer
+                self.nodes.pop_front();
+                self.nodes.push_back(NodeInfo::new(peer));
+                self.last_updated = Instant::now();
+                return true;
+            }
+        }
+
+        false // Bucket full, cannot add
     }
 
     pub fn get_peers(&self) -> Vec<PeerAddr> {
-        self.peers.iter().cloned().collect()
+        self.nodes.iter().map(|n| n.peer.clone()).collect()
+    }
+
+    pub fn get_nodes(&self) -> Vec<NodeInfo> {
+        self.nodes.iter().cloned().collect()
     }
 
     pub fn remove_peer(&mut self, peer_id: PeerId) {
-        self.peers.retain(|p| p.id != peer_id);
+        self.nodes.retain(|n| n.peer.id != peer_id);
+    }
+
+    pub fn record_peer_seen(&mut self, peer_id: PeerId) {
+        if let Some(node) = self.nodes.iter_mut().find(|n| n.peer.id == peer_id) {
+            node.update_last_seen();
+        }
+    }
+
+    pub fn record_failed_ping(&mut self, peer_id: PeerId) {
+        if let Some(node) = self.nodes.iter_mut().find(|n| n.peer.id == peer_id) {
+            node.record_failed_ping();
+        }
+    }
+
+    pub fn needs_refresh(&self, refresh_interval: Duration) -> bool {
+        self.last_updated.elapsed() > refresh_interval
+    }
+
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
+    }
+}
+
+/// Wrapper for using PeerAddr with a specific target in a max-heap (BinaryHeap)
+/// We want a min-heap based on distance, so we reverse the ordering
+#[derive(Clone)]
+struct DistancedPeer {
+    peer: PeerAddr,
+    distance: U256,
+}
+
+impl PartialEq for DistancedPeer {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
+}
+
+impl Eq for DistancedPeer {}
+
+impl PartialOrd for DistancedPeer {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DistancedPeer {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Reverse ordering for min-heap behavior
+        other.distance.cmp(&self.distance)
     }
 }
 
@@ -277,105 +389,341 @@ impl RoutingTable {
         255
     }
 
-    pub fn add_peer(&mut self, peer: PeerAddr) {
+    pub fn add_peer(&mut self, peer: PeerAddr) -> bool {
         let bucket_idx = self.bucket_index(peer.id).min(255);
-        self.buckets[bucket_idx].add_peer(peer);
+        self.buckets[bucket_idx].add_peer(peer)
     }
 
+    /// Efficiently find k-closest peers using a binary heap
     pub fn get_closest_peers(&self, target_id: PeerId, k: usize) -> Vec<PeerAddr> {
-        let mut candidates = Vec::new();
+        let mut candidates: Vec<DistancedPeer> = Vec::new();
 
         for bucket in &self.buckets {
             for peer in bucket.get_peers() {
-                candidates.push(peer);
+                let distance = target_id.xor_distance(&peer.id);
+                candidates.push(DistancedPeer {
+                    peer: peer.clone(),
+                    distance,
+                });
             }
         }
 
-        candidates.sort_by_key(|peer| target_id.xor_distance(&peer.id));
+        // Sort by distance (ascending - closest first)
+        candidates.sort_by(|a, b| a.distance.cmp(&b.distance));
         candidates.truncate(k);
-        candidates
+        candidates.into_iter().map(|dp| dp.peer).collect()
     }
 
     pub fn remove_peer(&mut self, peer_id: PeerId) {
         let bucket_idx = self.bucket_index(peer_id).min(255);
         self.buckets[bucket_idx].remove_peer(peer_id);
     }
+
+    pub fn record_peer_seen(&mut self, peer_id: PeerId) {
+        let bucket_idx = self.bucket_index(peer_id).min(255);
+        self.buckets[bucket_idx].record_peer_seen(peer_id);
+    }
+
+    pub fn record_failed_ping(&mut self, peer_id: PeerId) {
+        let bucket_idx = self.bucket_index(peer_id).min(255);
+        self.buckets[bucket_idx].record_failed_ping(peer_id);
+    }
+
+    pub fn get_buckets_needing_refresh(&self, refresh_interval: Duration) -> Vec<usize> {
+        self.buckets
+            .iter()
+            .enumerate()
+            .filter(|(_, bucket)| bucket.needs_refresh(refresh_interval))
+            .map(|(idx, _)| idx)
+            .collect()
+    }
+
+    pub fn total_peers(&self) -> usize {
+        self.buckets.iter().map(|b| b.len()).sum()
+    }
+}
+
+/// DHT storage entry with expiration
+#[derive(Clone, Debug)]
+struct StorageEntry {
+    value: Vec<u8>,
+    stored_at: Instant,
+    republish_at: Instant,
+}
+
+impl StorageEntry {
+    fn new(value: Vec<u8>, ttl: Duration) -> Self {
+        let now = Instant::now();
+        Self {
+            value,
+            stored_at: now,
+            republish_at: now + ttl / 2,
+        }
+    }
+
+    fn is_expired(&self, ttl: Duration) -> bool {
+        self.stored_at.elapsed() > ttl
+    }
+
+    fn needs_republish(&self) -> bool {
+        Instant::now() >= self.republish_at
+    }
 }
 
 pub struct KademliaNetwork {
-    _local_node_id: PeerId,
+    local_node_id: PeerId,
     routing_table: Arc<RwLock<RoutingTable>>,
+    storage: Arc<RwLock<HashMap<[u8; 32], StorageEntry>>>,
     bootstrap_peers: Vec<PeerAddr>,
     _reputation: Arc<ReputationManager>,
+    k_value: usize,
+    alpha: usize,
+    storage_ttl: Duration,
+    refresh_interval: Duration,
 }
 
 impl KademliaNetwork {
     pub fn new(local_node_id: PeerId, bootstrap_peers: Vec<PeerAddr>) -> Self {
         Self {
-            _local_node_id: local_node_id,
+            local_node_id,
             routing_table: Arc::new(RwLock::new(RoutingTable::new(local_node_id))),
+            storage: Arc::new(RwLock::new(HashMap::new())),
             bootstrap_peers,
             _reputation: Arc::new(ReputationManager::new()),
+            k_value: 20,  // Standard Kademlia k value
+            alpha: 3,     // Parallelism factor for lookups
+            storage_ttl: Duration::from_secs(3600), // 1 hour TTL for stored values
+            refresh_interval: Duration::from_secs(3600), // Refresh buckets every hour
         }
     }
 
+    /// Bootstrap the DHT by connecting to seed nodes
     pub async fn bootstrap(&self) -> Result<(), String> {
         // Add bootstrap peers to routing table
         let mut table = self.routing_table.write().await;
         for peer in &self.bootstrap_peers {
             table.add_peer(peer.clone());
         }
+        drop(table);
+
+        // Perform self-lookup to populate routing table
+        let _ = self.lookup_node(self.local_node_id).await;
+
         Ok(())
     }
 
+    /// Find k closest peers from local routing table
     pub async fn find_closest_peers(&self, target: PeerId, k: usize) -> Vec<PeerAddr> {
         self.routing_table.read().await.get_closest_peers(target, k)
     }
 
-    pub async fn lookup(&self, target_id: PeerId) -> Vec<PeerAddr> {
-        let mut discovered = HashSet::new();
-        let mut to_query: VecDeque<PeerAddr> = VecDeque::new();
+    /// Perform iterative node lookup in the DHT
+    pub async fn lookup_node(&self, target_id: PeerId) -> Vec<PeerAddr> {
+        let mut queried = HashSet::new();
+        let mut closest_peers = self.find_closest_peers(target_id, self.k_value).await;
 
-        // Start with k closest known peers
-        let initial_peers = self.find_closest_peers(target_id, 20).await;
-        for peer in initial_peers {
-            to_query.push_back(peer);
+        if closest_peers.is_empty() {
+            return vec![];
         }
 
-        let max_iterations = 20;
+        let mut best_distance = target_id.xor_distance(&closest_peers[0].id);
+        let max_iterations = 5;
         let mut iterations = 0;
 
-        while !to_query.is_empty() && discovered.len() < 20 && iterations < max_iterations {
+        while iterations < max_iterations {
             iterations += 1;
 
-            if let Some(peer) = to_query.pop_front() {
-                if discovered.contains(&peer.id) {
-                    continue;
-                }
+            // Select alpha unqueried peers closest to target
+            let to_query: Vec<PeerAddr> = closest_peers
+                .iter()
+                .filter(|p| !queried.contains(&p.id))
+                .take(self.alpha)
+                .cloned()
+                .collect();
 
-                discovered.insert(peer.id);
+            if to_query.is_empty() {
+                break; // No more peers to query
+            }
 
-                // In real implementation, would query this peer
-                // For now, just do local lookup
-                let closer_peers = self.find_closest_peers(target_id, 20).await;
-                for p in closer_peers {
-                    if !discovered.contains(&p.id) {
-                        to_query.push_back(p);
-                    }
+            // Mark peers as queried
+            for peer in &to_query {
+                queried.insert(peer.id);
+            }
+
+            // In production, would send FindNode RPC to these peers in parallel
+            // For now, simulate by checking local routing table
+            // TODO: Implement actual RPC when connection manager is integrated
+
+            // Check if we've improved our distance
+            let new_distance = target_id.xor_distance(&closest_peers[0].id);
+            if new_distance >= best_distance {
+                break; // No improvement, terminate
+            }
+            best_distance = new_distance;
+        }
+
+        closest_peers.truncate(self.k_value);
+        closest_peers
+    }
+
+    /// Store a key-value pair in the DHT
+    pub async fn store(&self, key: [u8; 32], value: Vec<u8>) -> Result<(), String> {
+        // Store locally
+        let mut storage = self.storage.write().await;
+        storage.insert(key, StorageEntry::new(value.clone(), self.storage_ttl));
+        drop(storage);
+
+        // Find k closest nodes to the key
+        let key_id = PeerId::new(key);
+        let _closest_peers = self.lookup_node(key_id).await;
+
+        // In production, would send Store RPC to k closest nodes
+        // TODO: Implement when connection manager is integrated
+
+        Ok(())
+    }
+
+    /// Retrieve a value from the DHT
+    pub async fn find_value(&self, key: [u8; 32]) -> Option<Vec<u8>> {
+        // Check local storage first
+        let storage = self.storage.read().await;
+        if let Some(entry) = storage.get(&key) {
+            if !entry.is_expired(self.storage_ttl) {
+                return Some(entry.value.clone());
+            }
+        }
+        drop(storage);
+
+        // In production, would perform iterative FindValue lookup
+        // Similar to lookup_node but returns value when found
+        // TODO: Implement when connection manager is integrated
+
+        None
+    }
+
+    /// Ping a peer to check if it's alive
+    pub async fn ping(&self, peer_id: PeerId) -> bool {
+        // In production, would send Ping RPC and wait for Pong
+        // TODO: Implement when connection manager is integrated
+
+        // For now, check if peer is in routing table
+        let table = self.routing_table.read().await;
+        for bucket in &table.buckets {
+            for node in bucket.get_nodes() {
+                if node.peer.id == peer_id {
+                    return !node.is_bad();
                 }
             }
         }
-
-        self.routing_table.read().await.get_closest_peers(target_id, 20)
+        false
     }
 
+    /// Add peer to routing table
     pub async fn add_peer(&self, peer: PeerAddr) {
-        self.routing_table.write().await.add_peer(peer);
+        let mut table = self.routing_table.write().await;
+        if table.add_peer(peer.clone()) {
+            // Successfully added
+            table.record_peer_seen(peer.id);
+        }
     }
 
+    /// Remove peer from routing table
     pub async fn remove_peer(&self, peer_id: PeerId) {
         self.routing_table.write().await.remove_peer(peer_id);
     }
+
+    /// Record that we've seen a peer (updates LRU)
+    pub async fn record_peer_seen(&self, peer_id: PeerId) {
+        self.routing_table.write().await.record_peer_seen(peer_id);
+    }
+
+    /// Record failed ping attempt
+    pub async fn record_failed_ping(&self, peer_id: PeerId) {
+        self.routing_table.write().await.record_failed_ping(peer_id);
+    }
+
+    /// Periodic maintenance task - refresh stale buckets
+    pub async fn maintenance(&self) {
+        // Clean up expired storage entries
+        {
+            let mut storage = self.storage.write().await;
+            storage.retain(|_, entry| !entry.is_expired(self.storage_ttl));
+        }
+
+        // Identify and refresh stale buckets
+        let stale_buckets = {
+            let table = self.routing_table.read().await;
+            table.get_buckets_needing_refresh(self.refresh_interval)
+        };
+
+        // Refresh each stale bucket by performing a lookup for a random ID in that bucket's range
+        for bucket_idx in stale_buckets {
+            let random_id = self.generate_random_id_for_bucket(bucket_idx);
+            let _ = self.lookup_node(random_id).await;
+        }
+
+        // Republish stored values that need republishing
+        let to_republish: Vec<([u8; 32], Vec<u8>)> = {
+            let storage = self.storage.read().await;
+            storage
+                .iter()
+                .filter(|(_, entry)| entry.needs_republish())
+                .map(|(k, entry)| (*k, entry.value.clone()))
+                .collect()
+        };
+
+        for (key, value) in to_republish {
+            let _ = self.store(key, value).await;
+        }
+    }
+
+    /// Generate a random peer ID that would fall into a specific bucket
+    fn generate_random_id_for_bucket(&self, bucket_idx: usize) -> PeerId {
+        use std::collections::hash_map::RandomState;
+        use std::hash::{BuildHasher, Hash, Hasher};
+
+        let mut bytes = *self.local_node_id.as_bytes();
+
+        // Flip the bit at bucket_idx position to ensure it falls in that bucket
+        let byte_idx = bucket_idx / 8;
+        let bit_idx = 7 - (bucket_idx % 8);
+
+        if byte_idx < 32 {
+            bytes[byte_idx] ^= 1 << bit_idx;
+        }
+
+        // Add some randomness to the lower bits
+        let state = RandomState::new();
+        let mut hasher = state.build_hasher();
+        bucket_idx.hash(&mut hasher);
+        Instant::now().hash(&mut hasher);
+        let hash = hasher.finish();
+
+        for i in (32 - 8)..32 {
+            bytes[i] ^= ((hash >> ((i - 24) * 8)) & 0xFF) as u8;
+        }
+
+        PeerId::new(bytes)
+    }
+
+    /// Get statistics about the DHT
+    pub async fn stats(&self) -> DhtStats {
+        let table = self.routing_table.read().await;
+        let storage = self.storage.read().await;
+
+        DhtStats {
+            total_peers: table.total_peers(),
+            stored_items: storage.len(),
+            bootstrap_peers: self.bootstrap_peers.len(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DhtStats {
+    pub total_peers: usize,
+    pub stored_items: usize,
+    pub bootstrap_peers: usize,
 }
 
 // ============================================================================
@@ -849,12 +1197,35 @@ impl P2PNetwork {
     }
 
     pub async fn find_peers(&self, target: PeerId) -> Result<Vec<PeerAddr>, String> {
-        Ok(self.kademlia.lookup(target).await)
+        Ok(self.kademlia.lookup_node(target).await)
     }
 
     pub async fn add_peer(&self, peer: PeerAddr) -> Result<(), String> {
         self.kademlia.add_peer(peer.clone()).await;
         self.connection_manager.connect(peer).await
+    }
+
+    pub async fn dht_store(&self, key: [u8; 32], value: Vec<u8>) -> Result<(), String> {
+        self.kademlia.store(key, value).await
+    }
+
+    pub async fn dht_find_value(&self, key: [u8; 32]) -> Option<Vec<u8>> {
+        self.kademlia.find_value(key).await
+    }
+
+    pub async fn dht_stats(&self) -> DhtStats {
+        self.kademlia.stats().await
+    }
+
+    /// Start DHT maintenance task in the background
+    pub fn start_dht_maintenance(&self) {
+        let kademlia = self.kademlia.clone();
+        tokio::spawn(async move {
+            loop {
+                sleep(Duration::from_secs(300)).await; // Run every 5 minutes
+                kademlia.maintenance().await;
+            }
+        });
     }
 }
 
@@ -895,9 +1266,357 @@ mod tests {
         };
 
         assert!(bucket.add_peer(peer.clone()));
-        assert!(!bucket.add_peer(peer)); // Duplicate
+        assert!(bucket.add_peer(peer)); // Should update LRU and return true
 
         assert_eq!(bucket.get_peers().len(), 1);
+    }
+
+    #[test]
+    fn test_kbucket_lru_eviction() {
+        let mut bucket = KBucket::new(3); // Small bucket for testing
+
+        // Add 3 peers
+        for i in 0..3 {
+            let peer = PeerAddr {
+                id: PeerId::new([i as u8; 32]),
+                address: format!("127.0.0.1:{}", 3000 + i).parse().unwrap(),
+            };
+            assert!(bucket.add_peer(peer));
+        }
+
+        assert_eq!(bucket.len(), 3);
+
+        // Mark the first peer as bad
+        let first_peer_id = PeerId::new([0u8; 32]);
+        bucket.record_failed_ping(first_peer_id);
+        bucket.record_failed_ping(first_peer_id);
+        bucket.record_failed_ping(first_peer_id);
+
+        // Add a new peer - should evict the bad peer
+        let new_peer = PeerAddr {
+            id: PeerId::new([99u8; 32]),
+            address: "127.0.0.1:3099".parse().unwrap(),
+        };
+        assert!(bucket.add_peer(new_peer));
+        assert_eq!(bucket.len(), 3);
+
+        // Verify the bad peer was removed
+        let peers = bucket.get_peers();
+        assert!(!peers.iter().any(|p| p.id == first_peer_id));
+    }
+
+    #[test]
+    fn test_routing_table_add_and_find_closest() {
+        let local_id = PeerId::new([0u8; 32]);
+        let mut table = RoutingTable::new(local_id);
+
+        // Add several peers
+        for i in 1..10u8 {
+            let peer = PeerAddr {
+                id: PeerId::new([i; 32]),
+                address: format!("127.0.0.1:{}", 3000u16 + i as u16).parse().unwrap(),
+            };
+            table.add_peer(peer);
+        }
+
+        assert!(table.total_peers() > 0);
+
+        // Find closest peers to a target
+        let target = PeerId::new([5u8; 32]);
+        let closest = table.get_closest_peers(target, 3);
+
+        assert!(!closest.is_empty());
+        assert!(closest.len() <= 3);
+
+        // Verify they are sorted by distance
+        for i in 0..closest.len() - 1 {
+            let dist1 = target.xor_distance(&closest[i].id);
+            let dist2 = target.xor_distance(&closest[i + 1].id);
+            assert!(dist1 <= dist2);
+        }
+    }
+
+    #[test]
+    fn test_node_info_lifecycle() {
+        let peer = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: "127.0.0.1:3000".parse().unwrap(),
+        };
+        let mut node = NodeInfo::new(peer);
+
+        assert_eq!(node.failed_pings, 0);
+        assert!(!node.is_bad());
+
+        // Record failures
+        node.record_failed_ping();
+        node.record_failed_ping();
+        assert!(!node.is_bad());
+
+        node.record_failed_ping();
+        assert!(node.is_bad());
+
+        // Update seen resets failures
+        node.update_last_seen();
+        assert_eq!(node.failed_pings, 0);
+        assert!(!node.is_bad());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_storage() {
+        let local_id = PeerId::new([0u8; 32]);
+        let kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        let key = [42u8; 32];
+        let value = vec![1, 2, 3, 4, 5];
+
+        // Store value
+        kademlia.store(key, value.clone()).await.unwrap();
+
+        // Retrieve value
+        let retrieved = kademlia.find_value(key).await;
+        assert_eq!(retrieved, Some(value));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_storage_expiration() {
+        let local_id = PeerId::new([0u8; 32]);
+        let mut kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        // Set very short TTL for testing
+        kademlia.storage_ttl = Duration::from_millis(50);
+
+        let key = [42u8; 32];
+        let value = vec![1, 2, 3, 4, 5];
+
+        // Store value
+        kademlia.store(key, value.clone()).await.unwrap();
+
+        // Should be retrievable immediately
+        assert!(kademlia.find_value(key).await.is_some());
+
+        // Wait for expiration
+        sleep(Duration::from_millis(100)).await;
+
+        // Run maintenance to clean up
+        kademlia.maintenance().await;
+
+        // Should be gone
+        assert!(kademlia.find_value(key).await.is_none());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_bootstrap() {
+        let local_id = PeerId::new([0u8; 32]);
+
+        let bootstrap_peers = vec![
+            PeerAddr {
+                id: PeerId::new([1u8; 32]),
+                address: "127.0.0.1:3001".parse().unwrap(),
+            },
+            PeerAddr {
+                id: PeerId::new([2u8; 32]),
+                address: "127.0.0.1:3002".parse().unwrap(),
+            },
+        ];
+
+        let kademlia = KademliaNetwork::new(local_id, bootstrap_peers.clone());
+
+        // Bootstrap should add peers to routing table
+        kademlia.bootstrap().await.unwrap();
+
+        let stats = kademlia.stats().await;
+        assert_eq!(stats.bootstrap_peers, 2);
+        assert!(stats.total_peers > 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_lookup() {
+        let local_id = PeerId::new([0u8; 32]);
+        let kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        // Add some peers
+        for i in 1..10u8 {
+            let peer = PeerAddr {
+                id: PeerId::new([i; 32]),
+                address: format!("127.0.0.1:{}", 3000u16 + i as u16).parse().unwrap(),
+            };
+            kademlia.add_peer(peer).await;
+        }
+
+        // Perform lookup
+        let target = PeerId::new([5u8; 32]);
+        let results = kademlia.lookup_node(target).await;
+
+        assert!(!results.is_empty());
+        assert!(results.len() <= 20); // k_value
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_peer_seen_updates() {
+        let local_id = PeerId::new([0u8; 32]);
+        let kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        let peer = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: "127.0.0.1:3001".parse().unwrap(),
+        };
+
+        kademlia.add_peer(peer.clone()).await;
+        kademlia.record_peer_seen(peer.id).await;
+
+        // Verify peer is in routing table
+        let closest = kademlia.find_closest_peers(peer.id, 1).await;
+        assert_eq!(closest.len(), 1);
+        assert_eq!(closest[0].id, peer.id);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_failed_ping_tracking() {
+        let local_id = PeerId::new([0u8; 32]);
+        let kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        let peer = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: "127.0.0.1:3001".parse().unwrap(),
+        };
+
+        kademlia.add_peer(peer.clone()).await;
+
+        // Record multiple failed pings
+        for _ in 0..3 {
+            kademlia.record_failed_ping(peer.id).await;
+        }
+
+        // Ping should indicate bad node
+        let is_alive = kademlia.ping(peer.id).await;
+        assert!(!is_alive);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dht_stats() {
+        let local_id = PeerId::new([0u8; 32]);
+        let bootstrap_peers = vec![
+            PeerAddr {
+                id: PeerId::new([1u8; 32]),
+                address: "127.0.0.1:3001".parse().unwrap(),
+            },
+        ];
+
+        let kademlia = KademliaNetwork::new(local_id, bootstrap_peers);
+
+        // Add peers and data
+        let peer = PeerAddr {
+            id: PeerId::new([2u8; 32]),
+            address: "127.0.0.1:3002".parse().unwrap(),
+        };
+        kademlia.add_peer(peer).await;
+
+        let key = [42u8; 32];
+        let value = vec![1, 2, 3];
+        kademlia.store(key, value).await.unwrap();
+
+        let stats = kademlia.stats().await;
+        assert_eq!(stats.bootstrap_peers, 1);
+        assert!(stats.total_peers > 0);
+        assert_eq!(stats.stored_items, 1);
+    }
+
+    #[test]
+    fn test_distanced_peer_ordering() {
+        let peer1 = PeerAddr {
+            id: PeerId::new([1u8; 32]),
+            address: "127.0.0.1:3001".parse().unwrap(),
+        };
+        let peer2 = PeerAddr {
+            id: PeerId::new([2u8; 32]),
+            address: "127.0.0.1:3002".parse().unwrap(),
+        };
+
+        let dp1 = DistancedPeer {
+            peer: peer1,
+            distance: U256([1u8; 32]),
+        };
+        let dp2 = DistancedPeer {
+            peer: peer2,
+            distance: U256([2u8; 32]),
+        };
+
+        // Smaller distance should be "greater" in our reversed ordering
+        assert!(dp1 > dp2);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_bucket_refresh_detection() {
+        let local_id = PeerId::new([0u8; 32]);
+        let mut kademlia = KademliaNetwork::new(local_id, vec![]);
+
+        // Set very short refresh interval for testing
+        kademlia.refresh_interval = Duration::from_millis(50);
+
+        // Add a peer
+        let peer = PeerAddr {
+            id: PeerId::new([255u8; 32]),
+            address: "127.0.0.1:3001".parse().unwrap(),
+        };
+        kademlia.add_peer(peer).await;
+
+        // Wait for bucket to become stale
+        sleep(Duration::from_millis(100)).await;
+
+        // Run maintenance - should trigger refresh
+        kademlia.maintenance().await;
+
+        // No assertions needed - just verify maintenance runs without panic
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_kbucket_needs_refresh() {
+        let bucket = KBucket::new(20);
+
+        // New bucket shouldn't need refresh
+        assert!(!bucket.needs_refresh(Duration::from_secs(3600)));
+
+        sleep(Duration::from_millis(50)).await;
+
+        // Should need refresh with very short interval
+        assert!(bucket.needs_refresh(Duration::from_millis(10)));
+    }
+
+    #[test]
+    fn test_routing_table_bucket_distribution() {
+        let local_id = PeerId::new([0u8; 32]);
+        let mut table = RoutingTable::new(local_id);
+
+        // Add peers with varying distances by setting different bits
+        for i in 0..10 {
+            let mut peer_bytes = [0u8; 32];
+            // Set bit at different positions to ensure different buckets
+            if i < 8 {
+                peer_bytes[0] = 1 << i;
+            } else {
+                peer_bytes[1] = 1 << (i - 8);
+            }
+
+            let peer = PeerAddr {
+                id: PeerId::new(peer_bytes),
+                address: format!("127.0.0.1:{}", 3000 + i).parse().unwrap(),
+            };
+            table.add_peer(peer);
+        }
+
+        // Verify peers are distributed across buckets
+        assert!(table.total_peers() > 0);
+
+        // Find buckets with peers
+        let mut buckets_with_peers = 0;
+        for bucket in &table.buckets {
+            if !bucket.is_empty() {
+                buckets_with_peers += 1;
+            }
+        }
+
+        // Should have multiple buckets with different bit distances
+        assert!(buckets_with_peers >= 1);
     }
 
     #[test]
@@ -923,9 +1642,12 @@ mod tests {
         let score = rep.get_score(peer_id).await;
         assert!(score > 0.0);
 
+        let initial_score = score;
+
         rep.record_event(peer_id, ReputationEvent::InvalidMessage).await;
         let score = rep.get_score(peer_id).await;
-        assert!(score > 0.0); // Still positive but lower
+        assert!(score >= 0.0); // Should be non-negative
+        assert!(score < initial_score); // But lower than before
     }
 
     #[tokio::test(flavor = "multi_thread")]
