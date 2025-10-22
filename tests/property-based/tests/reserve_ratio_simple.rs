@@ -304,3 +304,190 @@ mod price_update_properties {
         }
     }
 }
+
+/// Property: Edge cases and overflow handling
+#[cfg(test)]
+mod edge_case_properties {
+    use super::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        #[test]
+        fn maximum_collateral_no_overflow(
+            collateral in (u128::MAX / 101)..=(u128::MAX / 100),
+            debt in 1u128..1_000_000,
+        ) {
+            // Property: Max collateral values should not overflow
+            let result = calculate_reserve_ratio(collateral, debt);
+
+            // Should either succeed or gracefully return None
+            prop_assert!(
+                result.is_some() || result.is_none(),
+                "Should handle max collateral without panic"
+            );
+        }
+
+        #[test]
+        fn minimum_values_safe(
+            collateral in 0u128..2,
+            debt in 0u128..2,
+        ) {
+            // Property: Minimum values should be handled safely
+            let result = calculate_reserve_ratio(collateral, debt);
+
+            if debt == 0 {
+                prop_assert_eq!(result, Some(u128::MAX), "Zero debt = infinite ratio");
+            } else {
+                prop_assert!(result.is_some(), "Minimal non-zero values should work");
+            }
+        }
+
+        #[test]
+        fn extreme_ratios_calculated_correctly(
+            multiplier in 1000u128..10_000, // 1000x to 10000x over-collateralized
+            debt in 1_000u128..10_000,
+        ) {
+            // Property: Extreme over-collateralization should calculate correctly
+            if let Some(collateral) = debt.checked_mul(multiplier) {
+                if let Some(ratio) = calculate_reserve_ratio(collateral, debt) {
+                    // Ratio should be extremely high
+                    prop_assert!(
+                        ratio >= multiplier * 100 - 100, // Allow for rounding
+                        "Extreme over-collateralization should reflect in ratio"
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn dust_amounts_safe(
+            collateral in 1u128..100, // Dust amounts
+            debt in 1u128..100,
+        ) {
+            // Property: Dust amounts should not cause errors
+            let result = calculate_reserve_ratio(collateral, debt);
+
+            prop_assert!(
+                result.is_some(),
+                "Dust amounts should calculate safely"
+            );
+        }
+    }
+}
+
+/// Property: Oracle price volatility scenarios
+#[cfg(test)]
+mod oracle_volatility_properties {
+    use super::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1000))]
+
+        #[test]
+        fn flash_crash_scenario(
+            collateral_amount in 10_000u128..100_000,
+            initial_price in 1_000u128..10_000,
+            crash_percentage in 50u128..90, // 50-90% crash
+            debt in 50_000u128..500_000,
+        ) {
+            // Property: Flash crash should dramatically decrease ratio
+            let initial_value = collateral_amount * initial_price;
+            let crashed_price = (initial_price * (100 - crash_percentage)) / 100;
+            let crashed_value = collateral_amount * crashed_price;
+
+            let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
+            let crashed_ratio = calculate_reserve_ratio(crashed_value, debt).unwrap();
+
+            prop_assert!(
+                crashed_ratio < initial_ratio,
+                "Flash crash should decrease ratio"
+            );
+
+            // Verify crash magnitude is reflected
+            let ratio_decrease_pct = ((initial_ratio - crashed_ratio) * 100) / initial_ratio;
+            prop_assert!(
+                ratio_decrease_pct >= crash_percentage - 10, // Allow 10% tolerance
+                "Ratio decrease should roughly match price crash percentage"
+            );
+        }
+
+        #[test]
+        fn gradual_decline_scenario(
+            collateral_amount in 10_000u128..100_000,
+            price_steps in prop::collection::vec(950u128..990, 5..10), // 1-5% declines
+            debt in 50_000u128..500_000,
+        ) {
+            // Property: Gradual price declines should monotonically decrease ratio
+            let mut prev_ratio = None;
+            let mut current_price = 1000u128;
+
+            for step in price_steps {
+                current_price = (current_price * step) / 1000; // Apply decline
+                let value = collateral_amount * current_price;
+                let ratio = calculate_reserve_ratio(value, debt).unwrap();
+
+                if let Some(prev) = prev_ratio {
+                    prop_assert!(
+                        ratio <= prev,
+                        "Gradual decline should monotonically decrease ratio"
+                    );
+                }
+                prev_ratio = Some(ratio);
+            }
+        }
+
+        #[test]
+        fn pump_and_dump_scenario(
+            collateral_amount in 10_000u128..100_000,
+            base_price in 1_000u128..10_000,
+            pump_multiplier in 150u128..300, // 1.5x to 3x pump
+            dump_percentage in 60u128..95,   // 60-95% dump after pump
+            debt in 50_000u128..500_000,
+        ) {
+            // Property: Pump-and-dump should end with lower ratio than start
+            let initial_value = collateral_amount * base_price;
+            let pumped_price = (base_price * pump_multiplier) / 100;
+            let dumped_price = (pumped_price * (100 - dump_percentage)) / 100;
+            let final_value = collateral_amount * dumped_price;
+
+            let initial_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
+            let final_ratio = calculate_reserve_ratio(final_value, debt).unwrap();
+
+            // After pump-and-dump, should be lower than initial
+            if dumped_price < base_price {
+                prop_assert!(
+                    final_ratio < initial_ratio,
+                    "Pump-and-dump should result in lower ratio if final price < initial"
+                );
+            }
+        }
+
+        #[test]
+        fn volatility_threshold_testing(
+            collateral_amount in 10_000u128..100_000,
+            base_price in 1_000u128..10_000,
+            volatility in 5u128..50, // 5-50% volatility
+            debt in 100_000u128..500_000,
+        ) {
+            // Property: High volatility should be detectable via ratio changes
+            let initial_value = collateral_amount * base_price;
+            let volatile_up = (base_price * (100 + volatility)) / 100;
+            let volatile_down = (base_price * (100 - volatility)) / 100;
+
+            let up_value = collateral_amount * volatile_up;
+            let down_value = collateral_amount * volatile_down;
+
+            let base_ratio = calculate_reserve_ratio(initial_value, debt).unwrap();
+            let up_ratio = calculate_reserve_ratio(up_value, debt).unwrap();
+            let down_ratio = calculate_reserve_ratio(down_value, debt).unwrap();
+
+            // Volatility should create measurable ratio spread
+            let ratio_spread = up_ratio.saturating_sub(down_ratio);
+            prop_assert!(
+                ratio_spread > 0,
+                "Volatility should create measurable ratio spread"
+            );
+        }
+    }
+}

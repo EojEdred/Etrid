@@ -20,10 +20,10 @@ sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkad
 sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
-# Ëtrid pallets
-pallet-edsc-token = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token" }
-pallet-edsc-redemption = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption" }
-pallet-edsc-checkpoint = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint" }
+# Ëtrid pallets (commented out due to unresolved sp_core dependency in redemption pallet)
+# pallet-edsc-token = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token" }
+# pallet-edsc-redemption = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption" }
+# pallet-edsc-checkpoint = { path = "../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint" }
 
 [features]
 default = ["std"]
@@ -36,9 +36,9 @@ std = [
     "sp-std/std",
     "sp-io/std",
     "sp-core/std",
-    "pallet-edsc-token/std",
-    "pallet-edsc-redemption/std",
-    "pallet-edsc-checkpoint/std",
+    # "pallet-edsc-token/std",
+    # "pallet-edsc-redemption/std",
+    # "pallet-edsc-checkpoint/std",
 ]
 
 [[test]]
@@ -60,3 +60,11 @@ path = "tests/balance_invariants_simple.rs"
 [[test]]
 name = "reserve_ratio_simple"
 path = "tests/reserve_ratio_simple.rs"
+
+[[test]]
+name = "oracle_pricing"
+path = "tests/oracle_pricing.rs"
+
+[[test]]
+name = "redemption_flows"
+path = "tests/redemption_flows.rs"
