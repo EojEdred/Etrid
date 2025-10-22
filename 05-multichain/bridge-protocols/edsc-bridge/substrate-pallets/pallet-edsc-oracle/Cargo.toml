@@ -16,11 +16,10 @@ sp-io = { default-features = false, git = "https://github.com/paritytech/polkado
 sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
 
-# Local pallets
-pallet-edsc-redemption = { path = "../pallet-edsc-redemption", default-features = false }
-
 [dev-dependencies]
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-edsc-token = { path = "../pallet-edsc-token" }
+pallet-edsc-redemption = { path = "../pallet-edsc-redemption" }
 
 [features]
 default = ["std"]
@@ -34,7 +33,6 @@ std = [
 	"sp-io/std",
 	"sp-core/std",
 	"sp-arithmetic/std",
-	"pallet-edsc-redemption/std",
 ]
 runtime-benchmarks = ["frame-support/runtime-benchmarks"]
 try-runtime = ["frame-support/try-runtime"]

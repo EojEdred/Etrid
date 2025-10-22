@@ -527,6 +527,7 @@ parameter_types! {
 /// Configure EDSC Oracle Pallet
 impl pallet_edsc_oracle::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+    type PriceCallback = EdscRedemption;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
     type MinPriceSources = MinPriceSources;
