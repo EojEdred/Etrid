@@ -39,6 +39,12 @@ pub mod pallet {
         pub status: ProposalStatus,
     }
 
+    #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
+    pub struct VoteInfo<Balance> {
+        pub vote: bool,
+        pub stake: Balance,
+    }
+
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -70,6 +76,16 @@ pub mod pallet {
     #[pallet::getter(fn proposals)]
     pub type Proposals<T: Config> = StorageMap<_, Blake2_128Concat, ProposalId, Proposal<T>>;
 
+    #[pallet::storage]
+    #[pallet::getter(fn votes)]
+    pub type Votes<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat, ProposalId,
+        Blake2_128Concat, T::AccountId,
+        VoteInfo<BalanceOf<T>>,
+        OptionQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -78,6 +94,7 @@ pub mod pallet {
         ProposalPassed(ProposalId),
         ProposalRejected(ProposalId),
         ProposalCancelled(ProposalId),
+        VotesUnreserved(ProposalId, u32),
     }
 
     #[pallet::error]
@@ -91,6 +108,23 @@ pub mod pallet {
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
+
+    impl<T: Config> Pallet<T> {
+        /// Unreserve all votes for a finalized proposal
+        fn unreserve_votes(proposal_id: ProposalId) -> u32 {
+            let mut count = 0u32;
+
+            // Iterate through all votes for this proposal
+            let _ = Votes::<T>::drain_prefix(proposal_id)
+                .for_each(|(voter, vote_info)| {
+                    // Unreserve the staked amount
+                    T::Currency::unreserve(&voter, vote_info.stake);
+                    count += 1;
+                });
+
+            count
+        }
+    }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
@@ -149,6 +183,16 @@ pub mod pallet {
 
                 T::Currency::reserve(&voter, amount)?;
 
+                // Store vote info for later unreservation
+                Votes::<T>::insert(
+                    proposal_id,
+                    voter.clone(),
+                    VoteInfo {
+                        vote: support,
+                        stake: amount,
+                    },
+                );
+
                 if support {
                     p.votes_for += amount;
                 } else {
@@ -177,6 +221,11 @@ pub mod pallet {
                     p.status = ProposalStatus::Rejected;
                     Self::deposit_event(Event::ProposalRejected(proposal_id));
                 }
+
+                // Unreserve all votes after proposal finalization
+                let unreserved_count = Self::unreserve_votes(proposal_id);
+                Self::deposit_event(Event::VotesUnreserved(proposal_id, unreserved_count));
+
                 Ok(())
             })
         }
@@ -191,8 +240,449 @@ pub mod pallet {
                 ensure!(p.status == ProposalStatus::Active, Error::<T>::AlreadyFinalized);
                 p.status = ProposalStatus::Cancelled;
                 Self::deposit_event(Event::ProposalCancelled(proposal_id));
+
+                // Unreserve all votes when proposal is cancelled
+                let unreserved_count = Self::unreserve_votes(proposal_id);
+                Self::deposit_event(Event::VotesUnreserved(proposal_id, unreserved_count));
+
                 Ok(())
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use frame_support::{
+        assert_ok, assert_noop, parameter_types,
+        traits::ConstU32,
+    };
+    use sp_core::H256;
+    use sp_runtime::{
+        traits::{BlakeTwo256, IdentityLookup},
+        BuildStorage,
+    };
+
+    type Block = frame_system::mocking::MockBlock<Test>;
+
+    frame_support::construct_runtime!(
+        pub enum Test {
+            System: frame_system,
+            Balances: pallet_balances,
+            Governance: crate,
+        }
+    );
+
+    parameter_types! {
+        pub const BlockHashCount: u64 = 250;
+    }
+
+    impl frame_system::Config for Test {
+        type BaseCallFilter = frame_support::traits::Everything;
+        type BlockWeights = ();
+        type BlockLength = ();
+        type DbWeight = ();
+        type RuntimeOrigin = RuntimeOrigin;
+        type RuntimeCall = RuntimeCall;
+        type Nonce = u64;
+        type Hash = H256;
+        type Hashing = BlakeTwo256;
+        type AccountId = u64;
+        type Lookup = IdentityLookup<Self::AccountId>;
+        type Block = Block;
+        type RuntimeEvent = RuntimeEvent;
+        type BlockHashCount = BlockHashCount;
+        type Version = ();
+        type PalletInfo = PalletInfo;
+        type AccountData = pallet_balances::AccountData<u64>;
+        type OnNewAccount = ();
+        type OnKilledAccount = ();
+        type SystemWeightInfo = ();
+        type SS58Prefix = ();
+        type OnSetCode = ();
+        type MaxConsumers = ConstU32<16>;
+        type RuntimeTask = ();
+        type ExtensionsWeightInfo = ();
+        type SingleBlockMigrations = ();
+        type MultiBlockMigrator = ();
+        type PreInherents = ();
+        type PostInherents = ();
+        type PostTransactions = ();
+    }
+
+    parameter_types! {
+        pub const ExistentialDeposit: u64 = 1;
+    }
+
+    impl pallet_balances::Config for Test {
+        type MaxLocks = ();
+        type MaxReserves = ConstU32<50>;
+        type ReserveIdentifier = [u8; 8];
+        type Balance = u64;
+        type RuntimeEvent = RuntimeEvent;
+        type DustRemoval = ();
+        type ExistentialDeposit = ExistentialDeposit;
+        type AccountStore = System;
+        type WeightInfo = ();
+        type FreezeIdentifier = ();
+        type MaxFreezes = ();
+        type RuntimeHoldReason = ();
+        type RuntimeFreezeReason = ();
+        type DoneSlashHandler = ();
+    }
+
+    pub struct TestTime;
+    impl frame_support::traits::Time for TestTime {
+        type Moment = u64;
+        fn now() -> Self::Moment {
+            System::block_number()
+        }
+    }
+
+    parameter_types! {
+        pub const ProposalDuration: u64 = 100;
+        pub const MinProposalStake: u64 = 100;
+    }
+
+    impl Config for Test {
+        type RuntimeEvent = RuntimeEvent;
+        type Currency = Balances;
+        type Time = TestTime;
+        type ProposalDuration = ProposalDuration;
+        type MinProposalStake = MinProposalStake;
+    }
+
+    fn new_test_ext() -> sp_io::TestExternalities {
+        let mut t = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
+
+        pallet_balances::GenesisConfig::<Test> {
+            balances: vec![
+                (1, 10000),
+                (2, 10000),
+                (3, 10000),
+                (4, 10000),
+            ],
+            dev_accounts: None,
+        }
+        .assimilate_storage(&mut t)
+        .unwrap();
+
+        t.into()
+    }
+
+    #[test]
+    fn create_proposal_works() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            let title = b"Test Proposal".to_vec();
+            let description = b"Test Description".to_vec();
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                title,
+                description
+            ));
+
+            let proposal = Governance::proposals(0).unwrap();
+            assert_eq!(proposal.proposer, 1);
+            assert_eq!(proposal.status, ProposalStatus::Active);
+        });
+    }
+
+    #[test]
+    fn vote_reserves_balance() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Create proposal
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            let balance_before = Balances::free_balance(2);
+            let reserved_before = Balances::reserved_balance(2);
+
+            // Vote with 500
+            assert_ok!(Governance::vote(
+                RuntimeOrigin::signed(2),
+                0,
+                true,
+                500
+            ));
+
+            let balance_after = Balances::free_balance(2);
+            let reserved_after = Balances::reserved_balance(2);
+
+            assert_eq!(balance_before - balance_after, 500);
+            assert_eq!(reserved_after - reserved_before, 500);
+
+            // Check vote is stored
+            let vote_info = Governance::votes(0, 2).unwrap();
+            assert_eq!(vote_info.vote, true);
+            assert_eq!(vote_info.stake, 500);
+        });
+    }
+
+    #[test]
+    fn execute_proposal_unreserves_votes() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            // Create proposal
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            // Multiple voters
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 500));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(3), 0, true, 300));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(4), 0, false, 200));
+
+            // Check balances before finalization
+            let voter2_reserved_before = Balances::reserved_balance(2);
+            let voter3_reserved_before = Balances::reserved_balance(3);
+            let voter4_reserved_before = Balances::reserved_balance(4);
+
+            assert_eq!(voter2_reserved_before, 500);
+            assert_eq!(voter3_reserved_before, 300);
+            assert_eq!(voter4_reserved_before, 200);
+
+            // Advance time past voting period
+            System::set_block_number(102);
+
+            // Execute proposal
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Check all votes are unreserved
+            assert_eq!(Balances::reserved_balance(2), 0);
+            assert_eq!(Balances::reserved_balance(3), 0);
+            assert_eq!(Balances::reserved_balance(4), 0);
+
+            // Check votes storage is cleared
+            assert!(Governance::votes(0, 2).is_none());
+            assert!(Governance::votes(0, 3).is_none());
+            assert!(Governance::votes(0, 4).is_none());
+        });
+    }
+
+    #[test]
+    fn proposal_passes_with_majority() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 600));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(3), 0, false, 400));
+
+            System::set_block_number(102);
+
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 0));
+
+            let proposal = Governance::proposals(0).unwrap();
+            assert_eq!(proposal.status, ProposalStatus::Passed);
+
+            // Verify unreservation
+            assert_eq!(Balances::reserved_balance(2), 0);
+            assert_eq!(Balances::reserved_balance(3), 0);
+        });
+    }
+
+    #[test]
+    fn proposal_rejected_with_minority() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 400));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(3), 0, false, 600));
+
+            System::set_block_number(102);
+
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 0));
+
+            let proposal = Governance::proposals(0).unwrap();
+            assert_eq!(proposal.status, ProposalStatus::Rejected);
+
+            // Verify unreservation
+            assert_eq!(Balances::reserved_balance(2), 0);
+            assert_eq!(Balances::reserved_balance(3), 0);
+        });
+    }
+
+    #[test]
+    fn cancel_proposal_unreserves_votes() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 500));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(3), 0, true, 300));
+
+            assert_eq!(Balances::reserved_balance(2), 500);
+            assert_eq!(Balances::reserved_balance(3), 300);
+
+            // Cancel proposal
+            assert_ok!(Governance::cancel_proposal(RuntimeOrigin::signed(1), 0));
+
+            let proposal = Governance::proposals(0).unwrap();
+            assert_eq!(proposal.status, ProposalStatus::Cancelled);
+
+            // Verify unreservation
+            assert_eq!(Balances::reserved_balance(2), 0);
+            assert_eq!(Balances::reserved_balance(3), 0);
+
+            // Check votes storage is cleared
+            assert!(Governance::votes(0, 2).is_none());
+            assert!(Governance::votes(0, 3).is_none());
+        });
+    }
+
+    #[test]
+    fn cannot_vote_after_period_ends() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            System::set_block_number(102);
+
+            assert_noop!(
+                Governance::vote(RuntimeOrigin::signed(2), 0, true, 500),
+                Error::<Test>::VotingClosed
+            );
+        });
+    }
+
+    #[test]
+    fn cannot_execute_before_period_ends() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 500));
+
+            System::set_block_number(50);
+
+            assert_noop!(
+                Governance::execute_proposal(RuntimeOrigin::signed(1), 0),
+                Error::<Test>::VotingClosed
+            );
+        });
+    }
+
+    #[test]
+    fn only_proposer_can_cancel() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_noop!(
+                Governance::cancel_proposal(RuntimeOrigin::signed(2), 0),
+                Error::<Test>::NotProposer
+            );
+        });
+    }
+
+    #[test]
+    fn multiple_votes_tracked_correctly() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Proposal 1".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Proposal 2".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            // Vote on both proposals
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 500));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 1, true, 300));
+
+            // Total reserved should be 800
+            assert_eq!(Balances::reserved_balance(2), 800);
+
+            // Execute first proposal
+            System::set_block_number(102);
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Should have unreserved 500 from proposal 0
+            assert_eq!(Balances::reserved_balance(2), 300);
+
+            // Execute second proposal
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 1));
+
+            // Should have unreserved all
+            assert_eq!(Balances::reserved_balance(2), 0);
+        });
+    }
+
+    #[test]
+    fn events_emitted_correctly() {
+        new_test_ext().execute_with(|| {
+            System::set_block_number(1);
+
+            assert_ok!(Governance::create_proposal(
+                RuntimeOrigin::signed(1),
+                b"Test".to_vec(),
+                b"Test".to_vec()
+            ));
+
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(2), 0, true, 500));
+            assert_ok!(Governance::vote(RuntimeOrigin::signed(3), 0, true, 300));
+
+            System::set_block_number(102);
+            assert_ok!(Governance::execute_proposal(RuntimeOrigin::signed(1), 0));
+
+            // Check that VotesUnreserved event was emitted with count of 2
+            let events = System::events();
+            let unreserved_event = events.iter().find(|e| {
+                matches!(
+                    e.event,
+                    RuntimeEvent::Governance(Event::VotesUnreserved(0, 2))
+                )
+            });
+            assert!(unreserved_event.is_some());
+        });
     }
 }

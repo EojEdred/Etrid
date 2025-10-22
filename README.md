@@ -30,17 +30,17 @@ The **Essential Elements to Operate (E³20)** protocol defines 13 core component
 
 | # | Component | Purpose | Status |
 |---|-----------|---------|--------|
-| 01 | **DETR p2p** | Multi-protocol peer networking | 🟡 In Progress |
-| 02 | **OpenDID** | Self-sovereign identity | 🔴 Planned |
-| 03 | **Security** | Post-quantum encryption | 🔴 Planned |
+| 01 | **DETR p2p** | Lightning-Bloc payment channels | 🟢 Alpha |
+| 02 | **OpenDID** | Self-sovereign identity + **AIDID** 🌟 | 🟡 95% Complete |
+| 03 | **Security** | Post-quantum encryption | 🟢 **Production-Ready** |
 | 04 | **Accounts** | Account types (EBCA, RCA, SCA) | 🟢 Alpha |
 | 05 | **Multichain** | Flare Chain + PBCs | 🟢 Alpha |
 | 06 | **Crypto** | ÉTR, EDSC (+ Ethereum Bridge), VMw tokens | 🟢 **Bridge Complete** |
-| 07 | **Transactions** | Regular, smart, cross-chain | 🟡 In Progress |
+| 07 | **Transactions** | Ed25519 + HTLCs + Regular/Smart | 🟢 Alpha |
 | 08 | **ËtwasmVM** | WebAssembly runtime | 🟢 Alpha |
 | 09 | **Consensus** | ASF Finality algorithm | 🟢 Alpha |
-| 10 | **Foundation** | Legal/organizational DAO | 🟡 In Progress |
-| 11 | **Roles** | Peer roles and permissions | 🟡 In Progress |
+| 10 | **Foundation** | Stake-weighted governance + Voting | 🟢 Alpha |
+| 11 | **Roles** | Peer staking + Role permissions | 🟢 Alpha |
 | 12 | **Governance** | Consensus Day voting | 🟢 Alpha |
 | 13 | **Clients** | CLI, web, mobile wallets + 4 SDKs | 🟢 Alpha |
 

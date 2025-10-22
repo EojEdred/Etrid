@@ -12,7 +12,12 @@ edition = "2021"
 
 [dev-dependencies]
 # Test dependencies are handled by standard Rust test framework
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = ["std"]
 std = []
+
+[[bench]]
+name = "routing_bench"
+harness = false

@@ -65,6 +65,10 @@ pallet-xcm-bridge = { path = "../../../pallets/pallet-xcm-bridge", default-featu
 pallet-validator-committee = { path = "../../../pallets/pallet-validator-committee", default-features = false }
 pallet-validator-committee-runtime-api = { path = "../../../pallets/pallet-validator-committee/runtime-api", default-features = false }
 
+# OpenDID pallets (Component 02)
+pallet-did-registry = { path = "../../../pallets/pallet-did-registry", default-features = false }
+pallet-aidid = { path = "../../../pallets/pallet-aidid", default-features = false }
+
 # Phase 3: External Bridge Protocol (CCTP-style)
 pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
 pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
@@ -177,6 +181,10 @@ std = [
     # ASF Consensus pallets
     "pallet-validator-committee/std",
     "pallet-validator-committee-runtime-api/std",
+
+    # OpenDID pallets
+    "pallet-did-registry/std",
+    "pallet-aidid/std",
 
     "frame-executive/std",
     "frame-support/std",

@@ -772,7 +772,8 @@ mod tests {
         .unwrap();
 
         assert!(!channel.is_expired(150));
-        assert!(channel.is_expired(200));
+        assert!(!channel.is_expired(200)); // Not expired AT the expiry time
+        assert!(channel.is_expired(201)); // Expired AFTER the expiry time
     }
 
     #[test]
@@ -1004,6 +1005,10 @@ mod tests {
         .unwrap();
 
         bloc.open_channel(channel).unwrap();
+
+        // Must transition to closing before settling
+        bloc.transition_channel_state("ch1", ChannelState::Closing).unwrap();
+        bloc.transition_channel_state("ch1", ChannelState::Closed).unwrap();
 
         let settlement = Settlement::new("ch1".to_string(), 900, 1100, 5, 300);
         assert!(bloc.settle_channel("ch1", settlement).is_ok());

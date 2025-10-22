@@ -596,6 +596,26 @@ impl pallet_reserve_oracle::Config for Runtime {
     type MaxPriceStaleness = MaxOraclePriceStaleness;
 }
 
+// ========================================
+// OPENDID PALLETS CONFIGURATION (Component 02)
+// ========================================
+
+/// Configure DID Registry Pallet
+impl pallet_did_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxAccessControlEntries = ConstU32<100>;
+}
+
+/// Configure AIDID Pallet (World's First AI DID Standard)
+impl pallet_aidid::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxAIsPerController = ConstU32<100>;
+}
+
+// ========================================
+// CROSS-CHAIN INFRASTRUCTURE
+// ========================================
+
 // XCM Bridge Configuration (Cross-chain messaging with PBC-EDSC)
 parameter_types! {
     pub const FlareChainMaxPayloadSize: u32 = 1024;  // Max message size (bytes)
@@ -721,6 +741,10 @@ construct_runtime!(
 
         // ASF Consensus pallets
         ValidatorCommittee: pallet_validator_committee,
+
+        // OpenDID pallets (Component 02)
+        DidRegistry: pallet_did_registry,
+        AIDID: pallet_aidid,
     }
 );
 

@@ -15,6 +15,7 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polk
 sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+ed25519-dalek = { workspace = true }
 
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509" }
@@ -29,6 +30,7 @@ std = [
     "sp-runtime/std",
     "sp-core/std",
     "sp-std/std",
+    "ed25519-dalek/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

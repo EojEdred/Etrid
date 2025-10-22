@@ -12,6 +12,8 @@ scale-info = { workspace = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
 pallet-transaction = { path = "../types", default-features = false }
+ed25519-dalek = { workspace = true }
+sp-core = { workspace = true }
 
 [features]
 default = ["std"]
@@ -21,4 +23,6 @@ std = [
 "frame-support/std",
 "frame-system/std",
 "pallet-transaction/std",
+"ed25519-dalek/std",
+"sp-core/std",
 ]
