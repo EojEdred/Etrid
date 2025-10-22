@@ -39,7 +39,7 @@ pub mod pallet {
 		traits::{Currency, ExistenceRequirement},
 	};
 	use frame_system::pallet_prelude::*;
-	use sp_arithmetic::{FixedPointNumber, FixedU128, Permill, traits::SaturatedConversion};
+	use sp_arithmetic::{FixedPointNumber, FixedU128, Permill, traits::{SaturatedConversion, Saturating}};
 	use sp_runtime::traits::CheckedSub;
 	use sp_std::vec::Vec;
 
@@ -172,6 +172,12 @@ pub mod pallet {
 		ReserveThrottled { ratio: FixedU128 },
 		/// Reserve ratio returned to optimal
 		ReserveOptimal { ratio: FixedU128 },
+		/// Payout executed [recipient, usd_amount, assets_paid]
+		PayoutExecuted {
+			recipient: T::AccountId,
+			usd_amount: u128,
+			assets_paid: Vec<(u8, u128)>,
+		},
 	}
 
 	#[pallet::error]
@@ -424,6 +430,148 @@ pub mod pallet {
 			Self::deposit_event(Event::CustodianValueUpdated { value });
 			// Recalculate reserve ratio
 			Self::calculate_and_update_reserve_ratio()?;
+			Ok(())
+		}
+
+		/// Internal helper to execute payout (called by redemption pallet)
+		///
+		/// Pays out USD value from vault reserves proportionally across assets.
+		/// Applies haircuts in reverse - assets are withdrawn at risk-adjusted values.
+		///
+		/// # Parameters
+		/// - `recipient`: Account receiving the payout
+		/// - `usd_amount`: Amount to pay in USD cents
+		///
+		/// # Returns
+		/// - Ok(()) if payout successful
+		/// - Err if insufficient reserves or arithmetic errors
+		pub fn do_payout(recipient: &T::AccountId, usd_amount: u128) -> DispatchResult {
+			// Check if we have sufficient vault value
+			let total_vault_value = Self::calculate_total_vault_value()?;
+			ensure!(total_vault_value >= usd_amount, Error::<T>::InsufficientVaultBalance);
+
+			// Calculate reserve ratio after payout
+			let custodian_value = CustodianAttestedValue::<T>::get();
+			let total_reserves_after = total_vault_value
+				.checked_sub(usd_amount)
+				.ok_or(Error::<T>::Underflow)?
+				.checked_add(custodian_value)
+				.ok_or(Error::<T>::Overflow)?;
+
+			let total_supply = pallet_edsc_token::Pallet::<T>::total_supply();
+			if total_supply > 0 {
+				let reserve_ratio_after = FixedU128::saturating_from_rational(total_reserves_after, total_supply);
+				// Ensure we don't go below emergency ratio
+				ensure!(
+					reserve_ratio_after >= <T as Config>::EmergencyReserveRatio::get(),
+					Error::<T>::ReserveRatioTooLow
+				);
+			}
+
+			// Collect all assets and their proportions
+			let mut asset_withdrawals: Vec<(AssetType, u8, u128)> = Vec::new();
+			let mut remaining_usd = usd_amount;
+
+			// Withdraw proportionally from each asset
+			for (asset, mut entry) in Vault::<T>::iter() {
+				if remaining_usd == 0 {
+					break;
+				}
+
+				// Calculate this asset's proportion of total vault value
+				let asset_proportion = if total_vault_value > 0 {
+					FixedU128::saturating_from_rational(entry.adjusted_value, total_vault_value)
+				} else {
+					FixedU128::zero()
+				};
+
+				// Calculate USD amount to withdraw from this asset
+				let usd_from_asset = asset_proportion
+					.saturating_mul_int(usd_amount)
+					.min(entry.adjusted_value)
+					.min(remaining_usd);
+
+				if usd_from_asset == 0 {
+					continue;
+				}
+
+				// Calculate raw asset amount needed
+				// adjusted_value = usd_value * (1 - haircut)
+				// usd_value = raw_balance * price / decimals
+				// So: raw_amount = (usd_from_asset / (1 - haircut)) * decimals / price
+
+				let haircut_multiplier = Permill::one().saturating_sub(entry.haircut);
+				let usd_before_haircut = if haircut_multiplier.is_zero() {
+					usd_from_asset
+				} else {
+					// Reverse haircut: usd_from_asset / (1 - haircut)
+					FixedU128::from_u32(1)
+						.checked_div(&FixedU128::saturating_from_rational(
+							haircut_multiplier.deconstruct(),
+							Permill::one().deconstruct(),
+						))
+						.unwrap_or(FixedU128::one())
+						.saturating_mul_int(usd_from_asset)
+				};
+
+				let price = AssetPrices::<T>::get(&asset);
+				ensure!(price > 0, Error::<T>::Overflow); // Prevent division by zero
+
+				let raw_amount = usd_before_haircut
+					.checked_mul(1_000_000_000_000)
+					.ok_or(Error::<T>::Overflow)?
+					.checked_div(price)
+					.ok_or(Error::<T>::Overflow)?
+					.min(entry.raw_balance);
+
+				if raw_amount == 0 {
+					continue;
+				}
+
+				// Update vault entry
+				entry.raw_balance = entry.raw_balance.saturating_sub(raw_amount);
+				Self::update_vault_entry_value(&mut entry, &asset)?;
+
+				if entry.raw_balance > 0 {
+					Vault::<T>::insert(&asset, entry);
+				} else {
+					Vault::<T>::remove(&asset);
+				}
+
+				// Record withdrawal
+				let asset_type_u8 = match asset {
+					AssetType::ETR => 0,
+					AssetType::BTC => 1,
+					AssetType::ETH => 2,
+					AssetType::USDC => 3,
+					AssetType::USDT => 4,
+					AssetType::DAI => 5,
+				};
+				asset_withdrawals.push((asset.clone(), asset_type_u8, raw_amount));
+
+				remaining_usd = remaining_usd.saturating_sub(usd_from_asset);
+			}
+
+			// TODO: Actual asset transfers to recipient
+			// For now, this is a placeholder - in production, this would:
+			// 1. Transfer on-chain assets (ETR, USDC, etc.) directly
+			// 2. Coordinate with custodian for off-chain asset delivery (BTC, ETH)
+
+			// Emit payout event
+			let assets_paid: Vec<(u8, u128)> = asset_withdrawals
+				.iter()
+				.map(|(_, asset_type, amount)| (*asset_type, *amount))
+				.collect();
+
+			Self::deposit_event(Event::PayoutExecuted {
+				recipient: recipient.clone(),
+				usd_amount,
+				assets_paid,
+			});
+
+			// Recalculate reserve ratio
+			Self::calculate_and_update_reserve_ratio()?;
+
 			Ok(())
 		}
 

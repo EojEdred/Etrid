@@ -18,7 +18,7 @@ sha2 = "0.10"
 rand = "0.8"
 
 # Async runtime (for gadget-network-bridge)
-tokio = { version = "1.40", features = ["sync", "time", "macros"] }
+tokio = { version = "1.40", features = ["sync", "time", "macros", "rt-multi-thread"] }
 
 [dev-dependencies]
 # No additional dev dependencies needed - tests use standard dependencies

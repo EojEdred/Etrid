@@ -250,8 +250,10 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
     where
         C: sc_client_api::blockchain::HeaderBackend<Block>
             + sc_client_api::BlockchainEvents<Block>
+            + sp_api::ProvideRuntimeApi<Block>
             + Send
             + Sync,
+        C::Api: pallet_validator_committee_runtime_api::ValidatorCommitteeApi<Block>,
         B: sc_client_api::backend::Backend<Block> + Send + Sync,
     {
         async fn verify(
@@ -350,10 +352,6 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
             if let Some(seal) = ppfa_seal_data {
                 let proposer_id = block_production::ValidatorId::from(seal.proposer_id);
 
-                // Query runtime API to verify proposer authorization
-                // Note: In production, this would query the runtime at the parent block
-                // For now, we validate that the proposer is in the active committee
-
                 log::debug!(
                     "🔐 Validating PPFA authorization for block #{}: proposer={:?}, ppfa_index={}",
                     block_number,
@@ -361,10 +359,50 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
                     seal.ppfa_index
                 );
 
-                // Step 3: Check if proposer is in active committee
-                // This would be: client.runtime_api().is_in_committee(parent_hash, proposer_id)
-                // For now, we log the validation and accept the block
-                // Future enhancement: Add runtime call to is_proposer_authorized()
+                // Step 3: Query runtime API to verify proposer authorization
+                // Use parent block hash for validation (check authorization at time of block production)
+                let parent_hash = *header.parent_hash();
+
+                // Convert block_production::ValidatorId to runtime API ValidatorId
+                let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(seal.proposer_id);
+
+                match self.client.runtime_api().is_proposer_authorized(
+                    parent_hash,
+                    block_number,
+                    seal.ppfa_index,
+                    runtime_proposer_id,
+                ) {
+                    Ok(is_authorized) => {
+                        if !is_authorized {
+                            // CRITICAL: Proposer was not authorized - REJECT BLOCK
+                            let error_msg = format!(
+                                "❌ PPFA Authorization FAILED for block #{}: proposer {:?} was NOT authorized for ppfa_index {}",
+                                block_number,
+                                hex::encode(&proposer_id.encode()[..8]),
+                                seal.ppfa_index
+                            );
+                            log::error!("{}", error_msg);
+                            return Err(error_msg);
+                        }
+
+                        log::debug!(
+                            "✅ PPFA authorization validated for block #{}: proposer {:?} authorized for ppfa_index {}",
+                            block_number,
+                            hex::encode(&proposer_id.encode()[..8]),
+                            seal.ppfa_index
+                        );
+                    }
+                    Err(e) => {
+                        // Runtime API call failed - this is a serious error
+                        let error_msg = format!(
+                            "❌ Failed to query PPFA authorization for block #{}: {:?}. Rejecting block as safety measure.",
+                            block_number,
+                            e
+                        );
+                        log::error!("{}", error_msg);
+                        return Err(error_msg);
+                    }
+                }
 
                 log::trace!(
                     "PPFA authorization check: block={}, ppfa_index={}, proposer={:?}, slot={}, timestamp={}",
@@ -373,15 +411,6 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
                     hex::encode(&proposer_id.encode()[..8]),
                     seal.slot_number,
                     seal.timestamp
-                );
-
-                // Step 4: Record authorization (future: store in runtime via inherent)
-                // For production: Call runtime to record PPFA authorization
-                // ValidatorCommittee::record_ppfa_authorization(block_number, ppfa_index, proposer_id)
-
-                log::debug!(
-                    "✅ PPFA authorization validated for block #{} (proposer in committee)",
-                    block_number
                 );
             } else {
                 // No PPFA seal found - this might be a genesis block or from before sealing was enabled
@@ -2075,5 +2104,202 @@ mod tests {
         // 600 blocks/hour * 24 hours = 14,400 blocks per day
         let blocks_per_day = (86400 * 1000) / params.slot_duration;
         assert_eq!(blocks_per_day, 14_400);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TEST MODULE 7: PPFA Authorization (TODO #4 Integration Tests)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_ppfa_seal_encoding_decoding() {
+        use codec::{Encode, Decode};
+
+        // Define the PpfaSeal structure for testing
+        #[derive(Encode, Decode, Debug, PartialEq)]
+        struct PpfaSeal {
+            ppfa_index: u32,
+            proposer_id: [u8; 32],
+            slot_number: u64,
+            timestamp: u64,
+        }
+
+        // Create a test PPFA seal
+        let test_seal = PpfaSeal {
+            ppfa_index: 42,
+            proposer_id: [5u8; 32],
+            slot_number: 1234,
+            timestamp: 1609459200, // 2021-01-01 00:00:00 UTC
+        };
+
+        // Encode the seal
+        let encoded = test_seal.encode();
+
+        // Decode the seal
+        let decoded = PpfaSeal::decode(&mut &encoded[..]).expect("Failed to decode PPFA seal");
+
+        // Verify encoding/decoding round-trip
+        assert_eq!(test_seal, decoded);
+        assert_eq!(decoded.ppfa_index, 42);
+        assert_eq!(decoded.proposer_id, [5u8; 32]);
+        assert_eq!(decoded.slot_number, 1234);
+        assert_eq!(decoded.timestamp, 1609459200);
+    }
+
+    #[test]
+    fn test_ppfa_seal_engine_id() {
+        // Verify PPFA consensus engine ID is correctly formatted
+        let engine_id: [u8; 4] = *b"PPFA";
+
+        assert_eq!(engine_id, [b'P', b'P', b'F', b'A']);
+        assert_eq!(engine_id.len(), 4);
+
+        // Verify it matches the engine ID used in block sealing
+        let expected_engine_id = *b"PPFA";
+        assert_eq!(engine_id, expected_engine_id);
+    }
+
+    #[test]
+    fn test_ppfa_authorization_data_integrity() {
+        use codec::Encode;
+
+        // Create test data representing PPFA authorization
+        let block_number: u32 = 100;
+        let ppfa_index: u32 = 5;
+        let proposer_id = ValidatorId::from([7u8; 32]);
+
+        // Verify data can be encoded without panic
+        let _block_number_encoded = block_number.encode();
+        let _ppfa_index_encoded = ppfa_index.encode();
+        let _proposer_id_encoded = proposer_id.encode();
+
+        // Verify ValidatorId encoding produces 32 bytes
+        assert_eq!(proposer_id.encode().len(), 32);
+    }
+
+    #[test]
+    fn test_ppfa_seal_size_limits() {
+        use codec::Encode;
+
+        #[derive(Encode)]
+        struct PpfaSeal {
+            ppfa_index: u32,
+            proposer_id: [u8; 32],
+            slot_number: u64,
+            timestamp: u64,
+        }
+
+        let seal = PpfaSeal {
+            ppfa_index: u32::MAX,
+            proposer_id: [0xFFu8; 32],
+            slot_number: u64::MAX,
+            timestamp: u64::MAX,
+        };
+
+        let encoded = seal.encode();
+
+        // PPFA seal should be compact: 4 + 32 + 8 + 8 = 52 bytes minimum
+        // With SCALE encoding overhead, should be ~52-56 bytes
+        assert!(encoded.len() >= 52);
+        assert!(encoded.len() <= 64, "PPFA seal too large: {} bytes", encoded.len());
+    }
+
+    #[test]
+    fn test_ppfa_proposer_rotation() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add 5 validators
+        let validator_ids: Vec<ValidatorId> = (0..5)
+            .map(|i| {
+                let vid = ValidatorId::from([i as u8; 32]);
+                let vinfo = ValidatorInfo::new(
+                    vid,
+                    params.min_validator_stake,
+                    PeerType::ValidityNode,
+                );
+                committee.add_validator(vinfo).expect("Failed to add validator");
+                vid
+            })
+            .collect();
+
+        let mut proposer_selector = ProposerSelector::new(committee);
+
+        // Verify rotation through all proposers
+        let mut seen_proposers = std::collections::HashSet::new();
+
+        for i in 0..10 {
+            let proposer = proposer_selector.current_proposer()
+                .expect("Failed to get current proposer");
+            seen_proposers.insert(proposer);
+            proposer_selector.advance(i);
+        }
+
+        // Should have seen multiple different proposers
+        assert!(seen_proposers.len() >= 2, "PPFA rotation not working: only {} unique proposers", seen_proposers.len());
+    }
+
+    #[test]
+    fn test_unauthorized_proposer_detection() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add authorized validators
+        let authorized_ids: Vec<ValidatorId> = (0..3)
+            .map(|i| {
+                let vid = ValidatorId::from([i as u8; 32]);
+                let vinfo = ValidatorInfo::new(
+                    vid,
+                    params.min_validator_stake,
+                    PeerType::ValidityNode,
+                );
+                committee.add_validator(vinfo).expect("Failed to add validator");
+                vid
+            })
+            .collect();
+
+        let proposer_selector = ProposerSelector::new(committee);
+
+        // Create an unauthorized validator ID
+        let unauthorized_validator = ValidatorId::from([99u8; 32]);
+
+        // Verify unauthorized validator is NOT a proposer
+        assert!(!proposer_selector.is_proposer(&unauthorized_validator),
+            "Unauthorized validator incorrectly identified as proposer");
+
+        // Verify at least one authorized validator IS a proposer
+        let has_authorized_proposer = authorized_ids.iter()
+            .any(|id| proposer_selector.is_proposer(id));
+
+        assert!(has_authorized_proposer, "No authorized proposers found");
+    }
+
+    #[test]
+    fn test_epoch_boundary_ppfa_reset() {
+        let params = AsfParams::default();
+        let mut committee = CommitteeManager::new(params.max_committee_size);
+
+        // Add validators
+        for i in 0..5 {
+            let vid = ValidatorId::from([i as u8; 32]);
+            let vinfo = ValidatorInfo::new(
+                vid,
+                params.min_validator_stake,
+                PeerType::ValidityNode,
+            );
+            committee.add_validator(vinfo).expect("Failed to add validator");
+        }
+
+        // Simulate epoch rotation
+        let epoch1 = 0u64;
+        let epoch2 = 1u64;
+
+        let result1 = committee.rotate_committee(epoch1);
+        assert!(result1.is_ok(), "Epoch 0 rotation failed");
+
+        let result2 = committee.rotate_committee(epoch2);
+        assert!(result2.is_ok(), "Epoch 1 rotation failed");
+
+        // After rotation, committee should still have validators
+        assert!(committee.size() > 0, "Committee empty after rotation");
     }
 }
