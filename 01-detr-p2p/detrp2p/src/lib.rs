@@ -9,7 +9,7 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::time::{sleep, Duration, Instant};
+use tokio::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
 
 // ============================================================================
@@ -28,19 +28,19 @@ impl PeerId {
         &self.0
     }
 
-    pub fn xor_distance(&self, other: &PeerId) -> u256 {
+    pub fn xor_distance(&self, other: &PeerId) -> U256 {
         let mut result = [0u8; 32];
         for (i, (a, b)) in self.0.iter().zip(other.0.iter()).enumerate() {
             result[i] = a ^ b;
         }
-        u256(result)
+        U256(result)
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct u256([u8; 32]);
+pub struct U256([u8; 32]);
 
-impl u256 {
+impl U256 {
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
@@ -84,6 +84,12 @@ pub struct PeerScore {
     connection_failures: u32,
     timeout_count: u32,
     last_seen: Instant,
+}
+
+impl Default for PeerScore {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PeerScore {
@@ -135,6 +141,12 @@ impl PeerScore {
 
 pub struct ReputationManager {
     scores: Arc<RwLock<HashMap<PeerId, PeerScore>>>,
+}
+
+impl Default for ReputationManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ReputationManager {
@@ -291,19 +303,19 @@ impl RoutingTable {
 }
 
 pub struct KademliaNetwork {
-    local_node_id: PeerId,
+    _local_node_id: PeerId,
     routing_table: Arc<RwLock<RoutingTable>>,
     bootstrap_peers: Vec<PeerAddr>,
-    reputation: Arc<ReputationManager>,
+    _reputation: Arc<ReputationManager>,
 }
 
 impl KademliaNetwork {
     pub fn new(local_node_id: PeerId, bootstrap_peers: Vec<PeerAddr>) -> Self {
         Self {
-            local_node_id,
+            _local_node_id: local_node_id,
             routing_table: Arc::new(RwLock::new(RoutingTable::new(local_node_id))),
             bootstrap_peers,
-            reputation: Arc::new(ReputationManager::new()),
+            _reputation: Arc::new(ReputationManager::new()),
         }
     }
 
@@ -400,6 +412,12 @@ pub struct EncryptionManager {
     sessions: Arc<RwLock<HashMap<PeerId, EciesContext>>>,
 }
 
+impl Default for EncryptionManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EncryptionManager {
     pub fn new() -> Self {
         Self {
@@ -439,16 +457,16 @@ impl EncryptionManager {
 
 #[derive(Clone)]
 pub struct Connection {
-    peer_id: PeerId,
-    address: SocketAddr,
-    established_at: Instant,
+    _peer_id: PeerId,
+    _address: SocketAddr,
+    _established_at: Instant,
     last_activity: Instant,
 }
 
 pub struct ConnectionManager {
     active_connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
     active_streams: Arc<RwLock<HashMap<PeerId, Arc<Mutex<TcpStream>>>>>,
-    pending_connections: Arc<Mutex<VecDeque<PeerId>>>,
+    _pending_connections: Arc<Mutex<VecDeque<PeerId>>>,
     max_connections: usize,
     connection_timeout: Duration,
     idle_timeout: Duration,
@@ -465,7 +483,7 @@ impl ConnectionManager {
         Self {
             active_connections: Arc::new(RwLock::new(HashMap::new())),
             active_streams: Arc::new(RwLock::new(HashMap::new())),
-            pending_connections: Arc::new(Mutex::new(VecDeque::new())),
+            _pending_connections: Arc::new(Mutex::new(VecDeque::new())),
             max_connections,
             connection_timeout,
             idle_timeout,
@@ -489,9 +507,9 @@ impl ConnectionManager {
         {
             Ok(Ok(stream)) => {
                 let conn = Connection {
-                    peer_id: peer.id,
-                    address: peer.address,
-                    established_at: Instant::now(),
+                    _peer_id: peer.id,
+                    _address: peer.address,
+                    _established_at: Instant::now(),
                     last_activity: Instant::now(),
                 };
 
@@ -677,6 +695,12 @@ pub struct MessageRouter {
     inbox: Arc<Mutex<VecDeque<(PeerId, Message)>>>,
 }
 
+impl Default for MessageRouter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MessageRouter {
     pub fn new() -> Self {
         Self {
@@ -694,7 +718,7 @@ impl MessageRouter {
         inbox.pop_front()
     }
 
-    pub async fn broadcast(&self, msg: Message, peers: Vec<PeerId>) -> Result<(), String> {
+    pub async fn broadcast(&self, _msg: Message, _peers: Vec<PeerId>) -> Result<(), String> {
         // In production, would send to all peers asynchronously
         Ok(())
     }
@@ -705,7 +729,7 @@ impl MessageRouter {
 // ============================================================================
 
 pub struct P2PNetwork {
-    local_node_id: PeerId,
+    _local_node_id: PeerId,
     local_address: SocketAddr,
     kademlia: Arc<KademliaNetwork>,
     connection_manager: Arc<ConnectionManager>,
@@ -728,7 +752,7 @@ impl P2PNetwork {
         let message_router = Arc::new(MessageRouter::new());
 
         Self {
-            local_node_id,
+            _local_node_id: local_node_id,
             local_address,
             kademlia,
             connection_manager,
@@ -752,9 +776,9 @@ impl P2PNetwork {
             .await
             .map_err(|e| format!("Failed to bind listener: {}", e))?;
 
-        let kademlia = self.kademlia.clone();
-        let conn_mgr = self.connection_manager.clone();
-        let msg_router = self.message_router.clone();
+        let _kademlia = self.kademlia.clone();
+        let _conn_mgr = self.connection_manager.clone();
+        let _msg_router = self.message_router.clone();
 
         tokio::spawn(async move {
             loop {

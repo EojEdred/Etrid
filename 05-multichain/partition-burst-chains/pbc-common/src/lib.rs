@@ -82,7 +82,6 @@ pub use pallet_lightning_channels;
 pub mod config;
 pub mod opaque;
 
-// Re-export modules
-pub use config::*;
+// Note: NOT exporting config::* to avoid conflicts with runtime-specific configurations
 // Note: NOT exporting types::* to avoid conflicts with runtime-specific type definitions
 // Note: NOT exporting opaque::* to avoid conflicts - each PBC defines its own opaque module

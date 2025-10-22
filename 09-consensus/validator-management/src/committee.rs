@@ -5,7 +5,6 @@
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use codec::{Decode, Encode};
 
 use crate::{
     Balance, CommitteeMember, ValidatorError, ValidatorId, ValidatorInfo, ValidatorResult,

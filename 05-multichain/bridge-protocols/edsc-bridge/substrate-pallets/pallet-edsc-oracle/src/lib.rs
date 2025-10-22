@@ -35,11 +35,9 @@ mod tests;
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
-		traits::UnixTime,
 	};
 	use frame_system::pallet_prelude::*;
-	use sp_arithmetic::{FixedPointNumber, FixedU128, Permill, traits::Saturating};
-	use sp_runtime::traits::CheckedSub;
+	use sp_arithmetic::{Permill, traits::Saturating};
 	use sp_std::{vec, vec::Vec};
 
 	/// Trait for handling price update callbacks

@@ -1,9 +1,92 @@
-//! Ëtrid Peer-Roles — Staking & Role Assignment Pallet
+//! # Ëtrid Peer-Roles Staking & Role Assignment Pallet
 //!
-//! Handles staking, unstaking, role registration, and slashing logic for all
-//! peer types (FlareNodes, ValidityNodes, Directors, etc.).
+//! ## Overview
 //!
-//! Depends on: `peer_roles_staking_types` for shared structs & enums.
+//! This pallet manages staking, role assignment, and slashing for all network peer types
+//! in the Ëtrid blockchain, including FlareNodes, ValidityNodes, DecentralizedDirectors,
+//! and other peer roles. It provides the economic security layer for the network's
+//! consensus and governance systems.
+//!
+//! ## Features
+//!
+//! - Role-based staking with minimum stake requirements per role
+//! - Flexible stake increase/decrease with unbonding periods
+//! - Multi-tier peer roles (FlareNode, ValidityNode, Director, CommonStakePeer, etc.)
+//! - Slashing mechanism for misbehavior
+//! - Role activation/deactivation based on stake levels
+//! - Unbonding queue with configurable lock periods
+//! - Governance-controlled role revocation
+//!
+//! ## Extrinsics
+//!
+//! - `assign_role` - Assign a network role to an account with required stake
+//! - `increase_stake` - Add more stake to an existing role
+//! - `unstake` - Initiate unbonding of staked tokens (begins unbonding period)
+//! - `revoke_role` - Revoke a role completely (governance only)
+//! - `slash` - Slash misbehaving validator or director (governance only)
+//! - `withdraw_unbonded` - Withdraw tokens after unbonding period expires
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Assign ValidityNode role with 64 ËTR stake
+//! Staking::assign_role(
+//!     Origin::signed(alice),
+//!     1, // ValidityNode role (u8)
+//!     64_000_000_000_000_000_000, // 64 ËTR
+//! )?;
+//!
+//! // Increase stake by 10 ËTR
+//! Staking::increase_stake(
+//!     Origin::signed(alice),
+//!     10_000_000_000_000_000_000,
+//! )?;
+//!
+//! // Initiate unbonding of 5 ËTR
+//! Staking::unstake(
+//!     Origin::signed(alice),
+//!     5_000_000_000_000_000_000,
+//! )?;
+//!
+//! // Wait for unbonding period...
+//! // Then withdraw unbonded funds
+//! Staking::withdraw_unbonded(Origin::signed(alice))?;
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `Roles` - Maps account to role record (role type, stake, active status)
+//! - `UnbondingQueue` - Maps account to list of unbonding entries (amount, unlock block)
+//!
+//! ## Events
+//!
+//! - `RoleAssigned` - When a role is assigned to an account
+//! - `RoleRevoked` - When a role is revoked from an account
+//! - `StakeIncreased` - When stake is increased
+//! - `StakeDecreased` - When stake is decreased (unbonding initiated)
+//! - `StakeSlashed` - When stake is slashed for misbehavior
+//! - `UnbondingInitiated` - When unbonding process begins
+//! - `Withdrawn` - When unbonded funds are withdrawn
+//!
+//! ## Errors
+//!
+//! - `RoleAlreadyAssigned` - Account already has an active role
+//! - `InsufficientStake` - Stake amount is zero or invalid
+//! - `NoActiveRole` - Account has no active role
+//! - `BondNotMature` - Unbonding period not yet elapsed
+//! - `StakeTooLow` - Stake below minimum for requested role
+//! - `InsufficientBalance` - Account lacks free balance to stake
+//! - `NoUnbondedFunds` - No funds available to withdraw
+//! - `InsufficientBondedStake` - Attempting to unbond more than bonded
+//!
+//! ## Role Stake Requirements
+//!
+//! - **DecentralizedDirector**: 128 ËTR minimum
+//! - **ValidityNode**: 64 ËTR minimum
+//! - **CommonStakePeer**: 1 ËTR minimum
+//! - **CommonPeer**: No minimum stake
+//! - **CommunityDeveloper**: No minimum stake
+//! - **FlareNode**: 64 ËTR minimum (requires special authorization)
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

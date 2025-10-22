@@ -44,7 +44,7 @@ impl fmt::Display for ChannelState {
 }
 
 /// Payment channel
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PaymentChannel {
     pub id: String,
     pub party_a: String,
@@ -205,7 +205,7 @@ impl PaymentChannel {
 }
 
 /// Channel summary for compact representation
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct ChannelSummary {
     pub id: String,
     pub state: ChannelState,
@@ -215,7 +215,7 @@ pub struct ChannelSummary {
 }
 
 /// Channel update signature
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct ChannelUpdate {
     pub channel_id: String,
     pub nonce: u64,
@@ -259,7 +259,7 @@ impl ChannelUpdate {
 }
 
 /// Settlement record
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Settlement {
     pub channel_id: String,
     pub final_balance_a: u128,
@@ -287,7 +287,7 @@ impl Settlement {
 }
 
 /// Dispute record
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Dispute {
     pub channel_id: String,
     pub complained_by: String,
@@ -298,7 +298,7 @@ pub struct Dispute {
 }
 
 /// Dispute reason
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum DisputeReason {
     InvalidStateUpdate,
     UnauthorizedPayment,
@@ -320,7 +320,7 @@ impl fmt::Display for DisputeReason {
 }
 
 /// Dispute evidence
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct DisputeEvidence {
     pub claimed_nonce: u64,
     pub claimed_balance_a: u128,
@@ -345,7 +345,7 @@ impl DisputeEvidence {
 }
 
 /// Channel errors
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ChannelError {
     SameParty,
     InvalidBalance,
@@ -470,7 +470,7 @@ impl LightningBloc {
 
         self.updates
             .entry(update.channel_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(update);
 
         Ok(())

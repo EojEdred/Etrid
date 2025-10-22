@@ -18,10 +18,9 @@ pub use pallet::*;
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
-		traits::UnixTime,
 	};
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::traits::{CheckedAdd, Saturating, Zero};
+	use sp_runtime::traits::{Saturating, Zero};
 	use sp_std::vec::Vec;
 
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]

@@ -26,8 +26,6 @@ pub mod pallet {
 		pallet_prelude::*,
 	};
 	use frame_system::pallet_prelude::*;
-	use sp_runtime::traits::AtLeast32BitUnsigned;
-	use sp_std::vec::Vec;
 
 	type BalanceOf = u128;
 

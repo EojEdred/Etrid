@@ -31,7 +31,6 @@
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use codec::{Decode, Encode};
 
 use crate::{ValidatorInfo, ValidatorId, ValidatorResult, ValidatorError};
 

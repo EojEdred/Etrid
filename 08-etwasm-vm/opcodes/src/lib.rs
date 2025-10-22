@@ -5,8 +5,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
-use scale_info::TypeInfo;
 use sp_std::prelude::*;
 use etwasm_gas_metering::VMw;
 

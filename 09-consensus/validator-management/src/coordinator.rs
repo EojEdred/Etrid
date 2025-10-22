@@ -3,7 +3,6 @@
 //! This module provides the main coordination loop for validator management in Ëtrid FlareChain.
 //! It integrates committee management, health monitoring, rewards, and networking.
 
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::time::Duration;
 

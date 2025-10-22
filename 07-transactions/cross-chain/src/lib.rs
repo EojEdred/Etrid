@@ -84,7 +84,7 @@ impl fmt::Display for TransferState {
 }
 
 /// Bridge transfer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BridgeTransfer {
     pub id: String,
     pub from_chain: ChainId,
@@ -99,6 +99,7 @@ pub struct BridgeTransfer {
 }
 
 impl BridgeTransfer {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: String,
         from_chain: ChainId,
@@ -167,7 +168,7 @@ impl BridgeTransfer {
 }
 
 /// State proof for cross-chain finality
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StateProof {
     pub block_hash: String,
     pub block_height: u64,
@@ -216,7 +217,7 @@ impl StateProof {
 }
 
 /// Validator signature attestation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ValidatorSignature {
     pub validator_id: String,
     pub signature: Vec<u8>,
@@ -234,7 +235,7 @@ impl ValidatorSignature {
 }
 
 /// Atomic swap order
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AtomicSwap {
     pub id: String,
     pub chain_a: ChainId,
@@ -272,6 +273,7 @@ impl fmt::Display for SwapState {
 }
 
 impl AtomicSwap {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: String,
         chain_a: ChainId,
@@ -370,6 +372,7 @@ impl fmt::Display for BridgeError {
 }
 
 /// Cross-chain bridge manager
+#[derive(Debug, PartialEq)]
 pub struct CrossChainBridge {
     transfers: HashMap<String, BridgeTransfer>,
     swaps: HashMap<String, AtomicSwap>,

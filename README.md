@@ -31,7 +31,7 @@ The **Essential Elements to Operate (E³20)** protocol defines 13 core component
 | # | Component | Purpose | Status |
 |---|-----------|---------|--------|
 | 01 | **DETR p2p** | Lightning-Bloc payment channels | 🟢 Alpha |
-| 02 | **OpenDID** | Self-sovereign identity + **AIDID** 🌟 | 🟡 95% Complete |
+| 02 | **OpenDID** | Self-sovereign identity + **AIDID** 🌟 | 🟢 Complete |
 | 03 | **Security** | Post-quantum encryption | 🟢 **Production-Ready** |
 | 04 | **Accounts** | Account types (EBCA, RCA, SCA) | 🟢 Alpha |
 | 05 | **Multichain** | Flare Chain + PBCs | 🟢 Alpha |

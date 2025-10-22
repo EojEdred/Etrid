@@ -1,21 +1,87 @@
 //! # Pallet DID Registry
 //!
-//! This pallet provides on-chain DID (Decentralized Identifier) registration,
-//! management, and resolution for the Ëtrid blockchain.
-//!
 //! ## Overview
 //!
-//! The pallet manages:
-//! - DID registration and deregistration
-//! - DID document storage and updates
-//! - Access control for DID operations
-//! - DID ownership transfer
-//! - DID expiration and revocation
+//! This pallet provides on-chain DID (Decentralized Identifier) registration, management,
+//! and resolution for the Ëtrid blockchain, following the W3C DID specification with
+//! Ëtrid-specific extensions.
 //!
-//! ## W3C DID Compliance
+//! ## Features
 //!
-//! This implementation follows the W3C DID specification with Ëtrid extensions.
-//! DIDs follow the format: did:etrid:{identifier}
+//! - W3C DID-compliant decentralized identity management
+//! - On-chain DID document storage and retrieval
+//! - Flexible access control with multiple permission levels
+//! - Ownership transfer and delegation capabilities
+//! - DID expiration and revocation mechanisms
+//! - Support for controller and owner separation
+//!
+//! ## Extrinsics
+//!
+//! - `register_did` - Register a new DID with document hash
+//! - `update_did` - Update DID document hash (owner or controller)
+//! - `revoke_did` - Revoke a DID permanently (owner only)
+//! - `transfer_ownership` - Transfer DID ownership to another account
+//! - `set_expiration` - Set expiration block for a DID
+//! - `grant_access` - Grant access permissions to an agent
+//! - `revoke_access` - Revoke access permissions from an agent
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Register a new DID
+//! DidRegistry::register_did(
+//!     Origin::signed(alice),
+//!     b"did:etrid:alice".to_vec(),
+//!     bob, // controller
+//!     b"QmHash123...".to_vec(), // document hash
+//! )?;
+//!
+//! // Update DID document
+//! DidRegistry::update_did(
+//!     Origin::signed(alice),
+//!     did_hash,
+//!     b"QmNewHash456...".to_vec(),
+//! )?;
+//!
+//! // Grant read access to charlie
+//! DidRegistry::grant_access(
+//!     Origin::signed(alice),
+//!     did_hash,
+//!     charlie,
+//!     AccessLevel::Reader,
+//! )?;
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `Registrations` - Maps DID hash to registration record
+//! - `OwnerDids` - Maps owner account to list of owned DIDs
+//! - `AccessControlList` - Maps DID and agent to access permissions
+//! - `TotalDids` - Total number of registered DIDs
+//! - `Nonce` - Nonce counter for unique operations
+//!
+//! ## Events
+//!
+//! - `DidRegistered` - When a new DID is registered
+//! - `DidUpdated` - When a DID document is updated
+//! - `DidRevoked` - When a DID is revoked
+//! - `OwnershipTransferred` - When DID ownership changes
+//! - `ExpirationSet` - When DID expiration is configured
+//! - `AccessGranted` - When access is granted to an agent
+//! - `AccessRevoked` - When access is revoked from an agent
+//!
+//! ## Errors
+//!
+//! - `DidAlreadyExists` - Attempting to register an existing DID
+//! - `DidNotFound` - DID does not exist
+//! - `NotAuthorized` - Caller lacks required permissions
+//! - `DidRevoked` - DID has been revoked
+//! - `DidExpired` - DID has expired
+//!
+//! ## W3C DID Format
+//!
+//! DIDs follow the format: `did:etrid:{identifier}`
+//! where identifier is a unique string hashed for storage
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -24,7 +90,7 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use codec::{Decode, Encode, MaxEncodedLen};
+    use codec::{Decode, Encode, MaxEncodedLen, DecodeWithMemTracking};
     use frame_support::pallet_prelude::*;
     use frame_support::BoundedVec;
     use frame_system::pallet_prelude::*;
@@ -80,6 +146,8 @@ pub mod pallet {
         Writer,
         Admin,
     }
+
+    impl DecodeWithMemTracking for AccessLevel {}
 
     /// Access control entry
     #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]

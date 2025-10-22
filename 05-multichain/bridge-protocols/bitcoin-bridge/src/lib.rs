@@ -16,7 +16,7 @@ pub mod pallet {
         traits::{Currency, ExistenceRequirement, WithdrawReasons},
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{CheckedMul, CheckedDiv, Saturating, SaturatedConversion};
+    use sp_runtime::traits::{Saturating, SaturatedConversion};
     use sp_std::vec::Vec;
 
     // Import the generic Bridge trait

@@ -31,7 +31,7 @@ impl fmt::Display for ValidatorStatus {
 }
 
 /// Validator information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Validator {
     pub id: String,
     pub address: String,
@@ -94,9 +94,7 @@ impl Validator {
 
     /// Get total stake (own + delegated)
     pub fn total_stake(&self) -> u128 {
-        self.stake
-            .checked_add(self.total_delegated)
-            .unwrap_or(u128::MAX)
+        self.stake.saturating_add(self.total_delegated)
     }
 
     /// Calculate validator commission from rewards
@@ -128,7 +126,7 @@ impl Validator {
 }
 
 /// Delegation record
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Delegation {
     pub validator_id: String,
     pub delegator: String,
@@ -157,7 +155,7 @@ impl Delegation {
 }
 
 /// Reward distribution
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Reward {
     pub validator_id: String,
     pub amount: u128,
@@ -252,7 +250,7 @@ pub struct StakeDeposit {
     rewards: Vec<Reward>,
     slashing_events: Vec<SlashingEvent>,
     min_stake: u128,
-    unbonding_period: u64,
+    _unbonding_period: u64,
 }
 
 impl StakeDeposit {
@@ -264,7 +262,7 @@ impl StakeDeposit {
             rewards: Vec::new(),
             slashing_events: Vec::new(),
             min_stake,
-            unbonding_period,
+            _unbonding_period: unbonding_period,
         }
     }
 
@@ -331,7 +329,7 @@ impl StakeDeposit {
 
         self.delegations
             .entry(validator_id.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(delegation);
 
         Ok(())
@@ -376,7 +374,7 @@ impl StakeDeposit {
 
         let total_rewards = validator.reward_pool;
         let commission = validator.calculate_commission(total_rewards);
-        let delegator_rewards = total_rewards.saturating_sub(commission);
+        let _delegator_rewards = total_rewards.saturating_sub(commission);
 
         let validator = self.validators.get_mut(validator_id).unwrap();
         validator.reward_pool = 0;
@@ -665,7 +663,7 @@ mod tests {
     fn test_stake_deposit_creation() {
         let deposit = StakeDeposit::new(1000, 86400);
         assert_eq!(deposit.min_stake, 1000);
-        assert_eq!(deposit.unbonding_period, 86400);
+        assert_eq!(deposit._unbonding_period, 86400);
     }
 
     #[test]

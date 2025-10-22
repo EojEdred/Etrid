@@ -2,20 +2,101 @@
 //!
 //! **World's First AI DID Standard**
 //!
-//! This pallet provides decentralized identities for Artificial Intelligence agents,
-//! models, and systems on the Ëtrid blockchain.
-//!
 //! ## Overview
 //!
-//! AIDID extends the W3C DID specification to provide identities specifically
-//! designed for AI systems. This includes:
+//! This pallet provides decentralized identities specifically designed for Artificial
+//! Intelligence agents, models, and systems on the Ëtrid blockchain. AIDID extends the
+//! W3C DID specification with AI-specific features including capability declarations,
+//! model attestation, reputation tracking, and comprehensive safety profiles.
 //!
-//! - **Identity**: Unique DIDs for AI agents (did:etrid:ai:{type}:{id})
-//! - **Capabilities**: Declare what an AI can and cannot do
-//! - **Attestation**: Cryptographic proof of model provenance and training
-//! - **Reputation**: Track performance and build trust scores
-//! - **Authorization**: Permission system for AI actions
-//! - **Safety**: Alignment methods, content filtering, bias evaluation
+//! ## Features
+//!
+//! - Unique DIDs for AI agents (format: `did:etrid:ai:{type}:{id}`)
+//! - Capability declarations (tasks, modalities, languages, context limits)
+//! - Cryptographic model attestation and provenance tracking
+//! - Reputation system with inference tracking and user ratings
+//! - Permission-based authorization for AI actions
+//! - Safety profiles (alignment methods, content filtering, bias evaluation)
+//! - Pricing model configuration for AI services
+//! - AI activation/deactivation controls
+//!
+//! ## Extrinsics
+//!
+//! - `register_ai` - Register a new AI identity with profile
+//! - `update_profile` - Update AI capabilities and configuration
+//! - `attest_model` - Cryptographically attest AI model provenance
+//! - `grant_permission` - Grant specific permissions to an AI
+//! - `revoke_permission` - Revoke permissions from an AI
+//! - `record_inference` - Record AI inference execution (success/failure)
+//! - `submit_rating` - Submit user rating for AI performance
+//! - `deactivate_ai` - Temporarily deactivate an AI
+//! - `reactivate_ai` - Reactivate a deactivated AI
+//! - `update_pricing` - Update AI service pricing model
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Register a new LLM AI
+//! AIDID::register_ai(
+//!     Origin::signed(controller),
+//!     b"gpt-etrid-v1".to_vec(),
+//!     AIType::LLM,
+//!     ai_profile, // Includes capabilities, safety, version
+//! )?;
+//!
+//! // Attest the model
+//! AIDID::attest_model(
+//!     Origin::signed(controller),
+//!     ai_did_hash,
+//!     model_attestation, // Includes model hash, training data hash, benchmarks
+//! )?;
+//!
+//! // Grant permission for data access
+//! AIDID::grant_permission(
+//!     Origin::signed(controller),
+//!     ai_did_hash,
+//!     permission, // Action, resource, conditions
+//! )?;
+//!
+//! // Record successful inference
+//! AIDID::record_inference(
+//!     Origin::signed(user),
+//!     ai_did_hash,
+//!     true, // success
+//! )?;
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `AIIdentities` - Maps DID hash to AI identity record
+//! - `ControllerAIs` - Maps controller account to owned AIs
+//! - `AIReputation` - Tracks AI performance metrics and ratings
+//! - `AIPermissions` - Maps AI DID and permission hash to permission details
+//! - `TotalAIs` - Total number of registered AI identities
+//!
+//! ## Events
+//!
+//! - `AIRegistered` - When a new AI identity is registered
+//! - `AIUpdated` - When AI profile is updated
+//! - `ModelAttested` - When AI model is cryptographically attested
+//! - `PermissionGranted` - When permission is granted to AI
+//! - `PermissionRevoked` - When permission is revoked from AI
+//! - `InferenceRecorded` - When AI inference execution is logged
+//! - `RatingSubmitted` - When user submits AI rating
+//! - `AIDeactivated` - When AI is deactivated
+//! - `AIReactivated` - When AI is reactivated
+//! - `PricingUpdated` - When AI pricing model is updated
+//!
+//! ## Errors
+//!
+//! - `AIAlreadyExists` - AI identity already registered
+//! - `AINotFound` - AI identity does not exist
+//! - `NotController` - Caller is not the AI controller
+//! - `AIDeactivated` - AI is currently deactivated
+//! - `InvalidRating` - Rating value out of valid range (0-10000)
+//! - `InvalidAttestation` - Model attestation data is invalid
+//! - `NoCapabilities` - AI profile missing required capabilities
+//! - `NoModalities` - AI profile missing input/output modalities
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -665,6 +746,7 @@ mod tests {
     use frame_support::{
         assert_err, assert_ok, parameter_types,
         traits::ConstU32,
+        BoundedVec,
     };
     use sp_core::H256;
     use sp_runtime::{
@@ -753,7 +835,7 @@ mod tests {
         };
 
         let mut alignment_method = BoundedVec::default();
-        alignment_method.try_extend_from_slice(b"RLHF").unwrap();
+        alignment_method.extend_from_slice(b"RLHF");
 
         let safety = SafetyProfile {
             alignment_method,
@@ -763,13 +845,13 @@ mod tests {
         };
 
         let mut version = BoundedVec::default();
-        version.try_extend_from_slice(b"v1.0.0").unwrap();
+        version.extend_from_slice(b"v1.0.0");
 
         let mut architecture = BoundedVec::default();
-        architecture.try_extend_from_slice(b"transformer").unwrap();
+        architecture.extend_from_slice(b"transformer");
 
         let mut parameters = BoundedVec::default();
-        parameters.try_extend_from_slice(b"175B").unwrap();
+        parameters.extend_from_slice(b"175B");
 
         AIProfile {
             ai_type: AIType::LLM,
@@ -870,14 +952,14 @@ mod tests {
             let did_hash = AIDID::hash_identifier(&identifier, &AIType::LLM);
 
             let mut version = BoundedVec::default();
-            version.try_extend_from_slice(b"v1.0.0").unwrap();
+            version.extend_from_slice(b"v1.0.0");
 
             let mut training_data_hash = BoundedVec::default();
-            training_data_hash.try_extend_from_slice(b"QmXyz...").unwrap();
+            training_data_hash.extend_from_slice(b"QmXyz...");
 
             let mut benchmarks = BoundedVec::default();
             let mut benchmark_name = BoundedVec::default();
-            benchmark_name.try_extend_from_slice(b"MMLU").unwrap();
+            benchmark_name.extend_from_slice(b"MMLU");
             benchmarks.try_push(Benchmark {
                 name: benchmark_name,
                 score: 8670,
@@ -1007,10 +1089,10 @@ mod tests {
             let did_hash = AIDID::hash_identifier(&identifier, &AIType::LLM);
 
             let mut action = BoundedVec::default();
-            action.try_extend_from_slice(b"read").unwrap();
+            action.extend_from_slice(b"read");
 
             let mut resource = BoundedVec::default();
-            resource.try_extend_from_slice(b"/data/users").unwrap();
+            resource.extend_from_slice(b"/data/users");
 
             let permission = Permission {
                 action,
@@ -1050,10 +1132,10 @@ mod tests {
             let identifier = b"invalid-ai".to_vec();
 
             let mut version = BoundedVec::default();
-            version.try_extend_from_slice(b"v1.0.0").unwrap();
+            version.extend_from_slice(b"v1.0.0");
 
             let mut alignment_method = BoundedVec::default();
-            alignment_method.try_extend_from_slice(b"RLHF").unwrap();
+            alignment_method.extend_from_slice(b"RLHF");
 
             let profile = AIProfile {
                 ai_type: AIType::LLM,

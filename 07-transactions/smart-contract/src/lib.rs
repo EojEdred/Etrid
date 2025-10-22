@@ -197,6 +197,7 @@ impl ContractCode {
 
 /// Contract ABI (Application Binary Interface)
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct ContractABI {
     pub methods: Vec<MethodSignature>,
     pub events: Vec<EventSignature>,
@@ -215,15 +216,6 @@ impl ContractABI {
     /// Find event by name
     pub fn event(&self, name: &str) -> Option<&EventSignature> {
         self.events.iter().find(|e| e.name == name)
-    }
-}
-
-impl Default for ContractABI {
-    fn default() -> Self {
-        Self {
-            methods: Vec::new(),
-            events: Vec::new(),
-        }
     }
 }
 
@@ -512,7 +504,7 @@ impl SmartContractExecutor {
         let mut gas_meter = GasMeter::new(self.gas_config, gas_limit);
 
         // Create snapshot for rollback
-        let state_snapshot = state.snapshot();
+        let _state_snapshot = state.snapshot();
         let mut logs = Vec::new();
 
         // Simulate execution
@@ -527,7 +519,7 @@ impl SmartContractExecutor {
         let initial_size = state.size();
 
         // Simulate method execution
-        let mut execution_succeeded = true;
+        let execution_succeeded = true;
         if method.is_readonly {
             // Readonly methods just charge gas
             gas_meter.charge(100)?;
@@ -602,20 +594,16 @@ impl SmartContractExecutor {
         let mut gas = 0u64;
 
         // Base cost
-        gas = gas.checked_add(50).unwrap_or(u64::MAX);
+        gas = gas.saturating_add(50);
 
         // Parameter processing cost
         for size in param_sizes {
-            gas = gas
-                .checked_add((size as u64) * self.gas_config.memory_per_byte)
-                .unwrap_or(u64::MAX);
+            gas = gas.saturating_add((size as u64) * self.gas_config.memory_per_byte);
         }
 
         // Method-specific cost
         if !method.is_readonly {
-            gas = gas
-                .checked_add(self.gas_config.storage_write)
-                .unwrap_or(u64::MAX);
+            gas = gas.saturating_add(self.gas_config.storage_write);
         }
 
         Ok(gas)

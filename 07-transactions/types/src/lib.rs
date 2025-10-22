@@ -1,6 +1,110 @@
+//! # Ëtrid Transaction Types Pallet
+//!
+//! ## Overview
+//!
+//! This pallet defines the core transaction types and structures for the Ëtrid blockchain,
+//! implementing the 5 fundamental transaction categories defined in the Ivory Paper:
+//! Regular Transfer, Stake Deposit, Smart Contract Call, Contract Initialization, and
+//! Lightning Bloc (cross-chain micropayments). It also implements HTLC (Hashed Time-Locked
+//! Contracts) for atomic swaps and conditional payments.
+//!
+//! ## Features
+//!
+//! - Five core transaction types (Regular, Stake, Contract Call, Contract Init, Lightning Bloc)
+//! - Ed25519 signature verification for transaction authenticity
+//! - Dual-currency support (ÉTR native token and ETD stablecoin)
+//! - Smart contract deployment and execution with VMw (gas) limits
+//! - HTLC implementation for atomic swaps and payment channels
+//! - Transaction pool and mempool management
+//! - Nonce-based replay protection
+//! - Cross-chain payment channels via Lightning Bloc
+//!
+//! ## Extrinsics
+//!
+//! - `submit_regular_transfer` - Transfer tokens between accounts
+//! - `submit_stake_deposit` - Lock tokens for validator staking
+//! - `submit_contract_call` - Execute existing smart contract
+//! - `deploy_contract` - Deploy new WASM smart contract
+//! - `submit_lightning_bloc` - Initiate cross-chain payment
+//! - `withdraw_stake` - Withdraw staked tokens after lock period
+//! - `create_htlc` - Create hashed time-locked contract
+//! - `claim_htlc` - Claim HTLC with secret preimage
+//! - `refund_htlc` - Refund HTLC after timelock expiry
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Submit a regular transfer
+//! TxTypes::submit_regular_transfer(
+//!     Origin::signed(alice),
+//!     bob_address.to_vec(),
+//!     1_000_000_000_000_000_000, // 1 ÉTR
+//!     true, // is_etr
+//! )?;
+//!
+//! // Deploy a smart contract
+//! TxTypes::deploy_contract(
+//!     Origin::signed(alice),
+//!     contract_wasm_code,
+//!     1_000_000, // VMw limit
+//!     0, // no value sent
+//! )?;
+//!
+//! // Create HTLC for atomic swap
+//! TxTypes::create_htlc(
+//!     Origin::signed(alice),
+//!     bob,
+//!     1_000_000_000_000_000_000,
+//!     hash_lock, // SHA-256 hash of secret
+//!     current_block + 1000, // timelock
+//! )?;
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `AccountNonces` - Maps account to next nonce for replay protection
+//! - `TransactionPool` - Pending transaction mempool
+//! - `TransactionReceipts` - Maps tx hash to receipt (status, block, VMw used)
+//! - `StakingPool` - Maps account to staked balance
+//! - `ContractStorage` - Contract state storage (contract -> key -> value)
+//! - `ContractCode` - Maps contract address to WASM bytecode
+//! - `LightningBlocChannels` - Cross-chain payment channel data
+//! - `HTLCContracts` - Maps HTLC ID to contract details
+//!
+//! ## Events
+//!
+//! - `TransactionExecuted` - When transaction is successfully executed
+//! - `TransactionFailed` - When transaction fails with reason
+//! - `StakeDeposited` - When tokens are staked
+//! - `StakeWithdrawn` - When staked tokens are withdrawn
+//! - `ContractCalled` - When smart contract is invoked
+//! - `ContractDeployed` - When new contract is deployed
+//! - `LightningBlocCreated` - When payment channel is created
+//! - `LightningBlocPaymentRouted` - When cross-chain payment is processed
+//! - `HTLCCreated` - When new HTLC is created
+//! - `HTLCClaimed` - When HTLC is claimed with secret
+//! - `HTLCRefunded` - When HTLC is refunded after timeout
+//!
+//! ## Errors
+//!
+//! - `NonceMismatch` - Transaction nonce does not match expected
+//! - `InvalidSignature` - Ed25519 signature verification failed
+//! - `InsufficientBalance` - Account lacks sufficient balance
+//! - `VMwLimitExceeded` - Contract execution exceeded gas limit
+//! - `ContractNotFound` - Contract address does not exist
+//! - `HTLCNotFound` - HTLC does not exist
+//! - `HTLCInvalidSecret` - Secret preimage does not match hash
+//! - `HTLCTimeLockNotExpired` - Cannot refund HTLC before timelock
+//!
+//! ## Transaction Validation Rules (Ivory Paper)
+//!
+//! A transaction is valid if:
+//! 1. Properly formed and encoded (no trailing bytes)
+//! 2. Digital signature is valid (Ed25519)
+//! 3. Nonce equals sender's current nonce
+//! 4. VMwattage >= gas used
+//! 5. Sender's balance covers execution cost
 #![cfg_attr(not(feature = "std"), no_std)]
-
-//! tx-types
 
 use codec::{Decode, Encode};
 use frame_support::{dispatch::DispatchResult, pallet_prelude::{MaxEncodedLen, BoundedVec, ConstU32}};
@@ -118,7 +222,7 @@ pub mod pallet {
     }
 
     /// Transaction receipt
-    #[derive(Encode, Decode, TypeInfo, Debug, Clone)]
+    #[derive(Clone, Debug, Decode, Encode, TypeInfo)]
     pub struct TransactionReceipt<AccountId> {
         pub tx_hash: [u8; 32],
         pub sender: AccountId,
@@ -757,7 +861,7 @@ pub mod pallet {
 // LIGHTNING BLOC CHANNEL STRUCTURE
 // ============================================================
 
-#[derive(Encode, Decode, TypeInfo, Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, Decode, Encode, Eq, PartialEq, TypeInfo)]
 pub struct LightningBlocChannel {
     pub id: u32,
     pub target_chain: u32,
@@ -771,7 +875,7 @@ pub struct LightningBlocChannel {
 // ============================================================
 
 /// HTLC for atomic swaps and conditional payments
-#[derive(Encode, Decode, TypeInfo, Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, Decode, Encode, Eq, PartialEq, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 #[codec(mel_bound())]
 pub struct HTLC<T: pallet::Config> {
