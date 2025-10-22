@@ -1,12 +1,21 @@
 //! Bitcoin Bridge Pallet for Ëtrid
 //! Location: 05-multichain/bridge-protocols/bitcoin-bridge/src/lib.rs
-//! 
+//!
 //! Handles BTC <-> ËTR bridging for the BTC Partition Burst Chain
 //! Implements the generic Bridge trait from partition-burst-chains/bridge
+//!
+//! ## Multi-Signature Custodian Security
+//! This pallet implements M-of-N multi-signature custodian approval for critical operations:
+//! - Withdrawal confirmations require custodian consensus
+//! - Prevents single points of failure in bridge security
+//! - Configurable threshold (e.g., 2-of-3, 3-of-5)
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
+
+#[cfg(test)]
+mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -16,8 +25,9 @@ pub mod pallet {
         traits::{Currency, ExistenceRequirement, WithdrawReasons},
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Saturating, SaturatedConversion};
+    use sp_runtime::traits::{Saturating, SaturatedConversion, Hash};
     use sp_std::vec::Vec;
+    use etrid_bridge_common::multisig::{MultiSigCustodian, PendingApproval};
 
     // Import the generic Bridge trait
     // use etrid_bridge_interface::BridgeTrait;
@@ -25,6 +35,7 @@ pub mod pallet {
     type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -125,6 +136,23 @@ pub mod pallet {
     #[pallet::getter(fn total_etr_minted)]
     pub type TotalEtrMinted<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
 
+    /// Multi-sig custodian set for bridge operations
+    #[pallet::storage]
+    #[pallet::getter(fn custodian_set)]
+    pub type CustodianSet<T: Config> = StorageValue<_, MultiSigCustodian<T::AccountId>, OptionQuery>;
+
+    /// Pending multi-sig approvals for withdrawals
+    /// Maps withdrawal operation hash to pending approval state
+    #[pallet::storage]
+    #[pallet::getter(fn pending_approvals)]
+    pub type PendingApprovals<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::Hash,
+        PendingApproval<T::AccountId, T::Hash>,
+        OptionQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -142,6 +170,12 @@ pub mod pallet {
         WithdrawalCompleted(T::AccountId, Vec<u8>),
         /// Exchange rate updated [new_rate]
         ExchangeRateUpdated(u64),
+        /// Custodian set updated [threshold]
+        CustodianSetUpdated(u32),
+        /// Withdrawal approval submitted [operation_hash, custodian, approvals_count]
+        WithdrawalApprovalSubmitted(T::Hash, T::AccountId, u32),
+        /// Withdrawal approved and executed [operation_hash, withdrawer]
+        WithdrawalApprovedAndExecuted(T::Hash, T::AccountId),
     }
 
     #[pallet::error]
@@ -174,6 +208,18 @@ pub mod pallet {
         NotAuthorized,
         /// Invalid status transition
         InvalidStatusTransition,
+        /// No custodian set configured
+        NoCustodianSet,
+        /// Not a custodian
+        NotCustodian,
+        /// Unknown operation
+        UnknownOperation,
+        /// Already executed
+        AlreadyExecuted,
+        /// Already approved by this custodian
+        AlreadyApproved,
+        /// Invalid custodian set configuration
+        InvalidCustodianSet,
     }
 
     #[pallet::genesis_config]
@@ -398,10 +444,155 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Set custodian set (governance only)
+        ///
+        /// # Parameters
+        /// - `origin`: Root origin (governance)
+        /// - `custodians`: Vector of custodian accounts
+        /// - `threshold`: Number of approvals required (M in M-of-N)
+        ///
+        /// # Example
+        /// ```ignore
+        /// // Setup 2-of-3 multisig
+        /// set_custodians(root, vec![alice, bob, charlie], 2)?;
+        /// ```
+        #[pallet::call_index(5)]
+        #[pallet::weight(10_000)]
+        pub fn set_custodians(
+            origin: OriginFor<T>,
+            custodians: Vec<T::AccountId>,
+            threshold: u32,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+
+            // Validate and create custodian set
+            let custodian_set = MultiSigCustodian::new(custodians, threshold)
+                .map_err(|_| Error::<T>::InvalidCustodianSet)?;
+
+            CustodianSet::<T>::put(custodian_set);
+
+            Self::deposit_event(Event::CustodianSetUpdated(threshold));
+
+            Ok(())
+        }
+
+        /// Approve a BTC withdrawal (custodian only)
+        ///
+        /// # Parameters
+        /// - `origin`: Custodian account
+        /// - `withdrawer`: Account requesting withdrawal
+        /// - `btc_txid`: Bitcoin transaction ID for the withdrawal
+        ///
+        /// # Security
+        /// - Only custodians can approve
+        /// - Prevents duplicate approvals
+        /// - Executes withdrawal when threshold reached
+        /// - Marks operation as executed to prevent re-execution
+        ///
+        /// # Example
+        /// ```ignore
+        /// // Custodian 1 approves
+        /// approve_withdrawal(custodian1, alice, btc_txid)?;
+        /// // Custodian 2 approves (reaches 2-of-3 threshold, executes)
+        /// approve_withdrawal(custodian2, alice, btc_txid)?;
+        /// ```
+        #[pallet::call_index(6)]
+        #[pallet::weight(10_000)]
+        pub fn approve_withdrawal(
+            origin: OriginFor<T>,
+            withdrawer: T::AccountId,
+            btc_txid: Vec<u8>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Check custodian set exists
+            let custodian_set = CustodianSet::<T>::get().ok_or(Error::<T>::NoCustodianSet)?;
+
+            // Check caller is custodian
+            ensure!(custodian_set.is_custodian(&who), Error::<T>::NotCustodian);
+
+            // Check withdrawal exists
+            let _withdrawal = Withdrawals::<T>::get(&withdrawer)
+                .ok_or(Error::<T>::WithdrawalNotFound)?;
+
+            // Create operation hash from withdrawer + btc_txid
+            let operation_data = (withdrawer.clone(), btc_txid.clone()).encode();
+            let operation_hash = T::Hashing::hash(&operation_data);
+
+            // Get or create pending approval
+            let mut pending = PendingApprovals::<T>::get(&operation_hash)
+                .unwrap_or_else(|| {
+                    PendingApproval::new(operation_hash, custodian_set.threshold)
+                });
+
+            // Check not already executed
+            ensure!(!pending.executed, Error::<T>::AlreadyExecuted);
+
+            // Check not already approved by this custodian
+            ensure!(!pending.approvals.contains(&who), Error::<T>::AlreadyApproved);
+
+            // Add approval
+            pending.approvals.push(who.clone());
+
+            let approvals_count = pending.approvals.len() as u32;
+
+            Self::deposit_event(Event::WithdrawalApprovalSubmitted(
+                operation_hash,
+                who,
+                approvals_count,
+            ));
+
+            // Check if threshold reached
+            if custodian_set.has_threshold(&pending.approvals) {
+                // Mark as executed
+                pending.executed = true;
+
+                // Execute withdrawal confirmation
+                Self::execute_withdrawal_confirmation(withdrawer.clone(), btc_txid.clone())?;
+
+                Self::deposit_event(Event::WithdrawalApprovedAndExecuted(
+                    operation_hash,
+                    withdrawer,
+                ));
+            }
+
+            // Store pending approval
+            PendingApprovals::<T>::insert(operation_hash, pending);
+
+            Ok(())
+        }
     }
 
     // Helper functions
     impl<T: Config> Pallet<T> {
+        /// Execute withdrawal confirmation (internal helper)
+        fn execute_withdrawal_confirmation(
+            withdrawer: T::AccountId,
+            btc_txid: Vec<u8>,
+        ) -> DispatchResult {
+            let mut withdrawal = Withdrawals::<T>::get(&withdrawer)
+                .ok_or(Error::<T>::WithdrawalNotFound)?;
+
+            ensure!(
+                withdrawal.status == WithdrawalStatus::Requested ||
+                withdrawal.status == WithdrawalStatus::Processing,
+                Error::<T>::InvalidStatusTransition
+            );
+
+            let btc_txid_bounded: BoundedVec<u8, ConstU32<64>> = btc_txid.clone().try_into()
+                .map_err(|_| Error::<T>::InvalidBtcTxId)?;
+
+            withdrawal.status = WithdrawalStatus::Completed;
+            withdrawal.btc_txid = Some(btc_txid_bounded);
+
+            Withdrawals::<T>::insert(&withdrawer, withdrawal);
+
+            Self::deposit_event(Event::WithdrawalCompleted(withdrawer, btc_txid));
+
+            Ok(())
+        }
+
         /// Convert satoshi to ETR using exchange rate
         fn satoshi_to_etr(amount_satoshi: u64, exchange_rate: u64) -> Result<BalanceOf<T>, Error<T>> {
             // exchange_rate is satoshi per ETR, scaled by 1e8

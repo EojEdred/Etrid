@@ -1,6 +1,17 @@
 // STABLECOIN BRIDGE PALLET - Unified USDT + USDC bridging
 // Handles stablecoins across multiple chains: ETH, TRON, SOL, BNB
 // Priority #6-7 Combined - $217B market cap, 80%+ of stablecoin trading
+//
+// ## Multi-Signature Custodian Security
+// This bridge implements M-of-N multi-signature custodian approval for withdrawals.
+// Critical operations require consensus from multiple custodians to prevent
+// single points of failure.
+//
+// Integration with etrid_bridge_common::multisig provides:
+// - M-of-N threshold approval for withdrawal confirmations
+// - Duplicate approval prevention
+// - Execution only after threshold reached
+// - Configurable custodian sets (e.g., 2-of-3, 3-of-5)
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -216,6 +227,18 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn circle_attestation_required)]
 	pub type CircleAttestationRequired<T> = StorageValue<_, bool, ValueQuery>;
+
+	/// Multi-sig custodian set for withdrawal approvals
+	/// See etrid_bridge_common::multisig for implementation details
+	/// Example: 2-of-3 custodians must approve each withdrawal
+	#[pallet::storage]
+	#[pallet::getter(fn withdrawal_custodian_set)]
+	pub type WithdrawalCustodianSet<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+
+	/// Withdrawal approval threshold (M in M-of-N)
+	#[pallet::storage]
+	#[pallet::getter(fn withdrawal_threshold)]
+	pub type WithdrawalThreshold<T> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {

@@ -2,6 +2,9 @@
 
 pub use pallet::*;
 
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
     use frame_support::pallet_prelude::*;
@@ -9,6 +12,9 @@ pub mod pallet {
     use codec::{Encode, Decode};
     use scale_info::TypeInfo;
     use sp_runtime::{RuntimeDebug, traits::AtLeast32BitUnsigned};
+
+    // Maximum guardians per account
+    const MAX_GUARDIANS: u32 = 10;
 
     #[derive(
         Encode,
@@ -36,6 +42,34 @@ pub mod pallet {
         pub reputation: u64,
     }
 
+    #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
+    pub struct RecoveryConfig<AccountId, BlockNumber> {
+        pub guardians: BoundedVec<AccountId, ConstU32<MAX_GUARDIANS>>,
+        pub threshold: u32,  // M-of-N threshold
+        pub delay_period: BlockNumber,  // Blocks to wait before recovery
+    }
+
+    #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
+    pub struct ActiveRecovery<AccountId, BlockNumber> {
+        pub new_account: AccountId,
+        pub approvals: BoundedVec<AccountId, ConstU32<MAX_GUARDIANS>>,
+        pub created_at: BlockNumber,
+        pub executable_at: BlockNumber,
+    }
+
+    impl<AccountId, BlockNumber> RecoveryConfig<AccountId, BlockNumber> {
+        pub fn is_guardian(&self, who: &AccountId) -> bool
+        where
+            AccountId: PartialEq,
+        {
+            self.guardians.contains(who)
+        }
+
+        pub fn has_threshold(&self, approvals: &BoundedVec<AccountId, ConstU32<MAX_GUARDIANS>>) -> bool {
+            approvals.len() >= self.threshold as usize
+        }
+    }
+
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -47,18 +81,55 @@ pub mod pallet {
     #[pallet::getter(fn accounts)]
     pub(super) type Accounts<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, AccountData<T::Balance>, ValueQuery>;
 
+    #[pallet::storage]
+    #[pallet::getter(fn recovery_configs)]
+    pub type RecoveryConfigs<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        RecoveryConfig<T::AccountId, BlockNumberFor<T>>,
+        OptionQuery,
+    >;
+
+    #[pallet::storage]
+    #[pallet::getter(fn active_recoveries)]
+    pub type ActiveRecoveries<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,  // Lost account
+        ActiveRecovery<T::AccountId, BlockNumberFor<T>>,
+        OptionQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         Transferred(T::AccountId, T::AccountId, TokenType, T::Balance),
         Minted(T::AccountId, TokenType, T::Balance),
         Burned(T::AccountId, TokenType, T::Balance),
+        RecoveryCreated { account: T::AccountId, threshold: u32 },
+        RecoveryInitiated { lost_account: T::AccountId, new_account: T::AccountId, guardian: T::AccountId },
+        RecoveryApproved { lost_account: T::AccountId, guardian: T::AccountId, approvals: u32 },
+        RecoveryExecuted { lost_account: T::AccountId, new_account: T::AccountId },
+        RecoveryCancelled { account: T::AccountId },
     }
 
     #[pallet::error]
     pub enum Error<T> {
         InsufficientBalance,
         InvalidTokenType,
+        InvalidThreshold,
+        ThresholdTooHigh,
+        NoGuardians,
+        TooManyGuardians,
+        NoRecoveryConfig,
+        RecoveryAlreadyActive,
+        NotGuardian,
+        NoActiveRecovery,
+        AlreadyApproved,
+        ThresholdNotMet,
+        DelayNotPassed,
+        NotAccountOwner,
     }
 
     #[pallet::pallet]
@@ -133,6 +204,159 @@ pub mod pallet {
             Self::deposit_event(Event::Burned(sender, token_type, amount));
             Ok(())
         }
+
+        /// Setup recovery configuration for an account
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(4)]
+        pub fn create_recovery(
+            origin: OriginFor<T>,
+            guardians: Vec<T::AccountId>,
+            threshold: u32,
+            delay_period: BlockNumberFor<T>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            ensure!(threshold > 0, Error::<T>::InvalidThreshold);
+            ensure!(threshold as usize <= guardians.len(), Error::<T>::ThresholdTooHigh);
+            ensure!(!guardians.is_empty(), Error::<T>::NoGuardians);
+            ensure!(guardians.len() <= MAX_GUARDIANS as usize, Error::<T>::TooManyGuardians);
+
+            let guardians_bounded = BoundedVec::try_from(guardians)
+                .map_err(|_| Error::<T>::TooManyGuardians)?;
+
+            let config = RecoveryConfig {
+                guardians: guardians_bounded,
+                threshold,
+                delay_period,
+            };
+
+            RecoveryConfigs::<T>::insert(&who, config);
+            Self::deposit_event(Event::RecoveryCreated { account: who, threshold });
+
+            Ok(())
+        }
+
+        /// Initiate recovery for a lost account
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(5)]
+        pub fn initiate_recovery(
+            origin: OriginFor<T>,
+            lost_account: T::AccountId,
+            new_account: T::AccountId,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let config = RecoveryConfigs::<T>::get(&lost_account)
+                .ok_or(Error::<T>::NoRecoveryConfig)?;
+
+            ensure!(config.is_guardian(&who), Error::<T>::NotGuardian);
+            ensure!(!ActiveRecoveries::<T>::contains_key(&lost_account), Error::<T>::RecoveryAlreadyActive);
+
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let executable_at = current_block + config.delay_period;
+
+            let approvals = BoundedVec::try_from(vec![who.clone()])
+                .map_err(|_| Error::<T>::TooManyGuardians)?;
+
+            let recovery = ActiveRecovery {
+                new_account: new_account.clone(),
+                approvals,
+                created_at: current_block,
+                executable_at,
+            };
+
+            ActiveRecoveries::<T>::insert(&lost_account, recovery);
+            Self::deposit_event(Event::RecoveryInitiated { lost_account, new_account, guardian: who });
+
+            Ok(())
+        }
+
+        /// Approve an active recovery
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(6)]
+        pub fn approve_recovery(
+            origin: OriginFor<T>,
+            lost_account: T::AccountId,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let config = RecoveryConfigs::<T>::get(&lost_account)
+                .ok_or(Error::<T>::NoRecoveryConfig)?;
+
+            ensure!(config.is_guardian(&who), Error::<T>::NotGuardian);
+
+            ActiveRecoveries::<T>::try_mutate(&lost_account, |maybe_recovery| -> DispatchResult {
+                let recovery = maybe_recovery.as_mut().ok_or(Error::<T>::NoActiveRecovery)?;
+
+                ensure!(!recovery.approvals.contains(&who), Error::<T>::AlreadyApproved);
+
+                recovery.approvals.try_push(who.clone())
+                    .map_err(|_| Error::<T>::TooManyGuardians)?;
+
+                Self::deposit_event(Event::RecoveryApproved {
+                    lost_account: lost_account.clone(),
+                    guardian: who,
+                    approvals: recovery.approvals.len() as u32,
+                });
+
+                Ok(())
+            })
+        }
+
+        /// Execute recovery after threshold and delay period
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(7)]
+        pub fn execute_recovery(
+            origin: OriginFor<T>,
+            lost_account: T::AccountId,
+        ) -> DispatchResult {
+            let _who = ensure_signed(origin)?;
+
+            let config = RecoveryConfigs::<T>::get(&lost_account)
+                .ok_or(Error::<T>::NoRecoveryConfig)?;
+
+            let recovery = ActiveRecoveries::<T>::get(&lost_account)
+                .ok_or(Error::<T>::NoActiveRecovery)?;
+
+            // Check threshold reached
+            ensure!(config.has_threshold(&recovery.approvals), Error::<T>::ThresholdNotMet);
+
+            // Check delay period passed
+            let current_block = frame_system::Pallet::<T>::block_number();
+            ensure!(current_block >= recovery.executable_at, Error::<T>::DelayNotPassed);
+
+            // Execute recovery: transfer account ownership
+            Self::recover_account(&lost_account, &recovery.new_account)?;
+
+            // Cleanup
+            ActiveRecoveries::<T>::remove(&lost_account);
+            RecoveryConfigs::<T>::remove(&lost_account);
+
+            Self::deposit_event(Event::RecoveryExecuted {
+                lost_account,
+                new_account: recovery.new_account,
+            });
+
+            Ok(())
+        }
+
+        /// Cancel an active recovery (only by lost account owner)
+        #[pallet::weight(10_000)]
+        #[pallet::call_index(8)]
+        pub fn cancel_recovery(
+            origin: OriginFor<T>,
+            account: T::AccountId,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Only the account owner can cancel
+            ensure!(who == account, Error::<T>::NotAccountOwner);
+
+            ActiveRecoveries::<T>::remove(&account);
+            Self::deposit_event(Event::RecoveryCancelled { account });
+
+            Ok(())
+        }
     }
 
     impl<T: Config> Pallet<T> {
@@ -163,6 +387,36 @@ pub mod pallet {
                 }
             });
             Self::deposit_event(Event::Transferred(from.clone(), to.clone(), token_type, amount));
+            Ok(())
+        }
+
+        /// Helper function to transfer account ownership during recovery
+        fn recover_account(
+            lost_account: &T::AccountId,
+            new_account: &T::AccountId,
+        ) -> DispatchResult {
+            // Transfer all account data from lost to new account
+            let lost_data = Accounts::<T>::get(lost_account);
+
+            // Transfer ETR balance
+            if lost_data.etr_balance > T::Balance::from(0u64) {
+                Self::do_transfer(lost_account, new_account, TokenType::ETR, lost_data.etr_balance)?;
+            }
+
+            // Transfer ETD balance
+            if lost_data.etd_balance > T::Balance::from(0u64) {
+                Self::do_transfer(lost_account, new_account, TokenType::ETD, lost_data.etd_balance)?;
+            }
+
+            // Transfer other account properties
+            Accounts::<T>::mutate(new_account, |new_acct| {
+                new_acct.is_validator = lost_data.is_validator;
+                new_acct.reputation = lost_data.reputation;
+            });
+
+            // Clear the lost account
+            Accounts::<T>::remove(lost_account);
+
             Ok(())
         }
     }

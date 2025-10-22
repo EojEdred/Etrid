@@ -4834,6 +4834,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "etrid-bridge-common"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime 42.0.0",
+ "sp-std 14.0.0 (git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2506)",
+]
+
+[[package]]
 name = "etrid-cryptography"
 version = "0.1.0"
 dependencies = [
@@ -5126,6 +5136,7 @@ dependencies = [
 name = "etwasm-runtime"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "etwasm-gas-metering",
  "etwasm-opcodes",
  "parity-scale-codec",
@@ -9960,8 +9971,10 @@ dependencies = [
 name = "pallet-bitcoin-bridge"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "frame-support 41.0.0",
  "frame-system 41.0.0",
+ "pallet-balances 42.0.0",
  "parity-scale-codec",
  "scale-info",
  "sp-core 37.0.0",
