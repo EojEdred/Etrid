@@ -68,3 +68,7 @@ path = "tests/oracle_pricing.rs"
 [[test]]
 name = "redemption_flows"
 path = "tests/redemption_flows.rs"
+
+[[test]]
+name = "financial_arithmetic"
+path = "tests/financial_arithmetic.rs"

@@ -453,6 +453,7 @@ impl Default for ForkDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ConsensusPhase;
     use sp_core::crypto::AccountId32;
 
     fn create_test_cert(validator_id: u8, stake: Balance, phase: ConsensusPhase) -> ValidityCertificate {

@@ -26,12 +26,14 @@ pub mod certificates;
 pub mod votes;
 pub mod finality;
 pub mod safety;
+pub mod ppfa;
 
 pub use hotstuff::*;
 pub use certificates::*;
 pub use votes::*;
 pub use finality::*;
 pub use safety::*;
+pub use ppfa::*;
 
 /// Re-export core types
 pub use sp_core::crypto::AccountId32;
@@ -304,7 +306,7 @@ mod tests {
     fn test_stake_threshold() {
         let total = 1_000_000u128;
         let threshold = bft_stake_threshold(total);
-        assert_eq!(threshold, 666_668); // 2/3 + 1
+        assert_eq!(threshold, 666_667); // 2/3 + 1 = (1_000_000 * 2) / 3 + 1 = 666_666 + 1
 
         assert!(meets_stake_threshold(700_000, total));
         assert!(!meets_stake_threshold(600_000, total));

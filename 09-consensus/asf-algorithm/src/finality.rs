@@ -400,7 +400,7 @@ mod tests {
             let hash = Hash::from(hash_bytes);
             
             tracker.track_block(hash, i as u64);
-            tracker.update_certificates(&hash, i * 30); // 0, 30, 60, 90, 120
+            tracker.update_certificates(&hash, (i as u32) * 30); // 0, 30, 60, 90, 120
         }
         
         let stats = tracker.stats();
