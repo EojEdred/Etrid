@@ -92,7 +92,7 @@ cargo test --workspace
 - 📊 **Industry-Standard Organization**: Achieved 9/10 organization score
 - 🤖 **Automated Cleanup Scripts**: Reusable scripts for maintenance
 
-See [CODEBASE_AUDIT_REPORT.md](CODEBASE_AUDIT_REPORT.md) for full details.
+See [docs/maintenance/CODEBASE_AUDIT_REPORT.md](docs/maintenance/CODEBASE_AUDIT_REPORT.md) for full details.
 
 ---
 
@@ -227,9 +227,9 @@ All 13 E³20 protocol components have comprehensive architecture documentation:
 - **[Routing Guide](07-transactions/lightning-bloc/ROUTING_GUIDE.md)** - Multi-hop payment routing
 
 ### Cleanup & Maintenance
-- **[Codebase Audit Report](CODEBASE_AUDIT_REPORT.md)** - Comprehensive audit findings
-- **[Cleanup Instructions](CLEANUP_INSTRUCTIONS.md)** - Automated cleanup guide
-- **[Integration Fixes Report](INTEGRATION_FIXES_REPORT.md)** - Integration work documentation
+- **[Codebase Audit Report](docs/maintenance/CODEBASE_AUDIT_REPORT.md)** - Comprehensive audit findings
+- **[Cleanup Instructions](docs/maintenance/CLEANUP_INSTRUCTIONS.md)** - Automated cleanup guide
+- **[Integration Fixes Report](docs/maintenance/INTEGRATION_FIXES_REPORT.md)** - Integration work documentation
 
 ### Additional Resources
 - **[Whitepaper](docs/whitepaper/)** - Full technical specification
