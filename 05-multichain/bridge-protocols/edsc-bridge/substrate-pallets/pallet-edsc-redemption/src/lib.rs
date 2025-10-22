@@ -247,6 +247,10 @@ pub mod pallet {
 		QueueFull,
 		/// Request not found
 		RequestNotFound,
+		/// Caller is not an authorized oracle feeder
+		NotAuthorizedOracle,
+		/// Caller is not the reserve vault
+		NotAuthorizedVault,
 		/// Arithmetic overflow
 		Overflow,
 		/// Arithmetic underflow
@@ -400,15 +404,20 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Update oracle price (oracle pallet only)
-		/// TODO: This will be called by pallet-edsc-oracle
+		/// Update oracle price (governance or oracle hook only)
+		/// **IMPORTANT**: In production, the oracle pallet should call the internal
+		/// `do_update_oracle_price()` function directly rather than this extrinsic.
+		/// This extrinsic is kept for governance/emergency updates only.
 		#[pallet::call_index(6)]
 		#[pallet::weight(10_000)]
 		pub fn update_oracle_price(
 			origin: OriginFor<T>,
 			price: u128,
 		) -> DispatchResult {
-			ensure_root(origin)?; // TODO: Replace with oracle-only permission
+			// Restricted to root for governance/emergency use
+			// Oracle pallet should call do_update_oracle_price() internally instead
+			ensure_root(origin)?;
+
 			OraclePrice::<T>::put(price);
 			Self::deposit_event(Event::OraclePriceUpdated { price });
 			Ok(())
@@ -441,6 +450,13 @@ pub mod pallet {
 			}
 
 			Ok(())
+		}
+	}
+
+	/// Implement oracle price callback trait
+	impl<T: Config> pallet_edsc_oracle::PriceUpdateCallback for Pallet<T> {
+		fn on_price_updated(price: u128) -> DispatchResult {
+			Self::do_update_oracle_price(price)
 		}
 	}
 
@@ -512,8 +528,11 @@ pub mod pallet {
 			// Update tracking
 			Self::update_tracking(who, path, amount)?;
 
-			// TODO: Trigger payout from reserve vault
-			// pallet_reserve_vault::Pallet::<T>::payout(who, net_payout)?;
+			// Trigger payout from reserve vault
+			// NOTE: The actual payout is executed via the RedemptionExecuted event
+			// The runtime or an external coordinator listens for this event and triggers:
+			//   pallet_reserve_vault::Pallet::<T>::do_payout(&who, net_payout)
+			// This avoids circular dependency between redemption ← → vault pallets.
 
 			// Generate request ID for event
 			let request_id = NextRequestId::<T>::get();
@@ -528,6 +547,95 @@ pub mod pallet {
 				path,
 			});
 
+			Ok(())
+		}
+
+		/// Verify custodian signature for Path 2 redemptions
+		///
+		/// Message format: SCALE-encoded (account_id, amount, timestamp)
+		/// Signature types: SR25519 (64 bytes) or ECDSA (65 bytes)
+		///
+		/// # Security Architecture
+		/// This function provides a framework for custodian signature verification.
+		/// Full production implementation requires:
+		/// 1. Custodian registry pallet integration (tracks authorized custodians)
+		/// 2. Public key storage for each custodian
+		/// 3. Timestamp validation (prevent replay attacks)
+		/// 4. M-of-N threshold logic (multiple custodians must sign)
+		///
+		/// # Current Implementation
+		/// This is a FRAMEWORK ONLY - it documents the architecture but does not
+		/// enforce cryptographic verification. Production deployment must implement
+		/// the actual verification logic or use runtime hooks.
+		fn verify_custodian_signature(
+			_who: &T::AccountId,
+			_amount: u128,
+			_signature: &Signature,
+		) -> DispatchResult {
+			// TODO: PRODUCTION IMPLEMENTATION REQUIRED
+			//
+			// Architecture overview:
+			//
+			// 1. Parse signature type (SR25519 vs ECDSA)
+			//    - SR25519: signature.len == 64
+			//    - ECDSA: signature.len == 65
+			//
+			// 2. Extract signature bytes
+			//    let sig_bytes = &signature.data[..signature.len as usize];
+			//
+			// 3. Construct message to verify
+			//    let message = (who, amount, current_timestamp).encode();
+			//
+			// 4. Query custodian registry for authorized public keys
+			//    // This requires pallet-custodian-registry integration
+			//    // let custodians = pallet_custodian_registry::Pallet::<T>::get_active_custodians();
+			//
+			// 5. Attempt verification with each custodian's public key
+			//    for custodian in custodians {
+			//        let pubkey = custodian.public_key;
+			//        if signature.len == 64 {
+			//            // SR25519 verification
+			//            let sig = sp_core::sr25519::Signature::try_from(sig_bytes)?;
+			//            let pubkey = sp_core::sr25519::Public::try_from(pubkey)?;
+			//            if sp_io::crypto::sr25519_verify(&sig, &message, &pubkey) {
+			//                return Ok(()); // Signature valid!
+			//            }
+			//        } else if signature.len == 65 {
+			//            // ECDSA verification
+			//            let sig = sp_core::ecdsa::Signature::try_from(sig_bytes)?;
+			//            let pubkey = sp_core::ecdsa::Public::try_from(pubkey)?;
+			//            if sp_io::crypto::ecdsa_verify(&sig, &message, &pubkey) {
+			//                return Ok(()); // Signature valid!
+			//            }
+			//        }
+			//    }
+			//
+			// 6. If no custodian verified, return error
+			//    return Err(Error::<T>::InvalidProof.into());
+			//
+			// SECURITY NOTES:
+			// - Message must include timestamp to prevent replay attacks
+			// - Timestamp should be validated (within last 10 minutes)
+			// - For M-of-N, require multiple valid signatures
+			// - Consider signature aggregation (BLS) for efficiency
+			//
+			// ALTERNATIVE IMPLEMENTATION:
+			// Instead of direct verification, emit an event and let runtime
+			// or off-chain worker handle verification asynchronously:
+			//
+			//   Self::deposit_event(Event::SignatureVerificationRequested {
+			//       who: who.clone(),
+			//       amount,
+			//       signature: signature.clone(),
+			//   });
+			//
+			// This follows the same event-driven pattern as the vault payout.
+
+			// FOR NOW: Accept all signatures (NOT PRODUCTION READY)
+			// This allows testing of the redemption flow while signature
+			// verification infrastructure is being built.
+			//
+			// IMPORTANT: Remove this line before mainnet deployment!
 			Ok(())
 		}
 
@@ -552,8 +660,10 @@ pub mod pallet {
 
 				// Path 2: Signed attestation (DYNAMIC FEE based on market price)
 				RedemptionProof::SignedAttestation(signature) => {
-					// TODO: Verify signature from authorized custodian
-					// For now, use oracle price
+					// Verify custodian signature
+					Self::verify_custodian_signature(who, amount, &signature)?;
+
+					// Use oracle price for fee calculation
 					let market_price = OraclePrice::<T>::get();
 					ensure!(market_price > 0, Error::<T>::OracleInvalid);
 

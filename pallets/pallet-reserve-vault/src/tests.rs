@@ -83,6 +83,7 @@ impl pallet_edsc_token::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type MaxSupply = MaxSupply;
 	type MinBalance = MinBalance;
+	type WeightInfo = ();
 }
 
 parameter_types! {
