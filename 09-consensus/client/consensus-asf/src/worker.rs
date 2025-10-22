@@ -21,11 +21,10 @@
 //! which increments with each block or slot.
 
 use codec::{Codec, Encode};
-use futures::{future, prelude::*};
 use futures_timer::Delay;
 use sc_client_api::{backend::AuxStore, BlockBackend};
 use sc_consensus::{BlockImport, BlockImportParams, StateAction, StorageChanges};
-use sc_consensus_slots::{BackoffAuthoringBlocksStrategy, SlotInfo};
+use sc_consensus_slots::BackoffAuthoringBlocksStrategy;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_consensus::{Environment, Error as ConsensusError, Proposer, SyncOracle};
@@ -34,7 +33,7 @@ use sp_consensus_slots::Slot;
 use sp_inherents::{CreateInherentDataProviders, InherentDataProvider};
 use sp_keystore::KeystorePtr;
 use sp_runtime::{
-    traits::{Block as BlockT, Header as HeaderT, NumberFor, Zero},
+    traits::{Block as BlockT, Header as HeaderT, NumberFor},
     DigestItem,
 };
 use std::{marker::PhantomData, sync::Arc, time::Duration};
@@ -305,7 +304,7 @@ async fn check_if_we_are_proposer<AuthorityId>(
 where
     AuthorityId: Codec + Clone + AsRef<[u8]>,
 {
-    use sp_application_crypto::{sr25519, AppPublic};
+    use sp_application_crypto::sr25519;
     use sp_core::crypto::ByteArray;
 
     // Get the public key bytes from the AuthorityId

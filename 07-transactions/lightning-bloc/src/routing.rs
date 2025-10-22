@@ -119,7 +119,7 @@ impl NetworkGraph {
     /// Add a node to the network
     pub fn add_node(&mut self, node_id: NodeId) {
         if self.nodes.insert(node_id.clone()) {
-            self.outgoing_channels.entry(node_id).or_insert_with(Vec::new);
+            self.outgoing_channels.entry(node_id).or_default();
             self.stats.node_count += 1;
         }
     }
@@ -138,7 +138,7 @@ impl NetworkGraph {
         // Add forward edge
         self.outgoing_channels
             .entry(edge.from_node.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(edge.clone());
 
         // Add reverse edge
@@ -156,7 +156,7 @@ impl NetworkGraph {
 
         self.outgoing_channels
             .entry(reverse_edge.from_node.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(reverse_edge);
 
         self.channels_by_id.insert(edge.channel_id.clone(), edge);

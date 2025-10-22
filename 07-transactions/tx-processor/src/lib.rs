@@ -1,8 +1,92 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
-//! Transaction Processor Pallet
+//! # Ëtrid Transaction Processor Pallet
 //!
-//! This pallet provides transaction mempool and processing functionality for FlareChain.
+//! ## Overview
+//!
+//! This pallet provides transaction mempool management and processing functionality for
+//! the Ëtrid blockchain. It handles transaction submission, validation, queuing, and
+//! execution, serving as the core transaction processing layer between user submissions
+//! and block inclusion.
+//!
+//! ## Features
+//!
+//! - Transaction mempool with configurable size limits (10,000 transactions)
+//! - Ed25519 signature verification for transaction authenticity
+//! - Nonce-based replay protection
+//! - Automatic transaction processing at block finalization
+//! - Transaction batching (up to 1,000 transactions per block)
+//! - Pool statistics tracking (submitted, processed, failed counts)
+//! - Transaction history with block height recording
+//! - Chain ID validation for cross-chain security
+//!
+//! ## Extrinsics
+//!
+//! - `submit_transaction` - Submit signed transaction to mempool
+//! - `clear_mempool` - Clear all pending transactions (governance only)
+//! - `query_pool_size` - Query current mempool size
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Create and submit a signed transaction
+//! let signed_tx = SignedTransaction {
+//!     sender: alice,
+//!     nonce: 5,
+//!     tx_type: TransactionType::Regular { ... },
+//!     signature: ed25519_signature,
+//!     chain_id: 1,
+//! };
+//!
+//! TxProcessor::submit_transaction(
+//!     Origin::signed(alice),
+//!     signed_tx,
+//! )?;
+//!
+//! // Query mempool statistics
+//! let stats = TxProcessor::get_stats();
+//! println!("Pool size: {}", stats.current_pool_size);
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `TransactionPool` - Pending transaction mempool (max 10,000 transactions)
+//! - `ProcessedTransactions` - Recently processed transactions (max 1,000)
+//! - `NextNonce` - Maps account to expected next nonce
+//! - `TxBlockHeight` - Maps transaction hash to block number
+//! - `PoolStats` - Mempool statistics (submitted, processed, failed counts)
+//!
+//! ## Events
+//!
+//! - `TransactionReceived` - When transaction is accepted into mempool
+//! - `TransactionProcessed` - When transaction is included in block
+//! - `TransactionFailed` - When transaction validation or execution fails
+//! - `MempoolCleared` - When mempool is administratively cleared
+//!
+//! ## Errors
+//!
+//! - `InvalidSignature` - Ed25519 signature verification failed
+//! - `InvalidNonce` - Nonce does not match expected value
+//! - `InsufficientFunds` - Account lacks balance for transaction
+//! - `PoolFull` - Mempool has reached maximum capacity
+//! - `InvalidChainId` - Chain ID does not match expected value
+//! - `DuplicateTransaction` - Transaction already exists in pool
+//! - `TransactionTooLarge` - Transaction size exceeds limit (1MB)
+//!
+//! ## Transaction Processing Pipeline
+//!
+//! 1. **Submission**: User submits signed transaction via extrinsic
+//! 2. **Validation**: Signature, nonce, and basic checks performed
+//! 3. **Mempool**: Valid transactions added to pending pool
+//! 4. **Selection**: At block finalization, top transactions selected (by priority)
+//! 5. **Execution**: Selected transactions processed and state updated
+//! 6. **Recording**: Block height and receipt stored for executed transactions
+//! 7. **Cleanup**: Processed transactions removed from mempool
+//!
+//! ## Performance Limits
+//!
+//! - **Max Mempool Size**: 10,000 transactions
+//! - **Max Transactions per Block**: 1,000 transactions
+//! - **Max Transaction Size**: 1 MB
+#![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 

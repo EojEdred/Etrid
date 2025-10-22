@@ -117,10 +117,7 @@ impl DecodeWithMemTracking for WithdrawalStatus {}
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{
-		pallet_prelude::*,
-		traits::{Currency, ExistenceRequirement},
-	};
+	use frame_support::traits::{Currency, ExistenceRequirement};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Zero;
 

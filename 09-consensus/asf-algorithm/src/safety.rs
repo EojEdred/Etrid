@@ -12,7 +12,7 @@ use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::vec::Vec;
 
 use crate::{
-    AsfError, AsfResult, Balance, BlockNumber, ConsensusPhase, Hash, ValidatorId,
+    AsfError, AsfResult, Balance, BlockNumber, Hash, ValidatorId,
     ValidityCertificate,
 };
 

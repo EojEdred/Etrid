@@ -23,7 +23,7 @@ pub mod pallet {
         BoundedVec,
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Zero, One};
+    use sp_runtime::traits::Zero;
     use sp_std::vec::Vec;
     use codec::{Encode, Decode};
 

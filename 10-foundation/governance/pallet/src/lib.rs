@@ -1,4 +1,86 @@
-//! Etrid Governance Pallet - E³20
+//! # Ëtrid Governance Pallet (E³20)
+//!
+//! ## Overview
+//!
+//! This pallet implements decentralized governance for the Ëtrid blockchain,
+//! enabling token holders to propose, vote on, and execute protocol changes
+//! through a stake-weighted voting system. It supports the E³20 governance
+//! framework with automatic vote unreservation after proposal finalization.
+//!
+//! ## Features
+//!
+//! - Stake-weighted proposal voting system
+//! - Automatic vote reservation and unreservation
+//! - Time-bound voting periods
+//! - Proposal creation with minimum stake requirement
+//! - Vote tallying with majority rule
+//! - Proposal cancellation by proposer
+//! - Transparent execution tracking
+//!
+//! ## Extrinsics
+//!
+//! - `create_proposal` - Create a new governance proposal (requires minimum stake)
+//! - `vote` - Vote on an active proposal with staked tokens
+//! - `execute_proposal` - Finalize and execute a proposal after voting period
+//! - `cancel_proposal` - Cancel an active proposal (proposer only)
+//!
+//! ## Usage Example
+//!
+//! ```ignore
+//! // Create a proposal
+//! Governance::create_proposal(
+//!     Origin::signed(alice),
+//!     b"Increase block reward".to_vec(),
+//!     b"Proposal to increase validator rewards by 10%".to_vec(),
+//! )?;
+//!
+//! // Vote in favor with 1000 tokens
+//! Governance::vote(
+//!     Origin::signed(bob),
+//!     0, // proposal_id
+//!     true, // support
+//!     1000,
+//! )?;
+//!
+//! // Wait for voting period to end...
+//! // Execute the proposal
+//! Governance::execute_proposal(
+//!     Origin::signed(charlie),
+//!     0, // proposal_id
+//! )?;
+//! ```
+//!
+//! ## Storage Items
+//!
+//! - `NextProposalId` - Counter for unique proposal IDs
+//! - `LastConsensusDay` - Timestamp of last consensus day
+//! - `Proposals` - Maps proposal ID to proposal details
+//! - `Votes` - Maps (proposal_id, voter) to vote info (support, stake)
+//!
+//! ## Events
+//!
+//! - `ProposalCreated` - When a new proposal is created
+//! - `Voted` - When a vote is cast on a proposal
+//! - `ProposalPassed` - When a proposal passes (votes_for > votes_against)
+//! - `ProposalRejected` - When a proposal is rejected
+//! - `ProposalCancelled` - When a proposal is cancelled by proposer
+//! - `VotesUnreserved` - When votes are unreserved after finalization
+//!
+//! ## Errors
+//!
+//! - `ProposalNotFound` - Proposal does not exist
+//! - `VotingClosed` - Voting period has ended or not yet ended
+//! - `AlreadyFinalized` - Proposal already finalized
+//! - `NotProposer` - Caller is not the proposal creator
+//! - `InsufficientStake` - Insufficient tokens for operation
+//!
+//! ## Vote Reservation
+//!
+//! All votes are automatically reserved when cast and unreserved when:
+//! - Proposal is executed (passed or rejected)
+//! - Proposal is cancelled by proposer
+//!
+//! This ensures economic commitment during voting while freeing funds after resolution.
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;

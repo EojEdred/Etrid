@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 
 use crate::{
     AsfError, AsfResult, Balance, BlockNumber, CertificateCollection, CertificateGenerator,
-    ConsensusPhase, FinalityLevel, Hash, ValidatorId, ValidityCertificate, Vote,
+    ConsensusPhase, FinalityLevel, Hash, ValidityCertificate, Vote,
     VoteCollection,
 };
 

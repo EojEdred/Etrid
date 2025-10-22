@@ -2,8 +2,8 @@
 //!
 //! Core types for AI Decentralized Identity
 
-use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::BoundedVec;
+use codec::{Decode, Encode, MaxEncodedLen, DecodeWithMemTracking};
+use frame_support::{BoundedVec, traits::ConstU32};
 use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 use sp_std::prelude::*;
@@ -26,6 +26,8 @@ pub enum AIType {
     /// Ensemble of Multiple Models
     Ensemble,
 }
+
+impl DecodeWithMemTracking for AIType {}
 
 impl AIType {
     pub fn to_u8(&self) -> u8 {
@@ -61,6 +63,8 @@ pub enum Task {
     DataAnalysis,
 }
 
+impl DecodeWithMemTracking for Task {}
+
 /// Input/Output Modality
 #[derive(Clone, Copy, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub enum Modality {
@@ -71,6 +75,8 @@ pub enum Modality {
     StructuredData,
     Code,
 }
+
+impl DecodeWithMemTracking for Modality {}
 
 /// AI Capabilities
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
@@ -116,6 +122,8 @@ impl Default for Capabilities {
     }
 }
 
+impl DecodeWithMemTracking for Capabilities {}
+
 /// AI Restrictions
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub struct Restrictions {
@@ -146,6 +154,8 @@ impl Default for Restrictions {
     }
 }
 
+impl DecodeWithMemTracking for Restrictions {}
+
 /// Safety Profile
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub struct SafetyProfile {
@@ -170,6 +180,8 @@ impl Default for SafetyProfile {
     }
 }
 
+impl DecodeWithMemTracking for SafetyProfile {}
+
 /// Benchmark Result
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub struct Benchmark {
@@ -178,6 +190,8 @@ pub struct Benchmark {
     /// Score (0-10000 representing 0.00% - 100.00%)
     pub score: u32,
 }
+
+impl DecodeWithMemTracking for Benchmark {}
 
 /// Model Attestation
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
@@ -195,6 +209,8 @@ pub struct ModelAttestation {
     /// Benchmark scores
     pub benchmarks: BoundedVec<Benchmark, ConstU32<MAX_BENCHMARKS>>,
 }
+
+impl DecodeWithMemTracking for ModelAttestation {}
 
 /// AI Profile - Complete metadata for an AI entity
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
@@ -215,6 +231,8 @@ pub struct AIProfile {
     pub safety: SafetyProfile,
 }
 
+impl DecodeWithMemTracking for AIProfile {}
+
 /// Authorization Permission
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub struct Permission {
@@ -225,6 +243,8 @@ pub struct Permission {
     /// Conditions that must be met
     pub conditions: BoundedVec<BoundedVec<u8, ConstU32<MAX_CONDITION_LENGTH>>, ConstU32<MAX_CONDITIONS>>,
 }
+
+impl DecodeWithMemTracking for Permission {}
 
 /// Reputation Score
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen, Default)]
@@ -288,6 +308,8 @@ impl Reputation {
     }
 }
 
+impl DecodeWithMemTracking for Reputation {}
+
 /// Pricing Model
 #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub struct PricingModel {
@@ -301,6 +323,8 @@ pub struct PricingModel {
     pub billing_method: BillingMethod,
 }
 
+impl DecodeWithMemTracking for PricingModel {}
+
 #[derive(Clone, Copy, Encode, Decode, PartialEq, Eq, TypeInfo, RuntimeDebug, MaxEncodedLen)]
 pub enum BillingMethod {
     PerToken,
@@ -308,3 +332,5 @@ pub enum BillingMethod {
     Subscription,
     PayAsYouGo,
 }
+
+impl DecodeWithMemTracking for BillingMethod {}
