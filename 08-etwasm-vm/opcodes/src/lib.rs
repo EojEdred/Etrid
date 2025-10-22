@@ -6,6 +6,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::prelude::*;
+use scale_info::TypeInfo;
 use etwasm_gas_metering::VMw;
 
 /// EVM Opcode byte value

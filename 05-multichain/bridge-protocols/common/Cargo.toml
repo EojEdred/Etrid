@@ -1,0 +1,22 @@
+[package]
+name = "etrid-bridge-common"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Common bridge protocol components for Ëtrid"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]

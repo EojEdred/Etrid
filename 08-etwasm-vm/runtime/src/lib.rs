@@ -12,8 +12,15 @@ use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_std::prelude::*;
+use sp_std::collections::btree_set::BTreeSet;
 use etwasm_gas_metering::VMw;
 use etwasm_opcodes::*;
+
+pub mod state_lock;
+pub mod host_functions;
+
+pub use state_lock::StateLock;
+pub use host_functions::*;
 
 #[cfg(feature = "std")]
 use wasmi::{Engine, Linker, Module, Store, Func, Caller, Value};
@@ -31,8 +38,8 @@ pub const EVM_WORD_SIZE: usize = 32;
 /// EXECUTION CONTEXT
 /// ============================================================================
 
-/// Execution context for smart contract calls
-#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+/// Execution context for smart contract calls with reentrancy protection
+#[derive(Debug, Clone)]
 pub struct ExecutionContext {
     /// Caller address
     pub caller: [u8; 32],
@@ -50,6 +57,12 @@ pub struct ExecutionContext {
     pub timestamp: u64,
     /// Chain ID
     pub chain_id: u64,
+    /// Call stack for reentrancy detection (tracks active contract calls)
+    pub call_stack: BTreeSet<[u8; 32]>,
+    /// Current call depth
+    pub reentrancy_depth: u32,
+    /// Maximum allowed call depth
+    pub max_depth: u32,
 }
 
 impl Default for ExecutionContext {
@@ -63,7 +76,93 @@ impl Default for ExecutionContext {
             block_number: 0,
             timestamp: 0,
             chain_id: 2, // Ëtrid chain ID
+            call_stack: BTreeSet::new(),
+            reentrancy_depth: 0,
+            max_depth: 10, // Default maximum call depth
         }
+    }
+}
+
+impl ExecutionContext {
+    /// Create a new execution context with specified parameters
+    pub fn new(
+        caller: [u8; 32],
+        address: [u8; 32],
+        value: u128,
+        gas_limit: VMw,
+    ) -> Self {
+        Self {
+            caller,
+            address,
+            value,
+            gas_limit,
+            gas_price: 1,
+            block_number: 0,
+            timestamp: 0,
+            chain_id: 2,
+            call_stack: BTreeSet::new(),
+            reentrancy_depth: 0,
+            max_depth: 10,
+        }
+    }
+
+    /// Enter a call - check for reentrancy and update call stack
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - The contract address being called
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the call is allowed, `Err(ExecutionError)` if reentrancy is detected
+    /// or max depth is exceeded
+    ///
+    /// # Errors
+    ///
+    /// * `ExecutionError::ReentrancyDetected` - If target is already in the call stack
+    /// * `ExecutionError::MaxCallDepthExceeded` - If max call depth would be exceeded
+    pub fn enter_call(&mut self, target: [u8; 32]) -> Result<(), ExecutionError> {
+        // Check if target is already in call stack (direct reentrancy)
+        if self.call_stack.contains(&target) {
+            return Err(ExecutionError::ReentrancyDetected);
+        }
+
+        // Check max depth
+        if self.reentrancy_depth >= self.max_depth {
+            return Err(ExecutionError::MaxCallDepthExceeded);
+        }
+
+        self.call_stack.insert(target);
+        self.reentrancy_depth += 1;
+        Ok(())
+    }
+
+    /// Exit a call - remove from call stack
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - The contract address to remove from the call stack
+    pub fn exit_call(&mut self, target: &[u8; 32]) {
+        self.call_stack.remove(target);
+        self.reentrancy_depth = self.reentrancy_depth.saturating_sub(1);
+    }
+
+    /// Check if a contract is currently in the call stack
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - The contract address to check
+    ///
+    /// # Returns
+    ///
+    /// `true` if the contract is in the call stack, `false` otherwise
+    pub fn is_in_call_stack(&self, target: &[u8; 32]) -> bool {
+        self.call_stack.contains(target)
+    }
+
+    /// Get the current call depth
+    pub fn call_depth(&self) -> u32 {
+        self.reentrancy_depth
     }
 }
 
@@ -94,8 +193,35 @@ pub enum ExecutionResult {
     InvalidOpcode(u8),
     /// Invalid jump destination
     InvalidJump,
+    /// Reentrancy detected - contract tried to call itself
+    ReentrancyDetected,
+    /// Maximum call depth exceeded
+    MaxCallDepthExceeded,
+    /// Account is locked (state modification blocked during execution)
+    AccountLocked,
     /// Other execution error
     Error(Vec<u8>),
+}
+
+/// Execution errors for internal use
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ExecutionError {
+    /// Reentrancy detected
+    ReentrancyDetected,
+    /// Maximum call depth exceeded
+    MaxCallDepthExceeded,
+    /// Account is locked
+    AccountLocked,
+    /// Out of gas
+    OutOfGas,
+    /// Stack error
+    StackError,
+    /// Invalid opcode
+    InvalidOpcode(u8),
+    /// Invalid jump
+    InvalidJump,
+    /// Generic error
+    Error(&'static str),
 }
 
 impl ExecutionResult {
@@ -270,9 +396,9 @@ impl Storage for InMemoryStorage {
 /// INTERPRETER
 /// ============================================================================
 
-/// EVM bytecode interpreter
+/// EVM bytecode interpreter with reentrancy protection
 pub struct Interpreter<S: Storage> {
-    /// Execution context
+    /// Execution context (with call stack tracking)
     pub context: ExecutionContext,
     /// Stack
     pub stack: Stack,
@@ -280,6 +406,8 @@ pub struct Interpreter<S: Storage> {
     pub memory: Memory,
     /// Storage
     pub storage: S,
+    /// State lock for reentrancy protection
+    pub state_lock: StateLock,
     /// Gas remaining
     pub gas_remaining: VMw,
     /// Program counter
@@ -291,6 +419,17 @@ pub struct Interpreter<S: Storage> {
 }
 
 impl<S: Storage> Interpreter<S> {
+    /// Create a new interpreter instance with reentrancy protection
+    ///
+    /// # Arguments
+    ///
+    /// * `context` - Execution context with call tracking
+    /// * `code` - Contract bytecode to execute
+    /// * `storage` - Storage backend for contract state
+    ///
+    /// # Returns
+    ///
+    /// A new Interpreter instance ready for execution
     pub fn new(
         context: ExecutionContext,
         code: Vec<u8>,
@@ -302,6 +441,39 @@ impl<S: Storage> Interpreter<S> {
             stack: Stack::new(),
             memory: Memory::new(),
             storage,
+            state_lock: StateLock::new(),
+            gas_remaining,
+            pc: 0,
+            code,
+            return_data: Vec::new(),
+        }
+    }
+
+    /// Create a new interpreter with explicit state lock (for nested calls)
+    ///
+    /// # Arguments
+    ///
+    /// * `context` - Execution context with call tracking
+    /// * `code` - Contract bytecode to execute
+    /// * `storage` - Storage backend for contract state
+    /// * `state_lock` - Shared state lock from parent call
+    ///
+    /// # Returns
+    ///
+    /// A new Interpreter instance ready for execution
+    pub fn new_with_lock(
+        context: ExecutionContext,
+        code: Vec<u8>,
+        storage: S,
+        state_lock: StateLock,
+    ) -> Self {
+        let gas_remaining = context.gas_limit;
+        Self {
+            context,
+            stack: Stack::new(),
+            memory: Memory::new(),
+            storage,
+            state_lock,
             gas_remaining,
             pc: 0,
             code,
