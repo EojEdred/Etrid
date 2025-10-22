@@ -4626,9 +4626,6 @@ version = "1.0.0"
 dependencies = [
  "frame-support",
  "frame-system",
- "pallet-edsc-checkpoint",
- "pallet-edsc-redemption",
- "pallet-edsc-token",
  "parity-scale-codec",
  "proptest",
  "quickcheck",

@@ -942,6 +942,26 @@ impl_runtime_apis! {
         fn committee_size_limit() -> u32 {
             ValidatorCommittee::committee_size_limit()
         }
+
+        fn next_epoch_start() -> u32 {
+            ValidatorCommittee::next_epoch_start()
+        }
+
+        fn next_epoch_validators() -> sp_std::vec::Vec<pallet_validator_committee_runtime_api::ValidatorInfo> {
+            ValidatorCommittee::get_next_epoch_validators()
+        }
+
+        fn is_proposer_authorized(
+            block_number: u32,
+            ppfa_index: u32,
+            proposer_id: pallet_validator_committee_runtime_api::ValidatorId,
+        ) -> bool {
+            ValidatorCommittee::is_proposer_authorized(block_number, ppfa_index, &proposer_id)
+        }
+
+        fn epoch_duration() -> u32 {
+            ValidatorCommittee::get_epoch_duration()
+        }
     }
 
     impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
