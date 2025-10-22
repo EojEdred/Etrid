@@ -386,7 +386,7 @@ sp_api::decl_runtime_apis! {
         BlockNumber: codec::Codec,
     {
         /// Get all active committee members
-        fn get_committee() -> Vec<ValidatorInfo>;
+        fn get_committee() -> sp_std::vec::Vec<ValidatorInfo>;
 
         /// Get specific validator info by ID
         fn get_validator(validator_id: ValidatorId) -> Option<ValidatorInfo>;
@@ -401,7 +401,7 @@ sp_api::decl_runtime_apis! {
         fn next_epoch_start() -> BlockNumber;
 
         /// Get validators for next epoch (pre-computed)
-        fn get_next_epoch_validators() -> Vec<ValidatorInfo>;
+        fn get_next_epoch_validators() -> sp_std::vec::Vec<ValidatorInfo>;
 
         /// Check if proposer was authorized for specific block/ppfa_index
         fn is_proposer_authorized(
@@ -412,5 +412,564 @@ sp_api::decl_runtime_apis! {
 
         /// Get epoch duration in blocks
         fn epoch_duration() -> BlockNumber;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TESTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use frame_support::{
+        assert_err, assert_ok, parameter_types,
+        traits::{BuildGenesisConfig, ConstU32, ConstU128},
+    };
+    use sp_core::{H256, crypto::AccountId32};
+    use sp_runtime::{
+        traits::{BlakeTwo256, IdentityLookup},
+        BuildStorage,
+    };
+
+    // Configure a mock runtime to test the pallet
+    type Block = frame_system::mocking::MockBlock<Test>;
+
+    frame_support::construct_runtime!(
+        pub enum Test
+        {
+            System: frame_system,
+            ValidatorCommittee: crate,
+        }
+    );
+
+    parameter_types! {
+        pub const BlockHashCount: u64 = 250;
+    }
+
+    impl frame_system::Config for Test {
+        type BaseCallFilter = frame_support::traits::Everything;
+        type BlockWeights = ();
+        type BlockLength = ();
+        type DbWeight = ();
+        type RuntimeOrigin = RuntimeOrigin;
+        type RuntimeCall = RuntimeCall;
+        type Nonce = u64;
+        type Hash = H256;
+        type Hashing = BlakeTwo256;
+        type AccountId = u64;
+        type Lookup = IdentityLookup<Self::AccountId>;
+        type Block = Block;
+        type RuntimeEvent = RuntimeEvent;
+        type BlockHashCount = BlockHashCount;
+        type Version = ();
+        type PalletInfo = PalletInfo;
+        type AccountData = ();
+        type OnNewAccount = ();
+        type OnKilledAccount = ();
+        type SystemWeightInfo = ();
+        type SS58Prefix = ();
+        type OnSetCode = ();
+        type MaxConsumers = ConstU32<16>;
+        type RuntimeTask = ();
+        type SingleBlockMigrations = ();
+        type MultiBlockMigrator = ();
+        type PreInherents = ();
+        type PostInherents = ();
+        type PostTransactions = ();
+        type ExtensionsWeightInfo = ();
+    }
+
+    impl Config for Test {
+        type RuntimeEvent = RuntimeEvent;
+        type MaxCommitteeSize = ConstU32<100>;
+        type MinValidatorStake = ConstU128<1000>;
+    }
+
+    // Build genesis storage according to the mock runtime
+    fn new_test_ext() -> sp_io::TestExternalities {
+        let genesis_config = crate::GenesisConfig::<Test> {
+            validators: vec![
+                // (validator_id, stake, peer_type)
+                (AccountId32::from([1u8; 32]), 5000, 0), // ValidityNode with 5000 stake
+                (AccountId32::from([2u8; 32]), 3000, 1), // FlareNode with 3000 stake
+                (AccountId32::from([3u8; 32]), 2000, 0), // ValidityNode with 2000 stake
+            ],
+            committee_size: 10,
+            _phantom: Default::default(),
+        };
+
+        let storage = frame_system::GenesisConfig::<Test>::default()
+            .build_storage()
+            .unwrap()
+            .into();
+
+        let mut ext = sp_io::TestExternalities::new(storage);
+        ext.execute_with(|| {
+            // Initialize genesis manually since we're not using RuntimeGenesisConfig
+            genesis_config.build();
+            System::set_block_number(1);
+        });
+        ext
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // ADD VALIDATOR TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_add_validator_success() {
+        new_test_ext().execute_with(|| {
+            let new_validator = AccountId32::from([4u8; 32]);
+            let stake = 2500;
+            let peer_type = 0;
+
+            assert_ok!(ValidatorCommittee::add_validator(
+                RuntimeOrigin::root(),
+                new_validator.clone(),
+                stake,
+                peer_type
+            ));
+
+            // Verify validator was added to storage
+            assert!(Validators::<Test>::contains_key(&new_validator));
+
+            // Verify validator is in committee
+            let committee = Committee::<Test>::get();
+            assert!(committee.contains(&new_validator));
+            assert_eq!(committee.len(), 4); // 3 genesis + 1 new
+
+            // Verify event was emitted
+            System::assert_has_event(
+                Event::ValidatorAdded {
+                    validator_id: new_validator,
+                }
+                .into(),
+            );
+        });
+    }
+
+    #[test]
+    fn test_add_validator_insufficient_stake() {
+        new_test_ext().execute_with(|| {
+            let new_validator = AccountId32::from([4u8; 32]);
+            let stake = 500; // Below MinValidatorStake (1000)
+            let peer_type = 0;
+
+            assert_err!(
+                ValidatorCommittee::add_validator(
+                    RuntimeOrigin::root(),
+                    new_validator,
+                    stake,
+                    peer_type
+                ),
+                Error::<Test>::InsufficientStake
+            );
+        });
+    }
+
+    #[test]
+    fn test_add_validator_already_exists() {
+        new_test_ext().execute_with(|| {
+            let existing_validator = AccountId32::from([1u8; 32]); // Already in genesis
+            let stake = 2000;
+            let peer_type = 0;
+
+            assert_err!(
+                ValidatorCommittee::add_validator(
+                    RuntimeOrigin::root(),
+                    existing_validator,
+                    stake,
+                    peer_type
+                ),
+                Error::<Test>::ValidatorAlreadyExists
+            );
+        });
+    }
+
+    #[test]
+    fn test_add_validator_committee_full() {
+        new_test_ext().execute_with(|| {
+            // Genesis has 3 validators, MaxCommitteeSize is 100
+            // Add 97 more validators to reach max size (3 + 97 = 100)
+            for i in 10..107 {
+                let validator_id = AccountId32::from([i as u8; 32]);
+                assert_ok!(ValidatorCommittee::add_validator(
+                    RuntimeOrigin::root(),
+                    validator_id,
+                    1000,
+                    0
+                ));
+            }
+
+            // Now committee is full (100), try to add one more (should fail)
+            let overflow_validator = AccountId32::from([200u8; 32]);
+            assert_err!(
+                ValidatorCommittee::add_validator(
+                    RuntimeOrigin::root(),
+                    overflow_validator,
+                    1000,
+                    0
+                ),
+                Error::<Test>::CommitteeFull
+            );
+        });
+    }
+
+    #[test]
+    fn test_add_validator_requires_root() {
+        new_test_ext().execute_with(|| {
+            let new_validator = AccountId32::from([4u8; 32]);
+
+            // Try to add validator with non-root origin (should fail)
+            assert!(ValidatorCommittee::add_validator(
+                RuntimeOrigin::signed(1),
+                new_validator,
+                1000,
+                0
+            )
+            .is_err());
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // REMOVE VALIDATOR TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_remove_validator_success() {
+        new_test_ext().execute_with(|| {
+            let validator_to_remove = AccountId32::from([1u8; 32]); // Exists in genesis
+
+            assert_ok!(ValidatorCommittee::remove_validator(
+                RuntimeOrigin::root(),
+                validator_to_remove.clone()
+            ));
+
+            // Verify validator was removed from storage
+            assert!(!Validators::<Test>::contains_key(&validator_to_remove));
+
+            // Verify validator is not in committee
+            let committee = Committee::<Test>::get();
+            assert!(!committee.contains(&validator_to_remove));
+            assert_eq!(committee.len(), 2); // 3 genesis - 1 removed
+
+            // Verify event was emitted
+            System::assert_has_event(
+                Event::ValidatorRemoved {
+                    validator_id: validator_to_remove,
+                }
+                .into(),
+            );
+        });
+    }
+
+    #[test]
+    fn test_remove_validator_not_found() {
+        new_test_ext().execute_with(|| {
+            let non_existent_validator = AccountId32::from([99u8; 32]);
+
+            assert_err!(
+                ValidatorCommittee::remove_validator(
+                    RuntimeOrigin::root(),
+                    non_existent_validator
+                ),
+                Error::<Test>::ValidatorNotFound
+            );
+        });
+    }
+
+    #[test]
+    fn test_remove_validator_requires_root() {
+        new_test_ext().execute_with(|| {
+            let validator_to_remove = AccountId32::from([1u8; 32]);
+
+            // Try to remove validator with non-root origin (should fail)
+            assert!(ValidatorCommittee::remove_validator(
+                RuntimeOrigin::signed(1),
+                validator_to_remove
+            )
+            .is_err());
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // ROTATE COMMITTEE TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_rotate_committee_success() {
+        new_test_ext().execute_with(|| {
+            let initial_epoch = CurrentEpoch::<Test>::get();
+            assert_eq!(initial_epoch, 0);
+
+            assert_ok!(ValidatorCommittee::rotate_committee(RuntimeOrigin::root()));
+
+            // Verify epoch was incremented
+            let new_epoch = CurrentEpoch::<Test>::get();
+            assert_eq!(new_epoch, 1);
+
+            // Verify event was emitted
+            System::assert_has_event(
+                Event::CommitteeRotated {
+                    epoch: 1,
+                    committee_size: 3, // 3 genesis validators
+                }
+                .into(),
+            );
+        });
+    }
+
+    #[test]
+    fn test_rotate_committee_multiple_times() {
+        new_test_ext().execute_with(|| {
+            for expected_epoch in 1..=5 {
+                assert_ok!(ValidatorCommittee::rotate_committee(RuntimeOrigin::root()));
+                assert_eq!(CurrentEpoch::<Test>::get(), expected_epoch);
+            }
+        });
+    }
+
+    #[test]
+    fn test_rotate_committee_requires_root() {
+        new_test_ext().execute_with(|| {
+            // Try to rotate committee with non-root origin (should fail)
+            assert!(ValidatorCommittee::rotate_committee(RuntimeOrigin::signed(1)).is_err());
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // QUERY FUNCTION TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_get_committee() {
+        new_test_ext().execute_with(|| {
+            let committee = ValidatorCommittee::get_committee();
+            assert_eq!(committee.len(), 3);
+
+            // Verify all genesis validators are present
+            assert!(committee.iter().any(|v| v.id == AccountId32::from([1u8; 32])));
+            assert!(committee.iter().any(|v| v.id == AccountId32::from([2u8; 32])));
+            assert!(committee.iter().any(|v| v.id == AccountId32::from([3u8; 32])));
+
+            // Verify stakes
+            let validator1 = committee.iter().find(|v| v.id == AccountId32::from([1u8; 32])).unwrap();
+            assert_eq!(validator1.stake, 5000);
+        });
+    }
+
+    #[test]
+    fn test_get_validator() {
+        new_test_ext().execute_with(|| {
+            let validator_id = AccountId32::from([1u8; 32]);
+            let info = ValidatorCommittee::get_validator(&validator_id);
+
+            assert!(info.is_some());
+            let info = info.unwrap();
+            assert_eq!(info.id, validator_id);
+            assert_eq!(info.stake, 5000);
+        });
+    }
+
+    #[test]
+    fn test_get_validator_not_found() {
+        new_test_ext().execute_with(|| {
+            let non_existent = AccountId32::from([99u8; 32]);
+            let info = ValidatorCommittee::get_validator(&non_existent);
+            assert!(info.is_none());
+        });
+    }
+
+    #[test]
+    fn test_is_validator_active() {
+        new_test_ext().execute_with(|| {
+            assert!(ValidatorCommittee::is_validator_active(&AccountId32::from([1u8; 32])));
+            assert!(ValidatorCommittee::is_validator_active(&AccountId32::from([2u8; 32])));
+            assert!(!ValidatorCommittee::is_validator_active(&AccountId32::from([99u8; 32])));
+        });
+    }
+
+    #[test]
+    fn test_get_current_epoch() {
+        new_test_ext().execute_with(|| {
+            assert_eq!(ValidatorCommittee::get_current_epoch(), 0);
+
+            ValidatorCommittee::rotate_committee(RuntimeOrigin::root()).unwrap();
+            assert_eq!(ValidatorCommittee::get_current_epoch(), 1);
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // PPFA AUTHORIZATION TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_record_ppfa_authorization() {
+        new_test_ext().execute_with(|| {
+            let block_number = 10;
+            let ppfa_index = 2;
+            let validator_id = AccountId32::from([1u8; 32]);
+
+            ValidatorCommittee::record_ppfa_authorization(
+                block_number,
+                ppfa_index,
+                validator_id.clone(),
+            );
+
+            // Verify authorization was recorded
+            assert!(ValidatorCommittee::is_proposer_authorized(
+                block_number,
+                ppfa_index,
+                &validator_id
+            ));
+        });
+    }
+
+    #[test]
+    fn test_is_proposer_authorized_false() {
+        new_test_ext().execute_with(|| {
+            let block_number = 10;
+            let ppfa_index = 2;
+            let validator_id = AccountId32::from([1u8; 32]);
+
+            // No authorization recorded
+            assert!(!ValidatorCommittee::is_proposer_authorized(
+                block_number,
+                ppfa_index,
+                &validator_id
+            ));
+        });
+    }
+
+    #[test]
+    fn test_ppfa_authorization_different_slots() {
+        new_test_ext().execute_with(|| {
+            let validator1 = AccountId32::from([1u8; 32]);
+            let validator2 = AccountId32::from([2u8; 32]);
+
+            // Authorize different validators for different slots
+            ValidatorCommittee::record_ppfa_authorization(10, 0, validator1.clone());
+            ValidatorCommittee::record_ppfa_authorization(10, 1, validator2.clone());
+            ValidatorCommittee::record_ppfa_authorization(11, 0, validator2.clone());
+
+            // Verify correct authorizations
+            assert!(ValidatorCommittee::is_proposer_authorized(10, 0, &validator1));
+            assert!(ValidatorCommittee::is_proposer_authorized(10, 1, &validator2));
+            assert!(ValidatorCommittee::is_proposer_authorized(11, 0, &validator2));
+
+            // Verify incorrect authorizations
+            assert!(!ValidatorCommittee::is_proposer_authorized(10, 0, &validator2));
+            assert!(!ValidatorCommittee::is_proposer_authorized(10, 1, &validator1));
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // EPOCH DURATION TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_set_and_get_epoch_duration() {
+        new_test_ext().execute_with(|| {
+            let duration = 100u64;
+            ValidatorCommittee::set_epoch_duration(duration);
+            assert_eq!(ValidatorCommittee::get_epoch_duration(), duration);
+        });
+    }
+
+    #[test]
+    fn test_next_epoch_start() {
+        new_test_ext().execute_with(|| {
+            // Set epoch duration
+            ValidatorCommittee::set_epoch_duration(100);
+
+            // Current epoch is 0, next epoch is 1
+            // Epoch 0: blocks 0-99, Epoch 1: blocks 100-199
+            let next_start = ValidatorCommittee::next_epoch_start();
+            assert_eq!(next_start, 100); // Epoch 1 starts at block 100
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // INTEGRATION TESTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_complete_lifecycle() {
+        new_test_ext().execute_with(|| {
+            // 1. Start with 3 genesis validators
+            assert_eq!(Committee::<Test>::get().len(), 3);
+            assert_eq!(CurrentEpoch::<Test>::get(), 0);
+
+            // 2. Add a new validator
+            let new_validator = AccountId32::from([4u8; 32]);
+            assert_ok!(ValidatorCommittee::add_validator(
+                RuntimeOrigin::root(),
+                new_validator.clone(),
+                1500,
+                1
+            ));
+            assert_eq!(Committee::<Test>::get().len(), 4);
+
+            // 3. Rotate committee to new epoch
+            assert_ok!(ValidatorCommittee::rotate_committee(RuntimeOrigin::root()));
+            assert_eq!(CurrentEpoch::<Test>::get(), 1);
+
+            // 4. Record PPFA authorization
+            ValidatorCommittee::record_ppfa_authorization(10, 0, new_validator.clone());
+            assert!(ValidatorCommittee::is_proposer_authorized(10, 0, &new_validator));
+
+            // 5. Remove a validator
+            let validator_to_remove = AccountId32::from([1u8; 32]);
+            assert_ok!(ValidatorCommittee::remove_validator(
+                RuntimeOrigin::root(),
+                validator_to_remove
+            ));
+            assert_eq!(Committee::<Test>::get().len(), 3);
+
+            // 6. Rotate again
+            assert_ok!(ValidatorCommittee::rotate_committee(RuntimeOrigin::root()));
+            assert_eq!(CurrentEpoch::<Test>::get(), 2);
+        });
+    }
+
+    #[test]
+    fn test_validator_info_conversion() {
+        new_test_ext().execute_with(|| {
+            let validator_id = AccountId32::from([1u8; 32]);
+            let stake = 5000;
+
+            // Get validator info
+            let info = ValidatorCommittee::get_validator(&validator_id).unwrap();
+
+            // Verify conversion from StoredValidatorInfo to ValidatorInfo
+            assert_eq!(info.id, validator_id);
+            assert_eq!(info.stake, stake);
+            // peer_type 0 should convert to ValidityNode
+            assert_eq!(info.peer_type, PeerType::ValidityNode);
+        });
+    }
+
+    #[test]
+    fn test_committee_size_limit() {
+        new_test_ext().execute_with(|| {
+            // Genesis set committee_size to 10 but MaxCommitteeSize is 100
+            // We should be able to add validators up to MaxCommitteeSize
+            assert_eq!(CommitteeSizeLimit::<Test>::get(), 10);
+
+            // Try adding validators beyond genesis committee_size but within MaxCommitteeSize
+            for i in 4..15 {
+                let validator_id = AccountId32::from([i as u8; 32]);
+                assert_ok!(ValidatorCommittee::add_validator(
+                    RuntimeOrigin::root(),
+                    validator_id,
+                    1000,
+                    0
+                ));
+            }
+
+            // Committee should now have 14 validators (3 genesis + 11 new)
+            assert_eq!(Committee::<Test>::get().len(), 14);
+        });
     }
 }
