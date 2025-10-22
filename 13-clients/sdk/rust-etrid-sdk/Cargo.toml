@@ -1,0 +1,35 @@
+[package]
+name = "etrid-sdk"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Rust SDK for Ëtrid Protocol blockchain"
+license = "Apache-2.0"
+repository = "https://github.com/etrid/etrid-protocol"
+
+[dependencies]
+# Substrate dependencies
+sp-core = { version = "28.0.0", default-features = false }
+sp-runtime = { version = "31.0.1", default-features = false }
+sp-keyring = { version = "31.0.0" }
+
+# Async runtime
+tokio = { version = "1.38", features = ["full"] }
+
+# RPC client
+jsonrpsee = { version = "0.24", features = ["ws-client", "client"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[features]
+default = ["std"]
+std = ["sp-core/std", "sp-runtime/std"]
