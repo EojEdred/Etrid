@@ -1,0 +1,103 @@
+{
+  "skill": "economic-modeling",
+  "name": "Economic Modeling",
+  "version": "1.0.0",
+  "description": "Economic simulation and modeling for tokenomics, reserves, and incentives",
+  "available_to": [
+    "economics-dev",
+    "oracle-dev",
+    "governance-dev",
+    "edsc-dev"
+  ],
+  "parameters": {
+    "model_type": {
+      "type": "enum",
+      "required": true,
+      "options": ["reserve-ratio", "staking-yield", "inflation-curve", "collateral-stability"],
+      "description": "Type of economic model to simulate"
+    },
+    "initial_conditions": {
+      "type": "object",
+      "required": true,
+      "description": "Initial state of the economic system"
+    },
+    "time_horizon": {
+      "type": "integer",
+      "required": false,
+      "default": 365,
+      "description": "Simulation time horizon in days"
+    },
+    "scenarios": {
+      "type": "array",
+      "required": false,
+      "default": ["baseline", "stress", "optimistic"],
+      "description": "Economic scenarios to simulate"
+    }
+  },
+  "returns": {
+    "projections": {
+      "type": "array",
+      "description": "Economic projections over time"
+    },
+    "risks": {
+      "type": "array",
+      "description": "Identified economic risks"
+    },
+    "optimal_parameters": {
+      "type": "object",
+      "description": "Recommended parameter settings"
+    },
+    "scenario_comparison": {
+      "type": "object",
+      "description": "Comparison of different scenarios"
+    }
+  },
+  "claude_prompt": "Model the economic dynamics of the specified system. Use agent-based modeling, game theory, and statistical analysis to project behavior under different scenarios. Consider rational actor assumptions, network effects, and systemic risks. Provide parameter recommendations and risk mitigation strategies.",
+  "examples": [
+    {
+      "input": {
+        "model_type": "reserve-ratio",
+        "initial_conditions": {
+          "total_supply": 1000000,
+          "reserve_btc": 10,
+          "reserve_eth": 500,
+          "price_btc": 50000,
+          "price_eth": 3000
+        },
+        "time_horizon": 180,
+        "scenarios": ["baseline", "stress"]
+      },
+      "output": {
+        "projections": [
+          {
+            "day": 90,
+            "reserve_ratio": 1.85,
+            "collateralization": "healthy"
+          }
+        ],
+        "risks": [
+          {
+            "type": "market_shock",
+            "probability": 0.15,
+            "impact": "Reserve ratio drops below 1.5"
+          }
+        ],
+        "optimal_parameters": {
+          "min_reserve_ratio": 1.75,
+          "liquidation_threshold": 1.3
+        },
+        "scenario_comparison": {
+          "baseline_reserve_ratio": 1.85,
+          "stress_reserve_ratio": 1.42
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "category": "economics",
+    "complexity": "very_high",
+    "execution_time": "90-180s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

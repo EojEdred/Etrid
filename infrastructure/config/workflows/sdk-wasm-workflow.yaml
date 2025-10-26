@@ -1,0 +1,206 @@
+# SDK Alignment & WASM Build Multi-Agent Workflow
+# Terminal 1: Critical SDK version alignment and WASM runtime builds
+
+project_dir: /Users/macbook/Desktop/etrid
+
+agents:
+  - name: SDK Alignment Agent
+    task: |
+      Fix the 6 PBC runtimes that have mixed Polkadot SDK versions - align all to polkadot-stable2506.
+
+      ## Your Mission
+      Analyze and fix SDK version mismatches across all PBC runtime Cargo.toml files.
+
+      ## Scope
+      **Files to analyze:**
+      - All `05-multichain/bridge-protocols/*/runtime/Cargo.toml` files
+      - Search for polkadot-sdk dependencies (polkadot-*, sp-*, frame-*)
+
+      **Target version:** `polkadot-stable2506`
+
+      **Tasks:**
+      1. Find all PBC runtime Cargo.toml files
+      2. Identify which ones have mixed/old SDK versions
+      3. Update to polkadot-stable2506 consistently
+      4. Create a before/after report
+
+      ## DO NOT
+      - Touch FlareChain runtime files (Agent 2's scope)
+      - Build WASM (Agents 3 & 4 will do that)
+      - Modify any non-Cargo.toml files
+      - Make changes outside 05-multichain/bridge-protocols/
+
+      ## Files in Your Scope
+      ```
+      05-multichain/bridge-protocols/*/runtime/Cargo.toml
+      (BTC, ETH, SOL, XLM, XRP, BNB, TRX, ADA, LINK, MATIC, USDT, DOGE, EDSC)
+      ```
+
+      ## Expected Output
+      Report with:
+      - List of 6 runtimes that needed updates (with before/after versions)
+      - List of 7 runtimes already aligned
+      - All changes made
+
+      ## Integration Points
+      - Provides: SDK-aligned Cargo.toml files for Agents 3 & 4 to build
+
+  - name: FlareChain WASM Build Agent
+    task: |
+      Monitor and complete the FlareChain runtime WASM build.
+
+      ## Your Mission
+      Ensure FlareChain runtime WASM build completes successfully.
+
+      ## Scope
+      **Files to work with:**
+      - `05-multichain/flare-chain/runtime/`
+      - `05-multichain/flare-chain/runtime/Cargo.toml`
+
+      **Tasks:**
+      1. Check for running background builds with `ps aux | grep cargo`
+      2. Monitor FlareChain build progress
+      3. If errors occur, diagnose and fix
+      4. Verify final WASM output exists
+      5. Check WASM file size (should be 1-2MB)
+
+      **Build command if needed:**
+      ```bash
+      cd 05-multichain/flare-chain/runtime
+      cargo build --release --features=runtime-benchmarks
+      ```
+
+      ## DO NOT
+      - Touch PBC runtime files (Agent 3's scope)
+      - Modify SDK versions (Agent 1's job)
+      - Run validation tools (Agent 4's job)
+      - Touch files outside 05-multichain/flare-chain/
+
+      ## Files in Your Scope
+      ```
+      05-multichain/flare-chain/runtime/**/*
+      target/release/wbuild/flare-runtime/
+      ```
+
+      ## Expected Output
+      Report with:
+      - Build status and any errors encountered
+      - Path to generated WASM file
+      - WASM file size
+      - Build time
+
+      ## Integration Points
+      - Provides: FlareChain WASM runtime for Agent 4 to validate
+
+  - name: PBC WASM Build Agent
+    task: |
+      Build WASM runtimes for all 13 PBC chains in parallel.
+
+      ## Your Mission
+      Generate WASM runtimes for all Parallel Blockchain (PBC) chains.
+
+      ## Scope
+      **Target chains (13 total):**
+      BTC, ETH, SOL, XLM, XRP, BNB, TRX, ADA, LINK, MATIC, USDT, DOGE, EDSC
+
+      **Files to work with:**
+      - `05-multichain/bridge-protocols/*/runtime/` (all 13 chains)
+
+      **Tasks:**
+      1. Wait for Agent 1 to complete SDK alignment (check status file)
+      2. Build WASM for all 13 PBC runtimes
+      3. Run builds in parallel (use `&` and `wait` in bash)
+      4. Track which builds succeed/fail
+      5. Fix any build errors
+      6. Verify all 13 WASM files exist
+
+      **Build command pattern:**
+      ```bash
+      cd 05-multichain/bridge-protocols/[CHAIN]-bridge/runtime
+      cargo build --release --features=runtime-benchmarks
+      ```
+
+      ## DO NOT
+      - Touch FlareChain runtime (Agent 2's scope)
+      - Modify Cargo.toml files (Agent 1's job)
+      - Run validation (Agent 4's job)
+      - Touch files outside 05-multichain/bridge-protocols/
+
+      ## Files in Your Scope
+      ```
+      05-multichain/bridge-protocols/*/runtime/**/*
+      target/release/wbuild/*/
+      ```
+
+      ## Dependencies
+      - **WAIT for Agent 1** to complete SDK alignment before starting builds
+      - Check status file for Agent 1's completion
+
+      ## Expected Output
+      Report with:
+      - 13 WASM files built successfully
+      - Build times for each
+      - Any errors and fixes applied
+      - List of generated WASM file paths
+
+      ## Integration Points
+      - Depends on: Agent 1's SDK alignment
+      - Provides: 13 PBC WASM runtimes for Agent 4 to validate
+
+  - name: Validation Agent
+    task: |
+      Verify all WASM runtimes are valid and generate metadata.
+
+      ## Your Mission
+      Validate all 14 WASM runtimes (1 FlareChain + 13 PBCs).
+
+      ## Scope
+      **Target WASM files (14 total):**
+      - 1 FlareChain runtime (from Agent 2)
+      - 13 PBC runtimes (from Agent 3)
+
+      **Tasks:**
+      1. Wait for Agents 2 & 3 to complete (check status file)
+      2. Locate all 14 WASM files
+      3. Check file sizes (should be 1-2MB each)
+      4. Validate WASM format
+      5. Generate runtime metadata for each
+      6. Create final validation report
+
+      **Validation commands:**
+      ```bash
+      # Check file size
+      ls -lh [WASM_FILE]
+
+      # Validate WASM
+      wasm-opt --version  # ensure tool exists
+      file [WASM_FILE]    # check file type
+      ```
+
+      ## DO NOT
+      - Modify any source code
+      - Rebuild any runtimes
+      - Touch Cargo.toml files
+      - Change any runtime logic
+
+      ## Files in Your Scope
+      ```
+      target/release/wbuild/flare-runtime/*.wasm
+      target/release/wbuild/*/runtime/*.wasm
+      ```
+
+      ## Dependencies
+      - **WAIT for Agent 2** (FlareChain WASM)
+      - **WAIT for Agent 3** (13 PBC WASMs)
+      - Check status file before starting
+
+      ## Expected Output
+      Final validation report with:
+      - Table of all 14 WASM files with sizes
+      - Validation status for each (✅/❌)
+      - Metadata generation status
+      - Overall summary: X/14 runtimes valid
+
+      ## Integration Points
+      - Depends on: Agent 2 (FlareChain WASM) + Agent 3 (PBC WASMs)
+      - Provides: Final validation report for deployment readiness

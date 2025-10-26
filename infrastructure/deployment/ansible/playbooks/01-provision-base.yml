@@ -1,0 +1,421 @@
+---
+# Base Infrastructure Provisioning Playbook
+# Works for both testnet and mainnet environments
+# Usage: ansible-playbook -i environments/{testnet|mainnet}/inventory/hosts.yml playbooks/01-provision-base.yml
+
+- name: Provision Base Infrastructure for Ëtrid Network
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    swap_size_mb: 4096  # 4GB swap
+    etrid_user: "etrid"
+    etrid_group: "etrid"
+
+  tasks:
+    - name: Display deployment information
+      debug:
+        msg:
+          - "================================================"
+          - "Ëtrid Infrastructure Provisioning"
+          - "Environment: {{ environment }}"
+          - "Network: {{ network_name }}"
+          - "Target: {{ inventory_hostname }}"
+          - "================================================"
+      tags: [always]
+
+    # ============================================
+    # System Updates
+    # ============================================
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      tags: [system, updates]
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      tags: [system, updates]
+
+    # ============================================
+    # Essential Packages
+    # ============================================
+    - name: Install essential packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - vim
+          - htop
+          - iotop
+          - net-tools
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+          - apt-listchanges
+          - build-essential
+          - clang
+          - libssl-dev
+          - pkg-config
+          - cmake
+          - jq
+          - python3-pip
+        state: present
+      tags: [system, packages]
+
+    # ============================================
+    # Swap Configuration
+    # ============================================
+    - name: Check if swap exists
+      stat:
+        path: /swapfile
+      register: swap_file
+      tags: [system, swap]
+
+    - name: Create swap file
+      command: fallocate -l {{ swap_size_mb }}M /swapfile
+      when: not swap_file.stat.exists
+      tags: [system, swap]
+
+    - name: Set swap file permissions
+      file:
+        path: /swapfile
+        mode: '0600'
+      when: not swap_file.stat.exists
+      tags: [system, swap]
+
+    - name: Format swap file
+      command: mkswap /swapfile
+      when: not swap_file.stat.exists
+      tags: [system, swap]
+
+    - name: Enable swap file
+      command: swapon /swapfile
+      when: not swap_file.stat.exists
+      tags: [system, swap]
+
+    - name: Add swap to fstab
+      lineinfile:
+        path: /etc/fstab
+        line: '/swapfile none swap sw 0 0'
+        state: present
+      tags: [system, swap]
+
+    - name: Set swappiness to 10
+      sysctl:
+        name: vm.swappiness
+        value: '10'
+        state: present
+        reload: yes
+      tags: [system, swap]
+
+    # ============================================
+    # Network Optimization
+    # ============================================
+    - name: Enable TCP BBR congestion control
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.core.default_qdisc', value: 'fq' }
+        - { name: 'net.ipv4.tcp_congestion_control', value: 'bbr' }
+        - { name: 'net.ipv4.tcp_notsent_lowat', value: '16384' }
+        - { name: 'net.ipv4.tcp_slow_start_after_idle', value: '0' }
+      tags: [system, network]
+
+    - name: Increase network buffer sizes
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.core.rmem_max', value: '134217728' }
+        - { name: 'net.core.wmem_max', value: '134217728' }
+        - { name: 'net.ipv4.tcp_rmem', value: '4096 87380 67108864' }
+        - { name: 'net.ipv4.tcp_wmem', value: '4096 65536 67108864' }
+        - { name: 'net.core.netdev_max_backlog', value: '5000' }
+      tags: [system, network]
+
+    # ============================================
+    # File Descriptor Limits
+    # ============================================
+    - name: Set file descriptor limits
+      pam_limits:
+        domain: '*'
+        limit_type: "{{ item.type }}"
+        limit_item: nofile
+        value: "{{ item.value }}"
+      loop:
+        - { type: 'soft', value: '65536' }
+        - { type: 'hard', value: '65536' }
+      tags: [system, limits]
+
+    # ============================================
+    # SSH Hardening
+    # ============================================
+    - name: Configure SSH hardening
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^PermitRootLogin', line: 'PermitRootLogin prohibit-password' }
+        - { regexp: '^PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^X11Forwarding', line: 'X11Forwarding no' }
+        - { regexp: '^MaxAuthTries', line: 'MaxAuthTries 3' }
+        - { regexp: '^ClientAliveInterval', line: 'ClientAliveInterval 300' }
+        - { regexp: '^ClientAliveCountMax', line: 'ClientAliveCountMax 2' }
+      notify: restart sshd
+      tags: [security, ssh]
+
+    # ============================================
+    # Firewall Configuration (UFW)
+    # ============================================
+    - name: Set UFW default policies
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - { direction: 'incoming', policy: 'deny' }
+        - { direction: 'outgoing', policy: 'allow' }
+      tags: [security, firewall]
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+      tags: [security, firewall]
+
+    - name: Allow P2P port
+      ufw:
+        rule: allow
+        port: "{{ p2p_port }}"
+        proto: tcp
+      when: "'validators' in group_names or 'backup_validators' in group_names"
+      tags: [security, firewall]
+
+    - name: Allow RPC ports (internal only for validators)
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "{{ rpc_port }}"
+        - "{{ ws_port }}"
+      when: "'validators' in group_names or 'backup_validators' in group_names or 'rpc_nodes' in group_names"
+      tags: [security, firewall]
+
+    - name: Allow Prometheus metrics (monitoring only)
+      ufw:
+        rule: allow
+        port: "{{ substrate_metrics_port }}"
+        proto: tcp
+      when: "'validators' in group_names or 'backup_validators' in group_names or 'rpc_nodes' in group_names"
+      tags: [security, firewall]
+
+    - name: Allow Node Exporter (monitoring only)
+      ufw:
+        rule: allow
+        port: "{{ node_exporter_port }}"
+        proto: tcp
+      tags: [security, firewall]
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+      tags: [security, firewall]
+
+    # ============================================
+    # Fail2Ban Configuration
+    # ============================================
+    - name: Configure fail2ban for SSH
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 3600
+          findtime = 600
+          maxretry = 3
+
+          [sshd]
+          enabled = true
+          port = ssh
+          filter = sshd
+          logpath = /var/log/auth.log
+      notify: restart fail2ban
+      tags: [security, fail2ban]
+
+    - name: Enable and start fail2ban
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+      tags: [security, fail2ban]
+
+    # ============================================
+    # Automatic Security Updates
+    # ============================================
+    - name: Configure unattended upgrades
+      copy:
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+              "${distro_id}ESMApps:${distro_codename}-apps-security";
+              "${distro_id}ESM:${distro_codename}-infra-security";
+          };
+          Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+          Unattended-Upgrade::MinimalSteps "true";
+          Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+          Unattended-Upgrade::Automatic-Reboot "false";
+      tags: [security, updates]
+
+    - name: Enable automatic updates
+      copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::AutocleanInterval "7";
+      tags: [security, updates]
+
+    # ============================================
+    # User Management
+    # ============================================
+    - name: Create etrid group
+      group:
+        name: "{{ etrid_group }}"
+        system: yes
+      tags: [system, users]
+
+    - name: Create etrid user
+      user:
+        name: "{{ etrid_user }}"
+        group: "{{ etrid_group }}"
+        system: yes
+        shell: /bin/bash
+        home: /home/{{ etrid_user }}
+        create_home: yes
+      tags: [system, users]
+
+    # ============================================
+    # Rust Installation (for etrid user)
+    # ============================================
+    - name: Check if Rust is installed
+      stat:
+        path: /home/{{ etrid_user }}/.cargo/bin/rustc
+      register: rust_installed
+      tags: [rust]
+
+    - name: Download Rust installer
+      get_url:
+        url: https://sh.rustup.rs
+        dest: /tmp/rustup-init.sh
+        mode: '0755'
+      become_user: "{{ etrid_user }}"
+      when: not rust_installed.stat.exists
+      tags: [rust]
+
+    - name: Install Rust
+      shell: /tmp/rustup-init.sh -y
+      become_user: "{{ etrid_user }}"
+      when: not rust_installed.stat.exists
+      tags: [rust]
+
+    # ============================================
+    # Directory Structure
+    # ============================================
+    - name: Create Ëtrid directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ etrid_user }}"
+        group: "{{ etrid_group }}"
+        mode: '0755'
+      loop:
+        - /opt/etrid
+        - /var/lib/etrid
+        - /var/log/etrid
+        - /var/backups/etrid
+      tags: [system, directories]
+
+    # ============================================
+    # Log Rotation
+    # ============================================
+    - name: Configure log rotation for Ëtrid
+      copy:
+        dest: /etc/logrotate.d/etrid
+        content: |
+          /var/log/etrid/*.log {
+              daily
+              rotate 14
+              compress
+              delaycompress
+              missingok
+              notifempty
+              create 0640 {{ etrid_user }} {{ etrid_group }}
+              sharedscripts
+              postrotate
+                  systemctl reload etrid || true
+              endscript
+          }
+      tags: [system, logging]
+
+    # ============================================
+    # Prometheus Node Exporter
+    # ============================================
+    - name: Install Prometheus Node Exporter
+      apt:
+        name: prometheus-node-exporter
+        state: present
+      tags: [monitoring, node_exporter]
+
+    - name: Enable and start Node Exporter
+      systemd:
+        name: prometheus-node-exporter
+        enabled: yes
+        state: started
+      tags: [monitoring, node_exporter]
+
+    # ============================================
+    # Completion Message
+    # ============================================
+    - name: Display completion message
+      debug:
+        msg:
+          - "================================================"
+          - "Base provisioning completed successfully!"
+          - "Environment: {{ environment }}"
+          - "Host: {{ inventory_hostname }}"
+          - ""
+          - "Security hardening: ✓"
+          - "Firewall configured: ✓"
+          - "Fail2ban enabled: ✓"
+          - "Automatic updates: ✓"
+          - "Etrid user created: ✓"
+          - "Rust installed: ✓"
+          - "================================================"
+      tags: [always]
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted
+
+    - name: restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted

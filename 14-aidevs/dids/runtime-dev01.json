@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:runtime-dev01",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:runtime-dev01#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:runtime-dev01",
+      "publicKeyMultibase": "zC2duk1SjsJgb3Mw6vikfR6dqh2DHekgyoWaW77G4GfM2",
+      "publicKeyBase58": "C2duk1SjsJgb3Mw6vikfR6dqh2DHekgyoWaW77G4GfM2"
+    }
+  ],
+  "authentication": [
+    "did:etrid:runtime-dev01#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:runtime-dev01#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:runtime-dev01#mcp-service",
+      "type": "AIRuntimeWorker",
+      "serviceEndpoint": "mcp://ai-devs/runtime-dev01"
+    },
+    {
+      "id": "did:etrid:runtime-dev01#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/runtime-dev01/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:runtime-dev01#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/runtime-dev01/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "Runtime Dev",
+    "description": "WebAssembly runtime + ETWasm VM. Execution layer specialist.",
+    "skills": [
+      "runtime-upgrade",
+      "wasm-optimization",
+      "vm-testing",
+      "execution-analysis"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "WebAssembly runtime + ETWasm VM. Execution layer specialist. #\u00cbtridRuntime",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "skill": "consensus-analysis",
+  "name": "Consensus Analysis",
+  "version": "1.0.0",
+  "description": "Analyze consensus performance, validator behavior, and network health",
+  "available_to": [
+    "consensus-dev",
+    "runtime-dev",
+    "audit-dev"
+  ],
+  "parameters": {
+    "analysis_type": {
+      "type": "enum",
+      "required": true,
+      "options": ["validator-performance", "network-health", "finality-lag", "ppfa-efficiency"],
+      "description": "Type of consensus analysis to perform"
+    },
+    "time_window": {
+      "type": "integer",
+      "required": false,
+      "default": 1000,
+      "description": "Number of blocks to analyze"
+    },
+    "validators": {
+      "type": "array",
+      "required": false,
+      "default": null,
+      "description": "Specific validators to analyze (null = all)"
+    }
+  },
+  "returns": {
+    "metrics": {
+      "type": "object",
+      "description": "Consensus metrics (block time, finality, etc.)"
+    },
+    "validator_scores": {
+      "type": "array",
+      "description": "Performance scores for each validator"
+    },
+    "anomalies": {
+      "type": "array",
+      "description": "Detected anomalies or concerning patterns"
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Recommended actions for optimization"
+    }
+  },
+  "claude_prompt": "Analyze consensus performance and validator behavior. Calculate key metrics: block production rate, finality lag, missed slots, validator uptime, and PPFA rotation efficiency. Identify anomalies, Byzantine behavior, and performance bottlenecks. Provide actionable recommendations.",
+  "examples": [
+    {
+      "input": {
+        "analysis_type": "validator-performance",
+        "time_window": 2000,
+        "validators": ["val-001", "val-002", "val-003"]
+      },
+      "output": {
+        "metrics": {
+          "avg_block_time": 5.94,
+          "finality_lag": 12.3,
+          "network_uptime": 0.9987
+        },
+        "validator_scores": [
+          {
+            "validator": "val-001",
+            "score": 98.5,
+            "blocks_produced": 456,
+            "missed_slots": 2
+          }
+        ],
+        "anomalies": [
+          {
+            "type": "slow_finality",
+            "block_range": [1500, 1550],
+            "severity": "MEDIUM"
+          }
+        ],
+        "recommendations": [
+          "Increase peer connection limit for val-002",
+          "Investigate network latency for val-003"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "category": "consensus",
+    "complexity": "high",
+    "execution_time": "30-90s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

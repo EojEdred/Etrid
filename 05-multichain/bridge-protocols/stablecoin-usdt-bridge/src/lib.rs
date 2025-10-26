@@ -18,7 +18,7 @@
 pub use pallet::*;
 
 use codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
-use frame_support::pallet_prelude::*;
+use frame_support::{pallet_prelude::*, BoundedVec};
 use scale_info::TypeInfo;
 use sp_std::prelude::*;
 use sp_runtime::{traits::SaturatedConversion, RuntimeDebug};
@@ -150,6 +150,10 @@ pub mod pallet {
 		/// Maximum number of pending withdrawals per account
 		#[pallet::constant]
 		type MaxWithdrawalsPerAccount: Get<u32>;
+
+		/// Maximum number of withdrawal custodians
+		#[pallet::constant]
+		type MaxCustodians: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -233,7 +237,7 @@ pub mod pallet {
 	/// Example: 2-of-3 custodians must approve each withdrawal
 	#[pallet::storage]
 	#[pallet::getter(fn withdrawal_custodian_set)]
-	pub type WithdrawalCustodianSet<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+	pub type WithdrawalCustodianSet<T: Config> = StorageValue<_, BoundedVec<T::AccountId, T::MaxCustodians>, ValueQuery>;
 
 	/// Withdrawal approval threshold (M in M-of-N)
 	#[pallet::storage]

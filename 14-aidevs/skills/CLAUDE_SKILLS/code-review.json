@@ -1,0 +1,86 @@
+{
+  "skill": "code-review",
+  "name": "Code Review",
+  "version": "1.0.0",
+  "description": "Comprehensive code review for Rust/Substrate pallets with security analysis",
+  "available_to": [
+    "compiler-dev",
+    "audit-dev",
+    "security-dev",
+    "runtime-dev"
+  ],
+  "parameters": {
+    "code_path": {
+      "type": "string",
+      "required": true,
+      "description": "Path to code file or directory to review"
+    },
+    "review_type": {
+      "type": "enum",
+      "required": false,
+      "default": "full",
+      "options": ["full", "security", "performance", "style"],
+      "description": "Type of code review to perform"
+    },
+    "language": {
+      "type": "enum",
+      "required": false,
+      "default": "rust",
+      "options": ["rust", "substrate", "typescript", "python"],
+      "description": "Programming language of the code"
+    }
+  },
+  "returns": {
+    "issues": {
+      "type": "array",
+      "description": "List of issues found with severity levels"
+    },
+    "security_score": {
+      "type": "float",
+      "range": [0, 10],
+      "description": "Security score (10=perfect)"
+    },
+    "quality_score": {
+      "type": "float",
+      "range": [0, 10],
+      "description": "Code quality score (10=perfect)"
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Recommended fixes and improvements"
+    }
+  },
+  "claude_prompt": "Review the following code for security vulnerabilities, logic errors, performance issues, and best practices. For Rust/Substrate code, check for: unsafe usage, arithmetic overflow, storage bloat, weight calculations, and proper error handling. Provide severity-rated issues and actionable recommendations.",
+  "examples": [
+    {
+      "input": {
+        "code_path": "pallets/pallet-governance/src/lib.rs",
+        "review_type": "security",
+        "language": "rust"
+      },
+      "output": {
+        "issues": [
+          {
+            "severity": "HIGH",
+            "line": 245,
+            "message": "Unchecked arithmetic operation may overflow",
+            "suggestion": "Use saturating_add() instead of +"
+          }
+        ],
+        "security_score": 7.5,
+        "quality_score": 8.2,
+        "recommendations": [
+          "Add input validation for proposal amounts",
+          "Implement reentrancy guard for vote() function"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "category": "development",
+    "complexity": "high",
+    "execution_time": "60-120s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

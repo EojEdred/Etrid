@@ -60,8 +60,8 @@ pallet-edsc-receipts = { path = "../../../../bridge-protocols/edsc-bridge/substr
 pallet-edsc-redemption = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
 pallet-edsc-oracle = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
 pallet-edsc-checkpoint = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint", default-features = false }
-pallet-circuit-breaker = { path = "../../../../../pallets/pallet-circuit-breaker", default-features = false }
-pallet-xcm-bridge = { path = "../../../../../pallets/pallet-xcm-bridge", default-features = false }
+pallet-circuit-breaker = { path = "../../../../../src/pallets/pallet-circuit-breaker", default-features = false }
+pallet-xcm-bridge = { path = "../../../../../src/pallets/pallet-xcm-bridge", default-features = false }
 pallet-edsc-bridge-token-messenger = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
 pallet-edsc-bridge-attestation = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
 

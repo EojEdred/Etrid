@@ -1,113 +1,129 @@
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Starting EDSC Ethereum contracts deployment...\n");
+  console.log("🚀 Deploying Ëtrid Ethereum Contracts...\n");
 
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying contracts with account:", deployer.address);
-  console.log("Account balance:", (await hre.ethers.provider.getBalance(deployer.address)).toString(), "\n");
+  console.log("Deploying with account:", deployer.address);
+  console.log("Account balance:", (await deployer.provider.getBalance(deployer.address)).toString());
+  console.log();
 
-  // Configuration
-  const INITIAL_OWNER = process.env.INITIAL_OWNER || deployer.address;
-  const MIN_SIGNATURES = parseInt(process.env.INITIAL_MIN_SIGNATURES || "3");
-  const TOTAL_ATTESTERS = parseInt(process.env.INITIAL_TOTAL_ATTESTERS || "5");
-
-  console.log("Configuration:");
-  console.log("  Owner:", INITIAL_OWNER);
-  console.log("  Min Signatures:", MIN_SIGNATURES);
-  console.log("  Total Attesters:", TOTAL_ATTESTERS, "\n");
-
-  // 1. Deploy EDSC Token
-  console.log("1. Deploying EDSC token...");
-  const EDSC = await hre.ethers.getContractFactory("EDSC");
-  const edsc = await EDSC.deploy(INITIAL_OWNER);
-  await edsc.waitForDeployment();
-  const edscAddress = await edsc.getAddress();
-  console.log("   EDSC deployed to:", edscAddress, "\n");
-
-  // 2. Deploy AttesterRegistry
-  console.log("2. Deploying AttesterRegistry...");
-  const AttesterRegistry = await hre.ethers.getContractFactory("AttesterRegistry");
-  const attesterRegistry = await AttesterRegistry.deploy(
-    INITIAL_OWNER,
-    MIN_SIGNATURES,
-    TOTAL_ATTESTERS
+  // ═══════════════════════════════════════════════════════════
+  // Step 1: Deploy ÉTR Token
+  // ═══════════════════════════════════════════════════════════
+  console.log("📦 Deploying ÉTR Token...");
+  const ETRToken = await hre.ethers.getContractFactory("ETRToken");
+  
+  // For now, use deployer as admin and bridge (will be replaced)
+  const etrToken = await ETRToken.deploy(
+    deployer.address,  // admin
+    deployer.address   // bridge (temporary, will grant to bridge contract)
   );
-  await attesterRegistry.waitForDeployment();
-  const attesterRegistryAddress = await attesterRegistry.getAddress();
-  console.log("   AttesterRegistry deployed to:", attesterRegistryAddress, "\n");
+  await etrToken.waitForDeployment();
+  
+  const etrAddress = await etrToken.getAddress();
+  console.log("✅ ÉTR Token deployed to:", etrAddress);
+  console.log();
 
-  // 3. Deploy EDSCMessageTransmitter
-  console.log("3. Deploying EDSCMessageTransmitter...");
-  const EDSCMessageTransmitter = await hre.ethers.getContractFactory("EDSCMessageTransmitter");
-  const messageTransmitter = await EDSCMessageTransmitter.deploy(
-    INITIAL_OWNER,
+  // ═══════════════════════════════════════════════════════════
+  // Step 2: Deploy EDSC Token
+  // ═══════════════════════════════════════════════════════════
+  console.log("📦 Deploying EDSC Token...");
+  const EDSCToken = await hre.ethers.getContractFactory("EDSCToken");
+  
+  const edscToken = await EDSCToken.deploy(
+    deployer.address,  // admin
+    deployer.address   // bridge (temporary, will grant to bridge contract)
+  );
+  await edscToken.waitForDeployment();
+  
+  const edscAddress = await edscToken.getAddress();
+  console.log("✅ EDSC Token deployed to:", edscAddress);
+  console.log();
+
+  // ═══════════════════════════════════════════════════════════
+  // Step 3: Deploy Bridge Contract
+  // ═══════════════════════════════════════════════════════════
+  console.log("📦 Deploying Ëtrid Bridge...");
+  
+  // Initial watchtowers (3-of-5 multisig)
+  // TODO: Replace with actual watchtower addresses
+  const initialWatchtowers = [
+    deployer.address,  // Replace with real watchtower 1
+    deployer.address,  // Replace with real watchtower 2
+    deployer.address,  // Replace with real watchtower 3
+  ];
+  
+  const EtridBridge = await hre.ethers.getContractFactory("EtridBridge");
+  const bridge = await EtridBridge.deploy(
+    deployer.address,
+    etrAddress,
     edscAddress,
-    attesterRegistryAddress
+    initialWatchtowers
   );
-  await messageTransmitter.waitForDeployment();
-  const messageTransmitterAddress = await messageTransmitter.getAddress();
-  console.log("   EDSCMessageTransmitter deployed to:", messageTransmitterAddress, "\n");
+  await bridge.waitForDeployment();
+  
+  const bridgeAddress = await bridge.getAddress();
+  console.log("✅ Ëtrid Bridge deployed to:", bridgeAddress);
+  console.log();
 
-  // 4. Deploy EDSCTokenMessenger
-  console.log("4. Deploying EDSCTokenMessenger...");
-  const EDSCTokenMessenger = await hre.ethers.getContractFactory("EDSCTokenMessenger");
-  const tokenMessenger = await EDSCTokenMessenger.deploy(
-    INITIAL_OWNER,
-    edscAddress
-  );
-  await tokenMessenger.waitForDeployment();
-  const tokenMessengerAddress = await tokenMessenger.getAddress();
-  console.log("   EDSCTokenMessenger deployed to:", tokenMessengerAddress, "\n");
+  // ═══════════════════════════════════════════════════════════
+  // Step 4: Grant Bridge Role to Bridge Contract
+  // ═══════════════════════════════════════════════════════════
+  console.log("🔑 Granting BRIDGE_ROLE to bridge contract...");
+  
+  const BRIDGE_ROLE = await etrToken.BRIDGE_ROLE();
+  
+  // Grant to ETR token
+  const tx1 = await etrToken.grantRole(BRIDGE_ROLE, bridgeAddress);
+  await tx1.wait();
+  console.log("✅ Bridge role granted to ETR token");
+  
+  // Revoke deployer's bridge role on ETR
+  const tx2 = await etrToken.revokeRole(BRIDGE_ROLE, deployer.address);
+  await tx2.wait();
+  console.log("✅ Deployer's bridge role revoked from ETR token");
+  
+  // Grant to EDSC token
+  const tx3 = await edscToken.grantRole(BRIDGE_ROLE, bridgeAddress);
+  await tx3.wait();
+  console.log("✅ Bridge role granted to EDSC token");
+  
+  // Revoke deployer's bridge role on EDSC
+  const tx4 = await edscToken.revokeRole(BRIDGE_ROLE, deployer.address);
+  await tx4.wait();
+  console.log("✅ Deployer's bridge role revoked from EDSC token");
+  console.log();
 
-  // 5. Configure EDSC token
-  console.log("5. Configuring EDSC token...");
-  if (INITIAL_OWNER === deployer.address) {
-    const setTx = await edsc.setMessageTransmitter(messageTransmitterAddress);
-    await setTx.wait();
-    console.log("   MessageTransmitter authorized to mint/burn\n");
-  } else {
-    console.log("   ⚠️  Owner is different - manually set MessageTransmitter\n");
-  }
-
-  // Print summary
-  console.log("=".repeat(60));
-  console.log("Deployment Summary");
-  console.log("=".repeat(60));
-  console.log("EDSC Token:             ", edscAddress);
-  console.log("AttesterRegistry:       ", attesterRegistryAddress);
-  console.log("MessageTransmitter:     ", messageTransmitterAddress);
-  console.log("TokenMessenger:         ", tokenMessengerAddress);
-  console.log("=".repeat(60), "\n");
-
-  console.log("Next steps:");
-  console.log("1. Register attesters via AttesterRegistry.registerAttester()");
-  console.log("2. Configure thresholds if needed");
-  console.log("3. Verify contracts on Etherscan");
-  console.log("4. Set up off-chain attestation service");
-  console.log("5. Set up relayer service\n");
-
-  // Save addresses to file
-  const fs = require("fs");
-  const addresses = {
-    network: hre.network.name,
-    timestamp: new Date().toISOString(),
-    contracts: {
-      EDSC: edscAddress,
-      AttesterRegistry: attesterRegistryAddress,
-      MessageTransmitter: messageTransmitterAddress,
-      TokenMessenger: tokenMessengerAddress,
-    },
-    config: {
-      owner: INITIAL_OWNER,
-      minSignatures: MIN_SIGNATURES,
-      totalAttesters: TOTAL_ATTESTERS,
-    },
-  };
-
-  const filename = `deployment-${hre.network.name}-${Date.now()}.json`;
-  fs.writeFileSync(filename, JSON.stringify(addresses, null, 2));
-  console.log("Deployment info saved to:", filename);
+  // ═══════════════════════════════════════════════════════════
+  // Deployment Summary
+  // ═══════════════════════════════════════════════════════════
+  console.log("═════════════════════════════════════════════════════════");
+  console.log("✅ Deployment Complete!");
+  console.log("═════════════════════════════════════════════════════════");
+  console.log();
+  console.log("📋 Contract Addresses:");
+  console.log("─────────────────────────────────────────────────────────");
+  console.log("ÉTR Token:       ", etrAddress);
+  console.log("EDSC Token:      ", edscAddress);
+  console.log("Ëtrid Bridge:    ", bridgeAddress);
+  console.log();
+  console.log("🔗 Add to frontend .env:");
+  console.log("─────────────────────────────────────────────────────────");
+  console.log(`NEXT_PUBLIC_ETR_TOKEN_ADDRESS=${etrAddress}`);
+  console.log(`NEXT_PUBLIC_EDSC_TOKEN_ADDRESS=${edscAddress}`);
+  console.log(`NEXT_PUBLIC_BRIDGE_ADDRESS=${bridgeAddress}`);
+  console.log();
+  console.log("⚠️  Next Steps:");
+  console.log("─────────────────────────────────────────────────────────");
+  console.log("1. Replace dummy watchtower addresses with real ones");
+  console.log("2. Verify contracts on Etherscan:");
+  console.log(`   npx hardhat verify --network ${hre.network.name} ${etrAddress} "${deployer.address}" "${deployer.address}"`);
+  console.log(`   npx hardhat verify --network ${hre.network.name} ${edscAddress} "${deployer.address}" "${deployer.address}"`);
+  console.log("3. Create Uniswap V3 pools (use scripts/create-uniswap-pools.js)");
+  console.log("4. Add initial liquidity (~$3M)");
+  console.log("5. Update Substrate bridge pallets with contract addresses");
+  console.log("═════════════════════════════════════════════════════════");
 }
 
 main()

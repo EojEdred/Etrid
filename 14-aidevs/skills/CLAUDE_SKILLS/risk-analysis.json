@@ -1,0 +1,79 @@
+{
+  "skill": "risk-analysis",
+  "name": "Risk Analysis",
+  "version": "1.0.0",
+  "description": "Evaluates proposal risk using Monte Carlo simulation and statistical analysis",
+  "available_to": [
+    "governance-dev",
+    "audit-dev",
+    "economics-dev"
+  ],
+  "parameters": {
+    "proposal_id": {
+      "type": "string",
+      "required": true,
+      "description": "On-chain proposal identifier"
+    },
+    "simulation_runs": {
+      "type": "integer",
+      "required": false,
+      "default": 10000,
+      "description": "Number of Monte Carlo simulation runs"
+    },
+    "risk_factors": {
+      "type": "array",
+      "required": false,
+      "default": ["financial", "technical", "governance"],
+      "description": "Risk dimensions to evaluate"
+    }
+  },
+  "returns": {
+    "risk_score": {
+      "type": "float",
+      "range": [0, 1],
+      "description": "Overall risk score (0=low, 1=high)"
+    },
+    "risk_breakdown": {
+      "type": "object",
+      "description": "Risk scores by category"
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Recommended actions to mitigate risk"
+    },
+    "confidence": {
+      "type": "float",
+      "range": [0, 1],
+      "description": "Confidence in the risk assessment"
+    }
+  },
+  "claude_prompt": "Analyze the following blockchain governance proposal for risk. Consider financial impact, technical feasibility, governance implications, and potential attack vectors. Use Monte Carlo simulation to model uncertainty. Return a comprehensive risk assessment with scores, breakdown, and recommendations.",
+  "examples": [
+    {
+      "input": {
+        "proposal_id": "prop-123",
+        "simulation_runs": 5000,
+        "risk_factors": ["financial", "technical"]
+      },
+      "output": {
+        "risk_score": 0.35,
+        "risk_breakdown": {
+          "financial": 0.42,
+          "technical": 0.28
+        },
+        "recommendations": [
+          "Add 2-week delay for additional review",
+          "Require security audit before execution"
+        ],
+        "confidence": 0.87
+      }
+    }
+  ],
+  "metadata": {
+    "category": "governance",
+    "complexity": "high",
+    "execution_time": "30-60s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

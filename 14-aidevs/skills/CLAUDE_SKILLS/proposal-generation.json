@@ -1,0 +1,99 @@
+{
+  "skill": "proposal-generation",
+  "name": "Proposal Generation",
+  "version": "1.0.0",
+  "description": "Generate well-structured governance proposals with rationale and implementation plans",
+  "available_to": [
+    "governance-dev",
+    "audit-dev",
+    "economics-dev"
+  ],
+  "parameters": {
+    "proposal_type": {
+      "type": "enum",
+      "required": true,
+      "options": ["treasury", "runtime-upgrade", "parameter-change", "emergency", "general"],
+      "description": "Type of proposal to generate"
+    },
+    "context": {
+      "type": "object",
+      "required": true,
+      "description": "Context and requirements for the proposal"
+    },
+    "target_audience": {
+      "type": "enum",
+      "required": false,
+      "default": "community",
+      "options": ["technical", "community", "validators", "council"],
+      "description": "Primary audience for the proposal"
+    }
+  },
+  "returns": {
+    "proposal": {
+      "type": "object",
+      "description": "Structured proposal document"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Executive summary (1-2 paragraphs)"
+    },
+    "implementation_plan": {
+      "type": "array",
+      "description": "Step-by-step implementation plan"
+    },
+    "risk_assessment": {
+      "type": "object",
+      "description": "Risks and mitigation strategies"
+    },
+    "estimated_impact": {
+      "type": "object",
+      "description": "Estimated impact on system and stakeholders"
+    }
+  },
+  "claude_prompt": "Generate a comprehensive governance proposal based on the provided context. Include: clear problem statement, proposed solution, rationale, implementation plan, timeline, budget (if applicable), risk assessment, and success criteria. Format for on-chain submission. Use clear, persuasive language appropriate for the target audience.",
+  "examples": [
+    {
+      "input": {
+        "proposal_type": "parameter-change",
+        "context": {
+          "parameter": "min_staking_amount",
+          "current_value": 1000,
+          "proposed_value": 500,
+          "rationale": "Increase validator decentralization by lowering barrier to entry"
+        },
+        "target_audience": "community"
+      },
+      "output": {
+        "proposal": {
+          "title": "Reduce Minimum Staking Amount to 500 ETR",
+          "problem_statement": "Current 1000 ETR minimum excludes smaller holders from staking",
+          "solution": "Reduce minimum to 500 ETR to increase participation",
+          "rationale": "...",
+          "timeline": "Implement in next runtime upgrade (est. 14 days)"
+        },
+        "summary": "This proposal recommends reducing the minimum staking amount from 1000 to 500 ETR...",
+        "implementation_plan": [
+          "Update runtime parameter via democracy pallet",
+          "Test on testnet for 7 days",
+          "Deploy to mainnet via sudo/democracy"
+        ],
+        "risk_assessment": {
+          "risks": ["Increased validator set size may impact performance"],
+          "mitigation": ["Monitor network metrics closely", "Set max validator limit"]
+        },
+        "estimated_impact": {
+          "validators": "+30-50% new validators",
+          "decentralization": "Improved Nakamoto coefficient",
+          "performance": "Negligible impact expected"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "category": "governance",
+    "complexity": "medium",
+    "execution_time": "30-60s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

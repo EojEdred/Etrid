@@ -12,7 +12,7 @@ use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
-        AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
+        AccountIdLookup, AccountIdConversion, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, FixedU128, MultiSignature, Perbill,
@@ -72,7 +72,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("etrid"),
     impl_name: create_runtime_str!("etrid"),
     authoring_version: 1,
-    spec_version: 100,
+    spec_version: 103,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -209,6 +209,73 @@ impl pallet_sudo::Config for Runtime {
     type WeightInfo = ();
 }
 
+use frame_support::traits::WithdrawReasons;
+
+parameter_types! {
+    pub const MinVestedTransfer: Balance = 100_000_000_000_000; // 0.0001 ETR (100 million base units)
+    pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+        WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
+}
+
+impl pallet_vesting::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
+    type MinVestedTransfer = MinVestedTransfer;
+    type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+    type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
+    type BlockNumberProvider = System;
+    const MAX_VESTING_SCHEDULES: u32 = 28; // Allow multiple vesting schedules per account
+}
+
+parameter_types! {
+    pub const DepositBase: Balance = 1_000_000_000_000; // 0.001 ETR base deposit
+    pub const DepositFactor: Balance = 500_000_000_000; // 0.0005 ETR per signatory
+    pub const MaxSignatories: u32 = 10; // Max 10 signatories per multisig
+}
+
+impl pallet_multisig::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeCall = RuntimeCall;
+    type Currency = Balances;
+    type DepositBase = DepositBase;
+    type DepositFactor = DepositFactor;
+    type MaxSignatories = MaxSignatories;
+    type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+    type BlockNumberProvider = System;
+}
+
+parameter_types! {
+    pub const SpendPeriod: BlockNumber = 7 * 24 * 600; // 7 days (assuming 6 second blocks)
+    pub const Burn: Permill = Permill::from_percent(0); // No burn, all rejected funds stay in treasury
+    pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+    pub const MaxApprovals: u32 = 100; // Maximum proposals that can be approved in one spend period
+    pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account_truncating();
+}
+
+impl pallet_treasury::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type PalletId = TreasuryPalletId;
+    type Currency = Balances;
+    type RejectOrigin = frame_system::EnsureRoot<AccountId>; // Sudo or governance can reject
+    type SpendOrigin = frame_support::traits::NeverEnsureOrigin<Balance>; // Disable direct spend, use proposals
+    type SpendPeriod = SpendPeriod;
+    type Burn = Burn;
+    type BurnDestination = (); // No burn destination since Burn = 0%
+    type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+    type SpendFunds = (); // No automatic spend mechanism
+    type MaxApprovals = MaxApprovals;
+    type AssetKind = ();
+    type Beneficiary = AccountId;
+    type BeneficiaryLookup = AccountIdLookup<AccountId, ()>;
+    type Paymaster = frame_support::traits::tokens::pay::PayFromAccount<Balances, TreasuryAccount>;
+    type BalanceConverter = frame_support::traits::tokens::UnityAssetBalanceConversion;
+    type PayoutPeriod = ConstU32<0>; // Instant payout
+    type BlockNumberProvider = System;
+    #[cfg(feature = "runtime-benchmarks")]
+    type BenchmarkHelper = ();
+}
+
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
 
 // ========================================
@@ -227,6 +294,7 @@ impl pallet_etrid_staking::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type UnbondPeriod = ConstU32<28800>; // ~2 days at 6 second blocks
+    type MaxUnbondingEntries = ConstU32<32>; // Max unbonding entries per account
 }
 
 /// Configure the pallet-etwasm-vm (smart contract execution)
@@ -257,6 +325,7 @@ impl pallet_governance::Config for Runtime {
     type Time = Timestamp;
     type ProposalDuration = ConstU64<604_800_000>; // 7 days in milliseconds
     type MinProposalStake = ConstU128<10_000_000_000_000>; // 10 ETR
+    type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
 /// Configure the PBC Router (Partition Burst Chain routing)
@@ -467,6 +536,7 @@ impl stablecoin_usdt_bridge::Config for Runtime {
     type BridgeFeeRate = ConstU32<5>; // 0.05% for stablecoins
     type MaxDepositsPerAccount = ConstU32<100>;
     type MaxWithdrawalsPerAccount = ConstU32<100>;
+    type MaxCustodians = ConstU32<10>; // Maximum 10 custodians for M-of-N multisig
 }
 
 // ========================================
@@ -594,6 +664,7 @@ impl pallet_reserve_oracle::Config for Runtime {
     type ReserveThrottleThreshold = ReserveOracleThrottleThreshold;
     type ReserveCriticalThreshold = ReserveOracleCriticalThreshold;
     type MaxPriceStaleness = MaxOraclePriceStaleness;
+    type MaxPriceAge = ConstU32<100>; // Max price age in blocks before considered stale
 }
 
 // ========================================
@@ -688,6 +759,9 @@ construct_runtime!(
         Timestamp: pallet_timestamp,
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
+        Vesting: pallet_vesting,
+        Multisig: pallet_multisig,
+        Treasury: pallet_treasury,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
@@ -1002,6 +1076,9 @@ impl_runtime_apis! {
                     sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET => {
                         Some(include_bytes!("../presets/local_testnet.json").to_vec())
                     },
+                    "ember_testnet" => {
+                        Some(include_bytes!("../presets/ember_testnet.json").to_vec())
+                    },
                     _ => None,
                 }
             })
@@ -1011,6 +1088,7 @@ impl_runtime_apis! {
             vec![
                 sp_genesis_builder::DEV_RUNTIME_PRESET.into(),
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
+                "ember_testnet".into(),
             ]
         }
     }

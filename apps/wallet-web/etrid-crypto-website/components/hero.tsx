@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function Hero() {
   const [particles, setParticles] = useState<
@@ -27,6 +28,11 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden gradient-bg">
+      {/* Mode Toggle - Top Right */}
+      <div className="absolute top-4 right-4 z-50">
+        <ModeToggle />
+      </div>
+
       {/* Animated particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map((particle) => (

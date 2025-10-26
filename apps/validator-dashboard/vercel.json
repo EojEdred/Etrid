@@ -1,0 +1,62 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_WS_PROVIDER": "wss://rpc.etrid.network",
+    "NEXT_PUBLIC_NETWORK_NAME": "Ëtrid MainNet",
+    "NEXT_PUBLIC_CHAIN_ID": "etrid-mainnet",
+    "NEXT_PUBLIC_APP_NAME": "Validator Dashboard",
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_WS_PROVIDER": "wss://rpc.etrid.network",
+      "NEXT_PUBLIC_NETWORK_NAME": "Ëtrid MainNet",
+      "NEXT_PUBLIC_CHAIN_ID": "etrid-mainnet",
+      "NEXT_PUBLIC_APP_NAME": "Validator Dashboard",
+      "NODE_ENV": "production"
+    }
+  },
+  "functions": {
+    "pages/**/*.{ts,tsx}": {
+      "maxDuration": 60
+    },
+    "pages/api/**/*.{ts,tsx}": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}

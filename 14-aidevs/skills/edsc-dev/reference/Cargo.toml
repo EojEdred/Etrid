@@ -1,0 +1,4 @@
+[dependencies]
+frame-support = { version = "4.0.0-dev", default-features = false }
+frame-system = { version = "4.0.0-dev", default-features = false }
+serde = { version = "1.0", features = ["derive"] }

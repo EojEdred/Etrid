@@ -276,6 +276,7 @@ parameter_types! {
     pub const UsdtBridgeFeeRate: u32 = 5; // 0.05% for stablecoins
     pub const MaxUsdtDepositsPerAccount: u32 = 100;
     pub const MaxUsdtWithdrawalsPerAccount: u32 = 50;
+    pub const MaxUsdtCustodians: u32 = 10;  // Maximum number of bridge custodians
 }
 
 impl pallet_stablecoin_usdt_bridge::Config for Runtime {
@@ -284,6 +285,7 @@ impl pallet_stablecoin_usdt_bridge::Config for Runtime {
     type BridgeFeeRate = UsdtBridgeFeeRate;
     type MaxDepositsPerAccount = MaxUsdtDepositsPerAccount;
     type MaxWithdrawalsPerAccount = MaxUsdtWithdrawalsPerAccount;
+    type MaxCustodians = MaxUsdtCustodians;
 }
 
 // Lightning Channels Configuration

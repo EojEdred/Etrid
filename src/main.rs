@@ -19,6 +19,10 @@
 //!
 //! # Development mode
 //! etrid --chain flare --dev
+//!
+//! # Subcommands
+//! etrid build-spec --chain flare
+//! etrid key generate
 //! ```
 
 #![warn(missing_docs)]
@@ -125,19 +129,15 @@ pub struct Cli {
     )]
     pub chain: String,
 
-    /// Run as validator (FlareChain only)
-    #[arg(long, conflicts_with = "collator")]
-    pub validator: bool,
-
-    /// Run as collator (PBC chains only)
-    #[arg(long, conflicts_with = "validator")]
+    /// Run as collator (for PBC chains)
+    #[arg(long, help = "Run as collator (for PBC chains only)")]
     pub collator: bool,
 
     /// Subcommands
     #[command(subcommand)]
     pub subcommand: Option<Subcommand>,
 
-    /// Standard Substrate run command options
+    /// Standard Substrate run command options (includes --validator flag)
     #[command(flatten)]
     pub run: sc_cli::RunCmd,
 }
@@ -213,9 +213,16 @@ impl SubstrateCli for Cli {
         match chain_type {
             ChainType::Flare => {
                 // Load FlareChain spec
-                // TODO: Import from flare-chain/node/chain-spec
                 log::info!("Loading FlareChain specification: {}", id);
-                Err("FlareChain specs not yet integrated".into())
+                Ok(match id {
+                    "dev" => Box::new(flare_chain_node::chain_spec::development_config()?),
+                    "local" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?),
+                    "staging" | "ember" => Box::new(flare_chain_node::chain_spec::staging_testnet_config()?),
+                    "" | "flarechain" => Box::new(flare_chain_node::chain_spec::flarechain_config()?),
+                    path => Box::new(flare_chain_node::chain_spec::ChainSpec::from_json_file(
+                        std::path::PathBuf::from(path),
+                    )?),
+                })
             }
             _ => {
                 // Load PBC spec
@@ -234,16 +241,32 @@ fn main() -> sc_cli::Result<()> {
     let chain_type = ChainType::from_str(&cli.chain)
         .map_err(|e| sc_cli::Error::Input(e))?;
 
-    // Validate validator/collator flags
-    if chain_type.is_pbc() && cli.validator {
-        return Err(sc_cli::Error::Input(
-            "Cannot run PBC chain as validator. Use --collator instead.".into(),
-        ));
-    }
-    if !chain_type.is_pbc() && cli.collator {
-        return Err(sc_cli::Error::Input(
-            "Cannot run FlareChain as collator. Use --validator instead.".into(),
-        ));
+    // Validate validator/collator flags (only when running node, not for subcommands)
+    if cli.subcommand.is_none() {
+        // Running the node - validate correct flag for chain type
+        if chain_type.is_pbc() {
+            // PBC chains must use --collator
+            if !cli.collator {
+                return Err(sc_cli::Error::Input(
+                    format!("{} requires --collator flag", chain_type.runtime_name())
+                ));
+            }
+            if cli.run.validator {
+                log::warn!("--validator flag ignored for PBC chains (use --collator)");
+            }
+        } else {
+            // FlareChain must use --validator
+            if !cli.run.validator {
+                return Err(sc_cli::Error::Input(
+                    "FlareChain requires --validator flag".into()
+                ));
+            }
+            if cli.collator {
+                return Err(sc_cli::Error::Input(
+                    "Cannot use --collator with FlareChain. Use --validator instead.".into()
+                ));
+            }
+        }
     }
 
     log::info!("🚀 Starting ËTRID Node");

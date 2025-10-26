@@ -7,7 +7,7 @@
   "protocolId": "flarechain",
   "properties": {
     "tokenSymbol": "ÉTR",
-    "tokenDecimals": 18,
+    "tokenDecimals": 12,
     "ss58Format": 42
   },
   "forkId": null,
