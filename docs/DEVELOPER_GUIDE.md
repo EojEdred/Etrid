@@ -29,7 +29,7 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 
 Ëtrid is a next-generation multichain blockchain platform built on Substrate that implements:
 
-- **FlareChain Relay Chain**: Main chain using Adaptive Stake Finality (ASF) consensus
+- **FlareChain Relay Chain**: Main chain using Ascending Scale of Finality (ASF) consensus
 - **13 Partition Burst Chains (PBCs)**: Specialized chains for cross-chain asset bridges
 - **Lightning-Bloc Layer 2**: Payment channel network for instant transactions
 - **ËtwasmVM**: Custom WebAssembly runtime with reentrancy protection
@@ -76,7 +76,7 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 │                                                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │              FlareChain (Relay Chain)                      │  │
-│  │  - ASF Consensus (Adaptive Stake Finality)                 │  │
+│  │  - ASF Consensus (Ascending Scale of Finality)                 │  │
 │  │  - Validator Set Management                                │  │
 │  │  - Cross-Chain Message Routing                             │  │
 │  │  - Governance & Treasury                                   │  │
@@ -145,7 +145,7 @@ Each chain (FlareChain + 13 PBCs) has its own runtime that combines relevant pal
 
 ### Consensus Mechanism
 
-**Adaptive Stake Finality (ASF)**:
+**Ascending Scale of Finality (ASF)**:
 - Combines Proof of Stake with "coinage" (stake × time)
 - Dilutes voting power over time to prevent centralization
 - Fast finality: ~15 seconds (3 blocks)

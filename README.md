@@ -10,7 +10,7 @@
 [![Documentation](https://img.shields.io/badge/docs-32k+%20lines-blue.svg)](docs/)
 [![Testnet](https://img.shields.io/badge/testnet-Ember-orange.svg)]()
 
-> **A multichain blockchain architecture with Adaptive Stake Finality, partition burst chains, and on-chain governance via annual Consensus Day.**
+> **A multichain blockchain architecture with Ascending Scale of Finality, partition burst chains, and on-chain governance via annual Consensus Day.**
 
 **Current Phase:** Alpha Complete (100%) | **Next Phase:** Ember Testnet (Q1 2026)
 
@@ -21,7 +21,7 @@
 Ëtrid is a next-generation blockchain multichain that implements:
 
 - **🔗 Multichain Architecture**: FlareChain relay chain + 13 Partition Burst Chains (PBCs)
-- **⚡ Adaptive Stake Finality (ASF)**: Novel consensus combining stake-weighted voting with coinage
+- **⚡ Ascending Scale of Finality (ASF)**: Novel consensus combining stake-weighted voting with coinage
 - **🗳️ Consensus Day Governance**: Annual on-chain voting for fiscal policy and network upgrades
 - **💰 Dual Token System**: ÉTR (native coin) + ËDSC (dollar-pegged stablecoin)
 - **🔐 Post-Quantum Security**: Future-proof cryptography (Ed25519 + SPHINCS+)
@@ -219,7 +219,7 @@ cat docs/API_REFERENCE.md       # API documentation
 ## 🔗 Multichain Architecture
 
 ### FlareChain (Relay Chain)
-- **Consensus:** Adaptive Stake Finality (ASF)
+- **Consensus:** Ascending Scale of Finality (ASF)
 - **Block Time:** ~6 seconds
 - **Finality:** <100 blocks
 - **Validators:** Stake-weighted selection

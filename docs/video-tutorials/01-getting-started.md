@@ -36,7 +36,7 @@ This tutorial introduces viewers to Etrid, guides them through wallet installati
 **NARRATION:**
 "Etrid is a multichain blockchain platform that solves three major problems in blockchain today. First, it provides true interoperability through 13 Partition Burst Chains - or PBCs - that connect Bitcoin, Ethereum, Solana, and 10 other major blockchains. Second, it offers lightning-fast transactions through our Layer 2 Lightning-Bloc payment channels with instant finality. Third, it's truly democratic with on-chain governance through our annual Consensus Day event, where YOU vote on network upgrades and fiscal policy.
 
-What makes Etrid special? We use Adaptive Stake Finality - a novel consensus mechanism that combines proof of stake with coinage tracking to prevent centralization. Blocks are finalized in just 15 seconds, and you can stake your ETR tokens to earn rewards while helping secure the network."
+What makes Etrid special? We use Ascending Scale of Finality - a novel consensus mechanism that combines proof of stake with coinage tracking to prevent centralization. Blocks are finalized in just 15 seconds, and you can stake your ETR tokens to earn rewards while helping secure the network."
 
 **VISUAL CUES:**
 - Architecture diagram: FlareChain relay + 13 PBCs
@@ -50,7 +50,7 @@ What makes Etrid special? We use Adaptive Stake Finality - a novel consensus mec
 - 13 PBC connections to major chains
 - 15-second finality
 - User-controlled governance
-- Adaptive Stake Finality prevents centralization
+- Ascending Scale of Finality prevents centralization
 
 **COMMON MISTAKES TO MENTION:**
 - "Don't confuse PBCs with traditional sidechains - they're specialized bridges with dedicated collators"

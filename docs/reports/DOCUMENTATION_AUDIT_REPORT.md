@@ -155,7 +155,7 @@ All required documentation categories are present and professional quality. The 
 - Others: Various governance centralization issues
 
 **Solution Positioning:**
-- Adaptive Stake Finality (ASF) consensus
+- Ascending Scale of Finality (ASF) consensus
 - Annual Consensus Day democratic governance
 - Multi-chain architecture (FlareChain + 13 PBCs)
 - True decentralization (no entity > 5% voting power)
@@ -293,7 +293,7 @@ All required documentation categories are present and professional quality. The 
 - 07-transactions/lightning-bloc/ (HTLC algorithms)
 
 **Coverage:**
-- Adaptive Stake Finality (ASF) consensus
+- Ascending Scale of Finality (ASF) consensus
 - S/Kademlia DHT routing
 - ECIES encryption scheme
 - HTLC hash-locked transactions

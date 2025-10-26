@@ -10,7 +10,7 @@
 
 Ëtrid is a next-generation multichain blockchain implementing the E³20 (Essential Elements to Operate) protocol with 13 core components, all now at 100% Alpha Complete status. The architecture combines:
 
-- **FlareChain Relay Chain** with Adaptive Stake Finality (ASF) consensus
+- **FlareChain Relay Chain** with Ascending Scale of Finality (ASF) consensus
 - **13 Partition Burst Chains (PBCs)** for cross-chain interoperability
 - **Lightning-Bloc Layer 2** for payment channels and instant transactions
 - **World's First AI DID Standard** (AIDID) for AI identity management
@@ -28,7 +28,7 @@
 │                                                                       │
 │  ┌───────────────────────────────────────────────────────────────┐  │
 │  │                    FlareChain (Relay Chain)                    │  │
-│  │  - ASF Consensus (Adaptive Stake Finality)                     │  │
+│  │  - ASF Consensus (Ascending Scale of Finality)                │  │
 │  │  - Validator Set Management                                    │  │
 │  │  - Cross-Chain Message Routing                                 │  │
 │  │  - Governance & Treasury                                       │  │
@@ -345,7 +345,7 @@
 
 ### FlareChain Relay Chain
 
-**Consensus**: Adaptive Stake Finality (ASF)
+**Consensus**: Ascending Scale of Finality (ASF)
 **Validators**: 21 (mainnet target)
 **Block Time**: 5 seconds
 **Finality**: ~15 seconds (3 blocks)

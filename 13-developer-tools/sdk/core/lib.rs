@@ -6,7 +6,7 @@
 //!
 //! ËTRID is a next-generation blockchain platform implementing:
 //! - **E³20 Architecture**: Essential Elements to Operate Reference Implementation
-//! - **FODDoS ASF Consensus**: Flexible Orchestrated Distributed Defense of Service with Adaptive Stake Finality
+//! - **FODDoS ASF Consensus**: Flexible Orchestrated Distributed Defense of Service with Ascending Scale of Finality
 //! - **Hybrid Multi-layer Design**: Custom P2P (DETR) + Substrate/Polkadot SDK framework
 //! - **13 Independent Chains**: 1 FlareChain (root) + 12 Partition Burst Chains (PBC)
 //! - **Layer 2 Networks**: Lightning Bloc Networks for instant micropayments
@@ -226,7 +226,7 @@ pub mod governance {
 #[cfg(feature = "consensus")]
 /// FODDoS ASF consensus mechanism
 ///
-/// Flexible Orchestrated Distributed Defense of Service with Adaptive Stake Finality.
+/// Flexible Orchestrated Distributed Defense of Service with Ascending Scale of Finality.
 /// Custom consensus algorithm with three validator tiers.
 ///
 /// # Examples

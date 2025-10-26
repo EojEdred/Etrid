@@ -38,7 +38,7 @@ Etrid is a next-generation multichain blockchain platform that connects 13 major
 - **🗳️ Democratic Governance**: Annual Consensus Day where stakeholders vote on network upgrades and fiscal policy
 - **💰 Stablecoin System**: EDSC (Etrid Digital Standard Currency) backed by real-world reserves
 - **🔐 Self-Sovereign Identity**: OpenDID and AIDID for human and AI identity management
-- **🌱 Eco-Friendly**: Energy-efficient Adaptive Stake Finality (ASF) consensus mechanism
+- **🌱 Eco-Friendly**: Energy-efficient Ascending Scale of Finality (ASF) consensus mechanism
 
 ### How Etrid Works
 
@@ -1673,7 +1673,7 @@ A: Etrid is a multichain blockchain platform that connects 13 major blockchains,
 
 **Q: How is Etrid different from other blockchains?**
 
-A: Etrid offers unique features including 13 cross-chain bridges (PBCs), annual Consensus Day governance, Lightning-Bloc Layer 2 payments, and Adaptive Stake Finality consensus.
+A: Etrid offers unique features including 13 cross-chain bridges (PBCs), annual Consensus Day governance, Lightning-Bloc Layer 2 payments, and Ascending Scale of Finality consensus.
 
 **Q: Is Etrid a fork of Polkadot?**
 
@@ -1781,7 +1781,7 @@ A: Currently, you can bridge native tokens (BTC, ETH, SOL, etc.) and major stabl
 
 **Q: What consensus does Etrid use?**
 
-A: Adaptive Stake Finality (ASF) - a novel mechanism that combines proof of stake with coinage tracking to prevent centralization.
+A: Ascending Scale of Finality (ASF) - a novel mechanism that combines proof of stake with coinage tracking to prevent centralization.
 
 **Q: How many transactions per second can Etrid handle?**
 
