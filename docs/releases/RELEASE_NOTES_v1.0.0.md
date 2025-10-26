@@ -10,7 +10,7 @@ All 13 E³20 protocol components are now **100% complete** and production-ready!
 ## 📦 What's Included
 
 ### Core Blockchain
-- ✅ FlareChain relay chain with Adaptive Stake Finality
+- ✅ FlareChain relay chain with Ascending Scale of Finality
 - ✅ 13 Partition Burst Chains (PBCs) for cross-chain interoperability
 - ✅ Lightning-Bloc Layer 2 payment channels
 - ✅ 8 production-ready custom pallets

@@ -62,7 +62,7 @@ Create `/Users/macbook/Desktop/etrid/.claude/project.md` with the following cont
 ## Quick Facts
 
 - **Architecture:** FlareChain relay chain + 13 Partition Burst Chains (PBCs)
-- **Consensus:** Adaptive Stake Finality (ASF)
+- **Consensus:** Ascending Scale of Finality (ASF)
 - **Governance:** Annual Consensus Day voting
 - **Tokens:** ÉTR (native), ËDSC (stablecoin), VMw (gas)
 - **Smart Contracts:** ËtwasmVM (WebAssembly-based)
@@ -162,7 +162,7 @@ cargo doc --no-deps --open
 ## Key Technologies
 
 - **Substrate:** Polkadot SDK stable2509
-- **Consensus:** Custom ASF (Adaptive Stake Finality)
+- **Consensus:** Custom ASF (Ascending Scale of Finality)
 - **Cryptography:** Ed25519, ECIES, post-quantum ready
 - **Smart Contracts:** WebAssembly (WASM)
 - **P2P:** Custom DETR P2P (S/Kademlia + ECIES)

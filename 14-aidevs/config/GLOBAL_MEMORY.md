@@ -12,7 +12,7 @@
 Ëtrid is a Layer 0 multichain blockchain protocol implementing the E³20 (Essential Elements to Operate) architecture:
 
 - **13 Core Components:** All at 100% Alpha completion
-- **Consensus:** Adaptive Stake Finality (ASF) + PPFA proposer selection
+- **Consensus:** Ascending Scale of Finality (ASF) + PPFA proposer selection
 - **Architecture:** FlareChain relay chain + 13 Partition Burst Chains (PBCs)
 - **Tokens:** ÉTR (native coin) + ËDSC (dollar-pegged stablecoin)
 - **Smart Contracts:** ËtwasmVM (WebAssembly) with reentrancy protection
@@ -58,7 +58,7 @@
 ### Blockchain
 - **Framework:** Substrate (Polkadot SDK stable2506)
 - **Language:** Rust 1.70+
-- **Consensus:** ASF (Adaptive Stake Finality)
+- **Consensus:** ASF (Ascending Scale of Finality)
 - **Block Time:** ~6 seconds
 - **Finality:** <100 blocks
 
@@ -94,7 +94,7 @@
 
 ### ASF Consensus
 
-**Adaptive Stake Finality** combines:
+**Ascending Scale of Finality** combines:
 - Stake-weighted voting (like Tendermint)
 - Coin-age weighting (stake * time held)
 - PPFA proposer selection (randomized but deterministic)

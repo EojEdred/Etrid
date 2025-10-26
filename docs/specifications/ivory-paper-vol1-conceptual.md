@@ -231,7 +231,7 @@ Not just a technical protocol, but a **philosophical framework** for building tr
 - **Client Diversity**: Multiple implementations encouraged
 - **Geographic Distribution**: Node operators across jurisdictions
 
-### The Ascending Scale of Finality (ASF)
+### Ascending Scale of Finality (ASF)
 
 **Problem**: Traditional consensus treats finality as binary (finalized or not)
 

@@ -19,7 +19,7 @@ This tutorial guides users through the complete process of setting up and runnin
 **NARRATION:**
 "Welcome to part two of the Etrid tutorial series. Today, you're going to learn how to become a validator - one of the most important roles in the Etrid ecosystem.
 
-What does a validator do? Validators secure the Etrid FlareChain by producing new blocks, validating transactions, and participating in our Adaptive Stake Finality consensus. In return, you earn block rewards and transaction fees. But it's not passive income - you're responsible for maintaining high uptime, securing your node, and acting honestly. Poor performance or malicious behavior can result in slashing - losing a portion of your stake.
+What does a validator do? Validators secure the Etrid FlareChain by producing new blocks, validating transactions, and participating in our Ascending Scale of Finality consensus. In return, you earn block rewards and transaction fees. But it's not passive income - you're responsible for maintaining high uptime, securing your node, and acting honestly. Poor performance or malicious behavior can result in slashing - losing a portion of your stake.
 
 Is it worth it? Validators can earn 10-20% annual returns on their staked ETR, but you'll need technical skills, dedicated hardware, and a stake of at least 10,000 ETR to get started. If that sounds like you, let's begin!"
 

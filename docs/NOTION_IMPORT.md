@@ -113,13 +113,13 @@ Through ASF, Consensus Day, and the E³20 foundation, Ëtrid becomes a system ca
 **Purpose:** Coordination & finality anchor
 
 **Features:**
-- Adaptive Stake Finality (ASF) consensus
+- Ascending Scale of Finality (ASF) consensus
 - Validator set management
 - Cross-chain message routing
 - Governance & treasury coordination
 - State anchoring for all PBCs
 
-### Adaptive Stake Finality (ASF)
+### Ascending Scale of Finality (ASF)
 
 **Dynamic consensus** that adjusts finality thresholds based on:
 - Validator participation rate

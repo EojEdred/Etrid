@@ -19,7 +19,7 @@ This tutorial teaches users how to earn passive rewards by nominating validators
 **NARRATION:**
 "Welcome back to the Etrid tutorial series! Today we're talking about staking - one of the easiest ways to earn passive income with your ETR tokens.
 
-Here's how it works: Etrid uses Adaptive Stake Finality, a consensus mechanism that requires validators to lock up ETR tokens. But what if you don't want to run a validator yourself? That's where nomination comes in. You can 'nominate' validators by staking your ETR with them. Your stake increases their voting power, and in return, they share their block rewards with you.
+Here's how it works: Etrid uses Ascending Scale of Finality, a consensus mechanism that requires validators to lock up ETR tokens. But what if you don't want to run a validator yourself? That's where nomination comes in. You can 'nominate' validators by staking your ETR with them. Your stake increases their voting power, and in return, they share their block rewards with you.
 
 Think of it like earning interest on a savings account, except you're helping secure the blockchain network. Current APY ranges from 8% to 15%, depending on network conditions and which validators you choose.
 

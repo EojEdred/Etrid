@@ -25,7 +25,7 @@
 
 Etrid is a multichain blockchain implementing the E320 (Essential Elements to Operate) protocol with:
 
-- **FlareChain Relay Chain** with Adaptive Stake Finality (ASF) consensus
+- **FlareChain Relay Chain** with Ascending Scale of Finality (ASF) consensus
 - **13 Partition Burst Chains (PBCs)** for cross-chain interoperability
 - **Lightning-Bloc Layer 2** for payment channels and instant transactions
 - **Watchtower Network** for security monitoring and fraud detection

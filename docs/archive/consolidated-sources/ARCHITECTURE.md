@@ -24,7 +24,7 @@
 
 ## Overview
 
-Ëtrid implements a **multichain architecture** with a main **Flare Chain** and unlimited **Partition Burst Chains (PBCs)**. The system uses **Adaptive Stake Finality (ASF)** for consensus and features an annual **Consensus Day** for on-chain governance.
+Ëtrid implements a **multichain architecture** with a main **Flare Chain** and unlimited **Partition Burst Chains (PBCs)**. The system uses **Ascending Scale of Finality (ASF)** for consensus and features an annual **Consensus Day** for on-chain governance.
 
 ### Key Principles
 
@@ -286,7 +286,7 @@ Transaction {
 
 ---
 
-#### 09. Consensus (ASF - Adaptive Stake Finality)
+#### 09. Consensus (ASF - Ascending Scale of Finality)
 **Purpose**: Novel consensus algorithm
 
 **Algorithm Overview:**
