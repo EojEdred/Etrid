@@ -1,0 +1,93 @@
+{
+  "skill": "security-audit",
+  "name": "Security Audit",
+  "version": "1.0.0",
+  "description": "Deep security audit for blockchain systems, smart contracts, and pallets",
+  "available_to": [
+    "security-dev",
+    "audit-dev",
+    "compiler-dev"
+  ],
+  "parameters": {
+    "target": {
+      "type": "string",
+      "required": true,
+      "description": "Target system, contract, or pallet to audit"
+    },
+    "audit_scope": {
+      "type": "array",
+      "required": false,
+      "default": ["reentrancy", "overflow", "access-control", "dos", "frontrunning"],
+      "description": "Security audit scope"
+    },
+    "depth": {
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "options": ["quick", "standard", "comprehensive"],
+      "description": "Audit depth level"
+    }
+  },
+  "returns": {
+    "vulnerabilities": {
+      "type": "array",
+      "description": "List of vulnerabilities found"
+    },
+    "risk_level": {
+      "type": "enum",
+      "options": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Overall risk level"
+    },
+    "attack_vectors": {
+      "type": "array",
+      "description": "Potential attack vectors identified"
+    },
+    "mitigation_steps": {
+      "type": "array",
+      "description": "Steps to mitigate identified risks"
+    },
+    "audit_report": {
+      "type": "string",
+      "description": "Full audit report in markdown"
+    }
+  },
+  "claude_prompt": "Perform a comprehensive security audit on the following blockchain component. Check for: reentrancy vulnerabilities, integer overflow/underflow, access control issues, DOS vectors, frontrunning risks, storage manipulation, and consensus attacks. Provide detailed findings with severity ratings and mitigation strategies.",
+  "examples": [
+    {
+      "input": {
+        "target": "pallet-staking/src/lib.rs",
+        "audit_scope": ["reentrancy", "overflow", "access-control"],
+        "depth": "comprehensive"
+      },
+      "output": {
+        "vulnerabilities": [
+          {
+            "id": "VULN-001",
+            "severity": "CRITICAL",
+            "type": "reentrancy",
+            "location": "fn unbond() at line 456",
+            "description": "Reentrancy vulnerability in unbond function",
+            "exploit_scenario": "Attacker can call unbond recursively before state update"
+          }
+        ],
+        "risk_level": "CRITICAL",
+        "attack_vectors": [
+          "Recursive unbond calls to drain staking pool"
+        ],
+        "mitigation_steps": [
+          "Add reentrancy guard using mutex",
+          "Update state before external calls",
+          "Add slashing mechanism for malicious unbonding"
+        ],
+        "audit_report": "# Security Audit Report\n..."
+      }
+    }
+  ],
+  "metadata": {
+    "category": "security",
+    "complexity": "very_high",
+    "execution_time": "120-300s",
+    "created": "2025-10-24",
+    "updated": "2025-10-24"
+  }
+}

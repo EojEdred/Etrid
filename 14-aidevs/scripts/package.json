@@ -1,0 +1,18 @@
+{
+  "name": "etrid-ai-devs-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for AI Devs DID management and on-chain operations",
+  "scripts": {
+    "register-dids": "node register_dids.js",
+    "query-dids": "node query_dids.js",
+    "resolve-did": "node resolve_did.js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^10.11.2",
+    "@polkadot/keyring": "^12.6.1",
+    "@polkadot/util-crypto": "^12.6.1"
+  },
+  "devDependencies": {},
+  "author": "Ëtrid AI Devs",
+  "license": "MIT"
+}

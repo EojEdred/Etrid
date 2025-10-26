@@ -1,0 +1,75 @@
+# Prometheus configuration for Ëtrid testnet monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'etrid-testnet'
+    cluster: 'testnet-3-nodes'
+
+# Load alerting rules
+rule_files:
+  - 'alerting-rules.yml'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+      # Note: Configure Alertmanager endpoint for production
+      # Example: - targets: ['localhost:9093']
+
+# Scrape configurations
+scrape_configs:
+  # FlareChain Node 1 (Alice - Validator)
+  - job_name: 'flarechain-alice'
+    static_configs:
+      - targets: ['localhost:9615']
+        labels:
+          instance: 'alice'
+          node_type: 'validator'
+          chain: 'flarechain'
+
+  # FlareChain Node 2 (Bob - Validator)
+  - job_name: 'flarechain-bob'
+    static_configs:
+      - targets: ['localhost:9616']
+        labels:
+          instance: 'bob'
+          node_type: 'validator'
+          chain: 'flarechain'
+
+  # FlareChain Node 3 (Charlie - Full Node)
+  - job_name: 'flarechain-charlie'
+    static_configs:
+      - targets: ['localhost:9617']
+        labels:
+          instance: 'charlie'
+          node_type: 'full_node'
+          chain: 'flarechain'
+
+  # BTC PBC Collator
+  - job_name: 'btc-pbc'
+    static_configs:
+      - targets: ['localhost:9618']
+        labels:
+          instance: 'btc-collator'
+          node_type: 'collator'
+          chain: 'btc-pbc'
+
+  # ETH PBC Collator
+  - job_name: 'eth-pbc'
+    static_configs:
+      - targets: ['localhost:9619']
+        labels:
+          instance: 'eth-collator'
+          node_type: 'collator'
+          chain: 'eth-pbc'
+
+  # DOGE PBC Collator
+  - job_name: 'doge-pbc'
+    static_configs:
+      - targets: ['localhost:9620']
+        labels:
+          instance: 'doge-collator'
+          node_type: 'collator'
+          chain: 'doge-pbc'

@@ -54,20 +54,20 @@ pallet-edsc-redemption = { path = "../../bridge-protocols/edsc-bridge/substrate-
 pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
 
 # FlareChain-specific EDSC pallets
-pallet-reserve-vault = { path = "../../../pallets/pallet-reserve-vault", default-features = false }
-pallet-custodian-registry = { path = "../../../pallets/pallet-custodian-registry", default-features = false }
-pallet-reserve-oracle = { path = "../../../pallets/pallet-reserve-oracle", default-features = false }
+pallet-reserve-vault = { path = "../../../src/pallets/pallet-reserve-vault", default-features = false }
+pallet-custodian-registry = { path = "../../../src/pallets/pallet-custodian-registry", default-features = false }
+pallet-reserve-oracle = { path = "../../../src/pallets/pallet-reserve-oracle", default-features = false }
 
 # Cross-chain infrastructure
-pallet-xcm-bridge = { path = "../../../pallets/pallet-xcm-bridge", default-features = false }
+pallet-xcm-bridge = { path = "../../../src/pallets/pallet-xcm-bridge", default-features = false }
 
 # ASF Consensus pallets
-pallet-validator-committee = { path = "../../../pallets/pallet-validator-committee", default-features = false }
-pallet-validator-committee-runtime-api = { path = "../../../pallets/pallet-validator-committee/runtime-api", default-features = false }
+pallet-validator-committee = { path = "../../../src/pallets/pallet-validator-committee", default-features = false }
+pallet-validator-committee-runtime-api = { path = "../../../src/pallets/pallet-validator-committee/runtime-api", default-features = false }
 
 # OpenDID pallets (Component 02)
-pallet-did-registry = { path = "../../../pallets/pallet-did-registry", default-features = false }
-pallet-aidid = { path = "../../../pallets/pallet-aidid", default-features = false }
+pallet-did-registry = { path = "../../../src/pallets/pallet-did-registry", default-features = false }
+pallet-aidid = { path = "../../../src/pallets/pallet-aidid", default-features = false }
 
 # Phase 3: External Bridge Protocol (CCTP-style)
 pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
@@ -89,6 +89,9 @@ pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "po
 pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+pallet-vesting = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+pallet-multisig = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+pallet-treasury = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-insecure-randomness-collective-flip = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
 # Primitives
@@ -195,6 +198,9 @@ std = [
     "pallet-sudo/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
+    "pallet-vesting/std",
+    "pallet-multisig/std",
+    "pallet-treasury/std",
     "pallet-insecure-randomness-collective-flip/std",
     "sp-api/std",
     "sp-arithmetic/std",

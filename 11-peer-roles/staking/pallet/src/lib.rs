@@ -100,7 +100,7 @@ use frame_support::{
     traits::{Currency, ReservableCurrency, Get},
 };
 use frame_system::pallet_prelude::*;
-use sp_runtime::traits::{Zero, UniqueSaturatedInto};
+use sp_runtime::traits::{Zero, UniqueSaturatedInto, Saturating};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -121,6 +121,10 @@ pub mod pallet {
         /// Minimum bond period (in blocks) before unstake is allowed.
         #[pallet::constant]
         type UnbondPeriod: Get<u32>;
+
+        /// Maximum number of unbonding entries per account.
+        #[pallet::constant]
+        type MaxUnbondingEntries: Get<u32>;
     }
 
     #[pallet::storage]
@@ -138,9 +142,9 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn unbonding_queue)]
     /// Mapping of account → (amount, unlock_block) for unbonding stake.
-    /// Multiple unbonding entries can exist per account (stored as a list).
+    /// Multiple unbonding entries can exist per account (stored as a bounded list).
     pub type UnbondingQueue<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::AccountId, Vec<(BalanceOf<T>, u32)>, ValueQuery>;
+        StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<(BalanceOf<T>, u32), T::MaxUnbondingEntries>, ValueQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -176,6 +180,8 @@ pub mod pallet {
         NoUnbondedFunds,
         /// Attempting to unstake more than bonded amount.
         InsufficientBondedStake,
+        /// Too many unbonding entries for this account.
+        TooManyUnbondingEntries,
     }
 
     #[pallet::pallet]
@@ -266,9 +272,10 @@ pub mod pallet {
                 let unlock_block = current_block.saturating_add(T::UnbondPeriod::get());
 
                 // Add to unbonding queue (funds remain reserved until withdrawal)
-                UnbondingQueue::<T>::mutate(&who, |queue| {
-                    queue.push((amount, unlock_block));
-                });
+                UnbondingQueue::<T>::try_mutate(&who, |queue| {
+                    queue.try_push((amount, unlock_block))
+                        .map_err(|_| Error::<T>::TooManyUnbondingEntries)
+                })?;
 
                 // Decrease bonded stake immediately but keep reserved
                 record.stake = record.stake.saturating_sub(amount);

@@ -21,6 +21,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use codec::Decode;
     use sp_std::prelude::*;
+    use sp_std::collections::btree_set::BTreeSet;
     use sp_core::H256;
     use sp_runtime::traits::SaturatedConversion;
 
@@ -146,6 +147,12 @@ pub mod pallet {
         InvalidOpcode,
         /// Invalid jump destination
         InvalidJump,
+        /// Reentrancy detected during contract execution
+        ReentrancyDetected,
+        /// Maximum call depth exceeded
+        MaxCallDepthExceeded,
+        /// Account is locked and cannot execute contracts
+        AccountLocked,
     }
 
     #[pallet::pallet]
@@ -244,6 +251,9 @@ pub mod pallet {
                 block_number: frame_system::Pallet::<T>::block_number().saturated_into(),
                 timestamp: 0, // TODO: Get actual timestamp
                 chain_id: 2, // Ëtrid chain ID
+                call_stack: BTreeSet::new(),
+                reentrancy_depth: 0,
+                max_depth: 10, // Max allowed reentrancy depth
             };
 
             // Create storage backend
@@ -289,6 +299,15 @@ pub mod pallet {
                 ExecutionResult::InvalidJump => {
                     Err(Error::<T>::InvalidJump.into())
                 }
+                ExecutionResult::ReentrancyDetected => {
+                    Err(Error::<T>::ReentrancyDetected.into())
+                }
+                ExecutionResult::MaxCallDepthExceeded => {
+                    Err(Error::<T>::MaxCallDepthExceeded.into())
+                }
+                ExecutionResult::AccountLocked => {
+                    Err(Error::<T>::AccountLocked.into())
+                }
                 ExecutionResult::Error(_) => {
                     Err(Error::<T>::ExecutionFailed.into())
                 }
@@ -323,6 +342,9 @@ pub mod pallet {
                 block_number: frame_system::Pallet::<T>::block_number().saturated_into(),
                 timestamp: 0,
                 chain_id: 2,
+                call_stack: BTreeSet::new(),
+                reentrancy_depth: 0,
+                max_depth: 10, // Max allowed reentrancy depth
             };
 
             // Use in-memory storage for direct execution

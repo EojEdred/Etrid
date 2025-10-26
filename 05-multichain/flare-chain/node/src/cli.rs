@@ -73,6 +73,7 @@ impl SubstrateCli for Cli {
         Ok(match id {
             "dev" => Box::new(crate::chain_spec::development_config()?),
             "local" => Box::new(crate::chain_spec::local_testnet_config()?),
+            "staging" | "ember" => Box::new(crate::chain_spec::staging_testnet_config()?),
             "" | "flarechain" => Box::new(crate::chain_spec::flarechain_config()?),
             path => Box::new(crate::chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),

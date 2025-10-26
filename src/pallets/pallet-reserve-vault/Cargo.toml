@@ -1,0 +1,44 @@
+[package]
+name = "pallet-reserve-vault"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "EDSC reserve vault with multi-asset collateral and haircut calculations"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+# Local pallets
+pallet-edsc-token = { path = "../../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
+pallet-edsc-receipts = { path = "../../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-receipts", default-features = false }
+pallet-edsc-redemption = { path = "../../../05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"serde/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-io/std",
+	"sp-arithmetic/std",
+	"pallet-edsc-token/std",
+	"pallet-edsc-receipts/std",
+	"pallet-edsc-redemption/std",
+]
+runtime-benchmarks = ["frame-support/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]

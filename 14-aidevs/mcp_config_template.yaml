@@ -1,0 +1,229 @@
+# MCP Configuration Template for AI Devs
+# Copy this file to each AI Dev skill pack and customize
+
+# AI Dev Identity
+identity:
+  did: "did:etrid:REPLACE_WITH_YOUR_DID"  # e.g., did:etrid:consensus-dev01
+  name: "REPLACE_WITH_YOUR_NAME"           # e.g., Consensus Dev
+  dev_type: "REPLACE_WITH_TYPE"            # e.g., AIConsensusWorker
+
+# Connectors
+connectors:
+  # Claude instance for deep reasoning
+  claude_instance:
+    type: "claude"
+    endpoint: "claude://skills"
+    model: "claude-sonnet-4-5"
+    max_tokens: 8096
+    temperature: 0.7
+
+  # Gizzi orchestration core
+  gizzi_core:
+    type: "orchestrator"
+    endpoint: "gizzi://orchestration"
+    api_url: "http://localhost:4000"
+
+  # Vector database for persistent memory
+  vector_db:
+    type: "qdrant"
+    endpoint: "qdrant://etrid-memory"
+    host: "${VECTORDB_URL}"
+    port: 6333
+    collection: "ai_dev_memory"
+
+  # Blockchain node connection
+  blockchain:
+    type: "substrate"
+    endpoint: "ws://localhost:9944"
+    chain: "flarechain"
+    network: "ember-testnet"
+
+# Paths
+paths:
+  # Shared Claude skills (all devs have access)
+  claude_skills: "../skills/CLAUDE_SKILLS/"
+
+  # This dev's local skills
+  local_skills: "./skills/"
+
+  # This dev's memory log
+  memory_log: "./MEMORY.md"
+
+  # Shared global memory (cross-peer communication)
+  global_memory: "../memory/GLOBAL_MEMORY.md"
+
+  # This dev's DID document
+  did_document: "../dids/REPLACE_WITH_YOUR_DID.json"
+
+  # Audit trail logs
+  logs: "../logs/REPLACE_WITH_DEV_ID/"
+
+# Skills Configuration
+skills:
+  # Maximum execution timeout (seconds)
+  execution_timeout: 300
+
+  # Skills this dev can execute
+  available_skills:
+    # Local skills (specific to this dev)
+    - "skill-1"  # REPLACE with actual skill names
+    - "skill-2"
+    - "skill-3"
+
+    # Shared Claude skills (from CLAUDE_SKILLS/)
+    - "risk-analysis"      # Available to: governance, audit, economics
+    - "code-review"        # Available to: compiler, audit, security, runtime
+    - "security-audit"     # Available to: security, audit, compiler
+    - "economic-modeling"  # Available to: economics, oracle, governance, edsc
+    - "consensus-analysis" # Available to: consensus, runtime, audit
+    - "proposal-generation"  # Available to: governance, audit, economics
+
+  # Skill execution priorities
+  priorities:
+    high: ["security-audit", "risk-analysis"]
+    medium: ["code-review", "proposal-generation"]
+    low: ["consensus-analysis", "economic-modeling"]
+
+# Memory Configuration
+memory:
+  # Sync interval for global memory (seconds)
+  sync_interval: 300  # 5 minutes
+
+  # Maximum memory entries to keep in local cache
+  cache_size: 1000
+
+  # Memory retention policy
+  retention_days: 30
+
+  # Auto-archive old entries
+  auto_archive: true
+
+# Logging Configuration
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  level: "INFO"
+
+  # Log format
+  format: "json"  # or "text"
+
+  # Log rotation
+  rotation:
+    max_size_mb: 100
+    backup_count: 5
+
+  # Audit trail settings
+  audit_trail:
+    enabled: true
+    include_parameters: true
+    include_results: true
+
+# Security Configuration
+security:
+  # Private key path (encrypted)
+  private_key_path: "../dids/keypairs.json"
+
+  # Sign all actions with DID
+  sign_actions: true
+
+  # Verify signatures from other devs
+  verify_signatures: true
+
+  # Allowed peer DIDs (other AI Devs)
+  trusted_peers:
+    - "did:etrid:gizzi"
+    - "did:etrid:consensus-dev01"
+    - "did:etrid:compiler-dev01"
+    - "did:etrid:governance-dev01"
+    - "did:etrid:audit-dev01"
+    - "did:etrid:oracle-dev01"
+    - "did:etrid:runtime-dev01"
+    - "did:etrid:economics-dev01"
+    - "did:etrid:edsc-dev01"
+    - "did:etrid:security-dev01"
+    - "did:etrid:multichain-dev01"
+    - "did:etrid:ethics-dev01"
+    - "did:etrid:docs-dev01"
+
+# Digital Footprint
+digital_footprint:
+  # Twitter configuration
+  twitter:
+    handle: "@EtridAI_Devs"
+    post_updates: true
+    update_frequency: "daily"  # daily, hourly, or manual
+
+  # GitHub configuration
+  github:
+    org: "etrid"
+    repo: "ai-devs"
+    auto_commit_logs: true
+
+  # Web presence
+  web:
+    registry_url: "https://etrid.network/dids"
+    dashboard_url: "https://etrid.network/ai-devs"
+
+# Health Monitoring
+health:
+  # Health check interval (seconds)
+  check_interval: 60
+
+  # Metrics to report
+  metrics:
+    - "skill_execution_count"
+    - "skill_execution_time"
+    - "memory_entries_written"
+    - "memory_entries_read"
+    - "errors_count"
+    - "uptime"
+
+  # Alerting thresholds
+  alerts:
+    error_rate_threshold: 0.05  # 5% error rate triggers alert
+    execution_time_threshold: 300  # 5 minutes max execution time
+
+# Environment Variables
+environment:
+  # API keys (use environment variables, don't hardcode)
+  ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+  OPENAI_API_KEY: "${OPENAI_API_KEY}"
+
+  # Service URLs
+  VECTORDB_URL: "${VECTORDB_URL}"
+  BLOCKCHAIN_WS_URL: "${BLOCKCHAIN_WS_URL}"
+
+  # Other config
+  LOG_LEVEL: "${LOG_LEVEL}"
+  ENVIRONMENT: "${ENVIRONMENT}"  # dev, staging, production
+
+# Feature Flags
+features:
+  # Enable/disable features
+  claude_integration: true
+  vectordb_memory: true
+  blockchain_queries: true
+  twitter_posting: false  # Disabled until production
+  auto_proposal_generation: false  # Requires manual review
+  cross_peer_messaging: true
+
+# Notes
+# - Copy this template to your AI Dev skill pack
+# - Replace all REPLACE_WITH_* placeholders
+# - Customize available_skills based on your dev type
+# - Update trusted_peers if adding new AI Devs
+# - Never commit private keys to version control
+# - Use environment variables for secrets
+
+# Example customization for consensus-dev:
+#
+# identity:
+#   did: "did:etrid:consensus-dev01"
+#   name: "Consensus Dev"
+#   dev_type: "AIConsensusWorker"
+#
+# skills:
+#   available_skills:
+#     - "validator-rotation"
+#     - "ppfa-sealing"
+#     - "adaptive-timing"
+#     - "consensus-analysis"  # from CLAUDE_SKILLS/

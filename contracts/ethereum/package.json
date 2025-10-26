@@ -1,26 +1,26 @@
 {
-  "name": "@etrid/edsc-ethereum-contracts",
+  "name": "@etrid/ethereum-contracts",
   "version": "1.0.0",
-  "description": "Ethereum smart contracts for EDSC CCTP-style bridge",
-  "author": "Ëtrid Team",
-  "license": "Apache-2.0",
+  "description": "Ethereum smart contracts for Ëtrid Protocol (ÉTR.e, EDSC.e, Bridge)",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "coverage": "hardhat coverage",
+    "test:gas": "REPORT_GAS=true hardhat test",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
-    "verify": "hardhat verify"
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "verify:mainnet": "hardhat verify --network mainnet",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@nomicfoundation/hardhat-verify": "^2.0.0",
     "@openzeppelin/hardhat-upgrades": "^3.0.0",
     "hardhat": "^2.19.0",
-    "hardhat-gas-reporter": "^1.0.9"
+    "dotenv": "^16.3.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.0",
-    "dotenv": "^16.3.1"
+    "@openzeppelin/contracts": "^5.0.0"
   }
 }

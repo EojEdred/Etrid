@@ -14,6 +14,7 @@ sp-runtime = { default-features = false, git = "https://github.com/paritytech/po
 sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Local pallets
 pallet-edsc-token = { path = "../pallet-edsc-token", default-features = false }
@@ -21,7 +22,6 @@ pallet-edsc-receipts = { path = "../pallet-edsc-receipts", default-features = fa
 pallet-edsc-oracle = { path = "../pallet-edsc-oracle", default-features = false }
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 [features]
 default = ["std"]
@@ -34,6 +34,7 @@ std = [
 	"sp-std/std",
 	"sp-io/std",
 	"sp-arithmetic/std",
+	"sp-core/std",
 	"pallet-edsc-token/std",
 	"pallet-edsc-receipts/std",
 	"pallet-edsc-oracle/std",

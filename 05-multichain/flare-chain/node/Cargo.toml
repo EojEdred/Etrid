@@ -78,6 +78,7 @@ asf-algorithm = { path = "../../../09-consensus/asf-algorithm" }
 block-production = { path = "../../../09-consensus/block-production" }
 finality-gadget = { package = "etrid-finality-gadget", path = "../../../09-consensus/finality-gadget" }
 validator-management = { path = "../../../09-consensus/validator-management" }
+pallet-validator-committee-runtime-api = { path = "../../../src/pallets/pallet-validator-committee/runtime-api" }
 
 # ÉTRID P2P Networking
 detrp2p = { path = "../../../01-detr-p2p/detrp2p" }

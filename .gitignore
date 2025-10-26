@@ -45,3 +45,14 @@ out/
 # Chain spec generated files
 *.raw.json
 flarechain-shared-raw.json
+
+# Build and test artifacts
+build*.log
+test_results.log
+*.profraw
+coverage/
+
+# Environment files (keep examples)
+.env
+!.env.example
+!.env.*.example

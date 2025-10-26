@@ -31,17 +31,21 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend};
+use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend};
 use sc_consensus::BlockImport;
 use sc_consensus_grandpa::SharedVoterState;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncConfig};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
+use sp_api::ProvideRuntimeApi;
 use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
 use sp_runtime::traits::Header;
 use sp_timestamp;
 use std::{sync::Arc, time::Duration};
+
+// Runtime API for validator committee queries
+use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 
 // ÉTRID P2P Networking
 use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
@@ -332,12 +336,12 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
                     if engine_id == b"PPFA" {
                         match PpfaSeal::decode(&mut &data[..]) {
                             Ok(seal) => {
-                                ppfa_seal_data = Some(seal);
                                 log::debug!(
                                     "🔍 Extracted PPFA seal: index={}, proposer={:?}",
                                     seal.ppfa_index,
                                     hex::encode(&seal.proposer_id[..8])
                                 );
+                                ppfa_seal_data = Some(seal);
                                 break;
                             }
                             Err(e) => {
@@ -718,7 +722,7 @@ pub fn new_full_with_params(
 
                 // Query runtime for active committee members
                 let runtime_committee = match ppfa_client.runtime_api()
-                    .get_committee(best_hash)
+                    .validator_committee(best_hash)
                 {
                     Ok(members) => {
                         log::info!(
@@ -746,7 +750,7 @@ pub fn new_full_with_params(
 
                 log::info!(
                     "🔗 PPFA committee initialized (size: {}/{}, mode: production)",
-                    committee.size(),
+                    committee.committee_size(),
                     ppfa_params.max_committee_size
                 );
 
@@ -759,7 +763,7 @@ pub fn new_full_with_params(
                     // Add ourselves as a validator
                     let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
                     let our_validator_info = validator_management::ValidatorInfo::new(
-                        our_validator_id,
+                        our_validator_id.clone(),
                         ppfa_params.min_validator_stake,
                         validator_management::PeerType::ValidityNode,
                     );
@@ -789,7 +793,7 @@ pub fn new_full_with_params(
                 }
 
                 // Create proposer selector
-                let mut proposer_selector = ProposerSelector::new(committee);
+                let mut proposer_selector = ProposerSelector::new(committee.clone());
 
                 // Create slot timer with health monitoring
                 let health_monitor = HealthMonitor::default();
@@ -850,9 +854,9 @@ pub fn new_full_with_params(
 
                         let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
-                                log::debug!(
+                                 log::debug!(
                                     "🔑 Using validator key from keystore: {}",
-                                    hex::encode(public_key.as_ref())
+                                    hex::encode(public_key.as_ref() as &[u8])
                                 );
                                 block_production::ValidatorId::from(public_key.0)
                             }
@@ -968,7 +972,7 @@ pub fn new_full_with_params(
 
                                     let ppfa_seal = PpfaSeal {
                                         ppfa_index,
-                                        proposer_id: our_validator_id.0,
+                                        proposer_id: *our_validator_id.as_ref(),
                                         slot_number,
                                         timestamp: current_time,
                                     };
@@ -1058,7 +1062,7 @@ pub fn new_full_with_params(
                             // ═══════════════════════════════════════════════════════════════
 
                             // Query runtime for new committee at epoch boundary
-                            match ppfa_client.runtime_api().get_committee(at_hash) {
+                            match ppfa_client.runtime_api().validator_committee(at_hash) {
                                 Ok(new_committee_members) => {
                                     log::info!(
                                         "✅ Loaded {} new committee members for epoch #{}",
@@ -1075,14 +1079,20 @@ pub fn new_full_with_params(
                                     }
 
                                     // Rotate committee to new epoch
-                                    if let Err(e) = committee.rotate_committee(slot_epoch) {
+                                    let epoch_u32 = slot_epoch.try_into().unwrap_or_else(|_| {
+                                        log::warn!("Epoch {} too large for u32, using max", slot_epoch);
+                                        u32::MAX
+                                    });
+                                    if let Err(e) = committee.rotate_committee(epoch_u32) {
                                         log::error!("Failed to rotate committee to epoch {}: {:?}", slot_epoch, e);
                                     } else {
-                                        // Update proposer selector with refreshed committee
-                                        proposer_selector.update_committee(committee.clone());
+                                        // Update proposer selector with refreshed committee (pass epoch number)
+                                        if let Err(e) = proposer_selector.rotate_committee(epoch_u32) {
+                                            log::error!("Failed to rotate proposer selector: {:?}", e);
+                                        }
                                         log::info!(
                                             "🔄 Committee rotated successfully (size: {}, epoch: {})",
-                                            committee.size(),
+                                            committee.committee_size(),
                                             slot_epoch
                                         );
                                     }
@@ -1310,7 +1320,10 @@ pub fn new_full_with_params(
         // ═══════════════════════════════════════════════════════════════
 
         // Generate local peer ID from validator ID (now derived from actual validator identity)
-        let local_peer_id = PeerId::new(validator_id.0);
+        // Convert u32 validator ID to 32-byte peer ID (pad with zeros)
+        let mut peer_id_bytes = [0u8; 32];
+        peer_id_bytes[0..4].copy_from_slice(&validator_id.0.to_le_bytes());
+        let local_peer_id = PeerId::new(peer_id_bytes);
 
         // Get local listen address from config
         // TODO: Make this configurable via command-line or config file

@@ -1,0 +1,141 @@
+services:
+  # Ëtrid Node (FlareChain) - Commented out for initial testing
+  # Uncomment when you have the etrid binary built
+  # etrid-node:
+  #   image: etrid/node:latest
+  #   container_name: etrid-node
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9944:9944"  # WebSocket RPC
+  #     - "9933:9933"  # HTTP RPC
+  #     - "30333:30333"  # P2P
+  #   volumes:
+  #     - ./data/etrid-node:/data
+  #   command: >
+  #     ./etrid
+  #     --chain flare
+  #     --dev
+  #     --ws-external
+  #     --rpc-external
+  #     --rpc-cors all
+  #     --prometheus-external
+  #     --base-path /data
+  #   networks:
+  #     - etrid-network
+  #   restart: unless-stopped
+
+  # AI Devs MCP Orchestrator
+  ai-devs:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: ai-devs-orchestrator
+    ports:
+      - "4000:4000"  # Main API
+      - "4001:4001"  # Compiler AI
+      - "4002:4002"  # Governance AI
+      - "4003:4003"  # Runtime AI
+      - "4004:4004"  # Economics AI
+      - "4005:4005"  # Security AI
+      - "4006:4006"  # Oracle AI
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ETRID_WS_URL=ws://localhost:9944  # Will fail until node is running, but won't block startup
+      - VECTORDB_URL=http://vectordb:6333
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+      - LOG_LEVEL=info
+    volumes:
+      - ./skills:/app/skills:ro
+      - ./config:/app/config:ro
+      - ./data/ai-devs:/app/data
+      - ../:/workspace:ro  # Read-only access to Ëtrid workspace
+    depends_on:
+      # - etrid-node  # Commented out for initial testing
+      - vectordb
+    networks:
+      - etrid-network
+    restart: unless-stopped
+
+  # Vector Database (Qdrant) for AI Memory
+  vectordb:
+    image: qdrant/qdrant:latest
+    container_name: etrid-vectordb
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC
+    volumes:
+      - ./data/vectordb:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - etrid-network
+    restart: unless-stopped
+
+  # Notion Sync Service
+  notion-sync:
+    build:
+      context: ./notion-sync
+      dockerfile: Dockerfile
+    container_name: etrid-notion-sync
+    environment:
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+      - VECTORDB_URL=http://vectordb:6333
+      - SYNC_INTERVAL=300
+    volumes:
+      - ./config/GLOBAL_MEMORY.md:/app/GLOBAL_MEMORY.md:ro
+    depends_on:
+      - vectordb
+    networks:
+      - etrid-network
+    restart: unless-stopped
+
+  # Grafana for Monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: etrid-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./config/grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana-datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - etrid-network
+    restart: unless-stopped
+
+  # Prometheus for Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: etrid-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - etrid-network
+    restart: unless-stopped
+
+networks:
+  etrid-network:
+    driver: bridge
+
+volumes:
+  etrid-node-data:
+  vectordb-data:
+  ai-devs-data:
+  grafana-data:
+  prometheus-data:

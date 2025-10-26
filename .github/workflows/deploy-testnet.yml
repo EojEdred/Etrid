@@ -1,0 +1,78 @@
+name: Deploy to BSC Testnet
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_token:
+        description: 'Deploy ÉTR Token'
+        required: true
+        type: boolean
+        default: false
+      deploy_masterchef:
+        description: 'Deploy MasterChef'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  deploy-testnet:
+    name: Deploy to BSC Testnet
+    runs-on: ubuntu-latest
+    environment: testnet
+
+    defaults:
+      run:
+        working-directory: 05-multichain/bridge/adapters/bsc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file
+        run: |
+          echo "DEPLOYER_PRIVATE_KEY=${{ secrets.TESTNET_DEPLOYER_PRIVATE_KEY }}" >> .env
+          echo "BSC_TESTNET_RPC=${{ secrets.BSC_TESTNET_RPC }}" >> .env
+          echo "BSCSCAN_API_KEY=${{ secrets.BSCSCAN_API_KEY }}" >> .env
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Deploy ÉTR Token
+        if: ${{ github.event.inputs.deploy_token == 'true' }}
+        run: npm run deploy:testnet
+
+      - name: Deploy MasterChef
+        if: ${{ github.event.inputs.deploy_masterchef == 'true' }}
+        run: npm run deploy:masterchef:testnet
+
+      - name: Run post-deployment health check
+        run: npm run check-pool-health:testnet
+        continue-on-error: true
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: testnet-deployment-${{ github.sha }}
+          path: |
+            05-multichain/bridge/adapters/bsc/deployment-testnet.json
+            05-multichain/bridge/adapters/bsc/masterchef-deployment-testnet.json
+          retention-days: 90
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Testnet Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ÉTR Token:** ${{ github.event.inputs.deploy_token }}" >> $GITHUB_STEP_SUMMARY
+          echo "**MasterChef:** ${{ github.event.inputs.deploy_masterchef }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment completed successfully!" >> $GITHUB_STEP_SUMMARY

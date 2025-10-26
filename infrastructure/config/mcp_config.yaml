@@ -1,0 +1,438 @@
+# Ëtrid AI Devs - MCP Orchestration Configuration
+# Model Context Protocol configuration for AI agent orchestration
+
+orchestrator:
+  name: "Ëtrid AI Devs Orchestrator"
+  version: "1.0.0"
+  description: "Autonomous AI governance and development automation for Ëtrid Protocol"
+  llm_backend: "${LLM_BACKEND:-claude}"  # claude | gpt | local
+
+# ═══════════════════════════════════════════════════════════════
+# AI Agent Definitions
+# Each agent has a DID, endpoint, skill set, and priority
+# ═══════════════════════════════════════════════════════════════
+
+agents:
+  # ─────────────────────────────────────────────────────────────
+  # 1. Compiler AI - Build, Test, Debug
+  # ─────────────────────────────────────────────────────────────
+  compiler_ai:
+    did: "did:etrid:compiler-01"
+    name: "Compiler AI"
+    description: "Autonomous compilation, testing, and error debugging"
+    endpoint: "http://localhost:4001/compiler"
+    skills:
+      - etrid-compile-build
+      - error-debugging
+      - workspace-manager
+      - integration-test
+    priority: "high"
+    auto_trigger:
+      - git_push
+      - pr_created
+      - pr_updated
+    memory:
+      vector_collection: "compiler-memory"
+      global_memory: true
+    output:
+      logs: "/logs/compiler/"
+      notifications:
+        - github_comment
+        - discord_webhook
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. Governance AI - Proposals, Voting, Consensus Day
+  # ─────────────────────────────────────────────────────────────
+  governance_ai:
+    did: "did:etrid:governance-01"
+    name: "Governance AI"
+    description: "Automated governance orchestration and Consensus Day management"
+    endpoint: "http://localhost:4002/governance"
+    skills:
+      - proposal-generator
+      - vote-simulation
+      - committee-rotation
+      - consensus-day-orchestrator
+      - compliance-dev
+      - ethics-dev
+      - moderation-dev
+    priority: "critical"
+    auto_trigger:
+      - consensus_day_approaching
+      - proposal_submitted
+      - vote_threshold_reached
+    memory:
+      vector_collection: "governance-memory"
+      global_memory: true
+      notion_sync: true
+    output:
+      logs: "/logs/governance/"
+      notifications:
+        - on_chain_event
+        - notion_update
+        - discord_webhook
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. Runtime AI - Chain Upgrades, WASM Compilation
+  # ─────────────────────────────────────────────────────────────
+  runtime_ai:
+    did: "did:etrid:runtime-01"
+    name: "Runtime AI"
+    description: "Runtime upgrade packaging and node orchestration"
+    endpoint: "http://localhost:4003/runtime"
+    skills:
+      - runtime-upgrade
+      - node-launcher
+      - integration-test
+    priority: "high"
+    auto_trigger:
+      - runtime_upgrade_proposal_approved
+      - node_restart_needed
+    memory:
+      vector_collection: "runtime-memory"
+      global_memory: true
+    output:
+      logs: "/logs/runtime/"
+      notifications:
+        - on_chain_event
+        - discord_webhook
+        - pagerduty_alert
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. Economics AI - Token Economics, Reserves, Bridges
+  # ─────────────────────────────────────────────────────────────
+  economics_ai:
+    did: "did:etrid:economics-01"
+    name: "Economics AI"
+    description: "Economic monitoring and automated distribution"
+    endpoint: "http://localhost:4004/economics"
+    skills:
+      - reserve-tracker
+      - vmw-simulator
+      - bridge-monitor
+      - distribution-scheduler
+    priority: "medium"
+    auto_trigger:
+      - reserve_ratio_alert
+      - distribution_epoch
+      - bridge_anomaly
+    memory:
+      vector_collection: "economics-memory"
+      global_memory: true
+      notion_sync: true
+    output:
+      logs: "/logs/economics/"
+      notifications:
+        - on_chain_event
+        - notion_update
+        - discord_webhook
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. Security AI - Auditing, Threat Detection, Slashing
+  # ─────────────────────────────────────────────────────────────
+  security_ai:
+    did: "did:etrid:security-01"
+    name: "Security AI"
+    description: "Continuous security monitoring and threat detection"
+    endpoint: "http://localhost:4005/security"
+    skills:
+      - security-hardening
+      - bridge-monitor
+      - slashing-verifier
+      - audit-dev
+      - reputation-dev
+    priority: "critical"
+    auto_trigger:
+      - security_event
+      - validator_misbehavior
+      - bridge_anomaly
+      - proposal_spam_detected
+    memory:
+      vector_collection: "security-memory"
+      global_memory: true
+    output:
+      logs: "/logs/security/"
+      notifications:
+        - on_chain_event
+        - pagerduty_alert
+        - discord_webhook
+        - email_alert
+
+  # ─────────────────────────────────────────────────────────────
+  # 6. Oracle AI - Data Feeds, Off-Chain Compute
+  # ─────────────────────────────────────────────────────────────
+  oracle_ai:
+    did: "did:etrid:oracle-01"
+    name: "Oracle AI"
+    description: "AI-enhanced oracle data attestation and integrity"
+    endpoint: "http://localhost:4006/oracle"
+    skills:
+      - oracle-dev
+      - bridge-monitor
+    priority: "medium"
+    auto_trigger:
+      - oracle_update_scheduled
+      - data_anomaly_detected
+    memory:
+      vector_collection: "oracle-memory"
+      global_memory: true
+    output:
+      logs: "/logs/oracle/"
+      notifications:
+        - on_chain_event
+        - discord_webhook
+
+# ═══════════════════════════════════════════════════════════════
+# LLM Backend Configuration
+# ═══════════════════════════════════════════════════════════════
+
+llm:
+  # Claude (Anthropic)
+  claude:
+    api_key: "${ANTHROPIC_API_KEY}"
+    model: "claude-sonnet-4"
+    max_tokens: 4096
+    temperature: 0.7
+    system_prompt: |
+      You are an AI agent operating as part of the Ëtrid Protocol governance system.
+      Your decisions are recorded on-chain and must be transparent, ethical, and aligned
+      with the Ivory Paper principles. Always explain your reasoning.
+
+  # GPT (OpenAI)
+  gpt:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-4"
+    max_tokens: 4096
+    temperature: 0.7
+    system_prompt: |
+      You are an AI agent operating as part of the Ëtrid Protocol governance system.
+      Your decisions are recorded on-chain and must be transparent, ethical, and aligned
+      with the Ivory Paper principles. Always explain your reasoning.
+
+  # Local LLM (Ollama)
+  local:
+    endpoint: "http://ollama:11434"
+    model: "llama2"
+    max_tokens: 2048
+    temperature: 0.7
+    system_prompt: |
+      You are an AI agent operating as part of the Ëtrid Protocol governance system.
+      Your decisions are recorded on-chain and must be transparent, ethical, and aligned
+      with the Ivory Paper principles. Always explain your reasoning.
+
+# ═══════════════════════════════════════════════════════════════
+# Vector Database Configuration (Qdrant)
+# ═══════════════════════════════════════════════════════════════
+
+vectordb:
+  type: "qdrant"
+  endpoint: "http://vectordb:6333"
+  collections:
+    - name: "etrid-memory"
+      vectors_config:
+        size: 1536  # OpenAI embedding size
+        distance: "Cosine"
+    - name: "compiler-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+    - name: "governance-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+    - name: "runtime-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+    - name: "economics-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+    - name: "security-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+    - name: "oracle-memory"
+      vectors_config:
+        size: 1536
+        distance: "Cosine"
+
+# ═══════════════════════════════════════════════════════════════
+# Blockchain Configuration
+# ═══════════════════════════════════════════════════════════════
+
+blockchain:
+  rpc_endpoint: "ws://etrid-node:9944"
+  http_endpoint: "http://etrid-node:9933"
+  chain: "flare"
+  network: "ember-testnet"
+  pallets:
+    governance: "pallet_governance"
+    did: "pallet_did_registry"
+    staking: "pallet_staking"
+    reserve: "pallet_reserve_oracle"
+    consensus_day: "pallet_consensus_day"
+
+# ═══════════════════════════════════════════════════════════════
+# Notion Integration
+# ═══════════════════════════════════════════════════════════════
+
+notion:
+  api_key: "${NOTION_API_KEY}"
+  database_id: "${NOTION_DATABASE_ID}"
+  sync_interval: 300  # seconds (5 minutes)
+  pages:
+    governance_proposals: "Governance Proposals"
+    consensus_day: "Consensus Day Archive"
+    technical_specs: "Technical Specifications"
+    bylaws: "Foundation Bylaws"
+
+# ═══════════════════════════════════════════════════════════════
+# Skill Execution Configuration
+# ═══════════════════════════════════════════════════════════════
+
+skills:
+  base_path: "/skills"
+  execution:
+    timeout: 600  # seconds
+    max_retries: 3
+    docker_enabled: true
+    sandboxed: true
+  logging:
+    level: "INFO"
+    format: "json"
+    rotation: "daily"
+    retention_days: 30
+
+# ═══════════════════════════════════════════════════════════════
+# Global Memory Configuration
+# ═══════════════════════════════════════════════════════════════
+
+global_memory:
+  file: "/config/GLOBAL_MEMORY.md"
+  update_frequency: "on_event"  # on_event | hourly | daily
+  max_size_mb: 10
+  archiving:
+    enabled: true
+    threshold_mb: 5
+    archive_path: "/data/memory_archives/"
+
+# ═══════════════════════════════════════════════════════════════
+# Notifications & Alerts
+# ═══════════════════════════════════════════════════════════════
+
+notifications:
+  discord:
+    webhook_url: "${DISCORD_WEBHOOK_URL}"
+    channels:
+      compiler: "ai-compiler-logs"
+      governance: "ai-governance"
+      security: "security-alerts"
+
+  github:
+    token: "${GITHUB_TOKEN}"
+    repository: "EojEdred/Etrid"
+    comment_on_pr: true
+
+  pagerduty:
+    api_key: "${PAGERDUTY_API_KEY}"
+    service_id: "${PAGERDUTY_SERVICE_ID}"
+    severity_threshold: "critical"
+
+  email:
+    smtp_host: "${SMTP_HOST}"
+    smtp_port: 587
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+    from_address: "ai-devs@etrid.io"
+    to_addresses:
+      - "alerts@etrid.io"
+
+# ═══════════════════════════════════════════════════════════════
+# Monitoring & Metrics
+# ═══════════════════════════════════════════════════════════════
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9091
+    metrics:
+      - skill_execution_duration
+      - skill_execution_count
+      - llm_token_usage
+      - vector_db_operations
+      - blockchain_rpc_calls
+
+  grafana:
+    enabled: true
+    dashboards:
+      - ai_devs_overview
+      - skill_performance
+      - blockchain_sync
+      - memory_usage
+
+  healthcheck:
+    enabled: true
+    interval: 30  # seconds
+    endpoints:
+      - http://etrid-node:9933/health
+      - http://vectordb:6333/healthz
+      - http://localhost:4000/health
+
+# ═══════════════════════════════════════════════════════════════
+# Security & Access Control
+# ═══════════════════════════════════════════════════════════════
+
+security:
+  did_verification:
+    enabled: true
+    require_signatures: true
+    trusted_dids:
+      - "did:etrid:compiler-01"
+      - "did:etrid:governance-01"
+      - "did:etrid:runtime-01"
+      - "did:etrid:economics-01"
+      - "did:etrid:security-01"
+      - "did:etrid:oracle-01"
+
+  api_keys:
+    rotation_interval_days: 90
+    encryption: "AES-256-GCM"
+
+  audit_log:
+    enabled: true
+    path: "/logs/audit/"
+    include:
+      - skill_executions
+      - llm_calls
+      - blockchain_transactions
+      - did_verifications
+
+# ═══════════════════════════════════════════════════════════════
+# Advanced Configuration
+# ═══════════════════════════════════════════════════════════════
+
+advanced:
+  # Cross-Agent Communication
+  inter_agent_messaging:
+    enabled: true
+    protocol: "websocket"
+    message_broker: "redis"
+
+  # Failover & Redundancy
+  failover:
+    enabled: true
+    backup_llm: "local"  # If Claude/GPT fails, use local
+    backup_vectordb: "file_based"
+
+  # Rate Limiting
+  rate_limiting:
+    llm_calls_per_minute: 60
+    blockchain_rpc_per_minute: 120
+    vector_db_ops_per_minute: 1000
+
+  # Experimental Features
+  experimental:
+    federated_learning: false
+    on_chain_ai_logic: false
+    multi_agent_consensus: false

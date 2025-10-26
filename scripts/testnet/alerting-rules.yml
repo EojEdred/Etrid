@@ -1,0 +1,234 @@
+# Prometheus Alerting Rules for Ëtrid Testnet
+# These rules define alerts for critical conditions that require attention
+
+groups:
+  # ============================================================================
+  # BLOCK PRODUCTION ALERTS
+  # ============================================================================
+  - name: block_production
+    interval: 30s
+    rules:
+      - alert: NoBlocksProduced
+        expr: rate(substrate_block_height[5m]) == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: consensus
+        annotations:
+          summary: "No blocks produced on {{ $labels.instance }}"
+          description: "Node {{ $labels.instance }} has not produced any blocks in the last 5 minutes. Block production may have stalled."
+
+      - alert: SlowBlockProduction
+        expr: rate(substrate_block_height[5m]) < 0.5
+        for: 3m
+        labels:
+          severity: warning
+          component: consensus
+        annotations:
+          summary: "Slow block production on {{ $labels.instance }}"
+          description: "Block production rate is {{ $value | humanize }} blocks/s, below expected 1 block/s on {{ $labels.instance }}."
+
+      - alert: FinalizationLag
+        expr: (substrate_block_height - substrate_finalized_height) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: finality
+        annotations:
+          summary: "Finalization lag on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has {{ $value }} unfinalized blocks. PPFA consensus may be delayed."
+
+      - alert: FinalizationStalled
+        expr: rate(substrate_finalized_height[5m]) == 0
+        for: 3m
+        labels:
+          severity: critical
+          component: finality
+        annotations:
+          summary: "Block finalization stalled on {{ $labels.instance }}"
+          description: "No blocks have been finalized in the last 5 minutes on {{ $labels.instance }}. PPFA consensus may be broken."
+
+  # ============================================================================
+  # NETWORK CONNECTIVITY ALERTS
+  # ============================================================================
+  - name: network
+    interval: 30s
+    rules:
+      - alert: LowPeerCount
+        expr: substrate_sub_libp2p_peers_count < 2
+        for: 2m
+        labels:
+          severity: warning
+          component: network
+        annotations:
+          summary: "Low peer count on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has only {{ $value }} peer(s). Expected at least 2 peers in testnet."
+
+      - alert: NoPeersConnected
+        expr: substrate_sub_libp2p_peers_count == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: network
+        annotations:
+          summary: "No peers connected on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has no connected peers. Node is isolated from the network."
+
+      - alert: HighNetworkErrors
+        expr: rate(substrate_sub_libp2p_network_per_sec_events_total{event="error"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: network
+        annotations:
+          summary: "High network error rate on {{ $labels.instance }}"
+          description: "Network error rate is {{ $value | humanize }} errors/s on {{ $labels.instance }}."
+
+  # ============================================================================
+  # TRANSACTION POOL ALERTS
+  # ============================================================================
+  - name: transaction_pool
+    interval: 30s
+    rules:
+      - alert: TransactionPoolFull
+        expr: substrate_ready_transactions_number > 8000
+        for: 5m
+        labels:
+          severity: warning
+          component: txpool
+        annotations:
+          summary: "Transaction pool nearly full on {{ $labels.instance }}"
+          description: "Transaction pool has {{ $value }} ready transactions on {{ $labels.instance }}. May indicate processing bottleneck."
+
+      - alert: TransactionPoolStalled
+        expr: substrate_ready_transactions_number > 1000 and rate(substrate_ready_transactions_number[5m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: txpool
+        annotations:
+          summary: "Transaction pool not draining on {{ $labels.instance }}"
+          description: "{{ $value }} transactions stuck in pool on {{ $labels.instance }}. Transactions may not be getting included in blocks."
+
+  # ============================================================================
+  # SYSTEM RESOURCE ALERTS
+  # ============================================================================
+  - name: system_resources
+    interval: 1m
+    rules:
+      - alert: HighMemoryUsage
+        expr: (process_resident_memory_bytes / 1024 / 1024 / 1024) > 8
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanize }}GB on {{ $labels.instance }}. May need to increase resources."
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanize }}% on {{ $labels.instance }} over the last 5 minutes."
+
+      - alert: DiskSpaceWarning
+        expr: (substrate_database_cache_bytes / 1024 / 1024 / 1024) > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: storage
+        annotations:
+          summary: "Database growing large on {{ $labels.instance }}"
+          description: "Database cache is {{ $value | humanize }}GB on {{ $labels.instance }}. Monitor disk space."
+
+  # ============================================================================
+  # CONSENSUS & VALIDATOR ALERTS
+  # ============================================================================
+  - name: consensus
+    interval: 30s
+    rules:
+      - alert: ValidatorOffline
+        expr: up{node_type="validator"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: validator
+        annotations:
+          summary: "Validator {{ $labels.instance }} is offline"
+          description: "Validator node {{ $labels.instance }} is not responding. Immediate attention required."
+
+      - alert: NoBlockAuthoring
+        expr: rate(substrate_proposer_block_constructed_total[10m]) == 0 and on(instance) up{node_type="validator"} == 1
+        for: 10m
+        labels:
+          severity: warning
+          component: validator
+        annotations:
+          summary: "Validator {{ $labels.instance }} not authoring blocks"
+          description: "Validator {{ $labels.instance }} has not authored any blocks in 10 minutes. May not be in active validator set."
+
+      - alert: HighUncleRate
+        expr: rate(substrate_block_height_total{status="uncle"}[5m]) / rate(substrate_block_height_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: consensus
+        annotations:
+          summary: "High uncle block rate on {{ $labels.instance }}"
+          description: "{{ $value | humanizePercentage }} of blocks are uncles on {{ $labels.instance }}. May indicate network issues."
+
+  # ============================================================================
+  # PPFA CONSENSUS SPECIFIC ALERTS
+  # ============================================================================
+  - name: ppfa_consensus
+    interval: 30s
+    rules:
+      - alert: PPFASealingFailure
+        expr: rate(substrate_proposer_block_constructed_total{status="failure"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: ppfa
+        annotations:
+          summary: "PPFA sealing failures on {{ $labels.instance }}"
+          description: "Block sealing is failing on {{ $labels.instance }}. PPFA consensus may have issues."
+
+      - alert: HighPPFALatency
+        expr: substrate_proposer_block_constructed_bucket{le="1.0"} / substrate_proposer_block_constructed_count < 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: ppfa
+        annotations:
+          summary: "High PPFA block construction latency on {{ $labels.instance }}"
+          description: "Less than 90% of blocks are sealed within 1 second on {{ $labels.instance }}. Performance degradation detected."
+
+  # ============================================================================
+  # RUNTIME ALERTS
+  # ============================================================================
+  - name: runtime
+    interval: 1m
+    rules:
+      - alert: SubstrateRuntimeUpgraded
+        expr: changes(substrate_build_info[5m]) > 0
+        labels:
+          severity: info
+          component: runtime
+        annotations:
+          summary: "Runtime upgraded on {{ $labels.instance }}"
+          description: "A runtime upgrade was detected on {{ $labels.instance }}."
+
+      - alert: HighExtrinsicExecutionTime
+        expr: histogram_quantile(0.95, rate(substrate_extrinsic_execution_time_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: runtime
+        annotations:
+          summary: "Slow extrinsic execution on {{ $labels.instance }}"
+          description: "95th percentile extrinsic execution time is {{ $value | humanizeDuration }} on {{ $labels.instance }}."

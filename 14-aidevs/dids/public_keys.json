@@ -1,0 +1,77 @@
+[
+  {
+    "identity": "consensus-dev01",
+    "public_key_base58": "7t54tgdvJLS8hAJtRTzBRiT5QDeN1Z9WbrdCi5cvjS3p",
+    "public_key_hex": "663b576c017afd071d44f125f316ea61065c767d6a9a271da982ebdb43cafb67"
+  },
+  {
+    "identity": "compiler-dev01",
+    "public_key_base58": "52vkMazpaEnwuoYDFjoFPNqvUagmnrbsFRGF7CR7KA8H",
+    "public_key_hex": "3bed19db79d924864e5c78c8901108fc83dec0f70c30cf3aa8cb37004e036bda"
+  },
+  {
+    "identity": "governance-dev01",
+    "public_key_base58": "3jMSk31C8sYWS6pKiJ93yQU4M72teijsVA4Q8YrZCsw4",
+    "public_key_hex": "2890e23cf9b9ae1ef9eb3127c6fcc19fcc600c7607af1624d3807d36a3b7b6df"
+  },
+  {
+    "identity": "audit-dev01",
+    "public_key_base58": "7YpepWvzbWkwYNpgUvFKn7M4HZ77K3EtNjbsVpTXQTvy",
+    "public_key_hex": "614d01ca2683341684f294bed3e79be2d554eec3aa1da2678daee442fd4ce75a"
+  },
+  {
+    "identity": "oracle-dev01",
+    "public_key_base58": "9ZR8MVxA2cuvmERbHdB3FVPLaYVrtZ6hzYYuTnSMKUJh",
+    "public_key_hex": "7f2b5c8e06208f5edb34d37903170dac6512ff57b2d3384127c315dd91c627be"
+  },
+  {
+    "identity": "runtime-dev01",
+    "public_key_base58": "C2duk1SjsJgb3Mw6vikfR6dqh2DHekgyoWaW77G4GfM2",
+    "public_key_hex": "a3dbdeda4fb917b436e01f9875178599450aacf0ee381c7e747866b4b6248b49"
+  },
+  {
+    "identity": "economics-dev01",
+    "public_key_base58": "GA7gnzJYc8b2zWZbCoAaGbKwLKozr8KM42oDsrRBAis",
+    "public_key_hex": "03e204d0ee8c84a892dfaa1eb3fe0768400dba629d3d438fe584e8b475bfecf0"
+  },
+  {
+    "identity": "edsc-dev01",
+    "public_key_base58": "4VCTebincvmYPTtJwyinDEEY2MJ6mcCqjbPqZFppGba2",
+    "public_key_hex": "33cc47da7bde0dece718961cc000032693d7085cbcf6b6ec0b459e472afe186b"
+  },
+  {
+    "identity": "security-dev01",
+    "public_key_base58": "DPyqUUxsTpgMrxiGyzzUmjAe9uFmxuWYFdgCrEBXpCcs",
+    "public_key_hex": "b82f490a0ea63a1675d57a52b2d3207d7a0008eacf2a5e142e04ac22650ccae4"
+  },
+  {
+    "identity": "multichain-dev01",
+    "public_key_base58": "FBEi55aXivA8fMDtPxi2bvUngGbF2QJ2FDLNq9p7cDux",
+    "public_key_hex": "d2a2ecc426b7f2fc4495723a0f09943717062c7600dde93af26f98e295c800e7"
+  },
+  {
+    "identity": "ethics-dev01",
+    "public_key_base58": "DouDrQ2YorRLyi8bagSknwf3Yyp4CGz2iBUSt5aNocxo",
+    "public_key_hex": "be5001e9197f8b31c202325cbb78d1818fea20acf06b6f343a23d6526a2fcf30"
+  },
+  {
+    "identity": "docs-dev01",
+    "public_key_base58": "4yu3DuRLqNbDpVZu14qNZAU7WzhRfNp85vfBZBdLzgTJ",
+    "public_key_hex": "3b266d0e7262d59c15a63985b25f29fbd7a8bc75241c688bb571266de958f489"
+  },
+  {
+    "identity": "gizzi",
+    "public_key_base58": "ETDabmDaYCVEnk5D56iK7DWLNALeSwoNVGPuupGGg71M",
+    "public_key_hex": "c7df41295d7be1c533649118f89fe558b2e9f0e494e80eae7ef00fcc6b2e9714"
+  },
+  {
+    "identity": "gizzi-claude",
+    "public_key_base58": "7EZUSaLd6Y2PEaQe48wPCVaD3fuaq4bFrph9aXQnf9zj",
+    "public_key_hex": "5c9f63b9865d60595cdde8bebdab45b729f965019ec2506d1a05de13c6400754"
+  },
+  {
+    "identity": "gizzi-claudecode",
+    "public_key_base58": "FyfPxeTpSSyM9TrCeHH2tvdqa4GjbPKGUiP6F7wVyKQG",
+    "public_key_hex": "de878e7dafbd319793c97e968ecf86f2ae50272713bc35d2f2fb28e48e0ded8d"
+  }
+]

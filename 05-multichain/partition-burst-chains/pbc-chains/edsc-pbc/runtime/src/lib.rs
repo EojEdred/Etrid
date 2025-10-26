@@ -246,6 +246,7 @@ impl pallet_edsc_token::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxSupply = ConstU128<50_000_000_000_000_000_000_000_000_000>;  // 50 billion EDSC (with 18 decimals)
     type MinBalance = ConstU128<1_000_000_000_000>;  // 0.000001 EDSC
+    type WeightInfo = ();
 }
 
 // EDSC Receipts Configuration (SBT for purchase tracking)
@@ -283,6 +284,17 @@ impl pallet_edsc_redemption::Config for Runtime {
     type MaxQueueSize = MaxQueueSize;
 }
 
+
+
+// EDSC Oracle No-Op Callback
+pub struct NoOpPriceCallback;
+impl pallet_edsc_oracle::PriceUpdateCallback for NoOpPriceCallback {
+    fn on_price_updated(_price: u128) -> frame_support::dispatch::DispatchResult {
+        Ok(())
+    }
+}
+
+
 // EDSC Oracle Configuration (TWAP price oracle)
 parameter_types! {
     pub const PrimaryTwapWindow: u32 = 14_400;  // 24 hours in blocks (6s blocks)
@@ -301,7 +313,23 @@ impl pallet_edsc_oracle::Config for Runtime {
     type OutlierThreshold = OutlierThreshold;
     type StalenessTimeout = StalenessTimeout;
     type MaxPriceHistory = MaxPriceHistory;
+    type PriceCallback = NoOpPriceCallback;
 }
+
+// EDSC Checkpoint Provider Implementations
+impl pallet_edsc_checkpoint::TotalSupplyProvider for Runtime {
+    fn get_total_supply() -> u128 {
+        pallet_edsc_token::Pallet::<Runtime>::total_supply()
+    }
+}
+
+impl pallet_edsc_checkpoint::ReserveRatioProvider for Runtime {
+    fn get_reserve_ratio() -> u16 {
+        // Default to 100% (10000 basis points) - can be connected to vault pallet later
+        10000
+    }
+}
+
 
 // EDSC Checkpoint Configuration (State synchronization with FlareChain)
 parameter_types! {
@@ -315,6 +343,8 @@ impl pallet_edsc_checkpoint::Config for Runtime {
     type CheckpointInterval = CheckpointInterval;
     type MaxCheckpoints = MaxCheckpoints;
     type EmergencyReserveThreshold = EmergencyReserveThreshold;
+    type TotalSupplyProvider = Runtime;
+    type ReserveRatioProvider = Runtime;
 }
 
 // Circuit Breaker Configuration (Emergency safety controls)
