@@ -372,8 +372,8 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "
 # Fix schnorrkel version conflict (substrate-bip39 pulls in old schnorrkel 0.9.1, we need 0.11.5)
 substrate-bip39 = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
-[patch."https://github.com/paritytech/polkadot-sdk.git"]
-substrate-prometheus-endpoint = { path = "vendor/substrate-prometheus-endpoint" }
+# [patch."https://github.com/paritytech/polkadot-sdk.git"]
+# substrate-prometheus-endpoint = { path = "vendor/substrate-prometheus-endpoint" }  # Commented out - vendor dir doesn't exist
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NOTE: As you build more E³20 components, add them to the members list above
