@@ -6,6 +6,7 @@
 use alloc::{
     collections::{BTreeMap as HashMap, BTreeSet as HashSet, BinaryHeap},
     string::{String, ToString},
+    vec,
     vec::Vec,
     format,
 };

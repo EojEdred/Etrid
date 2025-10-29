@@ -1,0 +1,132 @@
+====================================================================
+   ËTRID WEBSITE - QUICK UPLOAD GUIDE FOR HOSTINGER
+====================================================================
+
+📁 FILES TO UPLOAD:
+--------------------------------------------------------------------
+✓ index.html         → Upload to: public_html/
+✓ css/styles.css     → Upload to: public_html/css/
+✓ js/main.js         → Upload to: public_html/js/
+✓ images/            → Upload to: public_html/images/ (add your logo here)
+
+====================================================================
+🚀 STEP-BY-STEP UPLOAD INSTRUCTIONS
+====================================================================
+
+OPTION 1: Hostinger File Manager (Easiest)
+--------------------------------------------------------------------
+1. Login to Hostinger control panel (hpanel.hostinger.com)
+2. Click "File Manager"
+3. Navigate to "public_html" folder
+4. Click "Upload Files" button
+5. Upload files maintaining folder structure:
+
+   First, create folders:
+   - Click "New Folder" → name it "css"
+   - Click "New Folder" → name it "js"
+   - Click "New Folder" → name it "images"
+
+   Then upload files:
+   - Upload index.html to public_html/
+   - Open css folder → Upload styles.css
+   - Open js folder → Upload main.js
+   - Open images folder → Upload your logo
+
+6. Done! Visit etrid.org to see your site
+
+OPTION 2: FTP Client (For developers)
+--------------------------------------------------------------------
+1. Get FTP credentials from Hostinger:
+   - Control Panel → FTP Accounts
+
+2. Download FileZilla (filezilla-project.org)
+
+3. Connect using:
+   Host: ftp.etrid.org
+   Username: [your FTP username]
+   Password: [your FTP password]
+   Port: 21
+
+4. Navigate to public_html/ on remote side
+
+5. Drag and drop the entire website folder contents
+
+6. Verify all files uploaded successfully
+
+====================================================================
+✅ POST-UPLOAD VERIFICATION
+====================================================================
+
+1. Visit https://etrid.org
+2. Check that page loads correctly
+3. Test mobile menu (hamburger icon on mobile)
+4. Click all navigation links
+5. Test external links (GitHub, Discord, etc.)
+6. Check on mobile device
+7. Test in different browsers
+
+====================================================================
+🎨 CUSTOMIZATION (Optional)
+====================================================================
+
+Adding Your Logo:
+1. Upload logo.svg or logo.png to images/ folder
+2. Edit index.html (around line 36)
+3. Replace ËTRID text with:
+   <img src="images/logo.svg" alt="ËTRID" class="h-8">
+
+Changing Colors:
+1. Edit index.html
+2. Find tailwind.config (line 38)
+3. Modify color values
+
+====================================================================
+📊 PERFORMANCE TIPS
+====================================================================
+
+✓ Already optimized:
+  - CDN for Tailwind CSS
+  - CDN for Google Fonts
+  - Minimal file sizes
+  - GPU-accelerated animations
+
+🔧 Optional improvements:
+  - Enable Gzip in Hostinger (usually default)
+  - Add Google Analytics
+  - Submit to Google Search Console
+
+====================================================================
+🆘 TROUBLESHOOTING
+====================================================================
+
+Problem: CSS not loading
+Solution: Check file path is public_html/css/styles.css
+
+Problem: JavaScript not working
+Solution: Check browser console for errors (F12)
+
+Problem: Mobile menu not opening
+Solution: Verify js/main.js uploaded correctly
+
+Problem: Slow loading
+Solution: Test on fast.com to verify connection
+
+====================================================================
+📞 SUPPORT
+====================================================================
+
+Hostinger Support: support.hostinger.com
+Email: etridfoundation@proton.me
+GitHub: github.com/EojEdred/Etrid
+
+====================================================================
+
+🎉 YOU'RE READY TO LAUNCH!
+
+Simply upload the files as described above and your professional
+ËTRID landing page will be live at etrid.org
+
+Total upload time: ~2 minutes
+File size: < 100KB (super fast loading!)
+
+====================================================================

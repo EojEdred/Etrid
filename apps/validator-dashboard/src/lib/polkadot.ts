@@ -14,10 +14,16 @@ export interface ChainConfig {
   symbol: string;
 }
 
+// Dual Bootstrap Nodes (VM #1 Alice, VM #2 Bob)
+export const BOOTSTRAP_ENDPOINTS = [
+  process.env.NEXT_PUBLIC_WS_PROVIDER || 'ws://20.186.91.207:9944', // VM #1 Primary
+  process.env.NEXT_PUBLIC_WS_PROVIDER_FALLBACK || 'ws://172.177.44.73:9944', // VM #2 Fallback
+];
+
 // Default Ëtrid chain configuration
 export const ETRID_CHAIN: ChainConfig = {
   name: 'Ëtrid',
-  wsEndpoint: process.env.NEXT_PUBLIC_WS_PROVIDER || 'ws://localhost:9944',
+  wsEndpoint: BOOTSTRAP_ENDPOINTS[0],
   decimals: 18,
   symbol: 'ETR',
 };
@@ -26,20 +32,15 @@ let apiInstance: ApiPromise | null = null;
 let connectionPromise: Promise<ApiPromise> | null = null;
 
 /**
- * Get or create a Polkadot API connection
+ * Get or create a Polkadot API connection with automatic failover
  *
- * @param wsEndpoint - WebSocket endpoint (defaults to env variable)
+ * @param wsEndpoint - WebSocket endpoint (defaults to bootstrap nodes)
  * @returns Promise resolving to ApiPromise instance
  */
 export async function getApi(wsEndpoint?: string): Promise<ApiPromise> {
-  const endpoint = wsEndpoint || ETRID_CHAIN.wsEndpoint;
-
-  // Return existing instance if connected to same endpoint
+  // Return existing instance if connected
   if (apiInstance && apiInstance.isConnected) {
-    const currentEndpoint = (apiInstance as any)._options?.provider?.endpoint;
-    if (currentEndpoint === endpoint) {
-      return apiInstance;
-    }
+    return apiInstance;
   }
 
   // Return existing connection promise if one is in progress
@@ -47,23 +48,34 @@ export async function getApi(wsEndpoint?: string): Promise<ApiPromise> {
     return connectionPromise;
   }
 
-  // Create new connection
+  // Create new connection with failover
   connectionPromise = (async () => {
-    try {
-      const provider = new WsProvider(endpoint);
-      const api = await ApiPromise.create({ provider });
+    const endpoints = wsEndpoint ? [wsEndpoint] : BOOTSTRAP_ENDPOINTS;
+    let lastError: Error | null = null;
 
-      // Wait for API to be ready
-      await api.isReady;
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔄 Attempting connection to ${endpoint}...`);
+        const provider = new WsProvider(endpoint);
+        const api = await ApiPromise.create({ provider });
 
-      apiInstance = api;
-      connectionPromise = null;
+        // Wait for API to be ready
+        await api.isReady;
 
-      return api;
-    } catch (error) {
-      connectionPromise = null;
-      throw error;
+        apiInstance = api;
+        connectionPromise = null;
+
+        console.log(`✅ Connected to Ëtrid blockchain at ${endpoint}`);
+        return api;
+      } catch (error) {
+        console.warn(`⚠️ Failed to connect to ${endpoint}:`, error);
+        lastError = error as Error;
+        // Try next endpoint
+      }
     }
+
+    connectionPromise = null;
+    throw new Error(`Failed to connect to Ëtrid blockchain. Tried all endpoints. Last error: ${lastError?.message}`);
   })();
 
   return connectionPromise;

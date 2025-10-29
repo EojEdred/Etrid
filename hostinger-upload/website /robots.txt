@@ -1,0 +1,15 @@
+# ËTRID Website - Robots.txt
+# Controls search engine crawler access
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://etrid.org/sitemap.xml
+
+# Crawl delay (optional, helps prevent server overload)
+Crawl-delay: 1
+
+# Block access to specific directories (if needed)
+# Disallow: /private/
+# Disallow: /admin/

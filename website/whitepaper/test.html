@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Viewer</title>
+</head>
+<body style="background: #000; color: #fff; padding: 20px; font-family: monospace;">
+    <h1>Markdown File Test</h1>
+    <div id="status">Testing...</div>
+    <hr>
+    <div id="output"></div>
+
+    <script>
+        async function testFiles() {
+            const files = [
+                'ivory-paper.md',
+                'ivory-paper-vol1-conceptual.md',
+                'ivory-paper-vol2-technical.md',
+                'ivory-paper-vol3-governance.md'
+            ];
+
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+
+            for (const file of files) {
+                try {
+                    statusDiv.textContent = `Testing ${file}...`;
+                    const response = await fetch(file);
+                    const text = await response.text();
+
+                    outputDiv.innerHTML += `
+                        <div style="margin: 10px 0; padding: 10px; background: #222;">
+                            <strong style="color: #0f0;">✓ ${file}</strong><br>
+                            Size: ${text.length} characters<br>
+                            First 100 chars: ${text.substring(0, 100)}...
+                        </div>
+                    `;
+                } catch (error) {
+                    outputDiv.innerHTML += `
+                        <div style="margin: 10px 0; padding: 10px; background: #400;">
+                            <strong style="color: #f00;">✗ ${file}</strong><br>
+                            Error: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+
+            statusDiv.textContent = 'Test complete!';
+        }
+
+        testFiles();
+    </script>
+</body>
+</html>

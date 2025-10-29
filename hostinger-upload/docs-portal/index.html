@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Documentation Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .doc-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .doc-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .doc-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .doc-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .doc-links {
+            list-style: none;
+        }
+
+        .doc-links li {
+            margin-bottom: 12px;
+        }
+
+        .doc-links a {
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .doc-links a:hover {
+            background: #f0f0ff;
+        }
+
+        .doc-links a::before {
+            content: "→";
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .highlight h2 {
+            color: white;
+        }
+
+        .highlight p {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .highlight .doc-links a {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .highlight .doc-links a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ËTRID Documentation Hub</h1>
+            <p class="subtitle">The Free and Open Decentralized Democracy of Stakeholders</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number">13</span>
+                <span class="stat-label">Blockchain Components</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">100%</span>
+                <span class="stat-label">Alpha Complete</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">2.8M+</span>
+                <span class="stat-label">Lines of Code</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">87.3%</span>
+                <span class="stat-label">Test Coverage</span>
+            </div>
+        </div>
+
+        <div class="docs-grid">
+            <div class="doc-section highlight">
+                <h2>🚀 Getting Started</h2>
+                <p>Begin your journey with ËTRID. Learn the basics and start building.</p>
+                <ul class="doc-links">
+                    <li><a href="https://github.com/etrid-protocol/etrid" target="_blank">GitHub Repository</a></li>
+                    <li><a href="https://etrid.org/whitepaper/" target="_blank">Ivory Paper v2.0 (Whitepaper)</a></li>
+                    <li><a href="#quickstart">Quick Start Guide</a></li>
+                    <li><a href="#installation">Installation Instructions</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>📚 Foundation Documents</h2>
+                <p>Core specifications, legal framework, and governance principles.</p>
+                <ul class="doc-links">
+                    <li><a href="https://etrid.org/whitepaper/" target="_blank">Complete Ivory Paper (85 KB)</a></li>
+                    <li><a href="https://etrid.org/whitepaper/ivory-paper-vol1-conceptual.md" target="_blank">Vol 1: Conceptual Foundation</a></li>
+                    <li><a href="https://etrid.org/whitepaper/ivory-paper-vol2-technical.md" target="_blank">Vol 2: Technical Specification</a></li>
+                    <li><a href="https://etrid.org/whitepaper/ivory-paper-vol3-governance.md" target="_blank">Vol 3: Governance Framework</a></li>
+                    <li><a href="#protocol-charter">Protocol Charter (14 KB)</a></li>
+                    <li><a href="#foundation-governance">Foundation Governance</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>⚙️ Technical Architecture</h2>
+                <p>Deep dive into ËTRID's multichain architecture and E³20 Protocol.</p>
+                <ul class="doc-links">
+                    <li><a href="#protocol-index">Protocol Documentation Index (150 KB)</a></li>
+                    <li><a href="#asf-consensus">Ascending Scale of Finality (ASF)</a></li>
+                    <li><a href="#flarechain">FlareChain Relay Chain</a></li>
+                    <li><a href="#pbcs">Partition Burst Chains (12 PBCs)</a></li>
+                    <li><a href="#detr-p2p">DETR P2P Specification (60 KB)</a></li>
+                    <li><a href="#bridges">Cross-Chain Bridges</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>🔧 Developer Guides</h2>
+                <p>Build on ËTRID with comprehensive tutorials and API references.</p>
+                <ul class="doc-links">
+                    <li><a href="#runtime-api">Runtime API Documentation</a></li>
+                    <li><a href="#rpc-methods">RPC Method Reference</a></li>
+                    <li><a href="#smart-contracts">Smart Contract Development</a></li>
+                    <li><a href="#pallet-development">Pallet Development Guide</a></li>
+                    <li><a href="#testing">Testing Framework</a></li>
+                    <li><a href="#deployment">Deployment Guide</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>⚡ Node Operators</h2>
+                <p>Run validators, RPC nodes, and contribute to network security.</p>
+                <ul class="doc-links">
+                    <li><a href="#validator-setup">Validator Setup Guide</a></li>
+                    <li><a href="#validator-quickstart">Validator Quickstart</a></li>
+                    <li><a href="#rpc-setup">RPC Node Configuration</a></li>
+                    <li><a href="#monitoring">Monitoring & Metrics</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting Guide</a></li>
+                    <li><a href="#security">Security Best Practices</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>🗳️ Consensus Day</h2>
+                <p>Annual on-chain governance event powered by the community.</p>
+                <ul class="doc-links">
+                    <li><a href="https://governance.etrid.org" target="_blank">CONSËNSUS Platform</a></li>
+                    <li><a href="#consensus-day-overview">What is Consensus Day?</a></li>
+                    <li><a href="#four-phases">Four Phases Explained</a></li>
+                    <li><a href="#proposal-creation">Creating Proposals</a></li>
+                    <li><a href="#voting-guide">Voting Guide</a></li>
+                    <li><a href="#minting-logic">Token Minting Logic</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>💰 Token Economics</h2>
+                <p>Dual token system: ÉTR native currency and ËDSC stablecoin.</p>
+                <ul class="doc-links">
+                    <li><a href="#etr-token">ÉTR Token Specification</a></li>
+                    <li><a href="#edsc-stablecoin">ËDSC Stablecoin Design</a></li>
+                    <li><a href="#vmw-gas">VMW Gas Model</a></li>
+                    <li><a href="#staking-rewards">Staking & Rewards</a></li>
+                    <li><a href="#treasury">Treasury Management</a></li>
+                    <li><a href="#emission-schedule">Token Emission Schedule</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>🔐 Security</h2>
+                <p>Cryptography, audits, and security considerations.</p>
+                <ul class="doc-links">
+                    <li><a href="#cryptography">Cryptographic Primitives</a></li>
+                    <li><a href="#post-quantum">Post-Quantum Security</a></li>
+                    <li><a href="#key-management">Key Management</a></li>
+                    <li><a href="#open-did">OpenDID Identity System</a></li>
+                    <li><a href="#security-audits">Security Audits</a></li>
+                    <li><a href="#bug-bounty">Bug Bounty Program</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>🌐 Network</h2>
+                <p>Mainnet, testnet, and network infrastructure details.</p>
+                <ul class="doc-links">
+                    <li><a href="https://validator.etrid.org" target="_blank">Validator Dashboard</a></li>
+                    <li><a href="https://watchtower.etrid.org" target="_blank">Network Monitor</a></li>
+                    <li><a href="#mainnet-launch">Mainnet Launch Plan</a></li>
+                    <li><a href="#ember-testnet">Ember Testnet (Q1 2026)</a></li>
+                    <li><a href="#endpoints">RPC Endpoints</a></li>
+                    <li><a href="#network-stats">Network Statistics</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>💻 Applications</h2>
+                <p>Wallets, DEX, staking, and other ËTRID applications.</p>
+                <ul class="doc-links">
+                    <li><a href="https://wallet.etrid.org" target="_blank">Web Wallet</a></li>
+                    <li><a href="https://wallet.etrid.org/swap" target="_blank">DEX/Swap Interface</a></li>
+                    <li><a href="https://masterchef.etrid.org" target="_blank">MasterChef Staking</a></li>
+                    <li><a href="#mobile-wallet">Mobile Wallet (Coming Soon)</a></li>
+                    <li><a href="#sdk">ËTRID SDK</a></li>
+                    <li><a href="#integration">Integration Guide</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>🤝 Community</h2>
+                <p>Connect with the ËTRID community and contribute to the project.</p>
+                <ul class="doc-links">
+                    <li><a href="https://github.com/etrid-protocol/etrid" target="_blank">GitHub</a></li>
+                    <li><a href="#contributing">Contributing Guidelines</a></li>
+                    <li><a href="#code-of-conduct">Code of Conduct</a></li>
+                    <li><a href="#grants">Grants Program</a></li>
+                    <li><a href="#roadmap">Project Roadmap</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h2>📖 API Reference</h2>
+                <p>Complete API documentation for developers.</p>
+                <ul class="doc-links">
+                    <li><a href="#rpc-api">RPC API Reference</a></li>
+                    <li><a href="#runtime-api-ref">Runtime API Reference</a></li>
+                    <li><a href="#pallet-api">Pallet APIs</a></li>
+                    <li><a href="#storage-queries">Storage Queries</a></li>
+                    <li><a href="#events">Events & Errors</a></li>
+                    <li><a href="#extrinsics">Extrinsics Reference</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 ËTRID Protocol. The Free and Open Decentralized Democracy of Stakeholders.</p>
+            <p style="opacity: 0.8; margin-top: 10px;">Alpha Complete (100%) | Ember Testnet Q1 2026 | Mainnet 2026</p>
+            <div class="footer-links">
+                <a href="https://etrid.org">Main Site</a>
+                <a href="https://etrid.org/whitepaper/">Whitepaper</a>
+                <a href="https://github.com/etrid-protocol/etrid" target="_blank">GitHub</a>
+                <a href="https://governance.etrid.org">Governance</a>
+                <a href="https://wallet.etrid.org">Wallet</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
