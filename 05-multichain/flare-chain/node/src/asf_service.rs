@@ -647,6 +647,9 @@ pub fn new_full_with_params(
         })
     };
 
+    // Clone boot_nodes before moving config (needed for DETR P2P bootstrap peer parsing)
+    let boot_nodes = config.network.boot_nodes.clone();
+
     // Spawn RPC handlers
     let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network: Arc::new(network.clone()),
@@ -1432,12 +1435,13 @@ pub fn new_full_with_params(
         let mut bootstrap_peers = Vec::new();
 
         log::info!("🔍 Parsing bootstrap peers from config.network.boot_nodes:");
-        for bootnode in &config.network.boot_nodes {
+        for bootnode in &boot_nodes {
             log::info!("  Raw bootnode: {}", bootnode);
 
             // Parse multiaddr to extract IP and peer ID
             // Format: /ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>
-            let parts: Vec<&str> = bootnode.to_string().split('/').collect();
+            let bootnode_str = bootnode.to_string();
+            let parts: Vec<&str> = bootnode_str.split('/').collect();
             if parts.len() >= 6 {
                 if let (Some(ip_str), Some(peer_id_str)) = (parts.get(2), parts.last()) {
                     if let Ok(ip) = ip_str.parse::<IpAddr>() {
