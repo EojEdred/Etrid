@@ -7,8 +7,39 @@
 //! - Validator-backed attestations
 //! - Atomic swap settlement
 
-use std::collections::HashMap;
-use std::fmt;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+    collections::{BTreeMap as HashMap, BTreeSet as HashSet},
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+    format,
+};
+
+#[cfg(not(feature = "std"))]
+use core::{
+    fmt,
+    default::Default,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+};
+
+#[cfg(feature = "std")]
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+    vec,
+    vec::Vec,
+    string::String,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+    default::Default,
+};
 
 /// Supported chains
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -208,7 +239,7 @@ impl StateProof {
 
     /// Get unique signers
     pub fn unique_signers(&self) -> usize {
-        let mut signers = std::collections::HashSet::new();
+        let mut signers = HashSet::new();
         for sig in &self.validator_signatures {
             signers.insert(sig.validator_id.clone());
         }
@@ -548,7 +579,7 @@ impl CrossChainBridge {
         &self,
         signatures: &[ValidatorSignature],
     ) -> Result<usize, BridgeError> {
-        let mut seen = std::collections::HashSet::new();
+        let mut seen = HashSet::new();
         for sig in signatures {
             if !self.has_validator(&sig.validator_id) {
                 return Err(BridgeError::ValidatorNotFound);

@@ -10,9 +10,33 @@
 //! - Reputation system
 //! - Slashing for misbehavior
 
-use std::collections::HashMap;
-use std::fmt;
-use std::error::Error;
+#[cfg(not(feature = "std"))]
+use alloc::{
+    collections::BTreeMap as HashMap,
+    string::{String, ToString},
+    vec::Vec,
+    format,
+};
+
+#[cfg(not(feature = "std"))]
+use core::{
+    fmt,
+    default::Default,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+};
+
+#[cfg(feature = "std")]
+use std::{
+    collections::HashMap,
+    fmt,
+    error::Error,
+    vec::Vec,
+    string::String,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+    default::Default,
+};
 
 /// Minimum stake required to register as a watchtower (1000 tokens)
 pub const MIN_WATCHTOWER_STAKE: u128 = 1_000_000_000_000_000_000_000; // 1000 ETR
@@ -279,6 +303,7 @@ impl fmt::Display for WatchtowerError {
     }
 }
 
+#[cfg(feature = "std")]
 impl Error for WatchtowerError {}
 
 /// Watchtower manager

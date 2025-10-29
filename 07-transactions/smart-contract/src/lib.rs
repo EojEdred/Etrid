@@ -7,8 +7,31 @@
 //! - Error recovery and rollback
 //! - Multi-version contract support
 
-use std::collections::HashMap;
-use std::fmt;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+    boxed::Box,
+    collections::BTreeMap as HashMap,
+    format,
+};
+
+#[cfg(feature = "std")]
+use std::{
+    collections::HashMap,
+    string::String,
+    vec::Vec,
+    boxed::Box,
+    fmt,
+};
+
+#[cfg(not(feature = "std"))]
+use core::fmt;
 
 /// Gas (vmw) cost configuration
 #[derive(Debug, Clone, Copy)]
