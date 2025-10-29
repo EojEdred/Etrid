@@ -578,7 +578,7 @@ pub fn new_full_with_params(
     log::info!("  Public addresses: {:?}", config.network.public_addresses);
     log::info!("  Boot nodes: {:?}", config.network.boot_nodes);
     log::info!("  Reserved nodes: {:?}", config.network.default_peers_set.reserved_nodes);
-    log::info!("  Reserved only: {}", config.network.default_peers_set.reserved_only);
+    // log::info!("  Reserved only: {}", config.network.default_peers_set.reserved_only); // Field removed in newer Substrate
 
     // Build network
     let (network, system_rpc_tx, tx_handler_controller, sync_service) =
