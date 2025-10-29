@@ -18,11 +18,17 @@ export interface ChainConfig {
   type: 'relay' | 'pbc';
 }
 
+// Dual Bootstrap Nodes (VM #1 Alice, VM #2 Bob)
+export const BOOTSTRAP_NODES = [
+  'ws://20.186.91.207:9944', // VM #1 (Alice) - Primary
+  'ws://172.177.44.73:9944',  // VM #2 (Bob) - Fallback
+];
+
 export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
   flarechain: {
     id: 'flarechain',
     name: 'FlareChain',
-    endpoint: 'ws://127.0.0.1:9944',
+    endpoint: 'ws://20.186.91.207:9944', // VM #1 (Alice) - Primary bootstrap node
     symbol: 'ÉTR',
     decimals: 18,
     type: 'relay',
@@ -138,7 +144,7 @@ export class FlareChainAPI {
   private providers: Map<string, WsProvider> = new Map();
 
   /**
-   * Connect to a specific chain
+   * Connect to a specific chain with automatic failover
    */
   async connect(chainId: string): Promise<ApiPromise> {
     const existing = this.apis.get(chainId);
@@ -151,14 +157,29 @@ export class FlareChainAPI {
       throw new Error(`Unknown chain ID: ${chainId}`);
     }
 
-    const provider = new WsProvider(config.endpoint);
-    this.providers.set(chainId, provider);
+    // For FlareChain, use bootstrap nodes with failover
+    const endpoints = chainId === 'flarechain' ? BOOTSTRAP_NODES : [config.endpoint];
 
-    const api = await ApiPromise.create({ provider });
-    this.apis.set(chainId, api);
+    let lastError: Error | null = null;
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔄 Attempting connection to ${config.name} at ${endpoint}...`);
+        const provider = new WsProvider(endpoint);
+        this.providers.set(chainId, provider);
 
-    console.log(`✅ Connected to ${config.name}`);
-    return api;
+        const api = await ApiPromise.create({ provider });
+        this.apis.set(chainId, api);
+
+        console.log(`✅ Connected to ${config.name} at ${endpoint}`);
+        return api;
+      } catch (error) {
+        console.warn(`⚠️ Failed to connect to ${endpoint}:`, error);
+        lastError = error as Error;
+        // Try next endpoint
+      }
+    }
+
+    throw new Error(`Failed to connect to ${config.name}. Tried all endpoints. Last error: ${lastError?.message}`);
   }
 
   /**

@@ -67,8 +67,10 @@ export function useFraudDetection() {
 
   // Initialize fraud detection
   const initializeFraudDetection = useCallback(() => {
-    // Generate initial mock alerts
-    const initialAlerts = Array.from({ length: 12 }, () => generateMockAlert());
+    // NOTE: Mock alerts removed - connect to real blockchain data
+    // TODO: Fetch real fraud alerts from Azure blockchain node
+    // Example: await fetch('ws://20.186.91.207:9944')
+    const initialAlerts: FraudAlert[] = [];
     setAlerts(initialAlerts);
 
     // Calculate initial stats
@@ -99,28 +101,12 @@ export function useFraudDetection() {
   // Detect fraud in channels
   const detectFraud = useCallback(async (channelId: string) => {
     try {
-      // In production, this would analyze blockchain data for fraud
-      // const response = await fetch(`/api/detect-fraud/${channelId}`);
-      // const fraudData = await response.json();
+      // TODO: Connect to Azure blockchain at ws://20.186.91.207:9944
+      // TODO: Query watchtower pallet for fraud proofs on this channel
+      // TODO: Analyze blockchain state for actual fraud attempts
 
-      // For demo, randomly generate fraud alerts
-      const shouldGenerateAlert = Math.random() > 0.95; // 5% chance of fraud
-
-      if (shouldGenerateAlert) {
-        const newAlert = generateMockAlert();
-        newAlert.channelId = channelId;
-
-        setAlerts((prev) => {
-          const updated = [newAlert, ...prev];
-          updateStats(updated);
-          return updated;
-        });
-
-        // Send notification
-        sendNotification(newAlert);
-
-        return { fraudDetected: true, alert: newAlert };
-      }
+      // NOTE: Mock data generation disabled - connect to real blockchain
+      console.log(`Fraud detection for channel ${channelId} - awaiting blockchain connection`);
 
       return { fraudDetected: false };
     } catch (error) {
@@ -216,17 +202,10 @@ export function useFraudDetection() {
 
     // Set up periodic fraud detection
     detectionIntervalRef.current = setInterval(() => {
-      // In production, this would check all monitored channels
-      // For demo, occasionally generate random alerts
-      if (Math.random() > 0.98) {
-        const alert = generateMockAlert();
-        setAlerts((prev) => {
-          const updated = [alert, ...prev];
-          updateStats(updated);
-          return updated;
-        });
-        sendNotification(alert);
-      }
+      // TODO: Connect to Azure blockchain node at ws://20.186.91.207:9944
+      // TODO: Query real fraud alerts from on-chain watchtower pallet
+      // TODO: Process and display real alerts instead of mock data
+      // NOTE: Mock alert generation has been disabled
     }, 10000); // Check every 10 seconds
   }, [updateStats, sendNotification]);
 

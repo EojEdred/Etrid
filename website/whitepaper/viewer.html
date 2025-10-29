@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Ivory Paper Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom markdown styles */
+        .markdown-body {
+            color: #e5e7eb;
+        }
+        .markdown-body h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 2rem 0 1rem 0;
+            background: linear-gradient(to right, #3B82F6, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .markdown-body h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            color: #3B82F6;
+            font-family: 'Space Grotesk', sans-serif;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        .markdown-body h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem 0;
+            color: #8B5CF6;
+        }
+        .markdown-body h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem 0;
+            color: #60a5fa;
+        }
+        .markdown-body p {
+            margin: 1rem 0;
+            line-height: 1.8;
+            color: #d1d5db;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+            color: #d1d5db;
+        }
+        .markdown-body li {
+            margin: 0.5rem 0;
+            line-height: 1.6;
+        }
+        .markdown-body code {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+            color: #60a5fa;
+            font-family: 'Courier New', monospace;
+        }
+        .markdown-body pre {
+            background: #0A0E1A;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            color: #e5e7eb;
+        }
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #0A0E1A;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .markdown-body th {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #3B82F6;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        }
+        .markdown-body td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #d1d5db;
+        }
+        .markdown-body blockquote {
+            border-left: 4px solid #8B5CF6;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            color: #9ca3af;
+            font-style: italic;
+        }
+        .markdown-body a {
+            color: #3B82F6;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .markdown-body a:hover {
+            border-bottom-color: #3B82F6;
+        }
+        .markdown-body hr {
+            border: none;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+        .markdown-body strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        .markdown-body em {
+            color: #a5b4fc;
+        }
+
+        /* Loading animation */
+        .loader {
+            border: 3px solid rgba(59, 130, 246, 0.1);
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-etrid-darker text-white font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-white/10 bg-etrid-darker/80 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                    ËTRID
+                </a>
+                <nav class="flex items-center space-x-6">
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">← Back to Papers</a>
+                    <button id="downloadBtn" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-4 py-2 rounded-lg hover:shadow-lg transition-all">
+                        Download
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Loading State -->
+            <div id="loading" class="flex flex-col items-center justify-center py-20">
+                <div class="loader mb-4"></div>
+                <p class="text-gray-400">Loading document...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error" class="hidden bg-red-500/10 border border-red-500/20 rounded-xl p-8 text-center">
+                <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h2 class="text-xl font-bold mb-2 text-red-400">Failed to Load Document</h2>
+                <p class="text-gray-400 mb-4" id="errorMessage">The requested document could not be loaded.</p>
+                <a href="index.html" class="text-etrid-blue hover:text-etrid-purple transition-colors">← Return to Papers</a>
+            </div>
+
+            <!-- Document Content -->
+            <article id="content" class="hidden bg-etrid-dark border border-white/10 rounded-xl p-8 lg:p-12 markdown-body">
+                <!-- Markdown content will be injected here -->
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+            <p class="mt-2">Founder: Eoj Edred • GPLv3 License • v2.0 Active Specification</p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple embedded markdown parser - no external dependencies!
+        function parseMarkdown(markdown) {
+            let html = markdown;
+
+            // Escape HTML
+            html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Code blocks (must be before other conversions)
+            html = html.replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>');
+
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Headers
+            html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+            // Bold and italic
+            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+            // Links
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+            // Horizontal rules
+            html = html.replace(/^---$/gm, '<hr>');
+            html = html.replace(/^\*\*\*$/gm, '<hr>');
+
+            // Line breaks and paragraphs
+            html = html.split('\n\n').map(para => {
+                if (para.match(/^<h[1-6]>/) || para.match(/^<pre>/) || para.match(/^<hr>/) || para.match(/^<ul>/) || para.match(/^<ol>/)) {
+                    return para;
+                }
+                // Handle lists
+                if (para.match(/^[-*•] /m)) {
+                    const items = para.split('\n').map(line => {
+                        if (line.match(/^[-*•] /)) {
+                            return '<li>' + line.replace(/^[-*•] /, '') + '</li>';
+                        }
+                        return line;
+                    }).join('\n');
+                    return '<ul>' + items + '</ul>';
+                }
+                // Handle numbered lists
+                if (para.match(/^\d+\. /m)) {
+                    const items = para.split('\n').map(line => {
+                        if (line.match(/^\d+\. /)) {
+                            return '<li>' + line.replace(/^\d+\. /, '') + '</li>';
+                        }
+                        return line;
+                    }).join('\n');
+                    return '<ol>' + items + '</ol>';
+                }
+                return '<p>' + para.replace(/\n/g, '<br>') + '</p>';
+            }).join('\n');
+
+            // Tables (basic support)
+            html = html.replace(/\|(.+)\|/g, function(match, content) {
+                const cells = content.split('|').map(cell => '<td>' + cell.trim() + '</td>').join('');
+                return '<tr>' + cells + '</tr>';
+            });
+            html = html.replace(/(<tr>.*<\/tr>\n)+/g, function(match) {
+                const rows = match.split('\n').filter(r => r);
+                if (rows.length > 1) {
+                    const header = rows[0].replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>');
+                    const body = rows.slice(2).join('\n'); // Skip separator row
+                    return '<table>' + header + body + '</table>';
+                }
+                return match;
+            });
+
+            return html;
+        }
+
+        // Document configuration
+        const docs = {
+            'ivory-paper': {
+                file: 'ivory-paper.md',
+                title: 'ËTRID Ivory Paper v2.0 - Complete Edition'
+            },
+            'vol1': {
+                file: 'ivory-paper-vol1-conceptual.md',
+                title: 'Volume I: Conceptual Architecture'
+            },
+            'vol2': {
+                file: 'ivory-paper-vol2-technical.md',
+                title: 'Volume II: Technical Specification'
+            },
+            'vol3': {
+                file: 'ivory-paper-vol3-governance.md',
+                title: 'Volume III: Governance & Fiscal Mechanics'
+            }
+        };
+
+        let currentDoc = null;
+
+        // Show error
+        function showError(message) {
+            console.error('[Viewer] Error:', message);
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Show content
+        function showContent() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+
+        // Load and render document
+        async function loadDocument() {
+            try {
+                // Get document from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const doc = urlParams.get('doc') || 'ivory-paper';
+
+                currentDoc = docs[doc] || docs['ivory-paper'];
+                document.title = `${currentDoc.title} | ËTRID Ivory Papers`;
+
+                console.log('[Viewer] Fetching:', currentDoc.file);
+
+                // Fetch markdown file
+                const response = await fetch(currentDoc.file);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load: ${response.status}`);
+                }
+
+                const markdown = await response.text();
+                console.log('[Viewer] Loaded', markdown.length, 'characters');
+
+                // Parse markdown using embedded parser
+                const html = parseMarkdown(markdown);
+
+                // Inject content
+                document.getElementById('content').innerHTML = html;
+
+                // Show content
+                showContent();
+
+                // Setup download button
+                setupDownload();
+
+                console.log('[Viewer] Document rendered successfully!');
+
+            } catch (error) {
+                showError(error.message || 'Unknown error');
+            }
+        }
+
+        // Setup download button
+        function setupDownload() {
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn && currentDoc) {
+                downloadBtn.onclick = () => {
+                    const link = document.createElement('a');
+                    link.href = currentDoc.file;
+                    link.download = currentDoc.file;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+            }
+        }
+
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadDocument);
+        } else {
+            loadDocument();
+        }
+    </script>
+
+</body>
+</html>

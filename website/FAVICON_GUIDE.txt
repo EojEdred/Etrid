@@ -1,0 +1,115 @@
+====================================================================
+   FAVICON SETUP GUIDE FOR ËTRID WEBSITE
+====================================================================
+
+A favicon is the small icon that appears in browser tabs and bookmarks.
+
+====================================================================
+GENERATING YOUR FAVICON
+====================================================================
+
+OPTION 1: Use a Favicon Generator (Recommended)
+--------------------------------------------------------------------
+1. Visit: https://realfavicongenerator.net/
+2. Upload your ËTRID logo (PNG or SVG)
+3. Customize settings as needed
+4. Download the favicon package
+5. Upload all files to your website root (public_html/)
+
+Files you'll get:
+- favicon.ico (classic favicon)
+- favicon-16x16.png
+- favicon-32x32.png
+- apple-touch-icon.png (for iOS)
+- android-chrome-192x192.png
+- android-chrome-512x512.png
+- site.webmanifest
+
+OPTION 2: Simple ICO File
+--------------------------------------------------------------------
+1. Create a 32x32px version of your logo
+2. Convert to .ico format at: https://convertio.co/png-ico/
+3. Name it: favicon.ico
+4. Upload to public_html/
+
+====================================================================
+ADDING FAVICON TO HTML
+====================================================================
+
+Add these lines in the <head> section of index.html (after line 20):
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+====================================================================
+SITE MANIFEST (site.webmanifest)
+====================================================================
+
+Create a file called "site.webmanifest" with this content:
+
+{
+    "name": "ËTRID Protocol",
+    "short_name": "ËTRID",
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#3B82F6",
+    "background_color": "#050812",
+    "display": "standalone"
+}
+
+====================================================================
+QUICK FAVICON RECOMMENDATIONS
+====================================================================
+
+Design Tips:
+- Use your ËTRID logo or "Ë" letter
+- Keep it simple (works at small sizes)
+- Use brand colors (blue/purple)
+- High contrast for visibility
+
+Recommended Colors:
+- Background: #050812 (dark)
+- Icon: #3B82F6 (blue) or gradient
+
+====================================================================
+TESTING YOUR FAVICON
+====================================================================
+
+After upload:
+1. Visit etrid.org
+2. Check browser tab for icon
+3. Test in multiple browsers
+4. Clear cache if not showing (Ctrl+Shift+R)
+5. Check on mobile devices
+
+====================================================================
+FILE LOCATIONS AFTER UPLOAD
+====================================================================
+
+public_html/
+├── favicon.ico
+├── favicon-16x16.png
+├── favicon-32x32.png
+├── apple-touch-icon.png
+├── android-chrome-192x192.png
+├── android-chrome-512x512.png
+├── site.webmanifest
+└── index.html (updated with favicon links)
+
+====================================================================
+
+Not urgent - you can add this after the main site is live!

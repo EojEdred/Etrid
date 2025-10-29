@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  output: 'export',
   poweredByHeader: false,
   webpack: (config) => {
     config.resolve.fallback = {

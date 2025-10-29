@@ -30,7 +30,7 @@ export function TVLChart({ pools }: TVLChartProps) {
     );
   }
 
-  const total TVL = chartData.reduce((sum, item) => sum + item.value, 0);
+  const totalTVL = chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">

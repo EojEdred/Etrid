@@ -1,0 +1,18 @@
+Continue mainnet validator deployment. Current status:
+
+- Two Azure VMs with flarechain-node binaries built and ready
+- VM #1 (20.186.91.207) = Alice validator
+- VM #2 (172.177.44.73) = Bob validator
+- Startup scripts created to fix ASF consensus CommitteeFull bug
+- Scripts ready at: /tmp/start-validator-vm1.sh and /tmp/start-validator-vm2.sh
+
+IMMEDIATE TASK: Deploy these startup scripts to the VMs and start the validators.
+
+The scripts fix the critical bug where --alice/--bob flags don't insert ASF keys, causing CommitteeFull errors. They now properly:
+1. Generate network keys
+2. Insert ASF validator keys (key-type=asfk)
+3. Start nodes with correct configuration
+
+Read MAINNET_VALIDATOR_HANDOFF.md for complete context and instructions.
+
+First action: Kill background cargo builds with `pkill -f "cargo build"`, then help deploy the scripts to VMs.

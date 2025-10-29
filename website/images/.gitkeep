@@ -1,0 +1,11 @@
+# Images Directory
+
+Place your ËTRID logo and other images here.
+
+Recommended logo specifications:
+- Format: SVG (preferred) or PNG
+- Size: 512x512px minimum
+- Background: Transparent
+- File name: logo.svg or logo.png
+
+After adding your logo, update the navigation in index.html to include it.

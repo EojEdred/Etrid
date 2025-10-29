@@ -36,7 +36,7 @@ export const CHAINS: Record<ChainId, ChainConfig> = {
     name: 'FlareChain',
     symbol: 'ÉTR',
     decimals: 12,
-    rpc: 'ws://localhost:9944',
+    rpc: 'ws://20.186.91.207:9944', // VM #1 (Alice) - Primary bootstrap node
     isRelay: true,
     color: '#FF6B35',
   },
