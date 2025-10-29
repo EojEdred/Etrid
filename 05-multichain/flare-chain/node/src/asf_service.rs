@@ -647,8 +647,10 @@ pub fn new_full_with_params(
         })
     };
 
-    // Clone boot_nodes before moving config (needed for DETR P2P bootstrap peer parsing)
+    // Clone network data before moving config (needed for DETR P2P setup)
     let boot_nodes = config.network.boot_nodes.clone();
+    let listen_addresses = config.network.listen_addresses.clone();
+    let public_addresses = config.network.public_addresses.clone();
 
     // Spawn RPC handlers
     let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
@@ -1370,7 +1372,7 @@ pub fn new_full_with_params(
             // Option 2: Try to extract from Substrate public_addresses
             let mut detected_ip: Option<IpAddr> = None;
 
-            for addr in &config.network.public_addresses {
+            for addr in &public_addresses {
                 let addr_str = addr.to_string();
                 // Parse multiaddr format: /ip4/1.2.3.4/tcp/30333
                 if let Some(ip_part) = addr_str.split('/').nth(2) {
@@ -1387,7 +1389,7 @@ pub fn new_full_with_params(
 
             // Option 3: Try listen_addresses if no public address
             if detected_ip.is_none() {
-                for addr in &config.network.listen_addresses {
+                for addr in &listen_addresses {
                     let addr_str = addr.to_string();
                     if let Some(ip_part) = addr_str.split('/').nth(2) {
                         if let Ok(ip) = ip_part.parse::<IpAddr>() {
