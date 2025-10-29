@@ -571,6 +571,15 @@ pub fn new_full_with_params(
         Vec::default(),
     ));
 
+    // Log network configuration for debugging
+    log::info!("🌐 Substrate Network Configuration:");
+    log::info!("  Node name: {}", config.network.node_name);
+    log::info!("  Listen addresses: {:?}", config.network.listen_addresses);
+    log::info!("  Public addresses: {:?}", config.network.public_addresses);
+    log::info!("  Boot nodes: {:?}", config.network.boot_nodes);
+    log::info!("  Reserved nodes: {:?}", config.network.default_peers_set.reserved_nodes);
+    log::info!("  Reserved only: {}", config.network.default_peers_set.reserved_only);
+
     // Build network
     let (network, system_rpc_tx, tx_handler_controller, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
@@ -585,6 +594,8 @@ pub fn new_full_with_params(
             block_relay: None,
             metrics,
         })?;
+
+    log::info!("✅ Substrate network built successfully on port 30333");
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OFFCHAIN WORKERS
@@ -1326,16 +1337,158 @@ pub fn new_full_with_params(
         let local_peer_id = PeerId::new(peer_id_bytes);
 
         // Get local listen address from config
-        // TODO: Make this configurable via command-line or config file
+        // SECURITY: Prefer specific network interface over 0.0.0.0 (all interfaces)
         use std::net::{SocketAddr, IpAddr, Ipv4Addr};
-        let socket_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 30334);
+
+        let detr_p2p_port = std::env::var("DETR_P2P_PORT")
+            .ok()
+            .and_then(|s| s.parse::<u16>().ok())
+            .unwrap_or(30334);
+
+        // Determine DETR P2P listen IP with security priority:
+        // 1. Explicit DETR_P2P_IP environment variable (highest priority)
+        // 2. Extract from Substrate public_addresses (validator's actual IP)
+        // 3. Extract from Substrate listen_addresses (node's bind IP)
+        // 4. Fallback to 0.0.0.0 (SECURITY WARNING: exposes to all interfaces)
+
+        let detr_p2p_ip = if let Ok(env_ip) = std::env::var("DETR_P2P_IP") {
+            // Option 1: Explicitly set via environment variable
+            match env_ip.parse::<IpAddr>() {
+                Ok(ip) => {
+                    log::info!("🔒 DETR P2P IP from DETR_P2P_IP env: {}", ip);
+                    ip
+                }
+                Err(e) => {
+                    log::warn!("⚠️  Invalid DETR_P2P_IP '{}': {}, using auto-detect", env_ip, e);
+                    IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))
+                }
+            }
+        } else {
+            // Option 2: Try to extract from Substrate public_addresses
+            let mut detected_ip: Option<IpAddr> = None;
+
+            for addr in &config.network.public_addresses {
+                let addr_str = addr.to_string();
+                // Parse multiaddr format: /ip4/1.2.3.4/tcp/30333
+                if let Some(ip_part) = addr_str.split('/').nth(2) {
+                    if let Ok(ip) = ip_part.parse::<IpAddr>() {
+                        // Skip localhost addresses
+                        if !ip.is_loopback() {
+                            log::info!("🔍 Detected public IP from Substrate config: {}", ip);
+                            detected_ip = Some(ip);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Option 3: Try listen_addresses if no public address
+            if detected_ip.is_none() {
+                for addr in &config.network.listen_addresses {
+                    let addr_str = addr.to_string();
+                    if let Some(ip_part) = addr_str.split('/').nth(2) {
+                        if let Ok(ip) = ip_part.parse::<IpAddr>() {
+                            // Use listen IP if it's not 0.0.0.0
+                            if !ip.is_unspecified() && !ip.is_loopback() {
+                                log::info!("🔍 Detected listen IP from Substrate config: {}", ip);
+                                detected_ip = Some(ip);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Option 4: Fallback to 0.0.0.0 with security warning
+            if let Some(ip) = detected_ip {
+                ip
+            } else {
+                log::warn!("⚠️  SECURITY: Could not detect specific IP, using 0.0.0.0 (all interfaces)");
+                log::warn!("⚠️  RECOMMENDATION: Set DETR_P2P_IP={} for VM #1", "172.16.0.5");
+                log::warn!("⚠️  RECOMMENDATION: Set DETR_P2P_IP={} for VM #2", "172.16.0.4");
+                log::warn!("⚠️  This exposes DETR P2P to all network interfaces!");
+                IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))
+            }
+        };
+
+        let socket_addr = SocketAddr::new(detr_p2p_ip, detr_p2p_port);
+
+        log::info!("🌐 DETR P2P will listen on: {}", socket_addr);
+        if socket_addr.ip().is_unspecified() {
+            log::warn!("⚠️  SECURITY: Port {} exposed on ALL network interfaces", detr_p2p_port);
+        } else {
+            log::info!("🔒 SECURITY: Port {} bound to specific interface", detr_p2p_port);
+        }
+
         let local_address = PeerAddr {
             id: local_peer_id.clone(),
             address: socket_addr,
         };
 
-        // Bootstrap peers (empty for dev mode, will be populated from config)
-        let bootstrap_peers = Vec::new();
+        // Parse bootstrap peers from Substrate bootnodes configuration
+        // The config.network.boot_nodes contains multiaddr strings like:
+        // /ip4/172.16.0.5/tcp/30333/p2p/12D3KooW...
+        // We need to extract IP:port for DETR P2P (port 30334) and peer IDs
+        let mut bootstrap_peers = Vec::new();
+
+        log::info!("🔍 Parsing bootstrap peers from config.network.boot_nodes:");
+        for bootnode in &config.network.boot_nodes {
+            log::info!("  Raw bootnode: {}", bootnode);
+
+            // Parse multiaddr to extract IP and peer ID
+            // Format: /ip4/<IP>/tcp/<PORT>/p2p/<PEER_ID>
+            let parts: Vec<&str> = bootnode.to_string().split('/').collect();
+            if parts.len() >= 6 {
+                if let (Some(ip_str), Some(peer_id_str)) = (parts.get(2), parts.last()) {
+                    if let Ok(ip) = ip_str.parse::<IpAddr>() {
+                        // Use DETR P2P port (30334) instead of Substrate port (30333)
+                        let peer_socket = SocketAddr::new(ip, detr_p2p_port);
+
+                        // Parse peer ID from base58 (libp2p format) to bytes
+                        // For now, we'll skip the peer ID parsing complexity and just use the IP:port
+                        log::info!("  ✓ Adding bootstrap peer: {} (from Substrate bootnode)", peer_socket);
+
+                        // Create a placeholder peer ID from the IP
+                        // In production, you'd want to properly parse the libp2p peer ID
+                        let mut peer_id_bytes = [0u8; 32];
+                        if let IpAddr::V4(ipv4) = ip {
+                            peer_id_bytes[0..4].copy_from_slice(&ipv4.octets());
+                        }
+
+                        let peer_addr = PeerAddr {
+                            id: PeerId::new(peer_id_bytes),
+                            address: peer_socket,
+                        };
+
+                        bootstrap_peers.push(peer_addr);
+                    }
+                }
+            }
+        }
+
+        // Also check for DETR_P2P_BOOTSTRAP environment variable
+        if let Ok(bootstrap_env) = std::env::var("DETR_P2P_BOOTSTRAP") {
+            log::info!("🔍 Parsing bootstrap peers from DETR_P2P_BOOTSTRAP:");
+            for addr_str in bootstrap_env.split(',') {
+                if let Ok(addr) = addr_str.trim().parse::<SocketAddr>() {
+                    log::info!("  ✓ Adding bootstrap peer: {} (from env)", addr);
+
+                    let mut peer_id_bytes = [0u8; 32];
+                    if let IpAddr::V4(ipv4) = addr.ip() {
+                        peer_id_bytes[0..4].copy_from_slice(&ipv4.octets());
+                    }
+
+                    let peer_addr = PeerAddr {
+                        id: PeerId::new(peer_id_bytes),
+                        address: addr,
+                    };
+
+                    bootstrap_peers.push(peer_addr);
+                }
+            }
+        }
+
+        log::info!("📋 Total DETR P2P bootstrap peers: {}", bootstrap_peers.len());
 
         // Create P2P network instance
         let p2p_network = Arc::new(P2PNetwork::new(

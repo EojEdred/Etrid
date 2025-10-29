@@ -2,8 +2,34 @@
 //!
 //! Multi-hop payment routing with pathfinding and fee optimization
 
-use std::collections::{HashMap, HashSet, BinaryHeap};
-use std::cmp::Ordering;
+#[cfg(not(feature = "std"))]
+use alloc::{
+    collections::{BTreeMap as HashMap, BTreeSet as HashSet, BinaryHeap},
+    string::{String, ToString},
+    vec::Vec,
+    format,
+};
+
+#[cfg(not(feature = "std"))]
+use core::{
+    cmp::{Ordering, PartialEq, Eq, PartialOrd, Ord},
+    default::Default,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+    fmt,
+};
+
+#[cfg(feature = "std")]
+use std::{
+    collections::{HashMap, HashSet, BinaryHeap},
+    cmp::{Ordering, PartialEq, Eq, PartialOrd, Ord},
+    default::Default,
+    vec::Vec,
+    string::String,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+    fmt,
+};
 
 /// Node identifier in the payment network
 pub type NodeId = String;
@@ -568,8 +594,8 @@ pub enum RoutingError {
     InsufficientCapacity { channel: ChannelId, have: u128, need: u128 },
 }
 
-impl std::fmt::Display for RoutingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for RoutingError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             RoutingError::NodeNotFound(id) => write!(f, "Node not found: {}", id),
             RoutingError::ChannelNotFound(id) => write!(f, "Channel not found: {}", id),

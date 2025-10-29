@@ -2,7 +2,10 @@
   "name": "Ëtrid FlareChain Local Testnet",
   "id": "flarechain_local",
   "chainType": "Local",
-  "bootNodes": [],
+  "bootNodes": [
+    "/ip4/172.16.0.5/tcp/30333/p2p/12D3KooWGFF2fi26qBWeh91exK67Q5HLfZwsTJz2bHWpgJTzXY2V",
+    "/ip4/172.16.0.4/tcp/30333/p2p/12D3KooWB1wmRMmeQqUTZHES4UwBk5uXEUi36Jmfi6yCQKh3Gvyk"
+  ],
   "telemetryEndpoints": null,
   "protocolId": "flarechain",
   "properties": null,

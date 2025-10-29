@@ -7,8 +7,37 @@
 //! - Reward distribution
 //! - Slashing penalties
 
-use std::collections::HashMap;
-use std::fmt;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{
+    collections::BTreeMap as HashMap,
+    string::{String, ToString},
+    vec::Vec,
+    format,
+};
+
+#[cfg(not(feature = "std"))]
+use core::{
+    fmt,
+    default::Default,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+};
+
+#[cfg(feature = "std")]
+use std::{
+    collections::HashMap,
+    fmt,
+    vec::Vec,
+    string::String,
+    result::Result::{self, Ok, Err},
+    option::Option::{self, Some, None},
+    default::Default,
+};
 
 /// Validator status
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
