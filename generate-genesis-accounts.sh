@@ -21,12 +21,13 @@ echo "║         ETR Tokenomics + EDSC Stablecoin + Validators     ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Check if subkey is installed
-if ! command -v subkey &> /dev/null; then
-    echo -e "${RED}❌ Error: subkey is not installed${NC}"
+# Check if flarechain-node binary exists
+BINARY_PATH="$(pwd)/target/release/flarechain-node"
+if [ ! -f "$BINARY_PATH" ]; then
+    echo -e "${RED}❌ Error: flarechain-node binary not found at $BINARY_PATH${NC}"
     echo ""
-    echo "Install with:"
-    echo "  cargo install --force --git https://github.com/paritytech/polkadot-sdk subkey"
+    echo "Build with:"
+    echo "  cd 05-multichain/flare-chain/node && cargo build --release"
     exit 1
 fi
 
@@ -56,42 +57,42 @@ echo ""
 
 # 1. DAO Treasury / Protocol Reserve (35% = 875M ETR)
 echo "1️⃣  Generating DAO Treasury account (875M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > dao_treasury.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > dao_treasury.json
 DAO_TREASURY=$(cat dao_treasury.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $DAO_TREASURY${NC}"
 echo ""
 
 # 2. Community Liquidity & LP Incentives (10% = 250M ETR)
 echo "2️⃣  Generating Community LP Pool account (250M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > community_lp_pool.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > community_lp_pool.json
 COMMUNITY_LP=$(cat community_lp_pool.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $COMMUNITY_LP${NC}"
 echo ""
 
 # 3. Foundation / Team Vesting (15% = 375M ETR)
 echo "3️⃣  Generating Foundation Team Vesting account (375M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > foundation_team_vesting.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > foundation_team_vesting.json
 TEAM_VESTING=$(cat foundation_team_vesting.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $TEAM_VESTING${NC}"
 echo ""
 
 # 4. Network Expansion / Partnerships (25% = 625M ETR)
 echo "4️⃣  Generating Network Expansion Pool account (625M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > network_expansion.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > network_expansion.json
 NETWORK_EXPANSION=$(cat network_expansion.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $NETWORK_EXPANSION${NC}"
 echo ""
 
 # 5. Founders' Creation Pool (5% = 125M ETR)
 echo "5️⃣  Generating Founders Pool account (125M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > founders_pool.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > founders_pool.json
 FOUNDERS_POOL=$(cat founders_pool.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $FOUNDERS_POOL${NC}"
 echo ""
 
 # 6. Initial Circulating Supply (10% = 250M ETR)
 echo "6️⃣  Generating Initial Circulating Supply account (250M ETR)..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > initial_circulating.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > initial_circulating.json
 INITIAL_CIRC=$(cat initial_circulating.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $INITIAL_CIRC${NC}"
 echo ""
@@ -109,7 +110,7 @@ mkdir -p foundation_multisig_signers
 
 for i in {1..7}; do
     echo "Generating Foundation Multisig Signer #$i..."
-    subkey generate --scheme Sr25519 --network substrate --output-type json > foundation_multisig_signers/signer_$i.json
+    $BINARY_PATH key generate --scheme Sr25519 --output-type json > foundation_multisig_signers/signer_$i.json
     SIGNER=$(cat foundation_multisig_signers/signer_$i.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
     echo -e "${GREEN}   ✅ Signer #$i: $SIGNER${NC}"
 done
@@ -130,21 +131,21 @@ mkdir -p edsc_accounts
 
 # 1. Reserve Vault (Main custody account for multi-asset reserves)
 echo "1️⃣  Generating Reserve Vault account..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/reserve_vault.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/reserve_vault.json
 RESERVE_VAULT=$(cat edsc_accounts/reserve_vault.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $RESERVE_VAULT${NC}"
 echo ""
 
 # 2. EDSC Oracle Authority (Price feed signer)
 echo "2️⃣  Generating EDSC Oracle Authority account..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/oracle_authority.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/oracle_authority.json
 ORACLE_AUTH=$(cat edsc_accounts/oracle_authority.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $ORACLE_AUTH${NC}"
 echo ""
 
 # 3. Custodian Registry Manager
 echo "3️⃣  Generating Custodian Registry Manager account..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/custodian_manager.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/custodian_manager.json
 CUSTODIAN_MGR=$(cat edsc_accounts/custodian_manager.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $CUSTODIAN_MGR${NC}"
 echo ""
@@ -155,7 +156,7 @@ mkdir -p edsc_accounts/custodians
 
 for asset in BTC ETH Gold USDC USDT; do
     echo "   Generating $asset Custodian..."
-    subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/custodians/${asset}_custodian.json
+    $BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/custodians/${asset}_custodian.json
     CUSTODIAN=$(cat edsc_accounts/custodians/${asset}_custodian.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
     echo -e "${GREEN}   ✅ $asset Custodian: $CUSTODIAN${NC}"
 done
@@ -163,14 +164,14 @@ echo ""
 
 # 9. EDSC Minter Authority (Authorized to mint/burn EDSC)
 echo "5️⃣  Generating EDSC Minter Authority account..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/minter_authority.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/minter_authority.json
 MINTER_AUTH=$(cat edsc_accounts/minter_authority.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $MINTER_AUTH${NC}"
 echo ""
 
 # 10. EDSC Emergency Pause Authority
 echo "6️⃣  Generating EDSC Emergency Pause Authority account..."
-subkey generate --scheme Sr25519 --network substrate --output-type json > edsc_accounts/emergency_pause.json
+$BINARY_PATH key generate --scheme Sr25519 --output-type json > edsc_accounts/emergency_pause.json
 EMERGENCY_PAUSE=$(cat edsc_accounts/emergency_pause.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
 echo -e "${GREEN}   ✅ $EMERGENCY_PAUSE${NC}"
 echo ""
@@ -191,7 +192,7 @@ echo ""
 
 for i in {1..21}; do
     echo "Validator #$i Payment Account..."
-    subkey generate --scheme Sr25519 --network substrate --output-type json > validator_payment_accounts/validator_${i}_payment.json
+    $BINARY_PATH key generate --scheme Sr25519 --output-type json > validator_payment_accounts/validator_${i}_payment.json
     VALIDATOR_PAY=$(cat validator_payment_accounts/validator_${i}_payment.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
     echo -e "${GREEN}   ✅ Validator #$i Payment: $VALIDATOR_PAY${NC}"
 done
@@ -228,7 +229,7 @@ for member in "${TEAM_MEMBERS[@]}"; do
     AMOUNT=$(echo $member | cut -d':' -f2)
 
     echo "Generating account for $ROLE ($AMOUNT ETR)..."
-    subkey generate --scheme Sr25519 --network substrate --output-type json > team_accounts/${ROLE}.json
+    $BINARY_PATH key generate --scheme Sr25519 --output-type json > team_accounts/${ROLE}.json
     TEAM_ADDR=$(cat team_accounts/${ROLE}.json | grep -o '"ss58Address": "[^"]*' | cut -d'"' -f4)
     echo -e "${GREEN}   ✅ $ROLE: $TEAM_ADDR${NC}"
 done
