@@ -1,0 +1,27 @@
+[package]
+name = "vmw-runtime"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Comprehensive VMw metering runtime for ETWasm VM with execution limits and resource tracking"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11", default-features = false, features = ["derive"] }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+etwasm-gas-metering = { path = "../gas-metering", default-features = false }
+etwasm-opcodes = { path = "../opcodes", default-features = false }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-std/std",
+    "etwasm-gas-metering/std",
+    "etwasm-opcodes/std",
+]
