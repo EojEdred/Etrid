@@ -1,0 +1,40 @@
+[package]
+name = "pallet-reserve-backed-token"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "Reserve-backed synthetic token creation and management"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+# Local pallets
+pallet-multiasset-reserve = { path = "../pallet-multiasset-reserve", default-features = false }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-reserve-oracle = { path = "../pallet-reserve-oracle" }
+pallet-reserve-vault = { path = "../pallet-reserve-vault" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"scale-info/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-io/std",
+	"sp-arithmetic/std",
+	"pallet-multiasset-reserve/std",
+]
+runtime-benchmarks = ["frame-support/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]
