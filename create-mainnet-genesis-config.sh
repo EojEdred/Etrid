@@ -114,6 +114,13 @@ cat >> "$OUTPUT_FILE" << EOF
       ["$INITIAL_CIRC", "250000000000000000000000000"],
 EOF
 
+# Extract custodian addresses
+BTC_CUSTODIAN=$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/BTC_custodian.json")
+ETH_CUSTODIAN=$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/ETH_custodian.json")
+GOLD_CUSTODIAN=$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/Gold_custodian.json")
+USDC_CUSTODIAN=$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/USDC_custodian.json")
+USDT_CUSTODIAN=$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/USDT_custodian.json")
+
 # Add EDSC infrastructure balances (operational funds)
 cat >> "$OUTPUT_FILE" << EOF
       ["$RESERVE_VAULT", "10000000000000000000000"],
@@ -218,43 +225,34 @@ cat >> "$OUTPUT_FILE" << 'EOF'
   },
 
   "edscToken": {
-    "oracleAuthority": "EOF
-
-cat >> "$OUTPUT_FILE" << EOF
-$ORACLE_AUTH",
+    "oracleAuthority": "$ORACLE_AUTH",
     "custodianManager": "$CUSTODIAN_MGR",
     "minterAuthority": "$MINTER_AUTH",
     "emergencyPauseAuthority": "$EMERGENCY_PAUSE"
-EOF
-
-cat >> "$OUTPUT_FILE" << 'EOF'
   },
 
   "reserveVault": {
-EOF
-
-cat >> "$OUTPUT_FILE" << EOF
     "vaultAddress": "$RESERVE_VAULT",
     "reserveAssets": [
       {
         "asset": "BTC",
-        "custodian": "$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/BTC_custodian.json")"
+        "custodian": "$BTC_CUSTODIAN"
       },
       {
         "asset": "ETH",
-        "custodian": "$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/ETH_custodian.json")"
+        "custodian": "$ETH_CUSTODIAN"
       },
       {
         "asset": "Gold",
-        "custodian": "$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/Gold_custodian.json")"
+        "custodian": "$GOLD_CUSTODIAN"
       },
       {
         "asset": "USDC",
-        "custodian": "$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/USDC_custodian.json")"
+        "custodian": "$USDC_CUSTODIAN"
       },
       {
         "asset": "USDT",
-        "custodian": "$(extract_address "$ACCOUNTS_DIR/edsc_accounts/custodians/USDT_custodian.json")"
+        "custodian": "$USDT_CUSTODIAN"
       }
     ]
 EOF
