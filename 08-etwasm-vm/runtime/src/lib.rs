@@ -928,24 +928,24 @@ fn u256_sub(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
     result
 }
 
-fn u256_mul(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+fn u256_mul(_a: &[u8; 32], _b: &[u8; 32]) -> [u8; 32] {
     // Simplified multiplication (placeholder)
-    let mut result = [0u8; 32];
+    let result = [0u8; 32];
     // TODO: Implement proper 256-bit multiplication
     result
 }
 
-fn u256_div(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+fn u256_div(_a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
     if u256_is_zero(b) {
         return u256_zero();
     }
     // Simplified division (placeholder)
-    let mut result = [0u8; 32];
+    let result = [0u8; 32];
     // TODO: Implement proper 256-bit division
     result
 }
 
-fn u256_mod(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+fn u256_mod(_a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
     if u256_is_zero(b) {
         return u256_zero();
     }
