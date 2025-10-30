@@ -272,8 +272,6 @@ impl pallet_treasury::Config for Runtime {
     type BalanceConverter = frame_support::traits::tokens::UnityAssetBalanceConversion;
     type PayoutPeriod = ConstU32<0>; // Instant payout
     type BlockNumberProvider = System;
-    #[cfg(feature = "runtime-benchmarks")]
-    type BenchmarkHelper = ();
 }
 
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
