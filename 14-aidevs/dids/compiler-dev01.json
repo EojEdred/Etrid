@@ -10,8 +10,8 @@
       "id": "did:etrid:compiler-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:compiler-dev01",
-      "publicKeyMultibase": "z52vkMazpaEnwuoYDFjoFPNqvUagmnrbsFRGF7CR7KA8H",
-      "publicKeyBase58": "52vkMazpaEnwuoYDFjoFPNqvUagmnrbsFRGF7CR7KA8H"
+      "publicKeyMultibase": "z9UTBvCTUwXSqki8QeAnvmAZHoCm8teLw5Bsz1MveLmKU",
+      "publicKeyBase58": "9UTBvCTUwXSqki8QeAnvmAZHoCm8teLw5Bsz1MveLmKU"
     }
   ],
   "authentication": [

@@ -57,6 +57,8 @@ pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pall
 pallet-reserve-vault = { path = "../../../src/pallets/pallet-reserve-vault", default-features = false }
 pallet-custodian-registry = { path = "../../../src/pallets/pallet-custodian-registry", default-features = false }
 pallet-reserve-oracle = { path = "../../../src/pallets/pallet-reserve-oracle", default-features = false }
+pallet-multiasset-reserve = { path = "../../../src/pallets/pallet-multiasset-reserve", default-features = false }
+pallet-reserve-backed-token = { path = "../../../src/pallets/pallet-reserve-backed-token", default-features = false }
 
 # Cross-chain infrastructure
 pallet-xcm-bridge = { path = "../../../src/pallets/pallet-xcm-bridge", default-features = false }
@@ -68,6 +70,12 @@ pallet-validator-committee-runtime-api = { path = "../../../src/pallets/pallet-v
 # OpenDID pallets (Component 02)
 pallet-did-registry = { path = "../../../src/pallets/pallet-did-registry", default-features = false }
 pallet-aidid = { path = "../../../src/pallets/pallet-aidid", default-features = false }
+
+# Oracle Network (newly integrated)
+pallet-oracle-network = { path = "../../../src/pallets/pallet-oracle-network", default-features = false }
+
+# Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
+# etrid-post-quantum = { path = "../../../03-security/post-quantum", default-features = false }
 
 # Phase 3: External Bridge Protocol (CCTP-style)
 pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
@@ -177,6 +185,8 @@ std = [
     "pallet-reserve-vault/std",
     "pallet-custodian-registry/std",
     "pallet-reserve-oracle/std",
+    "pallet-multiasset-reserve/std",
+    "pallet-reserve-backed-token/std",
     "pallet-xcm-bridge/std",
     "pallet-edsc-bridge-token-messenger/std",
     "pallet-edsc-bridge-attestation/std",
@@ -188,6 +198,12 @@ std = [
     # OpenDID pallets
     "pallet-did-registry/std",
     "pallet-aidid/std",
+
+    # Oracle Network
+    "pallet-oracle-network/std",
+
+    # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
+    # "etrid-post-quantum/std",
 
     "frame-executive/std",
     "frame-support/std",

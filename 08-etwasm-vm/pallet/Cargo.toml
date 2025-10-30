@@ -29,6 +29,7 @@ log.workspace = true
 etwasm-gas-metering = { path = "../gas-metering", default-features = false }
 etwasm-opcodes = { path = "../opcodes", default-features = false }
 etwasm-runtime = { path = "../runtime", default-features = false }
+vmw-runtime = { path = "../vmw-runtime", default-features = false }
 
 [features]
 default = ["std"]
@@ -45,6 +46,7 @@ std = [
     "etwasm-gas-metering/std",
     "etwasm-opcodes/std",
     "etwasm-runtime/std",
+    "vmw-runtime/std",
 ]
 
 runtime-benchmarks = [

@@ -10,8 +10,8 @@
       "id": "did:etrid:ethics-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:ethics-dev01",
-      "publicKeyMultibase": "zDouDrQ2YorRLyi8bagSknwf3Yyp4CGz2iBUSt5aNocxo",
-      "publicKeyBase58": "DouDrQ2YorRLyi8bagSknwf3Yyp4CGz2iBUSt5aNocxo"
+      "publicKeyMultibase": "zECHfyc48jDzXrdUXyUahiEhgVgupTprb9RgTq8vR44RN",
+      "publicKeyBase58": "ECHfyc48jDzXrdUXyUahiEhgVgupTprb9RgTq8vR44RN"
     }
   ],
   "authentication": [

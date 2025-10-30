@@ -18,12 +18,17 @@ use etwasm_opcodes::*;
 
 pub mod state_lock;
 pub mod host_functions;
+pub mod storage;
+pub mod calls;
+pub mod events;
+pub mod lifecycle;
 
 pub use state_lock::StateLock;
 pub use host_functions::*;
-
-#[cfg(feature = "std")]
-use wasmi::{Engine, Linker, Module, Store, Func, Caller, Value};
+pub use storage::*;
+pub use calls::*;
+pub use events::*;
+pub use lifecycle::*;
 
 /// Maximum stack depth for WASM execution
 pub const MAX_STACK_DEPTH: usize = 1024;

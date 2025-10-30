@@ -667,6 +667,70 @@ impl pallet_reserve_oracle::Config for Runtime {
     type MaxPriceAge = ConstU32<100>; // Max price age in blocks before considered stale
 }
 
+// Multiasset Reserve Configuration (Advanced multi-asset reserve management)
+parameter_types! {
+    pub const MaxReserveAssets: u32 = 50;  // Maximum number of assets in reserve
+    pub const RebalanceIntervalBlocks: u32 = 14_400;  // Rebalance every ~24 hours (assuming 6s blocks)
+    pub const RebalanceThreshold: sp_arithmetic::Permill = sp_arithmetic::Permill::from_percent(5);  // 5% threshold
+    pub const MultiassetReservePalletId: frame_support::PalletId = frame_support::PalletId(*b"py/marve");
+}
+
+impl pallet_multiasset_reserve::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxAssets = MaxReserveAssets;
+    type RebalanceInterval = RebalanceIntervalBlocks;
+    type RebalanceThreshold = RebalanceThreshold;
+    type PalletId = MultiassetReservePalletId;
+    type WeightInfo = ();
+}
+
+// Reserve-Backed Token Configuration (Synthetic assets backed by reserves)
+parameter_types! {
+    pub const MaxSyntheticTokens: u32 = 100;  // Maximum number of synthetic tokens
+    pub const MaxPositionsPerUser: u32 = 50;  // Maximum positions per user
+    pub const MinCollateralAmount: u128 = 1_000_000_000_000;  // Minimum collateral (1 token with 12 decimals)
+    pub const LiquidationPenaltyPercent: u16 = 500;  // 5% liquidation penalty (500 basis points)
+    pub const ReserveBackedTokenPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/rbtok");
+}
+
+impl pallet_reserve_backed_token::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxSynthetics = MaxSyntheticTokens;
+    type MaxPositionsPerUser = MaxPositionsPerUser;
+    type MinCollateral = MinCollateralAmount;
+    type LiquidationPenalty = LiquidationPenaltyPercent;
+    type PalletId = ReserveBackedTokenPalletId;
+    type WeightInfo = ();
+}
+
+// ========================================
+// ORACLE NETWORK CONFIGURATION
+// ========================================
+
+parameter_types! {
+    pub const MinOracleStake: Balance = 1_000_000_000_000_000_000_000; // 1,000 ETR
+    pub const MaxOracleStake: Balance = 1_000_000_000_000_000_000_000_000; // 1,000,000 ETR
+    pub const OracleSlashPercentage: sp_arithmetic::Permill = sp_arithmetic::Permill::from_percent(5); // 5% slash
+    pub const MinReputationThreshold: u8 = 50; // Min reputation to stay active
+    pub const OracleReward: Balance = 10_000_000_000_000_000_000; // 10 ETR per submission
+    pub const MaxOracles: u32 = 1000; // Maximum 1000 oracles
+    pub const MaxDataRequests: u32 = 10000; // Maximum 10000 data requests
+}
+
+/// Configure Oracle Network Pallet
+impl pallet_oracle_network::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinimumStake = MinOracleStake;
+    type MaximumStake = MaxOracleStake;
+    type SlashPercentage = OracleSlashPercentage;
+    type MinimumReputation = MinReputationThreshold;
+    type SubmissionReward = OracleReward;
+    type MaxOracles = MaxOracles;
+    type MaxDataRequests = MaxDataRequests;
+}
+
 // ========================================
 // OPENDID PALLETS CONFIGURATION (Component 02)
 // ========================================
@@ -807,6 +871,8 @@ construct_runtime!(
         ReserveVault: pallet_reserve_vault,
         CustodianRegistry: pallet_custodian_registry,
         ReserveOracle: pallet_reserve_oracle,
+        MultiassetReserve: pallet_multiasset_reserve,
+        ReserveBackedToken: pallet_reserve_backed_token,
         XcmBridge: pallet_xcm_bridge,
 
         // Phase 3: External Bridge Protocol (CCTP-style)
@@ -815,6 +881,9 @@ construct_runtime!(
 
         // ASF Consensus pallets
         ValidatorCommittee: pallet_validator_committee,
+
+        // Oracle Network
+        OracleNetwork: pallet_oracle_network,
 
         // OpenDID pallets (Component 02)
         DidRegistry: pallet_did_registry,
@@ -1079,6 +1148,9 @@ impl_runtime_apis! {
                     "ember_testnet" => {
                         Some(include_bytes!("../presets/ember_testnet.json").to_vec())
                     },
+                    "test_2validator" => {
+                        Some(include_bytes!("../presets/test_2validator.json").to_vec())
+                    },
                     _ => None,
                 }
             })
@@ -1089,6 +1161,7 @@ impl_runtime_apis! {
                 sp_genesis_builder::DEV_RUNTIME_PRESET.into(),
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
                 "ember_testnet".into(),
+                "test_2validator".into(),
             ]
         }
     }

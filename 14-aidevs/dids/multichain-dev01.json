@@ -10,8 +10,8 @@
       "id": "did:etrid:multichain-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:multichain-dev01",
-      "publicKeyMultibase": "zFBEi55aXivA8fMDtPxi2bvUngGbF2QJ2FDLNq9p7cDux",
-      "publicKeyBase58": "FBEi55aXivA8fMDtPxi2bvUngGbF2QJ2FDLNq9p7cDux"
+      "publicKeyMultibase": "zB3B5vCwXM8Bz82twj2M9UUsuEYsSNPd8HFvekzhmpJVK",
+      "publicKeyBase58": "B3B5vCwXM8Bz82twj2M9UUsuEYsSNPd8HFvekzhmpJVK"
     }
   ],
   "authentication": [

@@ -10,8 +10,8 @@
       "id": "did:etrid:gizzi#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:gizzi",
-      "publicKeyMultibase": "zETDabmDaYCVEnk5D56iK7DWLNALeSwoNVGPuupGGg71M",
-      "publicKeyBase58": "ETDabmDaYCVEnk5D56iK7DWLNALeSwoNVGPuupGGg71M"
+      "publicKeyMultibase": "z76p4zAir9psNQoZGpvXGjqho2mi1nb98Ntsn5oLaKqir",
+      "publicKeyBase58": "76p4zAir9psNQoZGpvXGjqho2mi1nb98Ntsn5oLaKqir"
     }
   ],
   "authentication": [

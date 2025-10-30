@@ -10,8 +10,8 @@
       "id": "did:etrid:governance-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:governance-dev01",
-      "publicKeyMultibase": "z3jMSk31C8sYWS6pKiJ93yQU4M72teijsVA4Q8YrZCsw4",
-      "publicKeyBase58": "3jMSk31C8sYWS6pKiJ93yQU4M72teijsVA4Q8YrZCsw4"
+      "publicKeyMultibase": "z47Sjci21Jgr4tquQNwAmrTVvFT2rcTrNKi274Jfozuv7",
+      "publicKeyBase58": "47Sjci21Jgr4tquQNwAmrTVvFT2rcTrNKi274Jfozuv7"
     }
   ],
   "authentication": [

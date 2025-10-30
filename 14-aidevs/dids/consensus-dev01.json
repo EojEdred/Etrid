@@ -10,8 +10,8 @@
       "id": "did:etrid:consensus-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:consensus-dev01",
-      "publicKeyMultibase": "z7t54tgdvJLS8hAJtRTzBRiT5QDeN1Z9WbrdCi5cvjS3p",
-      "publicKeyBase58": "7t54tgdvJLS8hAJtRTzBRiT5QDeN1Z9WbrdCi5cvjS3p"
+      "publicKeyMultibase": "zHR43Hot2e5FBgvqReDiMEEWi7nN1dVhPtiZ1jCBF6WNt",
+      "publicKeyBase58": "HR43Hot2e5FBgvqReDiMEEWi7nN1dVhPtiZ1jCBF6WNt"
     }
   ],
   "authentication": [

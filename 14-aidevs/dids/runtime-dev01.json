@@ -10,8 +10,8 @@
       "id": "did:etrid:runtime-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:runtime-dev01",
-      "publicKeyMultibase": "zC2duk1SjsJgb3Mw6vikfR6dqh2DHekgyoWaW77G4GfM2",
-      "publicKeyBase58": "C2duk1SjsJgb3Mw6vikfR6dqh2DHekgyoWaW77G4GfM2"
+      "publicKeyMultibase": "z3CYHknfvpzt824L2w7CY6bnuDMB9zsPTM5Uj78EXEY5D",
+      "publicKeyBase58": "3CYHknfvpzt824L2w7CY6bnuDMB9zsPTM5Uj78EXEY5D"
     }
   ],
   "authentication": [

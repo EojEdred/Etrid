@@ -5,8 +5,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use crate::{ExecutionContext, ExecutionError, ExecutionResult, StateLock, Storage};
+extern crate alloc;
+
 use alloc::vec::Vec;
+use crate::{ExecutionContext, ExecutionError, StateLock, Storage};
 use sp_core::H256;
 
 /// Host function: Call another contract

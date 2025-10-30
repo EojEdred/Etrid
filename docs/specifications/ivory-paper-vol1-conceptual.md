@@ -3,7 +3,7 @@
 
 **Document ID**: ETRID-IP-VOL1-2025
 **Status**: ACTIVE PROTOCOL SPECIFICATION
-**Publication Date**: October 24, 2025
+**Publication Date**: October 30, 2025
 **Founder**: Eoj Edred
 **License**: GPLv3 (Open Source, Non-Commercial)
 
@@ -41,10 +41,10 @@
 
 ### Launch Timeline
 - **Phase 1-2**: ✅ Core infrastructure complete
-- **Phase 3**: 🔄 ËDSC stablecoin integration (current)
-- **Phase 4-5**: 🎯 Partition Burst Chains & DAO registration
-- **Phase 6-7**: 🔄 Smart contracts & AI governance
-- **Phase 8**: 🚀 Mainnet launch (Q1 2026 target)
+- **Phase 3**: ✅ ËDSC stablecoin integration complete
+- **Phase 4-5**: ✅ Partition Burst Chains & DAO registration complete
+- **Phase 6-7**: ✅ Smart contracts & AI governance complete
+- **Phase 8**: ✅ Mainnet launched successfully (October 2025)
 
 ### Initial Token Distribution
 - **Total Supply**: 1 Billion ÉTR
@@ -227,7 +227,7 @@ Not just a technical protocol, but a **philosophical framework** for building tr
 
 **Implementation**:
 - **FlareChain**: Root coordination layer
-- **13 PBCs**: Specialized domains (BTC, ETH, DOGE, SOL, etc.)
+- **12-13 PBCs**: Specialized domains (original design: 12 PBCs, expanded to 13 with EDSC-PBC)
 - **Client Diversity**: Multiple implementations encouraged
 - **Geographic Distribution**: Node operators across jurisdictions
 
@@ -257,20 +257,32 @@ Finality: 10% → 50% → 80% → 95% → 99.9%
 
 ### Consensus Day: The Constitutional Event
 
-**Concept**: Once per year (December 1st), the network pauses for governance
+**Concept**: Once per year (December 1st at 12:00 AM PST), the network pauses for governance
 
-**What Happens**:
-1. **Registration Phase (6h)**: Proposals submitted, stakes locked
-2. **Voting Phase (12h)**: Community + validators vote on all proposals
-3. **Minting Phase (3h)**: Approved budgets trigger token minting
-4. **Distribution Phase (1h)**: Rewards distributed to all participants
+**Pre-Consensus Period**: January 1 – October 31
+- Proposal submission and discussion
+- Director candidate nominations
+- Campaign period for proposals and candidates
+- Community debate and refinement
+
+**Consensus Day (December 1, 12:00 AM PST)**:
+All stakeholders vote on annual governance decisions with voting power calculated as:
+
+**Voting Power = Staked ÉTR × Coinage**
+
+Where coinage represents time-weighted stake (how long tokens have been staked).
+
+**Participant Types**:
+- **VALIDITY Nodes** (64+ ÉTR minimum stake): Block producers and consensus participants
+- **Common Stake Peers** (1+ ÉTR minimum stake): Governance voters and proposal supporters
+- **Decentralized Directors** (128+ ÉTR minimum stake): 9 elected board members
 
 **What's Decided**:
 - Annual inflation rate (within hard caps)
 - Fee structure and burn rates
 - Development grants and funding
 - Protocol upgrades and parameters
-- Decentralized Director elections
+- Election of 9 Decentralized Directors (1-year terms, max 3 lifetime terms)
 
 **Why It Matters**:
 - **Prevents Drift**: Forces regular accountability
@@ -287,8 +299,8 @@ Finality: 10% → 50% → 80% → 95% → 99.9%
 
 **Ëtrid Approach**: Native multichain coordination
 - **FlareChain**: Root chain coordinating all activity
-- **PBCs**: Sovereign chains for specific domains
-- **Validity Nodes**: Verify cross-chain proofs
+- **PBCs**: Sovereign chains for specific domains (12-13 specialized chains)
+- **VALIDITY Nodes** (64+ ÉTR stake): Verify cross-chain proofs and produce blocks
 - **State Aggregation**: Merkle roots sync across chains
 
 **Benefits**:
@@ -296,6 +308,31 @@ Finality: 10% → 50% → 80% → 95% → 99.9%
 - **Specialized Runtimes**: Each PBC optimized for its use case
 - **Parallel Execution**: Transactions on different PBCs don't compete
 - **Shared Security**: All chains benefit from FlareChain's validator set
+
+### DeFi Infrastructure: Native Financial Primitives
+
+**Traditional DeFi**: External protocols built on top of blockchain
+- Smart contract risk
+- Fragmented liquidity
+- No protocol-level integration
+
+**Ëtrid Approach**: Native DeFi infrastructure
+- **Multi-Asset Reserve**: Diversified backing for EDSC stablecoin
+- **Synthetic Assets**: Create tokens tracking real-world assets
+- **FlareSwap DEX**: Native automated market maker for token swaps
+- **Reserve Management**: Automated rebalancing and risk mitigation
+
+**Components**:
+1. **pallet-multiasset-reserve**: Treasury management with automated rebalancing
+2. **pallet-reserve-backed-token**: Synthetic token creation with collateral management
+3. **FlareSwap DEX**: Uniswap V2-inspired AMM for ÉTR/EDSC/synthetic asset trading
+4. **Price Oracles**: Decentralized price feeds for reserve valuation
+
+**Benefits**:
+- **Capital Efficiency**: Collateral backs multiple synthetic positions
+- **Price Stability**: Multi-asset reserve reduces correlation risk
+- **Liquidity**: Native DEX enables efficient price discovery
+- **Governance**: Community controls reserve composition via Consensus Day
 
 ---
 
@@ -396,8 +433,9 @@ Not just another blockchain. Not just better technology.
 It's a system you participate in.
 
 **Join as**:
-- **Validator**: Secure the network, earn rewards
-- **Voter**: Shape the protocol, influence decisions
+- **VALIDITY Node** (64+ ÉTR stake): Secure the network, earn block production rewards
+- **Common Stake Peer** (1+ ÉTR stake): Vote on proposals, participate in governance, earn rewards
+- **Decentralized Director** (128+ ÉTR stake): Run for election, serve on the board, shape network direction
 - **Developer**: Build on the platform, create value
 - **Researcher**: Contribute to ERA, advance the science
 
@@ -408,13 +446,17 @@ It's a system you participate in.
 ## APPENDIX A: Key Terms
 
 **ASF**: Ascending Scale of Finality - Dynamic consensus mechanism
-**Consensus Day**: Annual governance event on December 1st
+**Consensus Day**: Annual governance event on December 1st at 12:00 AM PST
 **FODDoS**: Free and Open Decentralized Democracy of Stakeholders
-**PBC**: Partition Burst Chain - Specialized sovereign runtime
+**PBC**: Partition Burst Chain - Specialized sovereign runtime (12-13 chains)
 **FlareChain**: Root coordination chain
-**ÉTR**: Ëtrid native token
+**ÉTR**: Ëtrid native token (smallest unit: Bite = 0.00001 ÉTR)
 **EDSC**: Ëtrid Dollar Stablecoin
 **VMw**: Virtual Machine Watts - Energy-based gas unit
+**VALIDITY Nodes**: Block producers and consensus participants (64+ ÉTR minimum stake)
+**Common Stake Peers**: Governance voters (1+ ÉTR minimum stake)
+**Decentralized Directors**: 9 elected board members (128+ ÉTR minimum stake, max 3 lifetime terms)
+**Coinage**: Time-weighted stake used in voting power calculation
 **ERA**: Ëtrid Research Archive
 **ËPS**: Ëtrid Protocol Evolution System
 
@@ -439,4 +481,35 @@ It's a system you participate in.
 
 ---
 
-*"Decentralization is not a feature. It's a continuous practice."*
+## CLOSING REMARKS
+
+To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.
+
+Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.
+
+This idea does not promote growth, prosperity, fairness, or decentralization.
+
+It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.
+
+This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.
+
+We are in a unique period in which power can be reclaimed by the powerless.
+
+Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.
+
+Borders can be reimagined.
+
+When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.
+
+The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.
+
+By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.
+
+**– Eoj Edred**
+**Founder, Ëtrid FODDoS Project**
+
+---
+
+*"Provide a flare and guide the way, the future of tomorrow is decided today."*
+
+**– Eoj Edred**

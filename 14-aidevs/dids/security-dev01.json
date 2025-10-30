@@ -10,8 +10,8 @@
       "id": "did:etrid:security-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:security-dev01",
-      "publicKeyMultibase": "zDPyqUUxsTpgMrxiGyzzUmjAe9uFmxuWYFdgCrEBXpCcs",
-      "publicKeyBase58": "DPyqUUxsTpgMrxiGyzzUmjAe9uFmxuWYFdgCrEBXpCcs"
+      "publicKeyMultibase": "z2T7bWH1BaZsHSpTE9YmYxNaeGvFk3emGUD45L8i4csCW",
+      "publicKeyBase58": "2T7bWH1BaZsHSpTE9YmYxNaeGvFk3emGUD45L8i4csCW"
     }
   ],
   "authentication": [

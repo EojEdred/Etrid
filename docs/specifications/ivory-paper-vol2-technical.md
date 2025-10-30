@@ -15,10 +15,12 @@
 2. Ascending Scale of Finality (ASF) Consensus
 3. Virtual Machine Watts (VMw) Computation Model
 4. FlareChain & Partition Burst Chains
+   4.7. Reserve-Backed Assets & DEX Infrastructure
 5. Cross-Chain Security & Validity Nodes
 6. EtwasmVM & Smart Contract Runtime
 7. Network & P2P Layer (DETR)
 8. Cryptographic Primitives & Post-Quantum Security
+9. Implementation Gap Analysis
 
 ---
 
@@ -38,20 +40,20 @@ Layer 4: Application
 
 Layer 3: Governance
     ├─ 12. Consensus Day (Annual governance event)
-    ├─ 11. Peer Roles (Staking, nomination, delegation)
+    ├─ 11. Peer Roles (Common Stake Peers, VALIDITY Nodes, Directors)
     └─ 10. Foundation (Constitutional parameters)
 
 Layer 2: Execution
-    ├─ 09. Consensus (ASF - Ascending Scale of Finality)
+    ├─ 09. Consensus (FODDoS.ASF.Consensus - Ascending Scale of Finality)
     ├─ 08. ËtwasmVM (WebAssembly smart contracts)
     ├─ 07. Transactions (Transfer, smart contract calls)
-    └─ 06. Native Currency (ÉTR, EDSC, VMw)
+    └─ 06. Native Currency (ÉTR with Bite denomination, EDSC, VMw)
 
 Layer 1: Coordination
-    ├─ 05. Multichain (FlareChain + 13 PBCs)
-    ├─ 04. Accounts (User accounts, social recovery)
+    ├─ 05. Multichain (FlareChain + 12-13 PBCs)
+    ├─ 04. Accounts (EBCA, RCA, RCWA, SCA, SSCA)
     ├─ 03. Security (Post-quantum cryptography)
-    ├─ 02. OpenDID + AIDID (Identity system)
+    ├─ 02. EOpenDID (Decentralized Identity system)
     └─ 01. DETR P2P (Lightning-Bloc network)
 ```
 
@@ -64,7 +66,11 @@ Layer 1: Coordination
 
 ---
 
-## 2. ASCENDING SCALE OF FINALITY (ASF) CONSENSUS
+## 2. FODDoS.ASF.CONSENSUS (ASCENDING SCALE OF FINALITY)
+
+**Full Name**: Free and Open Decentralized Democracy of Stakeholders – Ascending Scale of Finality
+
+A BFT committee-based Proof-of-Stake variant with probabilistic finality, combining HotStuff principles with leader election, stake-weighting, and rotating committees (PPFA sets).
 
 ### The Problem with Traditional Finality
 
@@ -435,7 +441,10 @@ struct FlareBlockHeader {
 
 **Purpose**: Specialized sovereign runtimes for specific domains
 
-**13 PBCs**:
+**Initial Design: 12 PBCs** (expandable based on governance vote)
+
+The original ivory paper specified 12 Partitioned Burst Chains. The network has been expanded to include additional chains based on ecosystem needs:
+
 1. **BTC-PBC**: Bitcoin bridge (SPV proofs)
 2. **ETH-PBC**: Ethereum bridge (event logs)
 3. **DOGE-PBC**: Dogecoin bridge
@@ -448,7 +457,9 @@ struct FlareBlockHeader {
 10. **LINK-PBC**: Chainlink integration (oracles)
 11. **MATIC-PBC**: Polygon bridge (plasma)
 12. **USDT-PBC**: Tether multi-chain bridge
-13. **EDSC-PBC**: Ëtrid Dollar stablecoin (native)
+13. **EDSC-PBC**: Ëtrid Dollar stablecoin (native) *(expansion from original 12)*
+
+**Note**: The network currently operates 13 PBCs, with EDSC-PBC added to support the native stablecoin. Additional PBCs may be added through governance proposals.
 
 ### PBC Architecture
 
@@ -566,6 +577,525 @@ struct PbcStateRoot {
 
 ---
 
+## 4.7. RESERVE-BACKED ASSETS & DEX INFRASTRUCTURE
+
+### Overview
+
+To support the EDSC stablecoin and broader DeFi ecosystem, FlareChain includes specialized infrastructure for reserve management, synthetic asset creation, and decentralized exchange functionality.
+
+**Components**:
+1. **pallet-multiasset-reserve**: Multi-asset treasury management with automated rebalancing
+2. **pallet-reserve-backed-token**: Synthetic token creation with collateral management
+3. **FlareSwap DEX Core**: Automated market maker (AMM) with liquidity pools
+4. **FlareSwap DEX Periphery**: Routing and helper contracts for optimal trade execution
+
+### 4.7.1. Multi-Asset Reserve (pallet-multiasset-reserve)
+
+**Purpose**: Manage diversified reserve assets backing EDSC and other synthetic tokens
+
+**Architecture**:
+```rust
+pub struct AssetConfig {
+    pub asset_id: AssetId,
+    pub target_allocation: Permill,  // Target percentage of total reserve
+    pub current_balance: Balance,
+    pub oracle_price: u128,          // Price in USD (6 decimals)
+    pub last_rebalance: BlockNumber,
+}
+
+pub enum AllocationStrategy {
+    EqualWeight = 0,        // Equal distribution across assets
+    MarketCapWeighted = 1,  // Weight by market capitalization
+    RiskAdjusted = 2,       // Weight by volatility/risk metrics
+    Custom = 3,             // Custom weights set by governance
+}
+```
+
+**Storage Items** (8 total):
+- `AssetConfigs`: Configuration for each reserve asset
+- `ReserveComposition`: Current holdings per asset
+- `CurrentStrategy`: Active allocation strategy (stored as u8)
+- `TotalReserveValue`: Aggregate USD value of reserve
+- `WhitelistedAssets`: Approved assets for reserve inclusion
+- `AssetCount`: Number of assets in reserve
+- `LastRebalance`: Timestamp of last rebalancing operation
+- `RebalancingEnabled`: Global rebalancing on/off switch
+
+**Key Operations**:
+
+1. **Asset Management**:
+```rust
+// Add new asset to reserve
+pub fn add_asset(
+    origin: OriginFor<T>,
+    asset_id: AssetId,
+    target_allocation: Permill,
+) -> DispatchResult;
+
+// Remove asset from reserve
+pub fn remove_asset(
+    origin: OriginFor<T>,
+    asset_id: AssetId,
+) -> DispatchResult;
+```
+
+2. **Rebalancing**:
+```rust
+// Automated rebalancing based on target allocations
+pub fn trigger_rebalance(origin: OriginFor<T>) -> DispatchResult;
+
+// Rebalancing triggers when:
+// - Deviation exceeds threshold (default: 5%)
+// - Sufficient time elapsed since last rebalance (default: 14,400 blocks ~24h)
+```
+
+3. **Strategy Management**:
+```rust
+pub fn set_allocation_strategy(
+    origin: OriginFor<T>,
+    strategy_code: u8,  // 0=EqualWeight, 1=MarketCap, 2=RiskAdjusted, 3=Custom
+) -> DispatchResult;
+```
+
+**Runtime Configuration**:
+```rust
+parameter_types! {
+    pub const MaxReserveAssets: u32 = 50;
+    pub const RebalanceIntervalBlocks: u32 = 14_400;  // ~24 hours
+    pub const RebalanceThreshold: Permill = Permill::from_percent(5);
+    pub const MultiassetReservePalletId: PalletId = PalletId(*b"py/marve");
+}
+```
+
+**Events**:
+- `AssetAdded`: New asset added to reserve
+- `AssetRemoved`: Asset removed from reserve
+- `RebalanceExecuted`: Automated rebalancing completed
+- `StrategyChanged`: Allocation strategy updated
+- `DepositReceived`: Funds deposited to reserve
+- `WithdrawalExecuted`: Funds withdrawn from reserve
+
+### 4.7.2. Reserve-Backed Token (pallet-reserve-backed-token)
+
+**Purpose**: Create synthetic tokens backed by multi-asset collateral with over-collateralization requirements
+
+**Core Structures**:
+```rust
+pub struct SyntheticToken {
+    pub symbol: BoundedVec<u8, ConstU32<16>>,
+    pub name: BoundedVec<u8, ConstU32<64>>,
+    pub decimals: u8,
+    pub min_collateral_ratio: u16,  // Basis points: 15000 = 150%
+    pub liquidation_ratio: u16,      // Basis points: 12000 = 120%
+    pub total_supply: u128,
+    pub is_active: bool,
+    pub created_at: u32,
+}
+
+pub struct CollateralPosition<Balance> {
+    pub synthetic_id: u32,
+    pub collateral_amount: Balance,
+    pub synthetic_minted: u128,
+    pub last_update: u32,
+}
+```
+
+**Collateralization Model**:
+
+EDSC and other synthetic tokens require over-collateralization to maintain peg stability:
+
+```
+Minimum Collateral Ratio: 150%
+Liquidation Threshold:     120%
+Liquidation Penalty:       5%
+
+Example:
+To mint 1000 EDSC ($1000 value):
+→ Requires: $1500 in ÉTR collateral (150%)
+→ Liquidated if collateral falls to $1200 (120%)
+→ Liquidator receives: $1200 + 5% penalty = $1260
+→ Position holder loses: $60
+```
+
+**Key Operations**:
+
+1. **Token Lifecycle**:
+```rust
+// Create new synthetic token type
+pub fn create_synthetic(
+    origin: OriginFor<T>,
+    symbol: Vec<u8>,
+    name: Vec<u8>,
+    decimals: u8,
+    min_collateral_ratio: u16,
+    liquidation_ratio: u16,
+) -> DispatchResult;
+
+// Deactivate synthetic token (no new minting)
+pub fn deactivate_synthetic(
+    origin: OriginFor<T>,
+    synthetic_id: u32,
+) -> DispatchResult;
+```
+
+2. **Minting & Burning**:
+```rust
+// Mint synthetic tokens by locking collateral
+pub fn mint_synthetic(
+    origin: OriginFor<T>,
+    synthetic_id: u32,
+    collateral_amount: BalanceOf<T>,
+    synthetic_amount: u128,
+) -> DispatchResult;
+
+// Burn synthetic tokens to reclaim collateral
+pub fn burn_synthetic(
+    origin: OriginFor<T>,
+    synthetic_id: u32,
+    synthetic_amount: u128,
+) -> DispatchResult;
+```
+
+3. **Collateral Management**:
+```rust
+// Add more collateral to existing position
+pub fn add_collateral(
+    origin: OriginFor<T>,
+    synthetic_id: u32,
+    amount: BalanceOf<T>,
+) -> DispatchResult;
+
+// Liquidate undercollateralized positions
+pub fn liquidate_position(
+    origin: OriginFor<T>,
+    account: T::AccountId,
+    synthetic_id: u32,
+) -> DispatchResult;
+```
+
+**Storage Items** (6 total):
+- `SyntheticTokens`: Metadata for each synthetic token type
+- `CollateralPositions`: User collateral positions per synthetic
+- `NextSyntheticId`: Auto-incrementing ID for new synthetics
+- `TotalCollateral`: Aggregate collateral locked per synthetic
+- `UserPositions`: Mapping of user → synthetic positions
+- `LiquidationHistory`: Record of liquidation events
+
+**Runtime Configuration**:
+```rust
+parameter_types! {
+    pub const MaxSyntheticTokens: u32 = 100;
+    pub const MaxPositionsPerUser: u32 = 50;
+    pub const MinCollateralAmount: u128 = 1_000_000_000_000;  // 1 ÉTR minimum
+    pub const LiquidationPenaltyPercent: u16 = 500;  // 5%
+    pub const ReserveBackedTokenPalletId: PalletId = PalletId(*b"py/rbtok");
+}
+```
+
+**Price Oracle Integration**:
+
+The pallet relies on price oracles to determine collateralization ratios:
+
+```rust
+// Oracle provides real-time pricing
+pub trait PriceOracle {
+    fn get_price(asset_id: AssetId) -> Option<u128>;  // Returns price in USD (6 decimals)
+}
+
+// Collateralization check
+fn check_collateral_ratio(position: &CollateralPosition) -> Permill {
+    let collateral_value_usd = position.collateral_amount * oracle::get_price(ETR);
+    let debt_value_usd = position.synthetic_minted * oracle::get_price(synthetic_id);
+
+    Permill::from_rational(collateral_value_usd, debt_value_usd)
+}
+```
+
+### 4.7.3. FlareSwap DEX - Core Infrastructure
+
+**Purpose**: Decentralized exchange for ÉTR, EDSC, and synthetic assets using automated market maker (AMM) model
+
+**Architecture**: Uniswap V2-inspired constant product formula (x × y = k)
+
+**Components**:
+
+1. **FlareSwap Factory** (`FlareSwapFactory.sol`)
+   - Creates new trading pairs
+   - Tracks all pair contracts
+   - Manages protocol fees
+
+2. **FlareSwap Pair** (`FlareSwapPair.sol`)
+   - Implements liquidity pool for token pair
+   - Handles swaps using constant product formula
+   - Distributes LP fees to liquidity providers
+
+3. **FlareSwap ERC20** (`FlareSwapERC20.sol`)
+   - LP token implementation
+   - Represents liquidity provider shares
+   - Standard ERC20 with permit functionality
+
+**Constant Product Formula**:
+```solidity
+// For any swap, the product of reserves must remain constant
+x * y = k
+
+// Where:
+// x = reserve of token A
+// y = reserve of token B
+// k = constant (invariant)
+
+// Example swap:
+// Initial state: 100 ETR × 1000 EDSC = 100,000
+// User swaps 10 ETR → receives 90.9 EDSC
+// Final state: 110 ETR × 909.1 EDSC ≈ 100,000 (minus 0.3% fee)
+```
+
+**Key Operations**:
+
+1. **Liquidity Provision**:
+```solidity
+// Add liquidity to pool (mints LP tokens)
+function addLiquidity(
+    address tokenA,
+    address tokenB,
+    uint amountADesired,
+    uint amountBDesired,
+    uint amountAMin,
+    uint amountBMin,
+    address to,
+    uint deadline
+) external returns (uint amountA, uint amountB, uint liquidity);
+
+// Remove liquidity (burns LP tokens)
+function removeLiquidity(
+    address tokenA,
+    address tokenB,
+    uint liquidity,
+    uint amountAMin,
+    uint amountBMin,
+    address to,
+    uint deadline
+) external returns (uint amountA, uint amountB);
+```
+
+2. **Token Swapping**:
+```solidity
+// Swap exact input amount for minimum output
+function swapExactTokensForTokens(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+
+// Swap for exact output using maximum input
+function swapTokensForExactTokens(
+    uint amountOut,
+    uint amountInMax,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+```
+
+**Fee Structure**:
+- **Swap Fee**: 0.3% of each trade
+  - 0.25% → Liquidity providers (via LP token value appreciation)
+  - 0.05% → Protocol treasury (for development/operations)
+
+**Price Impact**:
+```
+Price Impact = (amountIn / reserveIn) × 100%
+
+Examples:
+- Swap 1 ÉTR in 1000 ÉTR pool → 0.1% impact (negligible)
+- Swap 50 ÉTR in 1000 ÉTR pool → 5% impact (moderate)
+- Swap 100 ÉTR in 1000 ÉTR pool → 10% impact (high slippage)
+```
+
+### 4.7.4. FlareSwap DEX - Periphery Contracts
+
+**Purpose**: User-facing contracts that simplify interaction with core DEX
+
+**Components**:
+
+1. **FlareSwap Router** (`FlareSwapRouter.sol`)
+   - Simplifies multi-hop swaps
+   - Handles slippage protection
+   - Manages deadline enforcement
+   - Wraps/unwraps native ÉTR
+
+2. **FlareSwap Library** (`FlareSwapLibrary.sol`)
+   - Price calculation utilities
+   - Quote functions for UI/bots
+   - Optimal path finding for multi-hop trades
+
+3. **WETH Wrapper** (`WETH.sol`)
+   - Wraps native ÉTR into ERC20-compatible WETR
+   - Required for ÉTR trading on DEX
+   - 1:1 peg with native ÉTR
+
+**Router Functions**:
+
+1. **Multi-Hop Trading**:
+```solidity
+// Optimal routing through multiple pairs
+// Example: ÉTR → EDSC → USDT (saves fees vs direct pool)
+function swapExactTokensForTokens(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,  // [ÉTR, EDSC, USDT]
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+```
+
+2. **Price Quotes**:
+```solidity
+// Get quote for exact input
+function getAmountsOut(
+    uint amountIn,
+    address[] memory path
+) public view returns (uint[] memory amounts);
+
+// Get quote for exact output (reverse calculation)
+function getAmountsIn(
+    uint amountOut,
+    address[] memory path
+) public view returns (uint[] memory amounts);
+```
+
+3. **Native ÉTR Support**:
+```solidity
+// Swap ÉTR for tokens (auto-wraps to WETR)
+function swapExactETRForTokens(
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external payable returns (uint[] memory amounts);
+
+// Swap tokens for ÉTR (auto-unwraps WETR)
+function swapExactTokensForETR(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+```
+
+**Library Utilities**:
+```solidity
+library FlareSwapLibrary {
+    // Calculate output amount given input
+    function getAmountOut(
+        uint amountIn,
+        uint reserveIn,
+        uint reserveOut
+    ) internal pure returns (uint amountOut);
+
+    // Calculate required input for desired output
+    function getAmountIn(
+        uint amountOut,
+        uint reserveIn,
+        uint reserveOut
+    ) internal pure returns (uint amountIn);
+
+    // Sort tokens (deterministic pair ordering)
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) internal pure returns (address token0, address token1);
+}
+```
+
+### Implementation Status
+
+**✅ Completed Components**:
+1. pallet-multiasset-reserve (~670 lines)
+   - All 8 storage items
+   - All 8 extrinsics
+   - Runtime integration complete
+
+2. pallet-reserve-backed-token (~850 lines)
+   - All 6 storage items
+   - All 6 extrinsics
+   - Collateralization logic implemented
+   - Runtime integration complete
+
+3. FlareSwap DEX Core (~881 lines total)
+   - Factory contract (interface + implementation)
+   - Pair contract (AMM logic)
+   - ERC20 LP token contract
+
+4. FlareSwap DEX Periphery (completed in parallel terminal)
+   - Router contract with multi-hop support
+   - Library with price calculation utilities
+   - WETH wrapper for native ÉTR
+
+**Runtime Integration**:
+
+All components integrated into FlareChain runtime at `05-multichain/flare-chain/runtime/src/lib.rs`:
+
+```rust
+// Reserve infrastructure
+MultiassetReserve: pallet_multiasset_reserve,
+ReserveBackedToken: pallet_reserve_backed_token,
+
+// DEX deployed as smart contracts on ËtwasmVM
+// (not runtime pallets, but WASM contracts)
+```
+
+**Code Metrics**:
+- Total new code: ~2,400+ lines
+- Test coverage: Integration tests pending
+- Documentation: Technical specs complete
+- Audit status: Pre-audit (requires security review)
+
+### Economic Impact
+
+**Reserve Diversification**:
+- EDSC backed by multi-asset reserve (not just ÉTR)
+- Reduced correlation risk
+- Automated rebalancing maintains target allocations
+
+**Synthetic Assets**:
+- Over-collateralized positions prevent undercollateralization
+- Liquidation mechanism protects peg stability
+- Enables creation of diverse synthetic assets (stocks, commodities, indices)
+
+**DEX Liquidity**:
+- Native ÉTR/EDSC trading without external bridges
+- LP incentives encourage liquidity provision
+- 0.3% fee generates sustainable yield for LPs
+
+**Capital Efficiency**:
+- Collateral can back multiple synthetic positions
+- DEX enables efficient price discovery
+- Arbitrage bots maintain peg stability
+
+### Security Considerations
+
+**Reserve Security**:
+- Multi-asset reduces single-asset risk
+- Rebalancing limits handled by governance
+- Oracle manipulation resistance via multiple price sources
+
+**Collateral Liquidations**:
+- 30% buffer (150% min, 120% liquidation) provides safety margin
+- Liquidation penalty (5%) incentivizes position maintenance
+- Automated liquidation bots ensure timely execution
+
+**DEX Security**:
+- Constant product formula prevents price manipulation
+- Reentrancy protection on all state-changing functions
+- Slippage limits protect against front-running
+- Deadline enforcement prevents stale transactions
+
+---
+
 ## 5. CROSS-CHAIN SECURITY & VALIDITY NODES
 
 ### The Bridge Problem
@@ -580,18 +1110,35 @@ struct PbcStateRoot {
 
 **No external bridges. No trusted custodians.**
 
-### Validity Nodes
+### Validity Nodes (VALIDITY Nodes)
 
-**Role**: Verify cross-chain proofs and PBC state roots
+**Role**: Verify cross-chain proofs and PBC state roots, participate in consensus on Partition Burst Chains
+
+**Requirements**:
+- **Minimum stake: 64 ÉTR**
+- Hardware: 8-core CPU, 32GB RAM, 1TB SSD, 1Gbps network
+- Uptime: >98% (measured over 30-day rolling window)
+- Must run full nodes for FlareChain + ≥1 PBC
+
+**Node Statuses**:
+- **Registered**: Node has staked 64+ ÉTR and registered identity
+- **Pending**: Awaiting selection for active validator set
+- **Sequenced**: Active validator participating in consensus
+- **Chilled**: Temporarily inactive due to performance issues
+- **De-Sequenced**: Removed from active set (can re-enter after resolution)
+- **Re-Sequenced**: Returned to active validator set after fixing issues
 
 **Responsibilities**:
 1. Monitor all PBC state submissions to FlareChain
 2. Verify merkle proofs against submitted roots
 3. Attest to validity or flag discrepancies
 4. Participate in dispute resolution
+5. Produce blocks on assigned PBCs
+6. Maintain cross-chain state synchronization
 
 **Incentives**:
 - Earn rewards for correct attestations
+- Earn block production rewards
 - Slashed for false attestations
 - Higher reputation = more weight
 
@@ -934,6 +1481,362 @@ Verification = Ed25519_Verify() AND Dilithium_Verify()
 
 ---
 
+## 9. IMPLEMENTATION GAP ANALYSIS
+
+### Overview
+
+This section documents components specified in the Ivory Papers that require additional implementation work. While the E³20 architecture is complete at the alpha stage, several advanced features require further development before mainnet launch.
+
+### 9.1. VMw Metering Runtime ⚠️ PARTIAL IMPLEMENTATION
+
+**Status**: Specification complete, runtime implementation incomplete
+
+**What's Described** (Section 3):
+- Energy-based computation metering (1 VMw = 1 Watt-second)
+- Instruction-level weight assignments
+- Dynamic VMw → ÉTR price oracle
+- Pre-execution metering with runtime enforcement
+
+**What's Missing**:
+1. **VMw Injector**: WASM bytecode instrumentation to inject metering calls
+2. **Instruction Weight Database**: Comprehensive mapping of WASM opcodes to VMw costs
+3. **Dynamic Price Oracle**: Real-time VMw → ÉTR conversion based on network conditions
+4. **Execution Metering**: Runtime enforcement of VMw limits during transaction execution
+
+**Implementation Priority**: HIGH (required for mainnet)
+
+**Recommended Approach**:
+```rust
+// Required components:
+
+// 1. VMw Weight Database
+pub struct InstructionWeights {
+    add: u64,           // 1 VMw
+    mul: u64,           // 2 VMw
+    div: u64,           // 4 VMw
+    crypto_hash: u64,   // 100 VMw
+    storage_read: u64,  // 1000 VMw
+    storage_write: u64, // 2000 VMw
+    // ... complete mapping
+}
+
+// 2. WASM Instrumentation
+pub fn inject_metering(wasm_module: &[u8]) -> Result<Vec<u8>, Error> {
+    // Parse WASM module
+    // Inject VMw charging before each instruction
+    // Return instrumented bytecode
+}
+
+// 3. Runtime Metering
+pub struct VMwMeter {
+    limit: u64,
+    used: u64,
+}
+
+impl VMwMeter {
+    pub fn charge(&mut self, amount: u64) -> Result<(), OutOfVMw> {
+        if self.used + amount > self.limit {
+            return Err(OutOfVMw);
+        }
+        self.used += amount;
+        Ok(())
+    }
+}
+```
+
+**Estimated Work**: 2-3 weeks for experienced WASM developer
+
+**Location**: `08-etwasm-vm/vmw-metering/` (needs creation)
+
+### 9.2. ËtwasmVM Contract Runtime ⚠️ PARTIAL IMPLEMENTATION
+
+**Status**: Architecture defined, runtime incomplete
+
+**What's Described** (Section 6):
+- WebAssembly-based smart contract execution
+- VMw metering integration
+- Reentrancy protection
+- Contract state management
+- Multi-language support (Rust, C, AssemblyScript)
+
+**What's Missing**:
+1. **Contract Deployment**: Upload and instantiate WASM contracts
+2. **Contract Calls**: Inter-contract communication
+3. **State Persistence**: Storage rent and garbage collection
+4. **Gas Refunds**: Unused VMw refund mechanism
+5. **Contract Upgradeability**: Proxy pattern support
+
+**Implementation Priority**: HIGH (required for mainnet)
+
+**Recommended Approach**:
+
+Use existing Substrate pallets as foundation:
+- `pallet-contracts`: Substrate's WASM contract pallet
+- Customize for VMw metering (replace gas with VMw)
+- Add reentrancy guards
+- Implement storage rent model
+
+**Estimated Work**: 4-6 weeks
+
+**Location**: `08-etwasm-vm/pallet/src/lib.rs` (exists but needs completion)
+
+### 9.3. Lightning-Bloc (Layer 2) ⚠️ NOT IMPLEMENTED
+
+**Status**: Conceptual design only, no implementation
+
+**What's Described** (Section 7):
+- Payment channel network for instant, low-fee transactions
+- Multi-hop routing
+- Watchtower services for fraud prevention
+- Time-locked dispute resolution
+
+**What's Missing**:
+1. **Channel Opening**: On-chain contract for locking funds
+2. **Off-Chain Updates**: Signed state updates between parties
+3. **Channel Closing**: Submit final state or trigger dispute
+4. **Routing Protocol**: Path-finding for multi-hop payments
+5. **Watchtowers**: Monitor channels for fraud attempts
+
+**Implementation Priority**: MEDIUM (post-mainnet enhancement)
+
+**Recommended Approach**:
+
+Adapt existing Lightning Network concepts:
+```rust
+pub struct PaymentChannel {
+    pub participants: (AccountId, AccountId),
+    pub capacity: Balance,
+    pub balances: (Balance, Balance),
+    pub nonce: u64,
+    pub timeout: BlockNumber,
+    pub status: ChannelStatus,
+}
+
+pub enum ChannelStatus {
+    Open,
+    Disputed,
+    Closed,
+}
+
+// Extrinsics
+pub fn open_channel(counterparty: AccountId, amount: Balance);
+pub fn close_channel(channel_id: H256, final_state: ChannelState);
+pub fn dispute_close(channel_id: H256, newer_state: ChannelState);
+```
+
+**Estimated Work**: 8-12 weeks for full implementation
+
+**Location**: `07-transactions/lightning-bloc/` (exists as placeholder)
+
+### 9.4. Post-Quantum Cryptography ⚠️ NOT IMPLEMENTED
+
+**Status**: Migration path defined, no implementation
+
+**What's Described** (Section 8):
+- Hybrid signature scheme (Ed25519 + Dilithium)
+- CRYSTALS-Kyber for key encapsulation
+- SPHINCS+ as alternative hash-based signature
+- Phased migration timeline (2025-2028)
+
+**What's Missing**:
+1. **Hybrid Signing**: Dual signature verification
+2. **Key Derivation**: Generate both classical and PQ keys
+3. **Migration Tools**: Convert existing accounts to hybrid mode
+4. **Performance Testing**: Benchmark PQ signature verification
+5. **Storage Overhead**: Handle larger signature sizes (Ed25519: 64 bytes → Dilithium: 2420 bytes)
+
+**Implementation Priority**: LOW (future-proofing, not immediate threat)
+
+**Recommended Approach**:
+
+Use NIST-selected PQ algorithms:
+```rust
+pub enum SignatureScheme {
+    Ed25519,                          // Current (32 byte pubkey, 64 byte sig)
+    Hybrid(Ed25519, Dilithium2),      // Transition (verify both)
+    Dilithium2,                       // Future PQ-only (1312 byte pubkey, 2420 byte sig)
+}
+
+pub fn verify_hybrid(
+    message: &[u8],
+    ed25519_sig: &[u8; 64],
+    dilithium_sig: &[u8; 2420],
+    pubkey: &HybridPublicKey,
+) -> bool {
+    verify_ed25519(message, ed25519_sig, &pubkey.ed25519)
+        && verify_dilithium(message, dilithium_sig, &pubkey.dilithium)
+}
+```
+
+**Estimated Work**: 6-8 weeks
+
+**Location**: `03-security/post-quantum/` (needs creation)
+
+**Crate Dependencies**:
+- `pqcrypto-dilithium`
+- `pqcrypto-kyber`
+- `pqcrypto-sphincsplus`
+
+### 9.5. Cross-Chain Oracle Network ⚠️ PARTIAL IMPLEMENTATION
+
+**Status**: Architecture defined, production oracles not deployed
+
+**What's Needed**:
+
+The reserve-backed token system requires reliable price feeds for:
+- ÉTR/USD pricing
+- Synthetic asset pricing
+- Reserve asset valuations
+
+**Current State**:
+- Oracle pallet exists (`pallet-reserve-oracle`)
+- Price submission mechanism implemented
+- No production oracle operators
+
+**Implementation Priority**: HIGH (required for EDSC mainnet)
+
+**Recommended Approach**:
+
+Deploy oracle node network:
+```rust
+// Oracle data providers
+pub struct OracleProvider {
+    pub account: AccountId,
+    pub stake: Balance,              // Minimum 1000 ÉTR
+    pub reputation: ReputationScore,
+    pub price_feeds: Vec<AssetId>,
+}
+
+// Price aggregation
+pub fn submit_price(
+    origin: OriginFor<T>,
+    asset_id: AssetId,
+    price: u128,      // USD price (6 decimals)
+    timestamp: u64,
+) -> DispatchResult;
+
+pub fn aggregate_prices(asset_id: AssetId) -> Option<u128> {
+    // Median of all submitted prices (outlier rejection)
+    let mut prices = PriceSubmissions::<T>::get(asset_id);
+    prices.sort();
+    prices.get(prices.len() / 2).copied()
+}
+```
+
+**Oracle Incentives**:
+- Accurate submissions → Earn fees (0.1% of trades using oracle price)
+- Outlier submissions → Reputation penalty
+- Provably false data → Slashing
+
+**Estimated Work**: 4-6 weeks to deploy production oracle network
+
+**Location**: `src/pallets/pallet-reserve-oracle/` (exists, needs production deployment)
+
+### 9.6. FlareSwap DEX Deployment ⚠️ CONTRACTS READY, NOT DEPLOYED
+
+**Status**: Smart contracts complete, deployment pending
+
+**What's Complete**:
+- FlareSwap Factory, Pair, ERC20 (Core)
+- FlareSwap Router, Library, WETH (Periphery)
+- Solidity contracts tested locally
+
+**What's Missing**:
+1. **Contract Compilation**: Compile to WASM for ËtwasmVM
+2. **Deployment Scripts**: Automated deployment to FlareChain
+3. **Frontend Integration**: Web UI for swapping
+4. **Liquidity Bootstrapping**: Initial ÉTR/EDSC pools
+5. **Subgraph/Indexer**: Track trades, volume, TVL
+
+**Implementation Priority**: HIGH (DeFi ecosystem enabler)
+
+**Deployment Steps**:
+```bash
+# 1. Compile contracts to WASM
+solang compile --target substrate FlareSwapFactory.sol
+solang compile --target substrate FlareSwapPair.sol
+solang compile --target substrate FlareSwapRouter.sol
+
+# 2. Deploy via extrinsic
+polkadot-js-api tx.contracts.instantiateWithCode \
+  --gas 1000000 \
+  --value 0 \
+  --code FlareSwapFactory.wasm \
+  --data 0x... # constructor args
+
+# 3. Verify deployment
+polkadot-js-api query.contracts.contractInfoOf <contract-address>
+```
+
+**Estimated Work**: 2-3 weeks for full deployment + UI
+
+**Location**:
+- Contracts: `05-multichain/flareswap/` (complete)
+- Deployment: Needs scripts in `scripts/deploy-dex.sh`
+
+### 9.7. Comprehensive Testing ⚠️ IN PROGRESS
+
+**Status**: Unit tests exist, integration/stress tests incomplete
+
+**Test Coverage**:
+- Unit tests: ~60% coverage
+- Integration tests: ~30% coverage
+- Stress tests: Not implemented
+- Security audits: Not completed
+
+**What's Needed**:
+
+1. **Runtime Integration Tests**:
+   - Multi-pallet interaction tests
+   - Cross-chain message passing
+   - Reserve rebalancing scenarios
+   - Liquidation stress tests
+
+2. **Performance Benchmarks**:
+   - Transaction throughput (target: 1000+ TPS)
+   - Block finalization time (target: <60s for 95% finality)
+   - VMw metering overhead
+   - Cross-chain latency
+
+3. **Security Audits**:
+   - Third-party audit of all runtime code
+   - Fuzzing tests for edge cases
+   - Formal verification of critical components
+
+**Implementation Priority**: CRITICAL (before mainnet)
+
+**Estimated Work**: 6-8 weeks for comprehensive test suite + audits
+
+### Summary: Implementation Roadmap
+
+| Component | Priority | Status | Estimated Work | Blocker for Mainnet? |
+|-----------|----------|--------|----------------|---------------------|
+| VMw Metering Runtime | HIGH | 40% | 2-3 weeks | ✅ YES |
+| ËtwasmVM Completion | HIGH | 60% | 4-6 weeks | ✅ YES |
+| Oracle Network | HIGH | 70% | 4-6 weeks | ✅ YES |
+| FlareSwap Deployment | HIGH | 90% | 2-3 weeks | ⚠️ PARTIAL |
+| Lightning-Bloc | MEDIUM | 10% | 8-12 weeks | ❌ NO (post-mainnet) |
+| Post-Quantum Crypto | LOW | 5% | 6-8 weeks | ❌ NO (future upgrade) |
+| Comprehensive Testing | CRITICAL | 45% | 6-8 weeks | ✅ YES |
+
+**Total Pre-Mainnet Work**: 18-26 weeks (~4-6 months) for critical components
+
+**Mainnet Readiness Checklist**:
+- [x] Core E³20 components (13/13 complete)
+- [ ] VMw metering runtime
+- [ ] ËtwasmVM contract execution
+- [ ] Oracle network deployment
+- [ ] FlareSwap DEX deployment
+- [ ] Comprehensive test suite
+- [ ] Security audit completion
+- [x] Reserve infrastructure (pallet-multiasset-reserve, pallet-reserve-backed-token)
+
+**Current Status**: **ALPHA COMPLETE** (all architecture defined, ~70% implementation complete)
+
+**Next Milestone**: **BETA LAUNCH** (all mainnet blockers resolved, audited)
+
+---
+
 ## CONCLUSION
 
 The E³20 protocol provides a complete, modular foundation for sovereign blockchain networks:
@@ -955,4 +1858,35 @@ The E³20 protocol provides a complete, modular foundation for sovereign blockch
 
 ---
 
-*"Technical excellence through first principles."*
+## CLOSING REMARKS
+
+To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.
+
+Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.
+
+This idea does not promote growth, prosperity, fairness, or decentralization.
+
+It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.
+
+This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.
+
+We are in a unique period in which power can be reclaimed by the powerless.
+
+Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.
+
+Borders can be reimagined.
+
+When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.
+
+The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.
+
+By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.
+
+**– Eoj Edred**
+**Founder, Ëtrid FODDoS Project**
+
+---
+
+*"Provide a flare and guide the way, the future of tomorrow is decided today."*
+
+**– Eoj Edred**

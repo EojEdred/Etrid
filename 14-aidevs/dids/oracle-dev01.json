@@ -10,8 +10,8 @@
       "id": "did:etrid:oracle-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:oracle-dev01",
-      "publicKeyMultibase": "z9ZR8MVxA2cuvmERbHdB3FVPLaYVrtZ6hzYYuTnSMKUJh",
-      "publicKeyBase58": "9ZR8MVxA2cuvmERbHdB3FVPLaYVrtZ6hzYYuTnSMKUJh"
+      "publicKeyMultibase": "zCCKwMmR3BAVUeaDbP5UnrtBRBFmP4s8CvMXVoRLWjTa",
+      "publicKeyBase58": "CCKwMmR3BAVUeaDbP5UnrtBRBFmP4s8CvMXVoRLWjTa"
     }
   ],
   "authentication": [
