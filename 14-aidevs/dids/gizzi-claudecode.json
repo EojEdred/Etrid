@@ -10,8 +10,8 @@
       "id": "did:etrid:gizzi-claudecode#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:gizzi-claudecode",
-      "publicKeyMultibase": "zFyfPxeTpSSyM9TrCeHH2tvdqa4GjbPKGUiP6F7wVyKQG",
-      "publicKeyBase58": "FyfPxeTpSSyM9TrCeHH2tvdqa4GjbPKGUiP6F7wVyKQG"
+      "publicKeyMultibase": "z5kemrwL2Vm3z23rbpDRYfe4XiS4k6YfzUUaTMbQgExxX",
+      "publicKeyBase58": "5kemrwL2Vm3z23rbpDRYfe4XiS4k6YfzUUaTMbQgExxX"
     }
   ],
   "authentication": [

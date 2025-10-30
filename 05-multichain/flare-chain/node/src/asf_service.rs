@@ -42,7 +42,7 @@ use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
 use sp_runtime::traits::Header;
 use sp_timestamp;
-use std::{sync::Arc, time::Duration};
+use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 
 // Runtime API for validator committee queries
 use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
@@ -426,6 +426,19 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
 
             log::debug!(
                 "✅ ASF block #{} validated successfully",
+                block_number
+            );
+
+            // ═══════════════════════════════════════════════════════════════
+            // FORK CHOICE STRATEGY: Signal to Substrate import pipeline
+            // This tells Substrate this validated block is a candidate for
+            // the canonical chain. Without this, the import pipeline is
+            // incomplete and blocks are rejected.
+            // ═══════════════════════════════════════════════════════════════
+            block.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
+
+            log::debug!(
+                "🔗 Block #{} ready for import with LongestChain fork choice",
                 block_number
             );
 
@@ -942,9 +955,44 @@ pub fn new_full_with_params(
                                 continue;
                             }
 
+                            // ═══════════════════════════════════════════════════════════════
+                            // PPFA BLOCK SEALING: Create PPFA seal BEFORE proposing block
+                            // This ensures the seal is included in the block header and
+                            // propagated to all validators over the network.
+                            // ═══════════════════════════════════════════════════════════════
+                            use sp_runtime::{Digest, DigestItem};
+                            use codec::Encode;
+
+                            #[derive(Encode)]
+                            struct PpfaSeal {
+                                ppfa_index: u32,
+                                proposer_id: [u8; 32],
+                                slot_number: u64,
+                                timestamp: u64,
+                            }
+
+                            let ppfa_seal = PpfaSeal {
+                                ppfa_index,
+                                proposer_id: *our_validator_id.as_ref(),
+                                slot_number,
+                                timestamp: current_time,
+                            };
+
+                            let mut pre_digest = Digest::default();
+                            pre_digest.push(DigestItem::PreRuntime(
+                                *b"PPFA",
+                                ppfa_seal.encode(),
+                            ));
+
+                            log::debug!(
+                                "🔏 Creating block with PPFA seal: index={}, proposer={:?}",
+                                ppfa_index,
+                                hex::encode(&our_validator_id.encode()[..8])
+                            );
+
                             match proposer.propose(
                                 inherent_data,
-                                Default::default(), // Default digest
+                                pre_digest, // Include PPFA seal in block digest
                                 Duration::from_secs(5), // 5 second block production timeout
                                 None, // No soft deadline
                             ).await {
@@ -962,8 +1010,6 @@ pub fn new_full_with_params(
                                     // Import the block
                                     use sc_consensus::BlockImportParams;
                                     use sp_runtime::traits::Header as _;
-                                    use sp_runtime::DigestItem;
-                                    use codec::Encode;
 
                                     let mut import_params = BlockImportParams::new(
                                         sp_consensus::BlockOrigin::Own,
@@ -973,48 +1019,8 @@ pub fn new_full_with_params(
                                     import_params.finalized = false;
                                     import_params.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
 
-                                    // ═══════════════════════════════════════════════════════════════
-                                    // PPFA BLOCK SEALING: Add PPFA metadata to block digest
-                                    // ═══════════════════════════════════════════════════════════════
-
-                                    // Create PPFA seal with: (ppfa_index, proposer_id, slot_number, timestamp)
-                                    #[derive(Encode)]
-                                    struct PpfaSeal {
-                                        ppfa_index: u32,
-                                        proposer_id: [u8; 32],
-                                        slot_number: u64,
-                                        timestamp: u64,
-                                    }
-
-                                    let ppfa_seal = PpfaSeal {
-                                        ppfa_index,
-                                        proposer_id: *our_validator_id.as_ref(),
-                                        slot_number,
-                                        timestamp: current_time,
-                                    };
-
-                                    // Add PPFA seal as PreRuntime digest
-                                    import_params.post_digests.push(DigestItem::PreRuntime(
-                                        *b"PPFA", // PPFA consensus engine ID
-                                        ppfa_seal.encode(),
-                                    ));
-
-                                    log::debug!(
-                                        "🔏 Added PPFA seal to block #{}: index={}, proposer={:?}",
-                                        block.header.number(),
-                                        ppfa_index,
-                                        hex::encode(&our_validator_id.encode()[..8])
-                                    );
-
-                                    // Record PPFA authorization in runtime (for future validation)
-                                    // Note: This would ideally be done via an inherent extrinsic
-                                    // For now, we log it for tracking purposes
-                                    log::trace!(
-                                        "PPFA authorization: block={}, ppfa_index={}, proposer={:?}",
-                                        block.header.number(),
-                                        ppfa_index,
-                                        hex::encode(&our_validator_id.encode()[..8])
-                                    );
+                                    // PPFA seal is already in the block header (added before propose())
+                                    // No need to add post_digests - the seal was included during block creation
 
                                     match ppfa_block_import.import_block(import_params).await {
                                         Ok(result) => {
@@ -1660,28 +1666,27 @@ pub fn new_full_with_params(
                     }
 
                     // ========== STATUS MONITORING ==========
-                    // Periodically log finality gadget status
-                    static mut LAST_STATUS_LOG: u64 = 0;
+                    // Periodically log finality gadget status (thread-safe)
+                    static LAST_STATUS_LOG: AtomicU64 = AtomicU64::new(0);
                     let now = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
                         .as_secs();
 
-                    unsafe {
-                        if now - LAST_STATUS_LOG >= 30 {
-                            let gadget = bridge_finality_gadget.lock().await;
-                            let current_view = gadget.get_current_view();
-                            let finalized_count = gadget.get_finalized_blocks().len();
+                    let last_log = LAST_STATUS_LOG.load(Ordering::Relaxed);
+                    if now - last_log >= 30 {
+                        let gadget = bridge_finality_gadget.lock().await;
+                        let current_view = gadget.get_current_view();
+                        let finalized_count = gadget.get_finalized_blocks().len();
 
-                            log::debug!(
-                                "ASF Finality status: view={:?}, finalized={}, connected_peers={}",
-                                current_view,
-                                finalized_count,
-                                bridge_p2p_network.get_connected_peers().await.len()
-                            );
+                        log::debug!(
+                            "ASF Finality status: view={:?}, finalized={}, connected_peers={}",
+                            current_view,
+                            finalized_count,
+                            bridge_p2p_network.get_connected_peers().await.len()
+                        );
 
-                            LAST_STATUS_LOG = now;
-                        }
+                        LAST_STATUS_LOG.store(now, Ordering::Relaxed);
                     }
                 }
             },

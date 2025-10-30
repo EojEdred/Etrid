@@ -1,8 +1,0 @@
-# ËTRID Documentation
-DirectoryIndex index.html
-Options -Indexes
-
-# Allow access
-<Files *>
-    Require all granted
-</Files>

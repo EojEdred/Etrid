@@ -1,7 +1,7 @@
 # Etrid Network Operator Guide
 
 **Version**: 1.0.0
-**Last Updated**: October 22, 2025
+**Last Updated**: October 30, 2025
 **Status**: Production Ready
 **Target Audience**: Validator operators, watchtower operators, node administrators
 
@@ -303,8 +303,8 @@ listen_addr = [
 
 # Bootnodes (connect to network)
 bootnodes = [
-    "/dns4/bootnode-01.etrid.network/tcp/30333/p2p/12D3KooWBootnode1...",
-    "/dns4/bootnode-02.etrid.network/tcp/30333/p2p/12D3KooWBootnode2...",
+    "/dns4/bootnode-01.etrid.org/tcp/30333/p2p/12D3KooWBootnode1...",
+    "/dns4/bootnode-02.etrid.org/tcp/30333/p2p/12D3KooWBootnode2...",
 ]
 
 # External address (your public IP/domain)
@@ -358,7 +358,7 @@ enabled = true
 
 # Telemetry endpoints
 endpoints = [
-    "wss://telemetry.etrid.network/submit 0"
+    "wss://telemetry.etrid.org/submit 0"
 ]
 
 [prometheus]
@@ -386,7 +386,7 @@ Create `/etc/systemd/system/etrid-validator.service`:
 [Unit]
 Description=Etrid FlareChain Validator
 After=network.target
-Documentation=https://docs.etrid.network
+Documentation=https://docs.etrid.org
 
 [Service]
 Type=simple
@@ -474,7 +474,7 @@ etrid-cli account balance <STASH_ADDRESS>
 #### Step 2: Bond Stake
 
 ```bash
-# Using web wallet (https://wallet.etrid.network):
+# Using web wallet (https://wallet.etrid.org):
 # 1. Navigate to "Staking" tab
 # 2. Click "Bond Funds"
 # 3. Enter stash account
@@ -689,7 +689,7 @@ Create `/etc/systemd/system/etrid-watchtower.service`:
 [Unit]
 Description=Etrid Lightning-Bloc Watchtower
 After=network.target etrid-validator.service
-Documentation=https://docs.etrid.network
+Documentation=https://docs.etrid.org
 
 [Service]
 Type=simple
@@ -1518,8 +1518,8 @@ sudo journalctl -u etrid-validator -n 100 --no-pager
 ```bash
 # 1. Add bootnodes
 etrid-flare-node \
-  --bootnodes /dns4/bootnode-01.etrid.network/tcp/30333/p2p/12D3KooW... \
-  --bootnodes /dns4/bootnode-02.etrid.network/tcp/30333/p2p/12D3KooW...
+  --bootnodes /dns4/bootnode-01.etrid.org/tcp/30333/p2p/12D3KooW... \
+  --bootnodes /dns4/bootnode-02.etrid.org/tcp/30333/p2p/12D3KooW...
 
 # 2. Clear peer database
 sudo systemctl stop etrid-validator
@@ -1529,8 +1529,8 @@ sudo systemctl start etrid-validator
 # 3. Purge and re-sync from snapshot
 sudo systemctl stop etrid-validator
 etrid-flare-node purge-chain --base-path /var/lib/etrid-validator --chain flarechain
-# Download snapshot from https://snapshots.etrid.network
-wget https://snapshots.etrid.network/latest.tar.gz
+# Download snapshot from https://snapshots.etrid.org
+wget https://snapshots.etrid.org/latest.tar.gz
 tar -xzf latest.tar.gz -C /var/lib/etrid-validator/chains/flarechain/
 sudo chown -R etrid-validator:etrid-validator /var/lib/etrid-validator
 sudo systemctl start etrid-validator
@@ -1611,7 +1611,7 @@ curl -X POST http://localhost:9944 \
 
 # 3. Update network topology
 # Download latest topology:
-wget https://topology.etrid.network/lightning-network.json \
+wget https://topology.etrid.org/lightning-network.json \
   -O /var/lib/etrid-watchtower/network-topology.json
 
 # 4. Reduce check interval (if missing events)
@@ -1749,7 +1749,7 @@ etrid-flare-node purge-chain \
 
 # 4. Restore from snapshot (faster than full sync)
 cd /var/lib/etrid-validator/chains/flarechain
-wget https://snapshots.etrid.network/flarechain-latest.tar.gz
+wget https://snapshots.etrid.org/flarechain-latest.tar.gz
 tar -xzf flarechain-latest.tar.gz
 sudo chown -R etrid-validator:etrid-validator /var/lib/etrid-validator
 
@@ -2076,20 +2076,20 @@ sudo journalctl -u etrid-validator -f
 
 ### Resource Links
 
-- **Official Documentation**: https://docs.etrid.network
-- **Block Explorer**: https://explorer.etrid.network
-- **Telemetry**: https://telemetry.etrid.network
-- **Validator Dashboard**: https://validator-dashboard.etrid.network
+- **Official Documentation**: https://docs.etrid.org
+- **Block Explorer**: https://explorer.etrid.org
+- **Telemetry**: https://telemetry.etrid.org
+- **Validator Dashboard**: https://validator-dashboard.etrid.org
 - **Community Discord**: https://discord.gg/etrid
 - **GitHub Repository**: https://github.com/EojEdred/Etrid
-- **Security Contact**: security@etrid.network
+- **Security Contact**: security@etrid.org
 
 ### Support Channels
 
-- **Email**: support@etrid.network
+- **Email**: support@etrid.org
 - **Discord**: #validator-support channel
 - **GitHub Issues**: Technical problems
-- **Emergency Contact**: For critical security issues, contact security@etrid.network
+- **Emergency Contact**: For critical security issues, contact security@etrid.org
 
 ---
 

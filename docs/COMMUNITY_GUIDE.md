@@ -34,12 +34,12 @@ Our Discord is the heart of the community with channels for:
 
 ### Telegram
 
-**Main chat:** https://t.me/etridofficial
+**Main chat:** https://t.me/EtridOfficial
 **Announcements:** https://t.me/etridann
 
 ### Twitter/X
 
-**Follow:** https://twitter.com/etrid_network
+**Follow:** https://twitter.com/EtridMultichain
 
 Stay updated with:
 - Project announcements
@@ -50,7 +50,7 @@ Stay updated with:
 
 ### Forum (Governance)
 
-**Visit:** https://forum.etrid.network
+**Visit:** https://forum.etrid.org
 
 For in-depth discussions:
 - Treasury proposals
@@ -66,7 +66,7 @@ Community-driven news and discussions.
 
 ### GitHub
 
-**Repository:** https://github.com/Etrid/Etrid
+**Repository:** https://github.com/etrid/Etrid
 
 For technical contributions:
 - Report bugs
@@ -265,7 +265,7 @@ The Ëtrid Ambassador Program recognizes and rewards community members who activ
 
 ### How to Apply
 
-1. Fill out application: https://etrid.network/ambassador
+1. Fill out application: https://etrid.org/ambassador
 2. Provide portfolio/examples
 3. 2 community references
 4. Interview with community lead
@@ -292,7 +292,7 @@ The Ëtrid Ambassador Program recognizes and rewards community members who activ
 5. Complete work and submit
 6. Receive payment
 
-**Apply:** https://etrid.network/grants
+**Apply:** https://etrid.org/grants
 
 ### Treasury Proposals (5,000+ ÉTR)
 
@@ -304,7 +304,7 @@ The Ëtrid Ambassador Program recognizes and rewards community members who activ
 - Ecosystem development
 
 **Process:**
-1. Discuss on forum: https://forum.etrid.network
+1. Discuss on forum: https://forum.etrid.org
 2. Create formal proposal using template
 3. Community feedback (1-2 weeks)
 4. Submit on-chain proposal
@@ -320,7 +320,7 @@ The Ëtrid Ambassador Program recognizes and rewards community members who activ
 - Startups building on Ëtrid
 - Significant projects requiring investment
 
-**Contact:** ventures@etrid.network
+**Contact:** ventures@etrid.org
 
 We can introduce you to:
 - VCs specializing in blockchain
@@ -375,7 +375,7 @@ We can introduce you to:
 **How to Report:**
 1. Discord: Use `/report` command or DM a moderator
 2. Telegram: Report to @etrid_admin
-3. Email: conduct@etrid.network
+3. Email: conduct@etrid.org
 
 **What Happens:**
 1. Report reviewed by moderators
@@ -384,7 +384,7 @@ We can introduce you to:
 4. Parties notified
 
 **Appeals:**
-- Email: appeals@etrid.network
+- Email: appeals@etrid.org
 - Include: Your username, date, reason
 - Review within 7 days
 
@@ -445,15 +445,15 @@ We can introduce you to:
 
 ## Useful Links
 
-- Website: https://etrid.network
-- Documentation: https://docs.etrid.network
-- Forum: https://forum.etrid.network
-- Block Explorer: https://explorer.etrid.network
-- GitHub: https://github.com/Etrid/Etrid
+- Website: https://etrid.org
+- Documentation: https://docs.etrid.org
+- Forum: https://forum.etrid.org
+- Block Explorer: https://explorer.etrid.org
+- GitHub: https://github.com/etrid/Etrid
 - Linktree: https://linktr.ee/etrid
 
 ---
 
-*For questions about the community, contact: community@etrid.network*
+*For questions about the community, contact: community@etrid.org*
 
-*Last updated: October 25, 2025*
+*Last updated: October 30, 2025*

@@ -14,7 +14,7 @@
 
 [Get Started](/)
 [GitHub](https://github.com/etrid/etrid-protocol)
-[Live Dashboard](http://localhost:3001)
+[Live Dashboard](https://dashboard.etrid.org)
 
 <!-- Background color -->
 ![color](#f0f0f0)

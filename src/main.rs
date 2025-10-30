@@ -123,11 +123,11 @@ pub struct Cli {
     /// Specify which chain to run
     #[arg(
         long,
-        value_name = "CHAIN",
+        value_name = "CHAIN_TYPE",
         default_value = "flare",
         help = "Chain to run: flare, btc-pbc, eth-pbc, sol-pbc, xlm-pbc, xrp-pbc, bnb-pbc, trx-pbc, ada-pbc, link-pbc, matic-pbc, sc-usdt-pbc, doge-pbc"
     )]
-    pub chain: String,
+    pub chain_type: String,
 
     /// Run as collator (for PBC chains)
     #[arg(long, help = "Run as collator (for PBC chains only)")]
@@ -208,7 +208,7 @@ impl SubstrateCli for Cli {
     }
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
-        let chain_type = ChainType::from_str(&self.chain)?;
+        let chain_type = ChainType::from_str(&self.chain_type)?;
 
         match chain_type {
             ChainType::Flare => {
@@ -218,7 +218,7 @@ impl SubstrateCli for Cli {
                     "dev" => Box::new(flare_chain_node::chain_spec::development_config()?),
                     "local" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?),
                     "staging" | "ember" => Box::new(flare_chain_node::chain_spec::staging_testnet_config()?),
-                    "" | "flarechain" => Box::new(flare_chain_node::chain_spec::flarechain_config()?),
+                    "" | "flarechain" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?), // Use local testnet for testing
                     path => Box::new(flare_chain_node::chain_spec::ChainSpec::from_json_file(
                         std::path::PathBuf::from(path),
                     )?),
@@ -238,7 +238,7 @@ fn main() -> sc_cli::Result<()> {
     let cli = Cli::parse();
 
     // Parse chain type
-    let chain_type = ChainType::from_str(&cli.chain)
+    let chain_type = ChainType::from_str(&cli.chain_type)
         .map_err(|e| sc_cli::Error::Input(e))?;
 
     // Validate validator/collator flags (only when running node, not for subcommands)

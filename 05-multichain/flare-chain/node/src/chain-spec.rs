@@ -62,3 +62,26 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 pub fn flarechain_config() -> Result<ChainSpec, String> {
     ChainSpec::from_json_bytes(&include_bytes!("../res/flarechain.json")[..])
 }
+
+/// 2-validator test config (Alice & Bob) for debugging
+pub fn test_2validator_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain 2-Validator Test")
+    .with_id("flarechain_test_2val")
+    .with_chain_type(ChainType::Local)
+    .with_protocol_id("flarechain_test")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties
+    })
+    .with_genesis_config_preset_name("test_2validator")
+    .build())
+}

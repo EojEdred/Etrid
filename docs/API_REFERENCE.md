@@ -1,7 +1,7 @@
 # Etrid Blockchain API Reference
 
 **Version:** 1.0.0
-**Last Updated:** 2025-10-22
+**Last Updated:** 2025-10-30
 
 ## Table of Contents
 

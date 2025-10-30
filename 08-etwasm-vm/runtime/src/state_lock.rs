@@ -5,6 +5,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
+
 use sp_std::collections::btree_map::BTreeMap;
 
 /// Account identifier type (32-byte array for EVM compatibility)

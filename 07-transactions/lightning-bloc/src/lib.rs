@@ -8,6 +8,11 @@
 //! - Settlement finality
 //! - Channel lifecycle management
 //! - Watchtower incentive mechanisms
+//! - Multi-party state channels
+//! - Transaction batching and compression
+//! - Optimistic rollup integration
+//! - Fraud proof system
+//! - Emergency withdrawal procedures
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -16,6 +21,11 @@ extern crate alloc;
 
 pub mod routing;
 pub mod watchtower;
+pub mod fraud_proofs;
+pub mod multi_party;
+pub mod batching;
+pub mod optimistic_rollup;
+pub mod emergency;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -58,6 +68,43 @@ pub use watchtower::{
     FraudResolution, WatchtowerStatistics,
     MIN_WATCHTOWER_STAKE, WATCHTOWER_BASE_REWARD,
     FRAUD_REWARD_PERCENTAGE,
+};
+
+// Re-export fraud proof types
+pub use fraud_proofs::{
+    FraudProofSystem, FraudProof, ChallengeResponse,
+    Dispute as FraudDispute, StateTransition, DisputeResolution,
+    FraudProofError, FraudProofStatistics,
+    CHALLENGE_PERIOD, RESPONSE_PERIOD,
+};
+
+// Re-export multi-party channel types
+pub use multi_party::{
+    MultiPartyChannel, MultiPartyChannelManager, Participant,
+    Signature, MultiPartyStatistics, MultiPartyError,
+    MAX_PARTIES, DEFAULT_CONSENSUS_THRESHOLD,
+};
+
+// Re-export batching types
+pub use batching::{
+    BatchingManager, TransactionBatch, OffChainTransaction,
+    BatchSettlement, CompressionResult, BatchingError,
+    BatchingStatistics, MAX_BATCH_SIZE, MAX_BATCH_AGE,
+};
+
+// Re-export optimistic rollup types
+pub use optimistic_rollup::{
+    OptimisticRollup, StateCommitment, L2Block, Sequencer,
+    CommitmentStatus, RollupStatistics, RollupError,
+    OPTIMISTIC_CHALLENGE_PERIOD,
+};
+
+// Re-export emergency withdrawal types
+pub use emergency::{
+    EmergencySystem, WithdrawalRequest, ForcedClosureRequest,
+    TimeoutWatchdog, WithdrawalStatus, ClosureStatus,
+    EmergencyStatistics, EmergencyError,
+    COUNTERPARTY_TIMEOUT, FORCED_CLOSURE_GRACE_PERIOD,
 };
 
 /// Channel state

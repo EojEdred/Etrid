@@ -31,6 +31,7 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
+    use codec::Decode;
     use frame_support::pallet_prelude::*;
     use frame_support::BoundedVec;
     use frame_system::pallet_prelude::*;
@@ -77,6 +78,36 @@ pub mod pallet {
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
+
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_initialize(block_number: BlockNumberFor<T>) -> Weight {
+            // Extract PPFA authorization from block digest and record it
+            // This ensures block imports store PPFA authorizations for validation
+
+            let digests = frame_system::Pallet::<T>::digest();
+
+            // Look for PPFA PreRuntime digest items
+            // PPFA_ENGINE_ID is *b"ppfa" = [112, 112, 102, 97]
+            const PPFA_ENGINE_ID: [u8; 4] = *b"ppfa";
+
+            for digest_item in digests.logs.iter() {
+                if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
+                    if engine_id == &PPFA_ENGINE_ID {
+                        // Decode PPFA seal data: (ppfa_index: u32, proposer: ValidatorId)
+                        if let Ok((ppfa_index, proposer_id)) = <(u32, ValidatorId)>::decode(&mut &data[..]) {
+                            // Record PPFA authorization in storage for future validation
+                            Self::record_ppfa_authorization(block_number, ppfa_index, proposer_id);
+                        }
+                        // Note: Failed decodes are silently ignored to avoid runtime panics
+                    }
+                }
+            }
+
+            // Return weight for digest processing
+            Weight::from_parts(10_000, 0)
+        }
+    }
 
     #[pallet::config]
     pub trait Config: frame_system::Config {

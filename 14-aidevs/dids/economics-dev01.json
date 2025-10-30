@@ -10,8 +10,8 @@
       "id": "did:etrid:economics-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:economics-dev01",
-      "publicKeyMultibase": "zGA7gnzJYc8b2zWZbCoAaGbKwLKozr8KM42oDsrRBAis",
-      "publicKeyBase58": "GA7gnzJYc8b2zWZbCoAaGbKwLKozr8KM42oDsrRBAis"
+      "publicKeyMultibase": "zEdhoV4rQdMaRW4nWpW1qgVa5H2FyufqaGYSV5VS18E1C",
+      "publicKeyBase58": "EdhoV4rQdMaRW4nWpW1qgVa5H2FyufqaGYSV5VS18E1C"
     }
   ],
   "authentication": [

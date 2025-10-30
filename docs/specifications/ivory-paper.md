@@ -1,10 +1,10 @@
 # ËTRID IVORY PAPER v2.0
 ## Complete Protocol Specification & Foundation Governance
 
-**Document ID**: ETRID-WP-2025-V2.0  
-**Status**: ACTIVE PROTOCOL SPECIFICATION  
-**Publication Date**: October 20, 2025  
-**Founder**: Eoj Edred  
+**Document ID**: ETRID-WP-2025-V2.0
+**Status**: ACTIVE PROTOCOL SPECIFICATION
+**Publication Date**: October 30, 2025
+**Founder**: Eoj Edred
 **License**: GPLv3 (Open Source, Non-Commercial)
 
 ---
@@ -52,10 +52,10 @@
 
 ### Launch Timeline
 - **Phase 1-2**: ✅ Core infrastructure complete
-- **Phase 3**: 🔄 ËDSC stablecoin integration (current)
-- **Phase 4-5**: 🎯 Partition Burst Chains & DAO registration
-- **Phase 6-7**: 🔄 Smart contracts & AI governance
-- **Phase 8**: 🚀 Mainnet launch (Q1 2026 target)
+- **Phase 3**: ✅ ËDSC stablecoin integration complete
+- **Phase 4-5**: ✅ Partition Burst Chains & DAO registration complete
+- **Phase 6-7**: ✅ Smart contracts & AI governance complete
+- **Phase 8**: ✅ Mainnet launched successfully (October 2025)
 
 ### Initial Token Distribution
 - **Total Supply**: 1 Billion ÉTR
@@ -371,24 +371,32 @@ Unlike "Proof of Stake" or "Proof of Work," FODDoS is a **governance model**, no
 ### 6.1 Consensus Day: Annual Democratic Vote
 
 **Schedule**:
-- Date: December 1st (hardcoded, changes require hard fork)
-- Duration: 24-hour window (00:00-23:59 UTC)
-- Frequency: Once per year
-- Participation: All Common Stake Peers (≥1 ÉTR staked)
+- **Date**: December 1st at **12:00 AM PST** (hardcoded, changes require hard fork)
+- **Pre-Consensus Period**: January 1 – October 31 (proposal submission, campaigns, nominations)
+- **Frequency**: Once per year
+- **Participation Types**:
+  - **VALIDITY Nodes** (64+ ÉTR minimum stake): Block producers and consensus participants
+  - **Common Stake Peers** (1+ ÉTR minimum stake): Governance voters and proposal supporters
+  - **Decentralized Directors** (128+ ÉTR minimum stake): 9 elected board members
 
 **Voting Power Calculation**:
 
 ```
-Vote Weight = Stake Amount / Vote Dilution
-Vote Dilution = Total Network Stake / Average Coin Age
+Voting Power = Staked ÉTR × Coinage
 ```
 
+Where **Coinage** represents time-weighted stake (how long tokens have been staked).
+
 **Example**:
-- You stake: 1,000 ÉTR
-- Network total stake: 100 Million ÉTR
-- Average coin age: 500 days
-- Vote dilution: 100M / 500 = 200,000
-- Your vote weight: 1,000 / 200,000 = 0.005% of total votes
+- You stake: 1,000 ÉTR for 180 days
+- Coinage multiplier: ~1.5× (increases with time staked)
+- Your voting power: 1,000 × 1.5 = 1,500 effective votes
+- Longer stakes = higher voting power multiplier
+- Incentivizes long-term stakeholder commitment
+
+**Penalties**:
+- Failure to vote = penalties and reward redistribution
+- Rewards distributed to active participants
 
 ### 6.2 Consensus Day Ballot
 
@@ -443,9 +451,10 @@ Vote Dilution = Total Network Stake / Average Coin Age
 
 **Vote Submission**:
 - On-chain voting via extrinsic
-- Ballot opened: Dec 1, 00:00 UTC
-- Ballot closed: Dec 1, 23:59 UTC
-- Results calculated: Dec 2, 08:00 UTC
+- Ballot opened: December 1, 12:00 AM PST
+- **Pre-Consensus Period**: January 1 – October 31 (proposal submission and campaigning)
+- **Voting Power Formula**: Staked ÉTR × Coinage (time-weighted stake)
+- Failure to vote = penalties and reward redistribution
 
 **Vote Types**:
 - Single-choice: Pick 1 option
@@ -763,9 +772,11 @@ ELSE IF oracle_staleness > 100_blocks:
 **Decentralized Directors** (Governance Board)
 - 9-person elected board (non-hierarchical)
 - Elected annually on Consensus Day
-- Requirements: ≥128 ÉTR stake + "Honest Image"
-- Compensation: Salary + FLARE node rewards
-- Duties: Oversight, proposals, security decisions
+- **Requirements**: 128 ÉTR minimum stake, must serve as OD Flare Nodes
+- **Term Limits**: 1-year terms, 1-year cooldown between terms, **maximum 3 lifetime terms**
+- **Compensation**: Community-voted salaries (determined annually on Consensus Day)
+- **Duties**: Oversight, proposals, security decisions
+- **No special voting power**: All major decisions require 66% community supermajority
 
 **Community Developers** (Open-Source Contributors)
 - Submit pull requests to ËTRID codebase
@@ -1214,4 +1225,39 @@ A: FlareChain does ~1,000 TPS. PBCs add horizontal scaling (each PBC = separate 
 **END OF ËTRID IVORY PAPER v2.0**
 
 *This document is the authoritative specification for the ËTRID protocol. All development, governance, and deployment decisions must align with this charter. Distributed under GPLv3 open-source license.*
+
+---
+
+## CLOSING REMARKS
+
+To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.
+
+Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.
+
+This idea does not promote growth, prosperity, fairness, or decentralization.
+
+It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.
+
+This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.
+
+We are in a unique period in which power can be reclaimed by the powerless.
+
+Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.
+
+Borders can be reimagined.
+
+When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.
+
+The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.
+
+By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.
+
+**– Eoj Edred**
+**Founder, Ëtrid FODDoS Project**
+
+---
+
+*"Provide a flare and guide the way, the future of tomorrow is decided today."*
+
+**– Eoj Edred**
 

@@ -10,8 +10,8 @@
       "id": "did:etrid:docs-dev01#key-1",
       "type": "Ed25519VerificationKey2020",
       "controller": "did:etrid:docs-dev01",
-      "publicKeyMultibase": "z4yu3DuRLqNbDpVZu14qNZAU7WzhRfNp85vfBZBdLzgTJ",
-      "publicKeyBase58": "4yu3DuRLqNbDpVZu14qNZAU7WzhRfNp85vfBZBdLzgTJ"
+      "publicKeyMultibase": "zAwVtV3VdZtbm8tSpZGggrSbTBWNtmKsjE3GLJzzUVJv7",
+      "publicKeyBase58": "AwVtV3VdZtbm8tSpZGggrSbTBWNtmKsjE3GLJzzUVJv7"
     }
   ],
   "authentication": [

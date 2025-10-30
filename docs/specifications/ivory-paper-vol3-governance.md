@@ -26,21 +26,27 @@
 
 ### Overview
 
-**Consensus Day** occurs annually on **December 1st** at **00:00 UTC**. It is the network's constitutional moment where all major governance decisions are made collectively.
+**Consensus Day** occurs annually on **December 1st** at **12:00 AM PST**. It is the network's constitutional moment where all major governance decisions are made collectively.
 
-**Duration**: 22 hours total
 **Frequency**: Once per year (365 days)
-**Participation**: All ÉTR holders + Validators
+**Participation**: All ÉTR stakers (VALIDITY Nodes, Common Stake Peers, Decentralized Directors)
 
-### The Four Phases
+**Pre-Consensus Period**: January 1 – October 31
+- Registration for eligibility
+- Proposal submission
+- Campaigning for proposals and director candidates
+- Preliminary voting and discussion
 
-```
-Phase 1: Registration    →  6 hours  (00:00 - 06:00 UTC)
-Phase 2: Voting         → 12 hours  (06:00 - 18:00 UTC)
-Phase 3: Minting        →  3 hours  (18:00 - 21:00 UTC)
-Phase 4: Distribution   →  1 hour   (21:00 - 22:00 UTC)
-Total:                   = 22 hours
-```
+**Consensus Day Purpose**:
+- Vote on proposals (protocol improvements, standards, parameter changes, developer commits)
+- Adjust economic parameters (rewards, penalties, supply, salaries)
+- Elect 9 Decentralized Directors for the upcoming year
+- Distribute rewards to participating stakeholders
+
+**Voting Power**: Staked ÉTR × Coinage
+- Coinage = time-weighted stake (how long tokens have been staked)
+- Longer stakes = higher voting power multiplier
+- Encourages long-term stakeholder commitment
 
 ### Phase 1: Registration (6 hours)
 
@@ -278,50 +284,68 @@ Remaining:               98,300,000 ÉTR → Treasury for budgets
 
 **Composition**: 9 individuals elected annually
 
+**Requirements**:
+- **Minimum stake: 128 ÉTR**
+- **Must serve as OD Flare Nodes** (Operational Director Flare Nodes)
+- Must maintain active participation in network operations
+
 **Term**: 1 year (renewable via re-election)
 
+**Term Limits**:
+- **One-year terms**
+- **One-year cooldown** between terms
+- **Maximum 3 lifetime terms** (cannot serve more than 3 total terms)
+
 **Election Process**:
-1. Candidates announce during Registration Phase
-2. Community votes during Voting Phase (ranked choice)
+1. Candidates announce during Pre-Consensus Period (Jan 1 - Oct 31)
+2. Community votes on Consensus Day (December 1)
 3. Top 9 vote-getters elected
 4. Ties resolved by stake-weighted runoff
+5. Voting power = Staked ÉTR × Coinage
 
 **Powers**:
-1. **Veto Authority**: Can veto proposals with 6/9 vote (within 48 hours of Consensus Day)
-2. **Emergency Actions**: Can pause chains, slash malicious validators (7/9 vote required)
-3. **Treasury Management**: Approve budget disbursements throughout the year
-4. **Protocol Maintenance**: Coordinate security audits, bug bounties
-5. **Representation**: Speak for Ëtrid at conferences, media, partnerships
+1. **Governance Oversight**: Oversee development and consensus proposals
+2. **Protocol Maintenance**: Coordinate security audits, bug bounties
+3. **Representation**: Speak for Ëtrid at conferences, media, partnerships
+4. **Treasury Management**: Approve budget disbursements (community-authorized)
+5. **Emergency Coordination**: Coordinate response to network emergencies
 
 **Limitations**:
-- Cannot change protocol without community vote
+- Cannot change protocol without community consensus vote
 - Cannot mint tokens outside Consensus Day
-- Cannot override community supermajority (>75%)
-- Cannot serve more than 3 consecutive terms
+- **No hierarchy** among Directors - all decisions are community-driven
+- Cannot override community supermajority
+- Subject to term limits (max 3 lifetime terms)
 
 **Compensation**:
-- Annual stipend: 22,222 ÉTR per Director (paid from Consensus Day mint)
-- Travel/expense budget: Up to 10,000 ÉTR per Director per year
-- No equity, no token lock-up (Directors can sell freely)
+- **Community-voted salaries** (determined annually on Consensus Day)
+- No predetermined amounts - stakeholders decide compensation
+- Funded from Consensus Day distribution
 
 **Accountability**:
-- Monthly public reports required
-- Can be removed mid-term via emergency vote (requires 51% community + 66% validators)
+- Regular public reports required
+- Can be removed mid-term via emergency community vote
 - All communications public and logged
+- Bound by Foundation bylaws
 
-### Validators
+### VALIDITY Nodes (Validators)
 
-**Role**: Secure the network by producing and finalizing blocks
+**Role**: Ëtrid Partitioned Burst Chain nodes in consensus, syncing with Flare Chain. Responsible for block production, finality attestation, and cross-chain state verification.
 
 **Requirements**:
-- Minimum stake: 100,000 ÉTR (self-bond)
+- **Minimum stake: 64 ÉTR**
 - Hardware: 8-core CPU, 32GB RAM, 1TB SSD, 1Gbps network
 - Uptime: >98% (measured over 30-day rolling window)
+- Must run full nodes for FlareChain + ≥1 PBC
 - Identity: Must verify on-chain identity (no KYC, just persistent identity)
 
-**Selection**:
-- Top 100 validators by stake automatically included in active set
-- Additional 50 selected randomly (weighted by stake) for diversity
+**Node Statuses**:
+- Registered
+- Pending
+- Sequenced
+- Chilled
+- De-Sequenced
+- Re-Sequenced
 
 **Rewards**:
 ```rust
@@ -351,12 +375,25 @@ fn calculate_validator_reward(
 - **Malicious Behavior**: -50% stake + removal for provable attacks
 - **Censorship**: -5% stake for ignoring valid transactions
 
-### Validity Nodes
+### Common Stake Peers
 
-**Role**: Verify cross-chain messages and state proofs
+**Role**: Stakeholders who participate in governance without running full node infrastructure
 
 **Requirements**:
-- Minimum stake: 50,000 ÉTR
+- **Minimum stake: 1+ ÉTR**
+
+**Privileges**:
+- Voting on proposals during Consensus Day
+- Campaigning for proposals
+- Reporting faults and issues
+- Earning rewards based on stake, coinage, and activity
+
+**Voting Power Formula**:
+```
+Voting Power = Staked ÉTR × Coinage
+```
+
+Where coinage represents how long tokens have been staked (time-weighted stake)
 - Must run full nodes for FlareChain + ≥3 PBCs
 - Must respond to verification requests within 10 blocks
 
@@ -513,7 +550,34 @@ Allocation:
 
 **Peg**: $1.00 USD (soft peg maintained by arbitrage + liquidations)
 
-**Collateral**: Over-collateralized by ÉTR (target: 150%)
+**Collateral**: Over-collateralized by multi-asset reserve (target: 150%)
+
+**Reserve Infrastructure**:
+
+EDSC is backed by a diversified multi-asset reserve managed through two specialized pallets:
+
+1. **pallet-multiasset-reserve**: Manages reserve composition and automated rebalancing
+2. **pallet-reserve-backed-token**: Handles EDSC minting and collateral positions
+
+**Reserve Composition**:
+```
+Target Allocation (example):
+- 40% ÉTR (native token)
+- 30% BTC (bridged from BTC-PBC)
+- 20% ETH (bridged from ETH-PBC)
+- 10% Other assets (governance-approved)
+
+Rebalancing:
+- Triggered when deviation exceeds 5%
+- Automated via pallet-multiasset-reserve
+- Governance can adjust allocation strategy
+```
+
+**Allocation Strategies**:
+- **EqualWeight**: Equal distribution across all reserve assets
+- **MarketCapWeighted**: Weight by market capitalization
+- **RiskAdjusted**: Weight by volatility/risk metrics
+- **Custom**: Custom weights set by governance vote
 
 **Minting Process**:
 ```rust
@@ -524,11 +588,16 @@ fn mint_edsc(collateral_amount: Balance) -> Result<Balance, Error> {
     // Require 150% collateralization
     let max_edsc_mintable = collateral_value_usd / 1.5;
 
-    // Lock collateral
+    // Lock collateral in reserve
     lock_collateral(caller, collateral_amount)?;
 
-    // Mint EDSC
+    // Mint EDSC via pallet-reserve-backed-token
     mint_stablecoin(caller, max_edsc_mintable)?;
+
+    // Reserve automatically rebalances if needed
+    if should_rebalance() {
+        trigger_rebalance()?;
+    }
 
     Ok(max_edsc_mintable)
 }
@@ -543,8 +612,8 @@ fn check_liquidation(cdp: &CollateralDebtPosition) -> bool {
 
     let collateralization_ratio = collateral_value / debt_value;
 
-    // Liquidate if ratio falls below 110%
-    if collateralization_ratio < 1.1 {
+    // Liquidate if ratio falls below 120% (updated threshold)
+    if collateralization_ratio < 1.2 {
         liquidate_cdp(cdp);
         true
     } else {
@@ -553,11 +622,45 @@ fn check_liquidation(cdp: &CollateralDebtPosition) -> bool {
 }
 ```
 
+**Collateralization Parameters**:
+```
+Minimum Collateral Ratio: 150%
+Liquidation Threshold:     120%
+Liquidation Penalty:       5%
+
+Example:
+To mint 1000 EDSC ($1000 value):
+→ Requires: $1500 in collateral (150%)
+→ Liquidated if collateral falls to $1200 (120%)
+→ Liquidator receives: $1200 + 5% penalty = $1260
+→ Position holder loses: $60 to liquidator
+```
+
 **Stability Mechanisms**:
-1. **Over-Collateralization**: 150% target ratio prevents undercollateralization
-2. **Liquidation**: Automated liquidations at 110% ratio
-3. **Interest Rates**: Dynamic interest on borrowed EDSC adjusts to maintain peg
-4. **Arbitrage**: Price deviations create profitable arbitrage opportunities
+1. **Multi-Asset Reserve**: Reduces correlation risk compared to single-asset backing
+2. **Automated Rebalancing**: Maintains target allocations via pallet-multiasset-reserve
+3. **Over-Collateralization**: 150% target ratio prevents undercollateralization
+4. **Liquidation**: Automated liquidations at 120% ratio (updated from 110%)
+5. **Liquidation Penalty**: 5% penalty incentivizes proper position management
+6. **Interest Rates**: Dynamic interest on borrowed EDSC adjusts to maintain peg
+7. **Arbitrage**: Price deviations create profitable arbitrage opportunities
+8. **DEX Integration**: FlareSwap enables efficient ÉTR/EDSC trading and price discovery
+
+**Reserve-Backed Token Framework**:
+
+Beyond EDSC, the reserve infrastructure enables creation of diverse synthetic assets:
+
+**Synthetic Asset Types**:
+- **Stablecoins**: EDSC (USD), EEUR (Euro), EGBP (Pound)
+- **Commodities**: EXAU (Gold), EXAG (Silver), EXOIL (Oil)
+- **Equities**: ETSLA (Tesla), EAAPL (Apple), EGOOG (Google)
+- **Indices**: ES&P (S&P 500), ENASDAQ (Nasdaq), EDJI (Dow Jones)
+
+**Governance Controls**:
+- Whitelisting of reserve assets (Consensus Day vote required)
+- Adjustment of collateralization ratios per synthetic
+- Rebalancing strategy selection
+- Emergency pause of minting/liquidations
 
 ### VMw (Virtual Machine Watts)
 
@@ -1033,3 +1136,39 @@ fn proposal_approved(proposal: &Proposal) -> bool {
 
 **Document Status**: ACTIVE PROTOCOL SPECIFICATION
 **Next Review**: Consensus Day 2026 (December 1, 2026)
+
+---
+
+## CLOSING REMARKS
+
+To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.
+
+Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.
+
+This idea does not promote growth, prosperity, fairness, or decentralization.
+
+It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.
+
+This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.
+
+We are in a unique period in which power can be reclaimed by the powerless.
+
+Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.
+
+Borders can be reimagined.
+
+When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.
+
+The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.
+
+By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.
+
+**– Eoj Edred**
+**Founder, Ëtrid FODDoS Project**
+
+---
+
+*"Provide a flare and guide the way, the future of tomorrow is decided today."*
+
+**– Eoj Edred**
+

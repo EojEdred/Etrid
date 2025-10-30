@@ -61,14 +61,14 @@ Install [Polkadot.js Extension](https://polkadot.js.org/extension/):
 ### 3. Connect to Ëtrid
 
 Visit the Ëtrid Web Interface:
-- **Mainnet:** https://app.etrid.network
-- **Testnet:** https://testnet.etrid.network
+- **Mainnet:** https://app.etrid.org
+- **Testnet:** https://testnet.etrid.org
 
 Or use Polkadot.js Apps:
 1. Go to https://polkadot.js.org/apps
 2. Click top-left dropdown
 3. Select "Development" → "Custom endpoint"
-4. Enter: `wss://rpc.etrid.network`
+4. Enter: `wss://rpc.etrid.org`
 5. Click "Switch"
 
 ### 4. Get ÉTR Tokens
@@ -81,7 +81,7 @@ Or use Polkadot.js Apps:
   - Uniswap (Ethereum): [Link]
 
 **Testnet:**
-- Use faucet: https://faucet.etrid.network
+- Use faucet: https://faucet.etrid.org
 - Request tokens on Discord: #testnet-faucet
 
 ### 5. Make Your First Transaction
@@ -120,7 +120,7 @@ git --version  # Should be installed
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/Etrid/Etrid.git
+git clone https://github.com/etrid/Etrid.git
 cd Etrid
 ```
 
@@ -244,12 +244,12 @@ npm run dev
 
 ```bash
 # Build from source
-git clone https://github.com/Etrid/Etrid.git
+git clone https://github.com/etrid/Etrid.git
 cd Etrid
 cargo build --release --locked
 
 # Or download pre-built binary
-wget https://github.com/Etrid/Etrid/releases/latest/download/etrid-linux-x86_64
+wget https://github.com/etrid/Etrid/releases/latest/download/etrid-linux-x86_64
 chmod +x etrid-linux-x86_64
 sudo mv etrid-linux-x86_64 /usr/local/bin/etrid
 ```
@@ -349,11 +349,11 @@ curl -H "Content-Type: application/json" \
 
 - [ ] Join the community:
   - Discord: https://discord.gg/etrid
-  - Telegram: https://t.me/etridofficial
+  - Telegram: https://t.me/EtridOfficial
   - Twitter: https://twitter.com/etrid_network
-- [ ] Explore the block explorer: https://explorer.etrid.network
-- [ ] Participate in governance: https://forum.etrid.network
-- [ ] Check out ecosystem projects: https://etrid.network/ecosystem
+- [ ] Explore the block explorer: https://explorer.etrid.org
+- [ ] Participate in governance: https://forum.etrid.org
+- [ ] Check out ecosystem projects: https://etrid.org/ecosystem
 
 ### For Developers
 
@@ -361,7 +361,7 @@ curl -H "Content-Type: application/json" \
 - [ ] Explore the [API Reference](./API_REFERENCE.md)
 - [ ] Check out [Example dApps](../apps/)
 - [ ] Join developer chat on Discord: #developers
-- [ ] Apply for grants: https://forum.etrid.network/c/treasury-proposals
+- [ ] Apply for grants: https://forum.etrid.org/c/treasury-proposals
 - [ ] Contribute to the codebase: [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ### For Validators
@@ -379,30 +379,30 @@ curl -H "Content-Type: application/json" \
 
 ### Documentation
 
-- **Main docs:** https://docs.etrid.network
-- **GitHub Wiki:** https://github.com/Etrid/Etrid/wiki
-- **API Docs:** https://docs.etrid.network/api
+- **Main docs:** https://docs.etrid.org
+- **GitHub Wiki:** https://github.com/etrid/Etrid/wiki
+- **API Docs:** https://docs.etrid.org/api
 
 ### Community Support
 
 - **Discord:** https://discord.gg/etrid (Fastest response)
-- **Telegram:** https://t.me/etridofficial
-- **Forum:** https://forum.etrid.network
-- **Email:** support@etrid.network
+- **Telegram:** https://t.me/EtridOfficial
+- **Forum:** https://forum.etrid.org
+- **Email:** support@etrid.org
 
 ### Technical Support
 
-- **GitHub Issues:** https://github.com/Etrid/Etrid/issues
+- **GitHub Issues:** https://github.com/etrid/Etrid/issues
 - **Stack Overflow:** Tag with `etrid` or `substrate`
-- **Validator support:** validators@etrid.network
+- **Validator support:** validators@etrid.org
 
 ### Security Issues
 
 **Do NOT post security vulnerabilities publicly.**
 
-Email: security@etrid.network
+Email: security@etrid.org
 
-PGP key: https://etrid.network/security.asc
+PGP key: https://etrid.org/security.asc
 
 ---
 
