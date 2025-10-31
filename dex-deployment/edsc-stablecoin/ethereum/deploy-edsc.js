@@ -2,7 +2,7 @@ const hre = require("hardhat");
 
 async function main() {
   console.log("\n═══════════════════════════════════════════════════════════");
-  console.log("  EDSC (Ëtrid Dollar Stablecoin) Deployment - Ethereum");
+  console.log("  EDSC (Ëtrid Dollar Stablecoin) Deployment - Base L2");
   console.log("═══════════════════════════════════════════════════════════\n");
 
   const [deployer] = await hre.ethers.getSigners();
@@ -13,22 +13,27 @@ async function main() {
   // Get foundation multisig from env (fallback to deployer for testing)
   const foundationMultisig = process.env.FOUNDATION_MULTISIG || deployer.address;
 
+  // Get reserve vault from env (fallback to deployer for testing)
+  // IMPORTANT: For mainnet, use proper multisig vault address!
+  const reserveVault = process.env.RESERVE_VAULT || deployer.address;
+
   console.log("📝 Contract Configuration:");
   console.log("  Name: Etrid Dollar Stablecoin");
   console.log("  Symbol: EDSC");
   console.log("  Decimals: 18");
-  console.log("  Initial Supply: 100,000 EDSC");
+  console.log("  Total Supply: 1,000,000,000 EDSC");
   console.log("  Owner:", foundationMultisig);
+  console.log("  Reserve Vault:", reserveVault);
   console.log("  Peg: $1.00 USD");
-  console.log("  Backing: 150% collateral on FlareChain\n");
+  console.log("  Backing: Treasury-backed (organic from purchases)\n");
 
-  console.log("🚀 Deploying uEdscEthereum contract...");
-  const uEdscEthereum = await hre.ethers.getContractFactory("uEdscEthereum");
-  const edsc = await uEdscEthereum.deploy(foundationMultisig);
+  console.log("🚀 Deploying EdscuEthereum contract...");
+  const EdscuEthereum = await hre.ethers.getContractFactory("EdscuEthereum");
+  const edsc = await EdscuEthereum.deploy(foundationMultisig, reserveVault);
   await edsc.waitForDeployment();
 
   const edscAddress = await edsc.getAddress();
-  console.log("✅ uEdscEthereum deployed to:", edscAddress);
+  console.log("✅ EdscuEthereum deployed to:", edscAddress);
 
   // Get deployment info
   const totalSupply = await edsc.totalSupply();
@@ -52,7 +57,7 @@ async function main() {
     chainId: (await hre.ethers.provider.getNetwork()).chainId.toString(),
     token: "EDSC",
     type: "Stablecoin",
-    contract: "uEdscEthereum",
+    contract: "EdscuEthereum",
     address: edscAddress,
     deployer: deployer.address,
     owner: owner,

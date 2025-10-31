@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title EDSC - Ëtrid Dollar Stablecoin on BSC
- * @notice USD-pegged stablecoin backed by 150% collateral on FlareChain
+ * @notice USD-pegged stablecoin backed by treasury reserves
  * @dev Mintable/burnable, bridgeable to FlareChain
  *
  * Token Properties:
@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * - Decimals: 18
  * - Peg: $1.00 USD
  * - Total Supply: Backed 1:1 with FlareChain reserve
- * - Collateralization: 150% minimum on FlareChain
+ * - Backing: 100% from user purchases (organic backing)
  *
  * Use Cases:
  * - Stable payments and transactions
@@ -64,15 +64,17 @@ contract EdscBSC is ERC20, ERC20Burnable, Ownable {
      * @notice Constructor
      * @param initialOwner Address that will own the contract (governance multisig)
      */
-    constructor(address initialOwner)
+    constructor(address initialOwner, address reserveVault)
         ERC20("Etrid Dollar Stablecoin", "EDSC")
         Ownable(initialOwner)
     {
         if (initialOwner == address(0)) revert ZeroAddress();
+        if (reserveVault == address(0)) revert ZeroAddress();
+
 
         // Mint initial supply for stablecoin pool bootstrapping
         // 100,000 EDSC for initial EDSC/USDC pool on BSC
-        _mint(initialOwner, 100_000 * 10**18);
+        _mint(reserveVault, 1_000_000_000 * 10**18); // 1 billion to vault
     }
 
     /**

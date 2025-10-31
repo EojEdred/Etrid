@@ -7,22 +7,23 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title EDSC - Ëtrid Dollar Stablecoin on Base
- * @notice USD-pegged stablecoin backed by 150% collateral on FlareChain
- * @dev Mintable/burnable, bridgeable to FlareChain
+ * @notice USD-pegged stablecoin backed by treasury reserves
+ * @dev Treasury-backed model: Initial supply minted to reserve vault
  *
  * Token Properties:
  * - Name: Etrid Dollar Stablecoin
  * - Symbol: EDSC
  * - Decimals: 18
  * - Peg: $1.00 USD
- * - Total Supply: Backed 1:1 with FlareChain reserve
- * - Collateralization: 150% minimum on FlareChain
+ * - Total Supply: 1 billion EDSC
+ * - Backing: 100% from user purchases (organic backing)
  *
- * Use Cases:
- * - Stable payments and transactions
- * - Trading pairs with USDC, USDT, DAI
- * - Cross-chain transfers via Ëtrid bridge
- * - Low-slippage swaps on stablecoin DEXes
+ * Treasury Model:
+ * - All tokens minted to reserve vault initially
+ * - Users purchase EDSC with BTC/ETH/SOL/USDC
+ * - Purchases provide backing (not pre-funded)
+ * - Reserve buys/sells at $1.00 to maintain peg
+ * - No upfront collateral required
  */
 contract EdscBase is ERC20, ERC20Burnable, Ownable {
     /// Maximum supply: 1 billion EDSC
@@ -63,16 +64,19 @@ contract EdscBase is ERC20, ERC20Burnable, Ownable {
     /**
      * @notice Constructor
      * @param initialOwner Address that will own the contract (governance multisig)
+     * @param reserveVault Address of reserve vault (holds all initial supply)
      */
-    constructor(address initialOwner)
+    constructor(address initialOwner, address reserveVault)
         ERC20("Etrid Dollar Stablecoin", "EDSC")
         Ownable(initialOwner)
     {
         if (initialOwner == address(0)) revert ZeroAddress();
+        if (reserveVault == address(0)) revert ZeroAddress();
 
-        // Mint initial supply for stablecoin pool bootstrapping
-        // 100,000 EDSC for initial EDSC/USDC pool on Base
-        _mint(initialOwner, 100_000 * 10**18);
+        // Mint entire supply to reserve vault (NOT to owner)
+        // Reserve releases EDSC as users purchase with crypto
+        // Backing accumulates organically from purchases
+        _mint(reserveVault, 1_000_000_000 * 10**18); // 1 billion EDSC
     }
 
     /**

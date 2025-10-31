@@ -13,18 +13,23 @@ async function main() {
   // Get foundation multisig from env (fallback to deployer for testing)
   const foundationMultisig = process.env.FOUNDATION_MULTISIG || deployer.address;
 
+  // Get reserve vault from env (fallback to deployer for testing)
+  // IMPORTANT: For mainnet, use proper multisig vault address!
+  const reserveVault = process.env.RESERVE_VAULT || deployer.address;
+
   console.log("📝 Contract Configuration:");
   console.log("  Name: Etrid Dollar Stablecoin");
   console.log("  Symbol: EDSC");
   console.log("  Decimals: 18");
-  console.log("  Initial Supply: 100,000 EDSC");
+  console.log("  Total Supply: 1,000,000,000 EDSC");
   console.log("  Owner:", foundationMultisig);
+  console.log("  Reserve Vault:", reserveVault);
   console.log("  Peg: $1.00 USD");
-  console.log("  Backing: 150% collateral on FlareChain\n");
+  console.log("  Backing: Treasury-backed (organic from purchases)\n");
 
   console.log("🚀 Deploying EdscBase contract...");
   const EdscBase = await hre.ethers.getContractFactory("EdscBase");
-  const edsc = await EdscBase.deploy(foundationMultisig);
+  const edsc = await EdscBase.deploy(foundationMultisig, reserveVault);
   await edsc.waitForDeployment();
 
   const edscAddress = await edsc.getAddress();
