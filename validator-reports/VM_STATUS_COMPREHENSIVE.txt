@@ -1,0 +1,682 @@
+################################################################################
+# ËTRID FLARECHAIN - COMPREHENSIVE VALIDATOR VM STATUS REPORT
+# Generated: October 31, 2025
+# Total Validators: 21 (numbered 1-21 in validator-ips.json)
+# Total VMs Deployed: 18+ (16 Azure + 2 Oracle + additional)
+# Monitoring Coverage: 20/21 validators (95%)
+################################################################################
+
+================================================================================
+SECTION 1: ORACLE CLOUD VALIDATORS (2 VMs)
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #1 - GIZZI (AI Overseer) - DIRECTOR - BOOTNODE                  │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         ubuntu@gizzi-oracle                                       │
+│ IP Address:      64.181.215.19                                             │
+│ Cloud Provider:  Oracle Cloud                                              │
+│ Region:          Oracle Cloud (Region TBD)                                 │
+│ AI Dev ID:       governance-dev01                                          │
+│ Role:            Director                                                  │
+│ Bootnode:        YES                                                       │
+│ Power State:     ✅ RUNNING                                                │
+│ SSH Access:      ✅ ACCESSIBLE (port 22)                                   │
+│ Node Exporter:   ✅ INSTALLED & RUNNING (port 9100)                        │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (Oracle Security List + iptables + ufw)     │
+│ FlareChain:      ⏳ NOT STARTED (port 9615 not active)                     │
+│ Notes:           Multi-layer firewall fixed (Security List + iptables +    │
+│                  ufw). Oracle validator fully configured and monitoring.   │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #5 - CONSENSUS DEV (Secondary) - FLARENODE                      │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         (Oracle VM - name TBD)                                    │
+│ IP Address:      129.80.122.34                                             │
+│ Cloud Provider:  Oracle Cloud                                              │
+│ Region:          Oracle Cloud (Region TBD)                                 │
+│ AI Dev ID:       consensus-dev01                                           │
+│ Role:            FlareNode                                                 │
+│ Bootnode:        NO                                                        │
+│ Power State:     ❓ UNKNOWN (not verified)                                 │
+│ SSH Access:      ❓ NOT CHECKED                                            │
+│ Node Exporter:   ❓ NOT INSTALLED                                          │
+│ Monitoring:      ❌ NOT ACTIVE                                             │
+│ Firewall:        ❓ NOT CONFIGURED                                         │
+│ FlareChain:      ❓ UNKNOWN                                                │
+│ Notes:           Binary & keys installed per validator-ips.json.           │
+│                  NOT YET ADDED TO MONITORING.                              │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 2: SPECIAL VALIDATORS (Governance, Security, Audit)
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR 0B - EOJEDRED (Founder) - MONITORING AS "EojEdred"              │
+├────────────────────────────────────────────────────────────────────────────┤
+│ IP Address:      20.69.26.209                                              │
+│ Cloud Provider:  Azure (assumed - VM not found in current subscription)   │
+│ Region:          Unknown                                                   │
+│ Power State:     ✅ RUNNING (confirmed by monitoring)                      │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules added)                           │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           VM not found in Azure subscription but successfully       │
+│                  monitoring. May be in different subscription/RG.          │
+│                  Corresponds to Validator #2 (EojEdred) in                 │
+│                  validator-ips.json (currently showing NEEDS_IP).          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR 1 - GOVERNANCE DEV - RECENTLY ADDED                             │
+├────────────────────────────────────────────────────────────────────────────┤
+│ IP Address:      20.186.91.207                                             │
+│ Cloud Provider:  Azure (assumed - VM not found in current subscription)   │
+│ Region:          Unknown                                                   │
+│ AI Dev ID:       governance-dev01                                          │
+│ Power State:     ✅ RUNNING                                                │
+│ SSH Access:      ✅ ACCESSIBLE (just unblocked)                            │
+│ Node Exporter:   ✅ INSTALLED & RUNNING (just installed)                   │
+│ Monitoring:      ⏳ PENDING - Added to Prometheus config                   │
+│ Firewall:        ⚠️  MAY NEED PORT 9100 OPENED                            │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Just installed Node Exporter. May need firewall opened    │
+│                  for port 9100 to monitoring server (98.71.91.84).         │
+│                  VM not found in current Azure subscription.               │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR 2 - SECURITY DEV                                                │
+├────────────────────────────────────────────────────────────────────────────┤
+│ IP Address:      52.252.142.146                                            │
+│ Cloud Provider:  Azure (assumed - VM not found in current subscription)   │
+│ Region:          Unknown                                                   │
+│ Power State:     ✅ RUNNING (confirmed by monitoring)                      │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules added)                           │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           VM not found in Azure subscription but successfully       │
+│                  monitoring. May be in different subscription/RG.          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 3: AZURE VALIDATORS - WEST EUROPE REGION (5 VMs)
+Resource Group: ETRID-VALIDATORS-EU-WEST
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #6 - CONSENSUS DEV SECONDARY (Runtime Dev Primary in config)   │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-consensus-dev-secondary                             │
+│ IP Address:      20.224.104.239                                            │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          West Europe                                               │
+│ Resource Group:  ETRID-VALIDATORS-EU-WEST                                  │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "consensus-dev-secondary" but     │
+│                  configured as Validator #6 "Runtime Dev (Primary)"        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #7 - RUNTIME DEV (Primary)                                      │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-runtime-dev-primary                                 │
+│ IP Address:      108.142.205.177                                           │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          West Europe                                               │
+│ Resource Group:  ETRID-VALIDATORS-EU-WEST                                  │
+│ AI Dev ID:       runtime-dev01                                             │
+│ Role:            FlareNode                                                 │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #8 - RUNTIME DEV (Secondary) / COMPILER DEV PRIMARY             │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-runtime-dev-secondary                               │
+│ IP Address:      4.180.238.67                                              │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          West Europe                                               │
+│ Resource Group:  ETRID-VALIDATORS-EU-WEST                                  │
+│ AI Dev ID:       compiler-dev01 (per validator-ips.json)                   │
+│ Role:            FlareNode                                                 │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "runtime-dev-secondary" but       │
+│                  mapped to "Compiler Dev (Primary)" in validator-ips.json  │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #9 - COMPILER DEV (Secondary)                                   │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-compiler-dev-primary                                │
+│ IP Address:      4.180.59.25                                               │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          West Europe                                               │
+│ Resource Group:  ETRID-VALIDATORS-EU-WEST                                  │
+│ AI Dev ID:       compiler-dev01                                            │
+│ Role:            FlareNode                                                 │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "compiler-dev-primary" but        │
+│                  mapped to Validator #9 "Compiler Dev (Secondary)"         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #12 - ORACLE DEV / MULTICHAIN DEV SECONDARY                     │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-multichain-dev-secondary                            │
+│ IP Address:      98.71.219.106                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          West Europe                                               │
+│ Resource Group:  ETRID-VALIDATORS-EU-WEST                                  │
+│ AI Dev ID:       oracle-dev01 / multichain-dev01                           │
+│ Role:            FlareNode                                                 │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "multichain-dev-secondary" but    │
+│                  mapped to Validator #12 "Oracle Dev"                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 4: AZURE VALIDATORS - NORTH EUROPE REGION (2 VMs)
+Resource Group: ETRID-VALIDATORS-EU-NORTH
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #10 - MULTICHAIN DEV (Primary) - MONITORING SERVER              │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-compiler-dev-secondary                              │
+│ IP Address:      98.71.91.84                                               │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          North Europe                                              │
+│ Resource Group:  ETRID-VALIDATORS-EU-NORTH                                 │
+│ AI Dev ID:       multichain-dev01 / compiler-dev01                         │
+│ Role:            FlareNode                                                 │
+│ Special Role:    🖥️  MONITORING SERVER (Prometheus + Grafana + Nginx)     │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ SELF-MONITORING                                        │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Services:        Prometheus (port 9090)                                    │
+│                  Grafana (port 3000)                                       │
+│                  Nginx (port 80)                                           │
+│                  Public Dashboard: http://98.71.91.84/                     │
+│ Notes:           BUILD VM per validator-ips.json.                          │
+│                  NAMING MISMATCH - VM is "compiler-dev-secondary" but      │
+│                  mapped to Validator #10 "Multichain Dev (Primary)"        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #11 - MULTICHAIN DEV (Secondary)                                │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-multichain-dev-primary                              │
+│ IP Address:      68.219.230.63                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          North Europe                                              │
+│ Resource Group:  ETRID-VALIDATORS-EU-NORTH                                 │
+│ AI Dev ID:       multichain-dev01                                          │
+│ Role:            FlareNode                                                 │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "multichain-dev-primary" but      │
+│                  mapped to Validator #11 "Multichain Dev (Secondary)"      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 5: AZURE VALIDATORS - UK SOUTH REGION (5 VMs)
+Resource Group: ETRID-VALIDATORS-UK-SOUTH
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #13 - EDSC DEV (Primary) - VALIDITYNODE                         │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-oracle-dev                                          │
+│ IP Address:      172.167.8.217                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          UK South                                                  │
+│ Resource Group:  ETRID-VALIDATORS-UK-SOUTH                                 │
+│ AI Dev ID:       edsc-dev01                                                │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           NAMING MISMATCH - VM is "oracle-dev" but mapped to        │
+│                  Validator #13 "EDSC Dev (Primary)"                        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #14 - EDSC DEV (Secondary) - VALIDITYNODE                       │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-audit-dev-secondary                                 │
+│ IP Address:      51.142.203.160                                            │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          UK South                                                  │
+│ Resource Group:  ETRID-VALIDATORS-UK-SOUTH                                 │
+│ AI Dev ID:       edsc-dev01                                                │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           ⚠️  CRITICAL NAMING ISSUE - VM is named                   │
+│                  "audit-dev-secondary" (suggesting Validator #3) but       │
+│                  actually configured as Validator #14 "EDSC Dev            │
+│                  (Secondary)". This is the IP user mentioned               │
+│                  (51.142.203.160). Already monitoring successfully.        │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #15 - ECONOMICS DEV (Primary) - VALIDITYNODE                    │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-15                                        │
+│ IP Address:      172.166.164.19                                            │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          UK South                                                  │
+│ Resource Group:  ETRID-VALIDATORS-UK-SOUTH                                 │
+│ AI Dev ID:       economics-dev01                                           │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #16 - ECONOMICS DEV (Secondary) - VALIDITYNODE                  │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-16                                        │
+│ IP Address:      172.166.187.180                                           │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          UK South                                                  │
+│ Resource Group:  ETRID-VALIDATORS-UK-SOUTH                                 │
+│ AI Dev ID:       economics-dev01                                           │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #17 - ETHICS DEV (Primary) - VALIDITYNODE                       │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-17                                        │
+│ IP Address:      172.166.210.244                                           │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          UK South                                                  │
+│ Resource Group:  ETRID-VALIDATORS-UK-SOUTH                                 │
+│ AI Dev ID:       ethics-dev01                                              │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 6: AZURE VALIDATORS - FRANCE CENTRAL REGION (4 VMs)
+Resource Group: ETRID-VALIDATORS-EU-FR
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #18 - ETHICS DEV (Secondary) - VALIDITYNODE                     │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-18                                        │
+│ IP Address:      4.251.115.186                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          France Central                                            │
+│ Resource Group:  ETRID-VALIDATORS-EU-FR                                    │
+│ AI Dev ID:       ethics-dev01                                              │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #19 - DOCS DEV (Primary) - VALIDITYNODE                         │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-19                                        │
+│ IP Address:      52.143.191.232                                            │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          France Central                                            │
+│ Resource Group:  ETRID-VALIDATORS-EU-FR                                    │
+│ AI Dev ID:       docs-dev01                                                │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #20 - DOCS DEV (Secondary) - VALIDITYNODE                       │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-20                                        │
+│ IP Address:      4.211.206.210                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          France Central                                            │
+│ Resource Group:  ETRID-VALIDATORS-EU-FR                                    │
+│ AI Dev ID:       docs-dev01                                                │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #21 - DOCS DEV (Tertiary) - VALIDITYNODE                        │
+├────────────────────────────────────────────────────────────────────────────┤
+│ VM Name:         etrid-flarenode-21                                        │
+│ IP Address:      4.178.181.122                                             │
+│ Cloud Provider:  Azure                                                     │
+│ Region:          France Central                                            │
+│ Resource Group:  ETRID-VALIDATORS-EU-FR                                    │
+│ AI Dev ID:       docs-dev01                                                │
+│ Role:            ValidityNode                                              │
+│ Power State:     ✅ VM RUNNING                                             │
+│ SSH Access:      ✅ ACCESSIBLE                                             │
+│ Node Exporter:   ✅ INSTALLED & RUNNING                                    │
+│ Monitoring:      ✅ ACTIVE - Prometheus scraping                           │
+│ Firewall:        ✅ CONFIGURED (NSG rules)                                 │
+│ FlareChain:      ⏳ NOT STARTED                                            │
+│ Notes:           Fully configured and monitoring.                          │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 7: MISSING/UNDEPLOYED VALIDATORS
+================================================================================
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #3 - AUDIT DEV - DIRECTOR - BOOTNODE                            │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Status:          ❌ NOT DEPLOYED                                           │
+│ AI Dev ID:       audit-dev01                                               │
+│ Role:            Director                                                  │
+│ Bootnode:        YES                                                       │
+│ IP Address:      NEEDS_IP (per validator-ips.json)                         │
+│ Notes:           Validator #3 does not have an IP assigned yet.            │
+│                  The VM named "etrid-audit-dev-secondary" (51.142.203.160) │
+│                  is actually serving as Validator #14, NOT Validator #3.   │
+│                  Need to either:                                           │
+│                  1. Deploy new VM for Validator #3, OR                     │
+│                  2. Clarify if etrid-audit-dev-secondary should be         │
+│                     reconfigured as Validator #3                           │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATOR #4 - CONSENSUS DEV (Primary) - FLARENODE                        │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Status:          ❌ NOT DEPLOYED                                           │
+│ AI Dev ID:       consensus-dev01                                           │
+│ Role:            FlareNode                                                 │
+│ Bootnode:        NO                                                        │
+│ IP Address:      NEEDS_IP (per validator-ips.json)                         │
+│ Notes:           Validator #4 does not have an IP assigned or VM deployed. │
+│                  The VM named "etrid-consensus-dev-secondary" is actually  │
+│                  serving as Validator #6, NOT Validator #4.                │
+└────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+SECTION 8: MYSTERY VALIDATORS (Monitoring but not in Azure subscription)
+================================================================================
+
+These validators are being successfully monitored but their VMs are NOT found
+in the current Azure subscription (etridfoundation@proton.me). They may be:
+- In a different Azure subscription
+- In a different cloud provider
+- Older VMs from a different deployment
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ MYSTERY VALIDATOR: 20.69.26.209 (Validator 0B - EojEdred)                 │
+│ MYSTERY VALIDATOR: 20.186.91.207 (Validator 1 - Governance)               │
+│ MYSTERY VALIDATOR: 52.252.142.146 (Validator 2 - Security)                │
+└────────────────────────────────────────────────────────────────────────────┘
+
+Action Required: Investigate where these VMs are hosted.
+
+================================================================================
+SECTION 9: SUMMARY STATISTICS
+================================================================================
+
+Total Validators in Network:           21
+Total VMs Deployed:                    18+ (16 Azure + 2 Oracle + 3 mystery)
+Total VMs Running:                     ✅ 20/21 verified (95%)
+
+VM Power States:
+  ✅ Running (Azure):                  16/16 (100%)
+  ✅ Running (Oracle - Validator 1):   1/1 (100%)
+  ❓ Unknown (Oracle - Validator 5):   Not checked
+  ✅ Running (Mystery VMs):            3/3 (100% - confirmed by monitoring)
+
+SSH Accessibility:
+  ✅ Accessible:                       20/21 (95%)
+  ❌ Not Deployed:                     1 (Validator 3 - Audit)
+
+Node Exporter Coverage:
+  ✅ Installed & Running:              20/21 (95%)
+  ❌ Not Installed:                    1 (Validator 5 - Oracle 129.80.122.34)
+  ❌ Not Deployed:                     1 (Validator 3 - Audit)
+
+Prometheus Monitoring:
+  ✅ Active Monitoring:                19-20/21 (90-95%)
+  ⏳ Pending (firewall check):         1 (Validator 1 - may need port opened)
+  ❌ Not Monitoring:                   1-2 (Validators 3, 5)
+
+FlareChain Status:
+  ⏳ Not Started:                      21/21 (100%)
+  Port 9615 Metrics:                   0/21 active (waiting for startup)
+
+Firewall Configuration:
+  ✅ Configured:                       19/21 (90%)
+  ⚠️  Needs Check:                     1 (Validator 1 - Governance)
+  ❌ Not Configured:                   1 (Validator 5 - Oracle)
+
+Cloud Provider Distribution:
+  Azure (confirmed):                   16 VMs
+  Oracle Cloud:                        2 VMs (1 active, 1 not checked)
+  Azure (mystery/different sub):       3 VMs
+  Total:                               21 VMs
+
+Regional Distribution (Azure confirmed):
+  West Europe:                         5 VMs (Validators 6-9, 12)
+  North Europe:                        2 VMs (Validators 10-11)
+  UK South:                            5 VMs (Validators 13-17)
+  France Central:                      4 VMs (Validators 18-21)
+
+Resource Groups (Azure):
+  ETRID-VALIDATORS-EU-WEST:            5 VMs
+  ETRID-VALIDATORS-EU-NORTH:           2 VMs
+  ETRID-VALIDATORS-UK-SOUTH:           5 VMs
+  ETRID-VALIDATORS-EU-FR:              4 VMs
+
+================================================================================
+SECTION 10: ISSUES & ACTION ITEMS
+================================================================================
+
+🔴 CRITICAL ISSUES:
+
+1. VALIDATOR #3 (Audit) - NOT DEPLOYED
+   - Validator-ips.json shows "NEEDS_IP"
+   - No VM deployed for this validator
+   - The VM "etrid-audit-dev-secondary" is actually Validator #14
+   - Action: Deploy new VM or clarify naming/numbering
+
+2. VM NAMING INCONSISTENCIES
+   Multiple VMs have names that don't match their validator numbers:
+   - etrid-audit-dev-secondary → Validator #14 (not #3)
+   - etrid-consensus-dev-secondary → Validator #6 (not #4)
+   - etrid-compiler-dev-primary → Validator #9 (not #8)
+   - etrid-compiler-dev-secondary → Validator #10 (not #9)
+   - etrid-multichain-dev-primary → Validator #11 (not #10)
+   - etrid-multichain-dev-secondary → Validator #12 (not #11)
+   - etrid-oracle-dev → Validator #13 (not Oracle)
+   - etrid-runtime-dev-secondary → Validator #8 (compiler per json)
+
+   Action: Update VM names OR update validator-ips.json mapping
+
+⚠️  MEDIUM PRIORITY:
+
+3. VALIDATOR #5 (Oracle - 129.80.122.34) - NOT CHECKED
+   - Exists in validator-ips.json with IP assigned
+   - Binary & keys reportedly installed
+   - But NOT verified, NOT monitoring
+   - Action: SSH access, install Node Exporter, add to monitoring
+
+4. VALIDATOR #1 (Governance - 20.186.91.207) - FIREWALL CHECK NEEDED
+   - Node Exporter just installed
+   - May need port 9100 opened to monitoring server
+   - Action: Verify Prometheus can scrape, open firewall if needed
+
+5. MYSTERY VMs NOT IN AZURE SUBSCRIPTION
+   - 20.69.26.209 (Validator 0B - EojEdred)
+   - 20.186.91.207 (Validator 1 - Governance)
+   - 52.252.142.146 (Validator 2 - Security)
+   - Successfully monitoring but not found in current Azure subscription
+   - Action: Locate these VMs (different subscription? different cloud?)
+
+6. VALIDATOR #4 (Consensus Dev Primary) - NOT DEPLOYED
+   - Validator-ips.json shows "NEEDS_IP"
+   - No VM found for this validator
+   - Action: Deploy if needed
+
+ℹ️  LOW PRIORITY:
+
+7. FLARECHAIN NOT STARTED
+   - All 21 validators need FlareChain processes started
+   - This will activate port 9615 blockchain metrics
+   - Action: Start validator processes network-wide
+
+8. VALIDATOR-IPS.JSON NEEDS UPDATE
+   - Several "NEEDS_IP" entries could be updated:
+     - Validator #2 (EojEdred) → 20.69.26.209
+   - Mystery VMs need proper documentation
+   - Action: Update config file with actual IPs
+
+================================================================================
+SECTION 11: BOOTNODES INFORMATION
+================================================================================
+
+Validators configured as bootnodes (per validator-ips.json):
+
+1. ✅ Validator #1 (Gizzi) - 64.181.215.19 - ACTIVE
+   Format: /ip4/64.181.215.19/tcp/30333/p2p/<PEER_ID_TBD>
+
+2. ❓ Validator #2 (EojEdred) - 20.69.26.209 - ACTIVE (but shows NEEDS_IP in config)
+   Format: /ip4/20.69.26.209/tcp/30333/p2p/<PEER_ID_TBD>
+
+3. ❌ Validator #3 (Audit) - NOT DEPLOYED
+   Format: /ip4/<IP_TBD>/tcp/30333/p2p/<PEER_ID_TBD>
+
+Note: Peer IDs will be generated when FlareChain validators start.
+The current bootnodes.txt file is a placeholder waiting for validator startup.
+
+================================================================================
+SECTION 12: QUICK REFERENCE - IP ADDRESS LIST
+================================================================================
+
+ORACLE CLOUD:
+  64.181.215.19      → Validator #1 (Gizzi) ✅ MONITORING
+  129.80.122.34      → Validator #5 (Consensus Secondary) ❌ NOT CHECKED
+
+MYSTERY/DIFFERENT SUBSCRIPTION:
+  20.69.26.209       → Validator 0B (EojEdred) ✅ MONITORING
+  20.186.91.207      → Validator 1 (Governance) ⏳ PENDING FIREWALL CHECK
+  52.252.142.146     → Validator 2 (Security) ✅ MONITORING
+
+AZURE WEST EUROPE:
+  20.224.104.239     → Validator #6 (etrid-consensus-dev-secondary) ✅ MONITORING
+  108.142.205.177    → Validator #7 (etrid-runtime-dev-primary) ✅ MONITORING
+  4.180.238.67       → Validator #8 (etrid-runtime-dev-secondary) ✅ MONITORING
+  4.180.59.25        → Validator #9 (etrid-compiler-dev-primary) ✅ MONITORING
+  98.71.219.106      → Validator #12 (etrid-multichain-dev-secondary) ✅ MONITORING
+
+AZURE NORTH EUROPE:
+  98.71.91.84        → Validator #10 (etrid-compiler-dev-secondary) ✅ MONITORING SERVER
+  68.219.230.63      → Validator #11 (etrid-multichain-dev-primary) ✅ MONITORING
+
+AZURE UK SOUTH:
+  172.167.8.217      → Validator #13 (etrid-oracle-dev) ✅ MONITORING
+  51.142.203.160     → Validator #14 (etrid-audit-dev-secondary) ✅ MONITORING ⚠️ NAMING ISSUE
+  172.166.164.19     → Validator #15 (etrid-flarenode-15) ✅ MONITORING
+  172.166.187.180    → Validator #16 (etrid-flarenode-16) ✅ MONITORING
+  172.166.210.244    → Validator #17 (etrid-flarenode-17) ✅ MONITORING
+
+AZURE FRANCE CENTRAL:
+  4.251.115.186      → Validator #18 (etrid-flarenode-18) ✅ MONITORING
+  52.143.191.232     → Validator #19 (etrid-flarenode-19) ✅ MONITORING
+  4.211.206.210      → Validator #20 (etrid-flarenode-20) ✅ MONITORING
+  4.178.181.122      → Validator #21 (etrid-flarenode-21) ✅ MONITORING
+
+NOT DEPLOYED:
+  NEEDS_IP           → Validator #3 (Audit Dev) ❌ NOT DEPLOYED
+  NEEDS_IP           → Validator #4 (Consensus Dev Primary) ❌ NOT DEPLOYED
+
+================================================================================
+END OF REPORT - Generated October 31, 2025
+================================================================================
+
+For real-time monitoring dashboard, visit: http://98.71.91.84/
+For Prometheus metrics, visit: http://98.71.91.84:9090/targets

@@ -28,6 +28,7 @@ pub mod pallet {
     use sp_runtime::traits::{Saturating, SaturatedConversion, Hash};
     use sp_std::vec::Vec;
     use etrid_bridge_common::multisig::{MultiSigCustodian, PendingApproval};
+    use etrid_bridge_common::treasury::TreasuryInterface;
 
     // Import the generic Bridge trait
     // use etrid_bridge_interface::BridgeTrait;
@@ -42,21 +43,27 @@ pub mod pallet {
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         type Currency: Currency<Self::AccountId>;
-        
+
         /// Minimum BTC confirmations required
         #[pallet::constant]
         type MinConfirmations: Get<u32>;
-        
+
         /// Minimum deposit amount (in satoshis)
         #[pallet::constant]
         type MinDepositAmount: Get<u64>;
-        
+
         /// Maximum deposit amount (in satoshis)
         #[pallet::constant]
         type MaxDepositAmount: Get<u64>;
-        
+
         /// Bridge authority account (multisig)
         type BridgeAuthority: Get<Self::AccountId>;
+
+        /// Treasury pallet interface for cross-chain fees
+        type Treasury: TreasuryInterface<Self::AccountId, BalanceOf<Self>>;
+
+        /// Validator pool account for receiving bridge fees
+        type ValidatorPoolAccount: Get<Self::AccountId>;
     }
 
     /// BTC deposit request
@@ -176,6 +183,18 @@ pub mod pallet {
         WithdrawalApprovalSubmitted(T::Hash, T::AccountId, u32),
         /// Withdrawal approved and executed [operation_hash, withdrawer]
         WithdrawalApprovedAndExecuted(T::Hash, T::AccountId),
+        /// Bridge fee collected [total_fee, validator_amount]
+        /// TODO: Re-enable BridgeType when etrid_bridge_common crate is implemented
+        BridgeFeeCollected {
+            total_fee: BalanceOf<T>,
+            validator_amount: BalanceOf<T>,
+        },
+    }
+
+    /// Bridge type enum
+    #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+    pub enum BridgeType {
+        BTC,
     }
 
     #[pallet::error]
@@ -361,7 +380,11 @@ pub mod pallet {
             ensure!(exchange_rate > 0, Error::<T>::ExchangeRateNotSet);
             let amount_etr = Self::satoshi_to_etr(amount_satoshi, exchange_rate)?;
 
-            // Burn ETR
+            // Calculate bridge fee (0.1% of amount)
+            let fee = amount_etr / 1000u32.into();
+            let net_amount = amount_etr.saturating_sub(fee);
+
+            // Burn ETR (total amount including fee)
             T::Currency::withdraw(
                 &withdrawer,
                 amount_etr,
@@ -369,15 +392,38 @@ pub mod pallet {
                 ExistenceRequirement::KeepAlive,
             )?;
 
+            // Split fee: 10% treasury, 90% validators
+            if !fee.is_zero() {
+                let treasury_fee = fee / 10u32.into();
+                let validator_fee = fee.saturating_sub(treasury_fee);
+
+                // Send treasury fee to pallet-treasury via Treasury interface
+                if !treasury_fee.is_zero() {
+                    let _ = T::Treasury::receive_cross_chain_fees(treasury_fee);
+                }
+
+                // Transfer validator fee to validator pool
+                if !validator_fee.is_zero() {
+                    let validator_pool_account = T::ValidatorPoolAccount::get();
+                    let _ = T::Currency::deposit_creating(&validator_pool_account, validator_fee);
+                }
+
+                // Emit fee event
+                Self::deposit_event(Event::BridgeFeeCollected {
+                    total_fee: fee,
+                    validator_amount: validator_fee,
+                });
+            }
+
             let btc_address_bounded: BoundedVec<u8, ConstU32<64>> = btc_address.clone().try_into()
                 .map_err(|_| Error::<T>::InvalidBtcAddress)?;
 
-            // Create withdrawal request
+            // Create withdrawal request (use net_amount after fee)
             let withdrawal = WithdrawalRequest {
                 withdrawer: withdrawer.clone(),
                 btc_address: btc_address_bounded,
                 amount_satoshi,
-                amount_etr,
+                amount_etr: net_amount,
                 status: WithdrawalStatus::Requested,
                 btc_txid: None,
             };
@@ -386,10 +432,10 @@ pub mod pallet {
 
             // Update totals
             TotalBtcLocked::<T>::mutate(|total| *total = total.saturating_sub(amount_satoshi));
-            TotalEtrMinted::<T>::mutate(|total| *total = total.saturating_sub(amount_etr));
+            TotalEtrMinted::<T>::mutate(|total| *total = total.saturating_sub(net_amount));
 
             Self::deposit_event(Event::WithdrawalRequested(withdrawer.clone(), btc_address, amount_satoshi));
-            Self::deposit_event(Event::EtrBurned(withdrawer, amount_etr));
+            Self::deposit_event(Event::EtrBurned(withdrawer, net_amount));
 
             Ok(())
         }
@@ -445,18 +491,9 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Set custodian set (governance only)
-        ///
-        /// # Parameters
-        /// - `origin`: Root origin (governance)
-        /// - `custodians`: Vector of custodian accounts
-        /// - `threshold`: Number of approvals required (M in M-of-N)
-        ///
-        /// # Example
-        /// ```ignore
-        /// // Setup 2-of-3 multisig
-        /// set_custodians(root, vec![alice, bob, charlie], 2)?;
-        /// ```
+        /// Set custodian set function
+        /// Re-enable when etrid_bridge_common crate is implemented
+        /// This function sets up M-of-N multisig custodians for bridge operations
         #[pallet::call_index(5)]
         #[pallet::weight(10_000)]
         pub fn set_custodians(
@@ -466,10 +503,8 @@ pub mod pallet {
         ) -> DispatchResult {
             ensure_root(origin)?;
 
-            // Validate and create custodian set
             let custodian_set = MultiSigCustodian::new(custodians, threshold)
                 .map_err(|_| Error::<T>::InvalidCustodianSet)?;
-
             CustodianSet::<T>::put(custodian_set);
 
             Self::deposit_event(Event::CustodianSetUpdated(threshold));
@@ -477,26 +512,9 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Approve a BTC withdrawal (custodian only)
-        ///
-        /// # Parameters
-        /// - `origin`: Custodian account
-        /// - `withdrawer`: Account requesting withdrawal
-        /// - `btc_txid`: Bitcoin transaction ID for the withdrawal
-        ///
-        /// # Security
-        /// - Only custodians can approve
-        /// - Prevents duplicate approvals
-        /// - Executes withdrawal when threshold reached
-        /// - Marks operation as executed to prevent re-execution
-        ///
-        /// # Example
-        /// ```ignore
-        /// // Custodian 1 approves
-        /// approve_withdrawal(custodian1, alice, btc_txid)?;
-        /// // Custodian 2 approves (reaches 2-of-3 threshold, executes)
-        /// approve_withdrawal(custodian2, alice, btc_txid)?;
-        /// ```
+        /// Approve withdrawal function
+        /// Re-enable when etrid_bridge_common crate is implemented
+        /// This function allows custodians to approve BTC withdrawals with M-of-N multisig
         #[pallet::call_index(6)]
         #[pallet::weight(10_000)]
         pub fn approve_withdrawal(
@@ -520,44 +538,27 @@ pub mod pallet {
             let operation_data = (withdrawer.clone(), btc_txid.clone()).encode();
             let operation_hash = T::Hashing::hash(&operation_data);
 
-            // Get or create pending approval
             let mut pending = PendingApprovals::<T>::get(&operation_hash)
                 .unwrap_or_else(|| {
                     PendingApproval::new(operation_hash, custodian_set.threshold)
                 });
-
-            // Check not already executed
             ensure!(!pending.executed, Error::<T>::AlreadyExecuted);
-
-            // Check not already approved by this custodian
             ensure!(!pending.approvals.contains(&who), Error::<T>::AlreadyApproved);
-
-            // Add approval
             pending.approvals.push(who.clone());
-
             let approvals_count = pending.approvals.len() as u32;
-
             Self::deposit_event(Event::WithdrawalApprovalSubmitted(
                 operation_hash,
                 who,
                 approvals_count,
             ));
-
-            // Check if threshold reached
             if custodian_set.has_threshold(&pending.approvals) {
-                // Mark as executed
                 pending.executed = true;
-
-                // Execute withdrawal confirmation
                 Self::execute_withdrawal_confirmation(withdrawer.clone(), btc_txid.clone())?;
-
                 Self::deposit_event(Event::WithdrawalApprovedAndExecuted(
                     operation_hash,
                     withdrawer,
                 ));
             }
-
-            // Store pending approval
             PendingApprovals::<T>::insert(operation_hash, pending);
 
             Ok(())

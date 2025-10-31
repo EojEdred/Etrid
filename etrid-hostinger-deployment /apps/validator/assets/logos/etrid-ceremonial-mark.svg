@@ -1,0 +1,69 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="ceremonialGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#a78bfa;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+        </linearGradient>
+        <filter id="ceremonialGlow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Outer circle -->
+    <circle cx="200" cy="200" r="150" fill="none"
+            stroke="url(#ceremonialGradient)" stroke-width="4" filter="url(#ceremonialGlow)"/>
+
+    <!-- Middle circle -->
+    <circle cx="200" cy="200" r="100" fill="none"
+            stroke="url(#ceremonialGradient)" stroke-width="3" filter="url(#ceremonialGlow)"/>
+
+    <!-- Inner circle -->
+    <circle cx="200" cy="200" r="60" fill="none"
+            stroke="url(#ceremonialGradient)" stroke-width="3" filter="url(#ceremonialGlow)"/>
+
+    <!-- Circuit patterns in outer ring -->
+    <path d="M 200 50 L 200 80 M 350 200 L 320 200 M 200 350 L 200 320 M 50 200 L 80 200"
+          stroke="#06b6d4" stroke-width="2" opacity="0.6"/>
+
+    <!-- Circuit nodes -->
+    <circle cx="200" cy="50" r="5" fill="#06b6d4"/>
+    <circle cx="350" cy="200" r="5" fill="#06b6d4"/>
+    <circle cx="200" cy="350" r="5" fill="#06b6d4"/>
+    <circle cx="50" cy="200" r="5" fill="#06b6d4"/>
+
+    <!-- Inner circuit pattern -->
+    <path d="M 160 160 L 180 180 M 240 160 L 220 180 M 160 240 L 180 220 M 240 240 L 220 220"
+          stroke="#8b5cf6" stroke-width="1" opacity="0.5"/>
+
+    <!-- Central microchip -->
+    <rect x="170" y="170" width="60" height="60" rx="5" fill="none"
+          stroke="url(#ceremonialGradient)" stroke-width="2"/>
+
+    <!-- Microchip pins -->
+    <line x1="180" y1="170" x2="180" y2="165" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="200" y1="170" x2="200" y2="165" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="220" y1="170" x2="220" y2="165" stroke="#06b6d4" stroke-width="2"/>
+
+    <line x1="180" y1="230" x2="180" y2="235" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="200" y1="230" x2="200" y2="235" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="220" y1="230" x2="220" y2="235" stroke="#06b6d4" stroke-width="2"/>
+
+    <line x1="170" y1="180" x2="165" y2="180" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="170" y1="200" x2="165" y2="200" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="170" y1="220" x2="165" y2="220" stroke="#06b6d4" stroke-width="2"/>
+
+    <line x1="230" y1="180" x2="235" y2="180" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="230" y1="200" x2="235" y2="200" stroke="#06b6d4" stroke-width="2"/>
+    <line x1="230" y1="220" x2="235" y2="220" stroke="#06b6d4" stroke-width="2"/>
+
+    <!-- Central Ë -->
+    <text x="200" y="215" font-family="Arial, sans-serif" font-size="40"
+          font-weight="bold" text-anchor="middle" fill="url(#ceremonialGradient)">
+        Ë
+    </text>
+</svg>

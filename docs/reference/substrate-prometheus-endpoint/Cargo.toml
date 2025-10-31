@@ -1,0 +1,26 @@
+[package]
+description = "Endpoint to expose Prometheus metrics"
+name = "substrate-prometheus-endpoint"
+version = "0.17.2"
+license = "Apache-2.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+homepage = "https://substrate.io"
+repository = "https://github.com/paritytech/substrate/"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+http-body-util = "0.1.3"
+hyper = { version = "1.0", features = ["http1", "server"] }
+hyper-util = { version = "0.1.17", features = ["server-auto", "server-graceful", "tokio"] }
+log = "0.4"
+prometheus = "0.13"
+thiserror = "1.0"
+tokio = { version = "1.22.0", features = ["parking_lot", "net", "rt", "macros"], default-features = false }
+
+[dev-dependencies]
+hyper-util = { version = "0.1.17", features = ["client-legacy", "tokio"], default-features = true }
+tokio = { version = "1.22.0", features = ["macros", "rt-multi-thread"], default-features = true }

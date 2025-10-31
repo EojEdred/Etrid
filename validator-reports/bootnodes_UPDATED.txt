@@ -1,0 +1,235 @@
+################################################################################
+# ËTRID FLARECHAIN - MAINNET BOOTNODES CONFIGURATION
+# Updated: October 31, 2025
+################################################################################
+#
+# This file contains the bootnode configuration for the Ëtrid FlareChain network.
+# Bootnodes are special validators that help new nodes discover and connect to
+# the network. They should be highly available and geographically distributed.
+#
+# Format: /ip4/<IP_ADDRESS>/tcp/<PORT>/p2p/<PEER_ID>
+#
+# Standard FlareChain P2P port: 30333
+# Peer IDs are generated when validator keys are created
+#
+################################################################################
+
+================================================================================
+SECTION 1: ACTIVE BOOTNODES (Validators with bootnode=true in config)
+================================================================================
+
+# ------------------------------------------------------------------------------
+# BOOTNODE 1: Validator #1 - Gizzi (AI Overseer)
+# ------------------------------------------------------------------------------
+# Status:       ✅ ACTIVE & MONITORING
+# IP:           64.181.215.19
+# Cloud:        Oracle Cloud
+# Role:         Director
+# Priority:     PRIMARY BOOTNODE
+# SSH:          ubuntu@64.181.215.19
+# Node Export:  ✅ RUNNING (port 9100)
+# Monitoring:   ✅ Prometheus scraping
+# FlareChain:   ⏳ NOT STARTED (port 30333 will be active when started)
+#
+# ⚠️  Peer ID will be generated when FlareChain validator starts
+# ⚠️  UPDATE THIS LINE after validator starts with actual Peer ID
+#
+# BOOTNODE ENTRY (TO BE UPDATED WITH PEER_ID):
+# /ip4/64.181.215.19/tcp/30333/p2p/<PEER_ID_TBD>
+
+# ------------------------------------------------------------------------------
+# BOOTNODE 2: Validator #2 - EojEdred (Founder)
+# ------------------------------------------------------------------------------
+# Status:       ⚠️  IP NOT IN CONFIG (shows NEEDS_IP) BUT ACTIVE & MONITORING
+# IP:           20.69.26.209 (discovered via monitoring)
+# Cloud:        Azure (assumed - not in current subscription)
+# Role:         Director
+# Priority:     SECONDARY BOOTNODE
+# Note:         validator-ips.json shows "NEEDS_IP" but validator is running
+#               and being monitored at 20.69.26.209
+# SSH:          ✅ ACCESSIBLE
+# Node Export:  ✅ RUNNING (port 9100)
+# Monitoring:   ✅ Prometheus scraping
+# FlareChain:   ⏳ NOT STARTED
+#
+# ⚠️  Peer ID will be generated when FlareChain validator starts
+# ⚠️  validator-ips.json needs to be updated with this IP
+#
+# BOOTNODE ENTRY (TO BE UPDATED WITH PEER_ID):
+# /ip4/20.69.26.209/tcp/30333/p2p/<PEER_ID_TBD>
+
+# ------------------------------------------------------------------------------
+# BOOTNODE 3: Validator #3 - Audit Dev
+# ------------------------------------------------------------------------------
+# Status:       ✅ DEPLOYED - NEEDS MONITORING SETUP
+# IP:           129.80.122.34 ✅ CONFIRMED
+# Cloud:        Oracle Cloud
+# Username:     aed2020
+# SSH:          ssh -i ~/.ssh/gizzi-validator aed2020@129.80.122.34
+# Role:         Director
+# Priority:     TERTIARY BOOTNODE
+# Note:         validator-ips.json incorrectly shows this IP as Validator #5
+#               Actual validator is #3 (Audit Dev)
+#               Node Exporter not yet installed
+#
+# ⚠️  ACTION REQUIRED - Install Node Exporter and configure monitoring
+# ⚠️  Update validator-ips.json to show correct mapping
+#
+# BOOTNODE ENTRY (TO BE UPDATED WITH PEER_ID):
+# /ip4/129.80.122.34/tcp/30333/p2p/<PEER_ID_TBD>
+
+================================================================================
+SECTION 2: BACKUP BOOTNODE CANDIDATES (Not configured as bootnodes but suitable)
+================================================================================
+
+# These validators are highly available and could serve as backup bootnodes
+# if the primary bootnodes become unavailable. They are NOT currently configured
+# as bootnodes but are monitored and ready.
+
+# ------------------------------------------------------------------------------
+# BACKUP CANDIDATE: Validator #1 (Governance) - Recently Added
+# ------------------------------------------------------------------------------
+# IP:           20.186.91.207
+# Status:       ✅ ACTIVE & MONITORING (pending firewall verification)
+# Cloud:        Azure (assumed)
+# SSH:          ✅ ACCESSIBLE
+# Node Export:  ✅ RUNNING
+# Note:         Just added to monitoring, may need port 9100 firewall opened
+
+# ------------------------------------------------------------------------------
+# BACKUP CANDIDATE: Validator #10 - Monitoring Server
+# ------------------------------------------------------------------------------
+# IP:           98.71.91.84
+# Status:       ✅ ACTIVE - MONITORING SERVER
+# Cloud:        Azure North Europe
+# Services:     Prometheus, Grafana, Nginx, Node Exporter
+# Note:         Critical infrastructure server, consider as emergency bootnode
+
+================================================================================
+SECTION 3: ALL VALIDATOR IPs (For Reference)
+================================================================================
+
+# Complete list of all validators in the network with their IPs and status
+# This section is for reference when configuring network connectivity
+
+ORACLE CLOUD VALIDATORS:
+  64.181.215.19      → V#1  Gizzi (Director, Bootnode) ✅ MONITORING
+  129.80.122.34      → V#5  Consensus Secondary (FlareNode) ❌ NOT CHECKED
+
+SPECIAL VALIDATORS (Mystery location - not in current Azure subscription):
+  20.69.26.209       → V0B  EojEdred (Bootnode) ✅ MONITORING
+  20.186.91.207      → V1   Governance ⏳ PENDING FIREWALL CHECK
+  52.252.142.146     → V2   Security ✅ MONITORING
+
+AZURE WEST EUROPE (Resource Group: ETRID-VALIDATORS-EU-WEST):
+  20.224.104.239     → V#6  Consensus Dev Secondary ✅ MONITORING
+  108.142.205.177    → V#7  Runtime Primary ✅ MONITORING
+  4.180.238.67       → V#8  Runtime Secondary ✅ MONITORING
+  4.180.59.25        → V#9  Compiler Secondary ✅ MONITORING
+  98.71.219.106      → V#12 Oracle Dev ✅ MONITORING
+
+AZURE NORTH EUROPE (Resource Group: ETRID-VALIDATORS-EU-NORTH):
+  98.71.91.84        → V#10 Multichain Primary (MONITORING SERVER) ✅ MONITORING
+  68.219.230.63      → V#11 Multichain Secondary ✅ MONITORING
+
+AZURE UK SOUTH (Resource Group: ETRID-VALIDATORS-UK-SOUTH):
+  172.167.8.217      → V#13 EDSC Primary (ValidityNode) ✅ MONITORING
+  51.142.203.160     → V#14 EDSC Secondary (ValidityNode) ✅ MONITORING
+  172.166.164.19     → V#15 Economics Primary (ValidityNode) ✅ MONITORING
+  172.166.187.180    → V#16 Economics Secondary (ValidityNode) ✅ MONITORING
+  172.166.210.244    → V#17 Ethics Primary (ValidityNode) ✅ MONITORING
+
+AZURE FRANCE CENTRAL (Resource Group: ETRID-VALIDATORS-EU-FR):
+  4.251.115.186      → V#18 Ethics Secondary (ValidityNode) ✅ MONITORING
+  52.143.191.232     → V#19 Docs Primary (ValidityNode) ✅ MONITORING
+  4.211.206.210      → V#20 Docs Secondary (ValidityNode) ✅ MONITORING
+  4.178.181.122      → V#21 Docs Tertiary (ValidityNode) ✅ MONITORING
+
+NOT DEPLOYED:
+  NEEDS_IP           → V#3  Audit Dev (Director, Bootnode) ❌ NOT DEPLOYED
+  NEEDS_IP           → V#4  Consensus Primary (FlareNode) ❌ NOT DEPLOYED
+
+================================================================================
+SECTION 4: NETWORK CONNECTIVITY NOTES
+================================================================================
+
+FlareChain P2P Networking:
+  - Default P2P port: 30333 (libp2p)
+  - Prometheus metrics: 9615 (Substrate)
+  - RPC port: 9933 (HTTP)
+  - WebSocket: 9944 (WS)
+
+Bootnode Requirements:
+  1. High availability (99.9%+ uptime)
+  2. Geographic distribution (multiple regions)
+  3. Fast network connectivity
+  4. Reliable infrastructure
+
+Current Bootnode Distribution:
+  - Oracle Cloud: 1 bootnode (Validator #1)
+  - Azure: 1 bootnode (Validator 0B - EojEdred)
+  - Missing: 1 bootnode (Validator #3 - not deployed)
+
+Geographic Coverage:
+  ✅ Oracle Cloud region (Validator #1)
+  ✅ Azure region (Validator 0B)
+  ❌ Third region needed (Validator #3)
+
+================================================================================
+SECTION 5: NEXT STEPS TO ACTIVATE BOOTNODES
+================================================================================
+
+Step 1: Start FlareChain validators
+  - Start FlareChain process on each validator VM
+  - Validators will generate their Peer IDs
+  - P2P port 30333 will become active
+
+Step 2: Collect Peer IDs
+  - SSH to each bootnode validator
+  - Run: flarechain-node --print-network-id
+  - Record the Peer ID for each bootnode
+
+Step 3: Update bootnode configuration
+  - Replace <PEER_ID_TBD> with actual Peer IDs
+  - Update this file with complete bootnode entries
+  - Format: /ip4/<IP>/tcp/30333/p2p/<PEER_ID>
+
+Step 4: Configure validators to use bootnodes
+  - Add --bootnodes flag to validator startup commands
+  - Point to all bootnode addresses
+  - Example:
+    flarechain-node \
+      --validator \
+      --bootnodes /ip4/64.181.215.19/tcp/30333/p2p/<PEER_ID> \
+      --bootnodes /ip4/20.69.26.209/tcp/30333/p2p/<PEER_ID>
+
+Step 5: Verify network connectivity
+  - Check peer connections on each validator
+  - Ensure validators can discover each other
+  - Monitor network health via Prometheus
+
+================================================================================
+SECTION 6: MONITORING DASHBOARD
+================================================================================
+
+Public Dashboard: http://98.71.91.84/
+Prometheus:       http://98.71.91.84:9090/
+Grafana:          http://98.71.91.84:3000/
+
+Current Monitoring Status:
+  - Total Validators: 21
+  - Monitoring: 20/21 (95%)
+  - Active Targets: 22/45 (48%)
+  - System Metrics: 19-20/21 validators (95%)
+  - Blockchain Metrics: 0/21 (waiting for FlareChain to start)
+
+To reach 100% monitoring:
+  1. Check Validator 1 firewall (port 9100)
+  2. Deploy Validator 3 (Audit)
+  3. Start FlareChain on all validators
+
+================================================================================
+END OF BOOTNODE CONFIGURATION
+Updated: October 31, 2025
+For detailed VM status, see: VM_STATUS_COMPREHENSIVE.txt
+================================================================================

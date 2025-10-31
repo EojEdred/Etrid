@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:economics-dev01",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:economics-dev01#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:economics-dev01",
+      "publicKeyMultibase": "zEdhoV4rQdMaRW4nWpW1qgVa5H2FyufqaGYSV5VS18E1C",
+      "publicKeyBase58": "EdhoV4rQdMaRW4nWpW1qgVa5H2FyufqaGYSV5VS18E1C"
+    }
+  ],
+  "authentication": [
+    "did:etrid:economics-dev01#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:economics-dev01#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:economics-dev01#mcp-service",
+      "type": "AIEconomicsWorker",
+      "serviceEndpoint": "mcp://ai-devs/economics-dev01"
+    },
+    {
+      "id": "did:etrid:economics-dev01#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/economics-dev01/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:economics-dev01#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/economics-dev01/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "Economics Dev",
+    "description": "Reserve ratios, staking yields, inflation curves. Economics in code.",
+    "skills": [
+      "reserve-modeling",
+      "yield-calculation",
+      "inflation-analysis",
+      "economic-simulation"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "Reserve ratios, staking yields, inflation curves. Economics in code. #\u00cbtridEconomics",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}

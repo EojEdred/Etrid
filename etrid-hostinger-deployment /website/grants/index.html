@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Grants Program - Fund Your Project</title>
+    <meta name="description" content="Apply for grants to build on ËTRID. Up to $250K in funding for innovative cross-chain projects">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="../ecosystem/" class="text-gray-300 hover:text-white transition-colors">Ecosystem</a>
+                    <a href="../developers/" class="text-gray-300 hover:text-white transition-colors">Developers</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-block px-4 py-2 rounded-full bg-etrid-blue/20 text-etrid-blue border border-etrid-blue/30 text-sm font-semibold mb-6">
+                💰 $10M Grants Pool
+            </div>
+            <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Build on ËTRID, Get Funded
+            </h1>
+            <p class="text-xl text-gray-400 mb-8">
+                Apply for grants up to $250K to build innovative cross-chain applications on ËTRID's multichain infrastructure
+            </p>
+            <a href="#apply" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium text-lg">
+                Apply for Grant →
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="py-12 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-etrid-blue mb-2">$10M</div>
+                    <div class="text-gray-400 text-sm">Total Funding</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-etrid-purple mb-2">42</div>
+                    <div class="text-gray-400 text-sm">Projects Funded</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-etrid-blue mb-2">$250K</div>
+                    <div class="text-gray-400 text-sm">Max Grant Size</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-etrid-purple mb-2">85%</div>
+                    <div class="text-gray-400 text-sm">Success Rate</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Grant Tiers -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Grant Tiers</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Seed Grants -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <div class="text-center mb-6">
+                        <div class="text-3xl mb-3">🌱</div>
+                        <h3 class="text-2xl font-bold mb-2">Seed Grants</h3>
+                        <div class="text-3xl font-bold text-etrid-blue mb-1">$10K - $25K</div>
+                        <div class="text-sm text-gray-400">Early-stage projects</div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Proof of concept development</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>MVP deployment support</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Technical mentorship</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Community showcase</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Growth Grants -->
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border-2 border-etrid-blue/50 rounded-2xl p-8 relative">
+                    <div class="absolute top-0 right-0 px-4 py-1 bg-etrid-blue rounded-bl-lg rounded-tr-xl text-xs font-semibold">
+                        MOST POPULAR
+                    </div>
+                    <div class="text-center mb-6">
+                        <div class="text-3xl mb-3">🚀</div>
+                        <h3 class="text-2xl font-bold mb-2">Growth Grants</h3>
+                        <div class="text-3xl font-bold text-etrid-purple mb-1">$25K - $100K</div>
+                        <div class="text-sm text-gray-400">Scaling projects</div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Product development funding</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Marketing & community building</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Security audit coverage</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Partnership introductions</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Dedicated support channel</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Strategic Grants -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <div class="text-center mb-6">
+                        <div class="text-3xl mb-3">⭐</div>
+                        <h3 class="text-2xl font-bold mb-2">Strategic Grants</h3>
+                        <div class="text-3xl font-bold text-etrid-blue mb-1">$100K - $250K</div>
+                        <div class="text-sm text-gray-400">High-impact projects</div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Major protocol development</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Infrastructure projects</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Multiple audit rounds</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Co-marketing campaigns</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Direct team collaboration</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Follow-on funding consideration</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Focus Areas -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Focus Areas</h2>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🔄</div>
+                    <h3 class="text-xl font-bold mb-2">DeFi & Cross-Chain</h3>
+                    <p class="text-gray-400 text-sm">DEXs, lending protocols, yield aggregators, bridges</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🖼️</div>
+                    <h3 class="text-xl font-bold mb-2">NFTs & Gaming</h3>
+                    <p class="text-gray-400 text-sm">Marketplaces, GameFi, metaverse, collectibles</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🛠️</div>
+                    <h3 class="text-xl font-bold mb-2">Infrastructure</h3>
+                    <p class="text-gray-400 text-sm">Developer tools, indexers, RPC providers, oracles</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🏛️</div>
+                    <h3 class="text-xl font-bold mb-2">DAOs & Governance</h3>
+                    <p class="text-gray-400 text-sm">DAO tooling, voting systems, treasury management</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">💬</div>
+                    <h3 class="text-xl font-bold mb-2">Social & Identity</h3>
+                    <p class="text-gray-400 text-sm">SocialFi, decentralized identity, messaging</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🔐</div>
+                    <h3 class="text-xl font-bold mb-2">Security & Privacy</h3>
+                    <p class="text-gray-400 text-sm">Auditing tools, privacy protocols, security infrastructure</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Process -->
+    <section class="py-16 border-t border-white/10" id="apply">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Application Process</h2>
+
+            <div class="space-y-6">
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-lg">
+                        1
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Submit Application</h3>
+                        <p class="text-gray-400">Complete the grant application form with your project details, roadmap, and funding needs</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-etrid-purple flex items-center justify-center font-bold text-lg">
+                        2
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Review Period</h3>
+                        <p class="text-gray-400">Our grants committee reviews applications within 2 weeks. Selected teams are invited for interviews</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-lg">
+                        3
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Due Diligence</h3>
+                        <p class="text-gray-400">Technical review, team assessment, and proposal refinement with our experts</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-etrid-purple flex items-center justify-center font-bold text-lg">
+                        4
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-2">Grant Awarded</h3>
+                        <p class="text-gray-400">Funds disbursed in milestones. Ongoing support and mentorship throughout development</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Form CTA -->
+            <div class="mt-12 bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-2xl p-8 text-center">
+                <h3 class="text-2xl font-bold mb-4">Ready to Apply?</h3>
+                <p class="text-gray-400 mb-6">
+                    Applications are reviewed on a rolling basis. Apply early for priority consideration.
+                </p>
+                <a href="https://forms.gle/etridgrants" target="_blank" class="inline-block px-8 py-4 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium">
+                    Open Application Form →
+                </a>
+                <p class="text-sm text-gray-500 mt-4">
+                    Or email us at <a href="mailto:grants@etrid.org" class="text-etrid-blue hover:text-etrid-purple">grants@etrid.org</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Stories -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Success Stories</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-2xl mb-3">🔄</div>
+                    <h3 class="font-bold mb-2">ÉtriSwap</h3>
+                    <div class="text-sm text-etrid-blue mb-2">$75K Growth Grant</div>
+                    <p class="text-gray-400 text-sm mb-3">DEX aggregator now processing $4.2M daily volume across 13 chains</p>
+                    <div class="text-xs text-gray-500">Launched Q3 2025</div>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-2xl mb-3">🏦</div>
+                    <h3 class="font-bold mb-2">Vault Protocol</h3>
+                    <div class="text-sm text-etrid-blue mb-2">$150K Strategic Grant</div>
+                    <p class="text-gray-400 text-sm mb-3">Yield aggregator managing $2.8M TVL with automated strategies</p>
+                    <div class="text-xs text-gray-500">Launched Q2 2025</div>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-2xl mb-3">📡</div>
+                    <h3 class="font-bold mb-2">Oracle Bridge</h3>
+                    <div class="text-sm text-etrid-blue mb-2">$100K Strategic Grant</div>
+                    <p class="text-gray-400 text-sm mb-3">Cross-chain oracle serving 50+ protocols with reliable data feeds</p>
+                    <div class="text-xs text-gray-500">Launched Q1 2025</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Frequently Asked Questions</h2>
+
+            <div class="space-y-4">
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Who can apply for grants?</summary>
+                    <p class="text-gray-400 text-sm mt-3">Anyone building on ËTRID can apply - from solo developers to established teams. We evaluate based on technical merit, team capability, and potential impact.</p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">How long does the application process take?</summary>
+                    <p class="text-gray-400 text-sm mt-3">Initial review takes 2 weeks. Complete process from application to funding typically takes 4-6 weeks depending on the grant tier.</p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Are grants paid in ÉTR tokens or stablecoins?</summary>
+                    <p class="text-gray-400 text-sm mt-3">Grants are paid in a mix of ÉTR and stablecoins (USDC/USDT) based on recipient preference. We offer flexible payment terms to minimize volatility risk.</p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">What happens if we don't meet milestones?</summary>
+                    <p class="text-gray-400 text-sm mt-3">We work with teams to adjust timelines and milestones if needed. Open communication is key. Persistent delays may result in grant suspension pending reassessment.</p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Do you take equity or tokens?</summary>
+                    <p class="text-gray-400 text-sm mt-3">Grants are non-dilutive - we don't take equity. For strategic grants, we may request token allocation for community distribution, but this is negotiable.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

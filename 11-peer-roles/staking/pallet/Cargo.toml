@@ -21,6 +21,12 @@ serde = { workspace = true, features = ["alloc", "derive"], default-features = f
 
 # Internal Ëtrid dependencies
 peer-roles-staking-types = { path = "../types", default-features = false }
+pallet-validator-rewards = { path = "../../../src/pallets/pallet-validator-rewards", default-features = false }
+pallet-treasury-etrid = { path = "../../../src/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
+
+[dev-dependencies]
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 [features]
 default = ["std"]
@@ -36,6 +42,8 @@ std = [
     "serde/std",
     "serde/alloc",
     "peer-roles-staking-types/std",
+    "pallet-validator-rewards/std",
+    "pallet-treasury-etrid/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

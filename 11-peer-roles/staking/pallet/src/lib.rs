@@ -12,7 +12,10 @@
 //! - Role-based staking with minimum stake requirements per role
 //! - Flexible stake increase/decrease with unbonding periods
 //! - Multi-tier peer roles (FlareNode, ValidityNode, Director, CommonStakePeer, etc.)
-//! - Slashing mechanism for misbehavior
+//! - Payment account integration for validator rewards and slashing
+//! - Slashing mechanism with 6 offense types (Downtime, Equivocation, Malicious, etc.)
+//! - 50% burn / 50% treasury distribution for slashed funds
+//! - Automatic validator removal for critical offenses
 //! - Role activation/deactivation based on stake levels
 //! - Unbonding queue with configurable lock periods
 //! - Governance-controlled role revocation
@@ -23,8 +26,9 @@
 //! - `increase_stake` - Add more stake to an existing role
 //! - `unstake` - Initiate unbonding of staked tokens (begins unbonding period)
 //! - `revoke_role` - Revoke a role completely (governance only)
-//! - `slash` - Slash misbehaving validator or director (governance only)
+//! - `slash` - LEGACY: Slash from session account (governance only)
 //! - `withdraw_unbonded` - Withdraw tokens after unbonding period expires
+//! - `execute_slash` - Execute slashing from payment account with 50/50 burn/treasury split (governance only)
 //!
 //! ## Usage Example
 //!
@@ -51,6 +55,15 @@
 //! // Wait for unbonding period...
 //! // Then withdraw unbonded funds
 //! Staking::withdraw_unbonded(Origin::signed(alice))?;
+//!
+//! // Execute slashing for validator misbehavior (governance/root only)
+//! Staking::execute_slash(
+//!     Origin::root(),
+//!     validator_session_account,
+//!     OffenseType::Equivocation, // 10% slash
+//!     evidence_bytes,
+//! )?;
+//! // Result: 50% burned, 50% to treasury, validator status updated
 //! ```
 //!
 //! ## Storage Items
@@ -64,9 +77,11 @@
 //! - `RoleRevoked` - When a role is revoked from an account
 //! - `StakeIncreased` - When stake is increased
 //! - `StakeDecreased` - When stake is decreased (unbonding initiated)
-//! - `StakeSlashed` - When stake is slashed for misbehavior
+//! - `StakeSlashed` - LEGACY: When stake is slashed from session account
 //! - `UnbondingInitiated` - When unbonding process begins
 //! - `Withdrawn` - When unbonded funds are withdrawn
+//! - `ValidatorSlashedFromPayment` - When validator is slashed from payment account (with burn/treasury split)
+//! - `ValidatorRemoved` - When validator is removed from active set for critical offense
 //!
 //! ## Errors
 //!
@@ -97,10 +112,35 @@ use peer_roles_staking_types::{
 use frame_support::{
     dispatch::DispatchResult,
     pallet_prelude::*,
-    traits::{Currency, ReservableCurrency, Get},
+    traits::{Currency, ReservableCurrency, Get, ExistenceRequirement},
 };
 use frame_system::pallet_prelude::*;
 use sp_runtime::traits::{Zero, UniqueSaturatedInto, Saturating};
+
+// Import pallet-validator-rewards for payment account lookup (optional)
+// use pallet_validator_rewards;
+
+// Import pallet-treasury for treasury integration (optional)
+// use pallet_treasury_etrid;
+
+use codec::DecodeWithMemTracking;
+
+/// Offense types for slashing (per Ivory Papers Vol III lines 855-902)
+#[derive(Clone, Encode, Decode, DecodeWithMemTracking, PartialEq, Eq, TypeInfo, MaxEncodedLen, RuntimeDebug)]
+pub enum OffenseType {
+    /// Validator offline >24h (1% per day)
+    Downtime,
+    /// Missed blocks >10% (0.5%)
+    MissedBlocks,
+    /// Double-signing / equivocation (10%)
+    Equivocation,
+    /// Invalid finality vote (5%)
+    InvalidFinalityVote,
+    /// Provable censorship (5%)
+    Censorship,
+    /// Coordinated malicious attack (50% + removal)
+    MaliciousAttack,
+}
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -125,6 +165,13 @@ pub mod pallet {
         /// Maximum number of unbonding entries per account.
         #[pallet::constant]
         type MaxUnbondingEntries: Get<u32>;
+
+        /// Treasury account for receiving slashed funds
+        #[pallet::constant]
+        type TreasuryAccount: Get<Self::AccountId>;
+
+        /// Validator rewards pallet for payment account lookups
+        type ValidatorRewards: pallet_validator_rewards::Config<AccountId = Self::AccountId>;
     }
 
     #[pallet::storage]
@@ -160,6 +207,17 @@ pub mod pallet {
         UnbondingInitiated(T::AccountId, BalanceOf<T>, u32),
         /// Unbonded funds withdrawn [account, amount]
         Withdrawn(T::AccountId, BalanceOf<T>),
+        /// Validator slashed [session_account, payment_account, offense_type, slash_amount, burned, to_treasury]
+        ValidatorSlashedFromPayment {
+            session_account: T::AccountId,
+            payment_account: T::AccountId,
+            offense: OffenseType,
+            total_slashed: BalanceOf<T>,
+            burned: BalanceOf<T>,
+            to_treasury: BalanceOf<T>,
+        },
+        /// Validator removed from active set [session_account, offense_type]
+        ValidatorRemoved(T::AccountId, OffenseType),
     }
 
     #[pallet::error]
@@ -182,6 +240,12 @@ pub mod pallet {
         InsufficientBondedStake,
         /// Too many unbonding entries for this account.
         TooManyUnbondingEntries,
+        /// No payment account registered for this validator
+        NoPaymentAccountRegistered,
+        /// Invalid offense evidence provided
+        InvalidOffenseEvidence,
+        /// Payment account has insufficient balance to slash
+        InsufficientPaymentBalance,
     }
 
     #[pallet::pallet]
@@ -307,6 +371,9 @@ pub mod pallet {
         }
 
         /// Slash a misbehaving validator or director by an amount.
+        ///
+        /// LEGACY: This function slashes from the session account's reserved stake.
+        /// For validators with payment accounts, use `execute_slash` instead.
         #[pallet::call_index(4)]
         #[pallet::weight(10_000)]
         pub fn slash(origin: OriginFor<T>, account: T::AccountId, amount: BalanceOf<T>) -> DispatchResult {
@@ -352,6 +419,129 @@ pub mod pallet {
             Self::deposit_event(Event::<T>::Withdrawn(who, total_withdrawn));
             Ok(())
         }
+
+        /// Execute slashing for validator offense (per Ivory Papers Vol III lines 855-902)
+        ///
+        /// This function:
+        /// 1. Looks up payment account from pallet-validator-rewards
+        /// 2. Calculates slash amount based on offense type and validator stake
+        /// 3. Burns 50% of slashed amount
+        /// 4. Sends 50% to treasury
+        /// 5. Updates validator status (deactivates for critical offenses)
+        ///
+        /// # Offense Types & Penalties
+        /// - **Downtime** (>24h): 1% per day
+        /// - **MissedBlocks** (>10%): 0.5%
+        /// - **Equivocation** (double-sign): 10%
+        /// - **InvalidFinalityVote**: 5%
+        /// - **Censorship** (provable): 5%
+        /// - **MaliciousAttack**: 50% + removal from active set
+        ///
+        /// # Slashing Distribution
+        /// - 50% burned (deflationary mechanism)
+        /// - 50% sent to treasury (for protocol development)
+        #[pallet::call_index(6)]
+        #[pallet::weight(50_000)]
+        pub fn execute_slash(
+            origin: OriginFor<T>,
+            session_account: T::AccountId,
+            offense: OffenseType,
+            _evidence: BoundedVec<u8, ConstU32<1024>>,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+
+            // 1. Look up payment account from pallet-validator-rewards
+            let payment_account = pallet_validator_rewards::PaymentAccounts::<T::ValidatorRewards>::get(&session_account)
+                .ok_or(Error::<T>::NoPaymentAccountRegistered)?;
+
+            // 2. Get validator's stake to calculate slash amount
+            let validator_stake_raw = pallet_validator_rewards::ValidatorStakes::<T::ValidatorRewards>::get(&session_account);
+            ensure!(!validator_stake_raw.is_zero(), Error::<T>::NoActiveRole);
+
+            // Convert the stake to u128 for calculation, then back to BalanceOf<T>
+            use sp_runtime::traits::UniqueSaturatedFrom;
+            let validator_stake_u128: u128 = validator_stake_raw.unique_saturated_into();
+
+            // 3. Calculate slash amount based on offense type (per Ivory Papers Vol III)
+            let slash_percentage = Self::get_slash_percentage(&offense);
+            let total_slash_u128 = validator_stake_u128
+                .saturating_mul(slash_percentage as u128)
+                / 10000u128; // Basis points to percentage
+
+            let total_slash_amount = BalanceOf::<T>::unique_saturated_from(total_slash_u128);
+
+            // Verify payment account has sufficient free balance
+            let payment_balance = T::Currency::free_balance(&payment_account);
+            ensure!(
+                payment_balance >= total_slash_amount,
+                Error::<T>::InsufficientPaymentBalance
+            );
+
+            // 4. Execute slash: 50% burned, 50% to treasury
+            let burn_u128 = total_slash_u128 / 2u128;
+            let burn_amount = BalanceOf::<T>::unique_saturated_from(burn_u128);
+            let treasury_amount = total_slash_amount.saturating_sub(burn_amount);
+
+            // Burn 50% (slash without recipient)
+            let (_, burned) = T::Currency::slash(&payment_account, burn_amount);
+
+            // Transfer 50% to treasury
+            let treasury_account = T::TreasuryAccount::get();
+            T::Currency::transfer(
+                &payment_account,
+                &treasury_account,
+                treasury_amount,
+                ExistenceRequirement::KeepAlive,
+            )?;
+
+            // TODO: Record treasury deposit with proper tracking when integrated
+            // let _ = pallet_treasury_etrid::Pallet::<T>::fund_treasury(
+            //     frame_system::RawOrigin::Root.into(),
+            //     pallet_treasury_etrid::FundingSource::ValidatorSlashing,
+            //     treasury_amount,
+            // );
+
+            // 5. Update validator status based on offense severity
+            match offense {
+                OffenseType::MaliciousAttack => {
+                    // Critical offense: Remove from active set
+                    Roles::<T>::try_mutate(&session_account, |maybe_record| -> DispatchResult {
+                        if let Some(record) = maybe_record.as_mut() {
+                            record.active = false;
+                            record.last_update =
+                                <frame_system::Pallet<T>>::block_number().unique_saturated_into();
+                        }
+                        Ok(())
+                    })?;
+                    Self::deposit_event(Event::<T>::ValidatorRemoved(
+                        session_account.clone(),
+                        offense.clone(),
+                    ));
+                }
+                _ => {
+                    // Non-critical offense: Update role record
+                    Roles::<T>::try_mutate(&session_account, |maybe_record| -> DispatchResult {
+                        if let Some(record) = maybe_record.as_mut() {
+                            record.last_update =
+                                <frame_system::Pallet<T>>::block_number().unique_saturated_into();
+                        }
+                        Ok(())
+                    })?;
+                }
+            }
+
+            // Emit slashing event
+            Self::deposit_event(Event::<T>::ValidatorSlashedFromPayment {
+                session_account,
+                payment_account,
+                offense,
+                total_slashed: total_slash_amount,
+                burned,
+                to_treasury: treasury_amount,
+            });
+
+            Ok(())
+        }
     }
 
     // -------- Helper Functions --------
@@ -381,6 +571,30 @@ pub mod pallet {
                     // No minimum stake required
                     BalanceOf::<T>::zero()
                 }
+            }
+        }
+
+        /// Get slash percentage in basis points (per Ivory Papers Vol III lines 855-902)
+        ///
+        /// Returns slash amount as basis points (100 = 1%, 10000 = 100%)
+        ///
+        /// # Slashing Table
+        /// | Offense              | Slash % | Basis Points |
+        /// |---------------------|---------|--------------|
+        /// | Downtime (>24h)     | 1%      | 100          |
+        /// | Missed blocks (>10%)| 0.5%    | 50           |
+        /// | Equivocation        | 10%     | 1000         |
+        /// | Invalid finality    | 5%      | 500          |
+        /// | Censorship          | 5%      | 500          |
+        /// | Malicious attack    | 50%     | 5000         |
+        pub fn get_slash_percentage(offense: &OffenseType) -> u32 {
+            match offense {
+                OffenseType::Downtime => 100,              // 1%
+                OffenseType::MissedBlocks => 50,           // 0.5%
+                OffenseType::Equivocation => 1000,         // 10%
+                OffenseType::InvalidFinalityVote => 500,   // 5%
+                OffenseType::Censorship => 500,            // 5%
+                OffenseType::MaliciousAttack => 5000,      // 50%
             }
         }
     }
@@ -428,6 +642,7 @@ mod tests {
         {
             System: frame_system,
             Balances: pallet_balances,
+            ValidatorRewards: pallet_validator_rewards,
             Staking: pallet_etrid_staking,
         }
     );
@@ -486,12 +701,23 @@ mod tests {
 
     parameter_types! {
         pub const ConstU128<const N: u128>: u128 = N;
+        pub TreasuryAccountId: u64 = 999;
+    }
+
+    // Mock validator rewards pallet config
+    impl pallet_validator_rewards::Config for Test {
+        type RuntimeEvent = RuntimeEvent;
+        type Currency = Balances;
+        type MinRegistrationStake = ConstU128<1_000_000_000_000_000_000>; // 1 ETR
     }
 
     impl Config for Test {
         type RuntimeEvent = RuntimeEvent;
         type Currency = Balances;
         type UnbondPeriod = UnbondPeriod;
+        type MaxUnbondingEntries = ConstU32<10>;
+        type TreasuryAccount = TreasuryAccountId;
+        type ValidatorRewards = Test;
     }
 
     // Build genesis storage according to the mock runtime.

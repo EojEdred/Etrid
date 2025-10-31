@@ -1,0 +1,8 @@
+# Ëtrid FlareChain Mainnet Bootnodes
+# Format: /ip4/IP/tcp/PORT/p2p/PEER_ID
+#
+# ⚠️ TO BE UPDATED after validators start
+#
+# Validator 1 (Gizzi): /ip4/64.181.215.19/tcp/30333/p2p/<PEER_ID_TBD>
+# Validator 2 (EojEdred): /ip4/<IP_TBD>/tcp/30333/p2p/<PEER_ID_TBD>
+# Validator 3 (Backup): /ip4/<IP_TBD>/tcp/30333/p2p/<PEER_ID_TBD>

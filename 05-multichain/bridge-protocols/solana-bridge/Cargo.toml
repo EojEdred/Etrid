@@ -21,6 +21,9 @@ sp-io = { workspace = true }
 sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 
+# Etrid Bridge Common
+etrid-bridge-common = { path = "../common", default-features = false }
+
 # Solana-specific dependencies
 bs58 = { version = "0.5.0", default-features = false }
 borsh = { version = "0.10.3", default-features = false }
@@ -40,6 +43,7 @@ std = [
     "sp-io/std",
     "sp-runtime/std",
     "sp-std/std",
+    "etrid-bridge-common/std",
     "bs58/std",
     "borsh/std",
     "serde/std",

@@ -4431,6 +4431,7 @@ version = "0.1.0"
 dependencies = [
  "ethereum",
  "ethereum-types 0.14.1",
+ "etrid-bridge-common",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
@@ -4657,6 +4658,7 @@ dependencies = [
 name = "etrid-bridge-common"
 version = "0.1.0"
 dependencies = [
+ "frame-support",
  "parity-scale-codec",
  "scale-info",
  "sp-runtime",
@@ -5162,20 +5164,25 @@ dependencies = [
  "consensus-day-queries",
  "consensus-day-voting-protocol",
  "eth-bridge",
+ "etrid-bridge-common",
  "etrid-lightning-bloc",
  "etrid-smart-contract",
  "etrid-stake-deposit",
  "etrid-transactions-cross-chain",
+ "frame-benchmarking",
  "frame-executive",
  "frame-support",
  "frame-system",
+ "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "pallet-accounts",
  "pallet-aidid",
  "pallet-balances",
  "pallet-bitcoin-bridge",
  "pallet-cardano-bridge",
+ "pallet-circuit-breaker",
  "pallet-consensus",
+ "pallet-consensus-day",
  "pallet-custodian-registry",
  "pallet-did-registry",
  "pallet-doge-bridge",
@@ -5184,6 +5191,7 @@ dependencies = [
  "pallet-edsc-oracle",
  "pallet-edsc-receipts",
  "pallet-edsc-redemption",
+ "pallet-edsc-stability",
  "pallet-edsc-token",
  "pallet-etrid-staking",
  "pallet-etwasm-vm",
@@ -5202,10 +5210,12 @@ dependencies = [
  "pallet-transaction",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "pallet-treasury",
+ "pallet-treasury 0.1.0",
+ "pallet-treasury 42.0.0",
  "pallet-tx-processor",
  "pallet-validator-committee",
  "pallet-validator-committee-runtime-api",
+ "pallet-validator-rewards",
  "pallet-vesting",
  "pallet-xcm-bridge",
  "parity-scale-codec",
@@ -9454,6 +9464,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-consensus-day"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-treasury 0.1.0",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-custodian-registry"
 version = "1.0.0"
 dependencies = [
@@ -9592,6 +9618,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-edsc-stability"
+version = "1.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-multiasset-reserve",
+ "pallet-reserve-backed-token",
+ "pallet-reserve-oracle",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-edsc-token"
 version = "1.0.0"
 dependencies = [
@@ -9657,10 +9703,14 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
+ "pallet-balances",
+ "pallet-treasury 0.1.0",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "peer-roles-staking-types",
  "scale-info",
  "serde",
+ "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",
@@ -9849,6 +9899,7 @@ version = "1.0.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "log",
  "pallet-balances",
  "parity-scale-codec",
  "scale-info",
@@ -10159,6 +10210,23 @@ dependencies = [
 
 [[package]]
 name = "pallet-treasury"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-treasury"
 version = "42.0.0"
 source = "git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2509#5ab401310d2fbd808b3ffbcfc8735ad8f1c8fe10"
 dependencies = [
@@ -10217,6 +10285,22 @@ dependencies = [
  "sp-api",
  "sp-std",
  "validator-management",
+]
+
+[[package]]
+name = "pallet-validator-rewards"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -10287,7 +10371,7 @@ dependencies = [
  "pallet-balances",
  "pallet-collator-selection",
  "pallet-message-queue",
- "pallet-treasury",
+ "pallet-treasury 42.0.0",
  "pallet-xcm",
  "parity-scale-codec",
  "polkadot-primitives",
@@ -11578,7 +11662,7 @@ dependencies = [
  "pallet-staking-reward-fn",
  "pallet-timestamp",
  "pallet-transaction-payment",
- "pallet-treasury",
+ "pallet-treasury 42.0.0",
  "pallet-vesting",
  "parity-scale-codec",
  "polkadot-primitives",
@@ -15656,6 +15740,7 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "bs58",
+ "etrid-bridge-common",
  "frame-benchmarking",
  "frame-support",
  "frame-system",

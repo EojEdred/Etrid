@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Developer Portal - Build on Multichain Infrastructure</title>
+    <meta name="description" content="Everything you need to build on ËTRID - APIs, SDKs, tutorials, and developer resources">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="https://docs.etrid.org" target="_blank" class="text-gray-300 hover:text-white transition-colors">Docs</a>
+                    <a href="../ecosystem/" class="text-gray-300 hover:text-white transition-colors">Ecosystem</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Developer Portal
+            </h1>
+            <p class="text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                Build cross-chain applications on ËTRID's multichain infrastructure. Connect 13 major blockchains with one unified protocol.
+            </p>
+
+            <!-- Quick Links -->
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <a href="https://docs.etrid.org" target="_blank" class="px-6 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium">
+                    📚 Read Docs
+                </a>
+                <a href="https://github.com/etrid" target="_blank" class="px-6 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                    💻 GitHub
+                </a>
+                <a href="https://discord.gg/etrid" target="_blank" class="px-6 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                    💬 Discord
+                </a>
+                <a href="#grants" class="px-6 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                    💰 Apply for Grant
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">Quick Start</h2>
+
+            <!-- Code Example -->
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm text-gray-400">Install ËTRID SDK</span>
+                    <button onclick="copyCode('install-code')" class="text-etrid-blue hover:text-etrid-purple text-sm">Copy</button>
+                </div>
+                <pre id="install-code" class="text-sm text-gray-300 overflow-x-auto"><code>npm install @etrid/sdk
+# or
+yarn add @etrid/sdk</code></pre>
+            </div>
+
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm text-gray-400">Connect to ËTRID Network</span>
+                    <button onclick="copyCode('connect-code')" class="text-etrid-blue hover:text-etrid-purple text-sm">Copy</button>
+                </div>
+                <pre id="connect-code" class="text-sm text-gray-300 overflow-x-auto"><code>import { EtridSDK } from '@etrid/sdk';
+
+// Initialize ËTRID SDK
+const etrid = new EtridSDK({
+  network: 'mainnet',
+  endpoint: 'wss://rpc.etrid.org'
+});
+
+// Connect to blockchain
+await etrid.connect();
+
+// Get current block number
+const blockNumber = await etrid.getBlockNumber();
+console.log('Current block:', blockNumber);
+
+// Send cross-chain transaction
+const tx = await etrid.crossChain.transfer({
+  from: 'ethereum',
+  to: 'bsc',
+  asset: 'USDC',
+  amount: '100'
+});
+
+await tx.wait();</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SDKs & Tools -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">SDKs & Tools</h2>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- JavaScript SDK -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">📦</div>
+                    <h3 class="text-xl font-bold mb-2">JavaScript SDK</h3>
+                    <p class="text-gray-400 text-sm mb-4">Full-featured SDK for Node.js and browser</p>
+                    <a href="https://www.npmjs.com/package/@etrid/sdk" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        npm install @etrid/sdk →
+                    </a>
+                </div>
+
+                <!-- Python SDK -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">🐍</div>
+                    <h3 class="text-xl font-bold mb-2">Python SDK</h3>
+                    <p class="text-gray-400 text-sm mb-4">Python library for backend integration</p>
+                    <a href="https://pypi.org/project/etrid/" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        pip install etrid →
+                    </a>
+                </div>
+
+                <!-- Rust SDK -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">🦀</div>
+                    <h3 class="text-xl font-bold mb-2">Rust SDK</h3>
+                    <p class="text-gray-400 text-sm mb-4">High-performance Rust crate</p>
+                    <a href="https://crates.io/crates/etrid" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        cargo add etrid →
+                    </a>
+                </div>
+
+                <!-- Smart Contract Templates -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">📝</div>
+                    <h3 class="text-xl font-bold mb-2">Contract Templates</h3>
+                    <p class="text-gray-400 text-sm mb-4">Audited smart contract templates</p>
+                    <a href="https://github.com/etrid/templates" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        View Templates →
+                    </a>
+                </div>
+
+                <!-- CLI Tools -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">⚡</div>
+                    <h3 class="text-xl font-bold mb-2">CLI Tools</h3>
+                    <p class="text-gray-400 text-sm mb-4">Command-line development tools</p>
+                    <a href="https://docs.etrid.org/cli" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        Install CLI →
+                    </a>
+                </div>
+
+                <!-- Testing Framework -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-4xl mb-4">🧪</div>
+                    <h3 class="text-xl font-bold mb-2">Testing Framework</h3>
+                    <p class="text-gray-400 text-sm mb-4">Test your dApps locally</p>
+                    <a href="https://docs.etrid.org/testing" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        Learn More →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Endpoints -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">Network Endpoints</h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Mainnet -->
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></span>
+                        Mainnet
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">WebSocket RPC</div>
+                            <code class="text-sm bg-black/30 px-3 py-2 rounded block">wss://rpc.etrid.org</code>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">HTTP RPC</div>
+                            <code class="text-sm bg-black/30 px-3 py-2 rounded block">https://rpc.etrid.org</code>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Chain ID</div>
+                            <code class="text-sm bg-black/30 px-3 py-2 rounded block">etrid-mainnet-1</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testnet -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
+                        Testnet
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">WebSocket RPC</div>
+                            <code class="text-sm bg-black/30 px-3 py-2 rounded block">wss://testnet-rpc.etrid.org</code>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">HTTP RPC</div>
+                            <code class="text-sm bg-black/30 px-3 py-2 rounded block">https://testnet-rpc.etrid.org</code>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Faucet</div>
+                            <a href="https://faucet.etrid.org" target="_blank" class="text-sm text-etrid-blue hover:text-etrid-purple">Get Test Tokens →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutorials -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">Tutorials & Guides</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <a href="https://docs.etrid.org/tutorials/first-dapp" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">🚀</div>
+                    <h3 class="font-bold mb-2">Build Your First dApp</h3>
+                    <p class="text-gray-400 text-sm">Deploy a smart contract and build a web interface</p>
+                </a>
+
+                <a href="https://docs.etrid.org/tutorials/cross-chain" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">🌉</div>
+                    <h3 class="font-bold mb-2">Cross-Chain Transfers</h3>
+                    <p class="text-gray-400 text-sm">Enable asset transfers between blockchains</p>
+                </a>
+
+                <a href="https://docs.etrid.org/tutorials/defi" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">💰</div>
+                    <h3 class="font-bold mb-2">Build a DeFi Protocol</h3>
+                    <p class="text-gray-400 text-sm">Create lending, staking, and yield farming apps</p>
+                </a>
+
+                <a href="https://docs.etrid.org/tutorials/nft" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">🖼️</div>
+                    <h3 class="font-bold mb-2">NFT Marketplace</h3>
+                    <p class="text-gray-400 text-sm">Build a cross-chain NFT marketplace</p>
+                </a>
+
+                <a href="https://docs.etrid.org/tutorials/oracle" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">📡</div>
+                    <h3 class="font-bold mb-2">Oracle Integration</h3>
+                    <p class="text-gray-400 text-sm">Use price feeds and external data</p>
+                </a>
+
+                <a href="https://docs.etrid.org/tutorials/staking" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-etrid-blue/50 transition-all">
+                    <div class="text-2xl mb-3">⚡</div>
+                    <h3 class="font-bold mb-2">Staking Rewards</h3>
+                    <p class="text-gray-400 text-sm">Implement token staking mechanisms</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community & Support -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-display font-bold mb-4">Need Help?</h2>
+            <p class="text-gray-400 mb-8">Join our developer community for support and collaboration</p>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <a href="https://discord.gg/etrid" target="_blank" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-3xl mb-2">💬</div>
+                    <div class="font-semibold mb-1">Discord</div>
+                    <div class="text-sm text-gray-400">Chat with developers</div>
+                </a>
+
+                <a href="https://forum.etrid.org" target="_blank" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-3xl mb-2">🗨️</div>
+                    <div class="font-semibold mb-1">Forum</div>
+                    <div class="text-sm text-gray-400">Technical discussions</div>
+                </a>
+
+                <a href="https://twitter.com/etrid_dev" target="_blank" class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
+                    <div class="text-3xl mb-2">🐦</div>
+                    <div class="font-semibold mb-1">Twitter</div>
+                    <div class="text-sm text-gray-400">Latest updates</div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function copyCode(id) {
+            const code = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(code);
+            alert('Code copied to clipboard!');
+        }
+    </script>
+</body>
+</html>

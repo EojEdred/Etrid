@@ -21,6 +21,9 @@ sp-io = { workspace = true }
 sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 
+# Etrid Bridge Common
+etrid-bridge-common = { path = "../common", default-features = false }
+
 # Additional dependencies for Ethereum support
 ethereum = { version = "0.15.0", default-features = false }
 ethereum-types = { version = "0.14.1", default-features = false }
@@ -41,6 +44,7 @@ std = [
     "sp-io/std",
     "sp-runtime/std",
     "sp-std/std",
+    "etrid-bridge-common/std",
     "ethereum/std",
     "ethereum-types/std",
     "rlp/std",

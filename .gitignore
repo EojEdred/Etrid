@@ -111,3 +111,25 @@ genesis-*.json
 # Archive folders (old session reports, temporary docs)
 archive-docs/
 archive/
+_archive*/
+_CACHE_ARCHIVE/
+
+# Temporary genesis account generation
+genesis-accounts-*/
+
+# BFG cleanup reports
+..bfg-report/
+
+# Compiled binaries (should be built from source)
+**/flarechain-node
+**/flare-chain-node
+*.tar.gz
+!release-packages/**/*.tar.gz
+# But exclude large tarballs from release-packages
+release-packages/**/*Darwin*.tar.gz
+release-packages/**/flarechain-node
+
+# Deployment packages (binaries only, keep config)
+mainnet-deployment-package/*.node
+mainnet-deployment-package/flarechain-node
+validator-deployment-kit/*.node

@@ -1,0 +1,36 @@
+{
+  "@context": ["https://www.w3.org/ns/did/v1"],
+  "id": "did:etrid:governance-01",
+  "verificationMethod": [{
+    "id": "did:etrid:governance-01#key-1",
+    "type": "Ed25519VerificationKey2020",
+    "controller": "did:etrid:governance-01",
+    "publicKeyMultibase": "z6MkjRagNiMu91DduvCvgEsqLZDVW4Xt3Bq3RWdWJQhWkgQP"
+  }],
+  "authentication": [
+    "did:etrid:governance-01#key-1"
+  ],
+  "service": [{
+    "id": "did:etrid:governance-01#governance-service",
+    "type": "AIGovernanceOrchestrator",
+    "serviceEndpoint": "http://localhost:4002/governance",
+    "description": "Autonomous governance and Consensus Day orchestration agent"
+  }],
+  "metadata": {
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z",
+    "agent_type": "Governance AI",
+    "skills": [
+      "proposal-generator",
+      "vote-simulation",
+      "committee-rotation",
+      "consensus-day-orchestrator",
+      "compliance-dev",
+      "ethics-dev",
+      "moderation-dev",
+      "governance-dev"
+    ],
+    "priority": "critical",
+    "version": "1.0.0"
+  }
+}
