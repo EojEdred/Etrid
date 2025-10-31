@@ -13,27 +13,27 @@
       "number": 2,
       "name": "EojEdred (Founder)",
       "aiDevId": "security-dev01",
-      "ip": "NEEDS_IP",
+      "ip": "20.69.26.209",
       "role": "Director",
-      "region": "TBD",
+      "region": "Azure",
       "bootnode": true
     },
     {
       "number": 3,
       "name": "Audit Dev",
       "aiDevId": "audit-dev01",
-      "ip": "NEEDS_IP",
+      "ip": "129.80.122.34",
       "role": "Director",
-      "region": "TBD",
+      "region": "Oracle Cloud",
       "bootnode": true
     },
     {
       "number": 4,
-      "name": "Consensus Dev (Primary)",
-      "aiDevId": "consensus-dev01",
-      "ip": "NEEDS_IP",
+      "name": "Governance Dev",
+      "aiDevId": "governance-dev01",
+      "ip": "20.186.91.207",
       "role": "FlareNode",
-      "region": "TBD"
+      "region": "Azure"
     },
     {
       "number": 5,
