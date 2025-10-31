@@ -1,0 +1,26 @@
+{
+  "name": "etrid-polygon-deployment",
+  "version": "1.0.0",
+  "description": "ÉTR Token Polygon Deployment for QuickSwap V3",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run deploy.js --network amoy",
+    "deploy:mainnet": "hardhat run deploy.js --network polygon",
+    "verify:testnet": "hardhat verify --network amoy",
+    "verify:mainnet": "hardhat verify --network polygon",
+    "clean": "hardhat clean"
+  },
+  "keywords": ["etrid", "polygon", "erc20", "quickswap", "dex"],
+  "author": "Ëtrid Foundation",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1"
+  }
+}
