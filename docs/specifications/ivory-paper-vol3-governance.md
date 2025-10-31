@@ -542,29 +542,30 @@ Allocation:
 1. **Staking**: Lock ÉTR to become validator or voter
 2. **Gas Fees**: Pay for transactions (measured in VMw, priced in ÉTR)
 3. **Governance**: Vote on proposals during Consensus Day
-4. **Collateral**: Back EDSC stablecoin (over-collateralized)
+4. **Reserve Asset**: Held in multi-asset treasury backing EDSC stablecoin
 
 ### EDSC (Ëtrid Dollar Stablecoin)
 
 **Purpose**: Stable unit of account for payments, contracts
 
-**Peg**: $1.00 USD (soft peg maintained by arbitrage + liquidations)
+**Peg**: $1.00 USD (maintained by direct reserve buy/sell + arbitrage)
 
-**Collateral**: Over-collateralized by multi-asset reserve (target: 150%)
+**Backing Model**: Treasury-backed with 100% backing from organic purchases (no pre-funding required)
 
 **Reserve Infrastructure**:
 
 EDSC is backed by a diversified multi-asset reserve managed through two specialized pallets:
 
 1. **pallet-multiasset-reserve**: Manages reserve composition and automated rebalancing
-2. **pallet-reserve-backed-token**: Handles EDSC minting and collateral positions
+2. **pallet-reserve-backed-token**: Handles EDSC purchase/redemption and reserve management
 
 **Reserve Composition**:
 ```
-Target Allocation (example):
-- 40% ÉTR (native token)
-- 30% BTC (bridged from BTC-PBC)
-- 20% ETH (bridged from ETH-PBC)
+Target Allocation (accumulates organically from purchases):
+- 30% USDC (stablecoin purchases)
+- 25% ETH (bridged from ETH-PBC)
+- 20% BTC (bridged from BTC-PBC)
+- 15% SOL (bridged from SOL-PBC)
 - 10% Other assets (governance-approved)
 
 Rebalancing:
@@ -579,70 +580,89 @@ Rebalancing:
 - **RiskAdjusted**: Weight by volatility/risk metrics
 - **Custom**: Custom weights set by governance vote
 
-**Minting Process**:
+**Purchase Process**:
 ```rust
-fn mint_edsc(collateral_amount: Balance) -> Result<Balance, Error> {
-    let etr_price_usd = oracle::get_etr_price(); // From price oracle
-    let collateral_value_usd = collateral_amount * etr_price_usd;
+fn purchase_edsc(
+    payment_token: AssetId,
+    payment_amount: Balance
+) -> Result<Balance, Error> {
+    // Get payment token price from oracle
+    let token_price_usd = oracle::get_price(payment_token)?;
+    let payment_value_usd = payment_amount * token_price_usd;
 
-    // Require 150% collateralization
-    let max_edsc_mintable = collateral_value_usd / 1.5;
+    // Calculate EDSC amount at $1.00 peg
+    let edsc_amount = payment_value_usd; // 1 EDSC = $1.00
 
-    // Lock collateral in reserve
-    lock_collateral(caller, collateral_amount)?;
+    // Apply purchase fee (0.1%)
+    let fee = edsc_amount * 10 / 10000;
+    let net_edsc = edsc_amount - fee;
 
-    // Mint EDSC via pallet-reserve-backed-token
-    mint_stablecoin(caller, max_edsc_mintable)?;
+    // Transfer payment to reserve vault
+    transfer_to_reserve(caller, payment_token, payment_amount)?;
+
+    // Release EDSC from reserve vault to buyer
+    release_from_vault(caller, net_edsc)?;
 
     // Reserve automatically rebalances if needed
     if should_rebalance() {
         trigger_rebalance()?;
     }
 
-    Ok(max_edsc_mintable)
+    Ok(net_edsc)
 }
 ```
 
-**Liquidation Process**:
+**Redemption Process**:
 ```rust
-fn check_liquidation(cdp: &CollateralDebtPosition) -> bool {
-    let etr_price_usd = oracle::get_etr_price();
-    let collateral_value = cdp.collateral_amount * etr_price_usd;
-    let debt_value = cdp.edsc_minted; // 1 EDSC = $1
+fn redeem_edsc(
+    edsc_amount: Balance,
+    preferred_payment: AssetId
+) -> Result<Balance, Error> {
+    // Burn EDSC from user
+    burn_edsc(caller, edsc_amount)?;
 
-    let collateralization_ratio = collateral_value / debt_value;
+    // Calculate redemption value ($1.00 per EDSC)
+    let redemption_value_usd = edsc_amount;
 
-    // Liquidate if ratio falls below 120% (updated threshold)
-    if collateralization_ratio < 1.2 {
-        liquidate_cdp(cdp);
-        true
-    } else {
-        false
-    }
+    // Apply redemption fee (0.1%)
+    let fee = redemption_value_usd * 10 / 10000;
+    let net_value = redemption_value_usd - fee;
+
+    // Get payment token price
+    let token_price = oracle::get_price(preferred_payment)?;
+    let payment_amount = net_value / token_price;
+
+    // Transfer crypto from reserve to user
+    transfer_from_reserve(caller, preferred_payment, payment_amount)?;
+
+    Ok(payment_amount)
 }
 ```
 
-**Collateralization Parameters**:
+**Treasury-Backed Parameters**:
 ```
-Minimum Collateral Ratio: 150%
-Liquidation Threshold:     120%
-Liquidation Penalty:       5%
+Target Backing Ratio:    100% (purchase value)
+Purchase Price:          $1.00 per EDSC
+Redemption Price:        $1.00 per EDSC
+Purchase Fee:            0.1% (goes to treasury)
+Redemption Fee:          0.1% (goes to treasury)
 
 Example:
-To mint 1000 EDSC ($1000 value):
-→ Requires: $1500 in collateral (150%)
-→ Liquidated if collateral falls to $1200 (120%)
-→ Liquidator receives: $1200 + 5% penalty = $1260
-→ Position holder loses: $60 to liquidator
+User purchases 1000 EDSC with USDC:
+→ User sends: 1000 USDC ($1000)
+→ Fee: 1 USDC (0.1%)
+→ User receives: 999 EDSC
+→ Reserve holds: 1000 USDC backing
+→ Backing ratio: 100% ($1000 backing 999 circulating EDSC)
 ```
 
 **Stability Mechanisms**:
 1. **Multi-Asset Reserve**: Reduces correlation risk compared to single-asset backing
 2. **Automated Rebalancing**: Maintains target allocations via pallet-multiasset-reserve
-3. **Over-Collateralization**: 150% target ratio prevents undercollateralization
-4. **Liquidation**: Automated liquidations at 120% ratio (updated from 110%)
-5. **Liquidation Penalty**: 5% penalty incentivizes proper position management
-6. **Interest Rates**: Dynamic interest on borrowed EDSC adjusts to maintain peg
+3. **Direct Purchase/Redemption**: Reserve always buys/sells at $1.00, maintaining peg
+4. **Organic Backing**: 100% backing accumulates from user purchases (no pre-funding)
+5. **Purchase/Redemption Fees**: 0.1% fees prevent spam while generating treasury revenue
+6. **No Liquidations**: Simple buy/sell model eliminates liquidation risk
 7. **Arbitrage**: Price deviations create profitable arbitrage opportunities
 8. **DEX Integration**: FlareSwap enables efficient ÉTR/EDSC trading and price discovery
 
@@ -658,9 +678,9 @@ Beyond EDSC, the reserve infrastructure enables creation of diverse synthetic as
 
 **Governance Controls**:
 - Whitelisting of reserve assets (Consensus Day vote required)
-- Adjustment of collateralization ratios per synthetic
+- Adjustment of backing ratios per synthetic
 - Rebalancing strategy selection
-- Emergency pause of minting/liquidations
+- Emergency pause of purchase/redemption
 
 ### VMw (Virtual Machine Watts)
 
@@ -1642,39 +1662,42 @@ pub struct ReserveComposition {
 - **20% sETH**: Synthetic Ethereum, DeFi integration
 - **10% Other**: USDC, sXAU, diversification assets
 
-#### Collateralization Parameters
+#### Treasury-Backed Parameters
 
 ```rust
-/// Minimum collateralization ratio: 150% (15000 basis points)
+/// Target backing ratio: 100% (10000 basis points)
 #[pallet::constant]
-type MinCollateralRatio: Get<u16>;  // Default: 15000
+type TargetBackingRatio: Get<u16>;  // Default: 10000 (100%)
 
-/// Liquidation threshold: 120% (12000 basis points)
+/// Purchase fee: 0.1% (10 basis points)
 #[pallet::constant]
-type LiquidationThreshold: Get<u16>;  // Default: 12000
+type PurchaseFee: Get<u16>;  // Default: 10
 
-/// Liquidation penalty: 5% (500 basis points)
+/// Redemption fee: 0.1% (10 basis points)
 #[pallet::constant]
-type LiquidationPenalty: Get<u16>;  // Default: 500
+type RedemptionFee: Get<u16>;  // Default: 10
 ```
 
-**Collateralization Example**:
+**Purchase/Redemption Example**:
 ```
-To mint 1000 EDSC ($1000 value):
-→ Required collateral: $1500 (150%)
-→ Liquidation triggered at: $1200 (120%)
-→ Liquidation penalty: $60 (5%)
+To purchase 1000 EDSC:
+→ User sends: $1000 in BTC/ETH/SOL/USDC
+→ Purchase fee: $1 (0.1%)
+→ User receives: 999 EDSC
+→ Reserve holds: $1000 backing
 
-Scenario:
-1. User deposits 150 ËTR ($1500 at $10/ËTR)
-2. System mints 1000 EDSC
-3. If ËTR drops to $8/ËTR:
-   - Collateral value: 150 * $8 = $1200
-   - Collateral ratio: 120% (at liquidation threshold)
-   - Position can be liquidated
-   - Liquidator pays 1000 EDSC, receives $1260 in ËTR
-   - Position holder loses $60 penalty
-   - Treasury receives $60 penalty
+To redeem 999 EDSC:
+→ User burns: 999 EDSC
+→ Redemption fee: $0.999 (0.1%)
+→ User receives: $998.001 in preferred crypto
+→ Reserve releases: $998.001 from holdings
+
+Key Differences from Over-Collateralized Model:
+- No upfront capital required to launch
+- Backing accumulates organically from purchases
+- No liquidations (direct buy/sell only)
+- 100% backing ratio (not 150%)
+- No debt positions or interest charges
 ```
 
 #### Interest Rate Adjustments for Peg Defense
@@ -1729,49 +1752,85 @@ fn calculate_accrued_interest(
 }
 ```
 
-#### Liquidation System
+#### Reserve Purchase/Redemption System
 
-**Liquidation Trigger**:
+**Purchase from Reserve**:
 ```rust
-pub fn liquidate_position(
+pub fn purchase_edsc(
     origin: OriginFor<T>,
-    owner: T::AccountId,
+    payment_token: AssetId,
+    payment_amount: BalanceOf<T>,
 ) -> DispatchResult {
-    let position = Positions::<T>::get(&owner)?;
+    let buyer = ensure_signed(origin)?;
 
-    // Calculate current collateralization ratio
-    let collateral_value = Self::balance_to_u128(position.collateral_amount)?;
-    let debt_value = position.edsc_minted;
+    // Get payment token price from oracle
+    let token_price = T::PriceOracle::get_price(payment_token)?;
+    let payment_value_usd = payment_amount * token_price;
 
-    let collateral_ratio = (collateral_value * 10000) / debt_value;
+    // Calculate EDSC amount at $1.00 peg
+    let edsc_amount = payment_value_usd;
 
-    // Check if undercollateralized (below 120%)
-    ensure!(
-        collateral_ratio < T::LiquidationThreshold::get(),
-        Error::<T>::PositionHealthy
-    );
+    // Apply purchase fee (0.1%)
+    let fee = edsc_amount * T::PurchaseFee::get() / 10000;
+    let net_edsc = edsc_amount - fee;
 
-    // Execute liquidation...
+    // Transfer payment to reserve vault
+    T::MultiCurrency::transfer(payment_token, &buyer, &T::ReserveVault::get(), payment_amount)?;
+
+    // Release EDSC from vault to buyer
+    T::Currency::transfer(&T::ReserveVault::get(), &buyer, net_edsc)?;
+
+    Ok(())
 }
 ```
 
-**Liquidation Mechanics**:
-1. Liquidator provides EDSC to burn debt
-2. Liquidator receives collateral from position
-3. 5% penalty deducted from collateral
-4. Penalty sent to treasury
-5. Position closed or updated
+**Redemption to Reserve**:
+```rust
+pub fn redeem_edsc(
+    origin: OriginFor<T>,
+    edsc_amount: BalanceOf<T>,
+    preferred_payment: AssetId,
+) -> DispatchResult {
+    let redeemer = ensure_signed(origin)?;
 
-**Liquidation Penalty Distribution**:
+    // Burn EDSC from user
+    T::Currency::burn_from(&redeemer, edsc_amount)?;
+
+    // Calculate redemption value ($1.00 per EDSC)
+    let redemption_value_usd = edsc_amount;
+
+    // Apply redemption fee (0.1%)
+    let fee = redemption_value_usd * T::RedemptionFee::get() / 10000;
+    let net_value = redemption_value_usd - fee;
+
+    // Get payment token price and amount
+    let token_price = T::PriceOracle::get_price(preferred_payment)?;
+    let payment_amount = net_value / token_price;
+
+    // Transfer crypto from reserve to user
+    T::MultiCurrency::transfer(preferred_payment, &T::ReserveVault::get(), &redeemer, payment_amount)?;
+
+    Ok(())
+}
 ```
-Total Collateral: $1200
-Debt: $1000 EDSC
-Penalty: 5% of collateral = $60
 
-Distribution:
-→ Liquidator receives: $1140 ($1200 - $60)
-→ Treasury receives: $60 (penalty)
-→ Position holder loses: $60
+**Fee Distribution**:
+```
+Purchase Fee: 0.1% → Treasury
+Redemption Fee: 0.1% → Treasury
+
+Example:
+User purchases 1000 EDSC with 1000 USDC:
+→ Fee: 1 USDC (0.1%)
+→ User receives: 999 EDSC
+→ Treasury receives: 1 USDC fee
+→ Reserve holds: 1000 USDC backing
+
+User redeems 999 EDSC for USDC:
+→ Fee: 0.999 USDC (0.1%)
+→ User receives: 998.001 USDC
+→ Treasury receives: 0.999 USDC fee
+→ Reserve releases: 998.001 USDC
 ```
 
 #### Automatic Rebalancing
@@ -1817,17 +1876,17 @@ StabilityFees::<T>::mutate(|fees| {
 });
 ```
 
-**Liquidation Penalties Flow**:
+**Purchase/Redemption Fees Flow**:
 ```rust
-// Penalty sent to treasury
+// Fees sent to treasury
 StabilityFees::<T>::mutate(|fees| {
-    *fees = fees.saturating_add(penalty);
+    *fees = fees.saturating_add(purchase_fee + redemption_fee);
 });
 ```
 
 **Fee Collection**:
-- Interest payments from EDSC positions
-- Liquidation penalties (5% of collateral)
+- Purchase fees from EDSC purchases (0.1%)
+- Redemption fees from EDSC redemptions (0.1%)
 - Rebalancing fees (if applicable)
 - All fees flow to treasury for protocol sustainability
 
@@ -1843,29 +1902,26 @@ CurrentReserveComposition<T: Config> = StorageValue<_, ReserveComposition>
 /// Target reserve composition (governance-updatable)
 TargetReserveComposition<T: Config> = StorageValue<_, ReserveComposition>
 
-/// Current collateralization ratio (basis points)
-CollateralizationRatio<T: Config> = StorageValue<_, u16>
+/// Current backing ratio (basis points)
+BackingRatio<T: Config> = StorageValue<_, u16>
 
-/// Current interest rate (annual, basis points)
-InterestRate<T: Config> = StorageValue<_, u16>
+/// Reserve vault address (holds initial EDSC supply)
+ReserveVault<T: Config> = StorageValue<_, T::AccountId>
 
-/// Total EDSC supply
-TotalEDSCSupply<T: Config> = StorageValue<_, u128>
+/// Circulating EDSC supply (released from vault)
+CirculatingEDSCSupply<T: Config> = StorageValue<_, u128>
 
 /// User EDSC balances
 EDSCBalances<T: Config> = StorageMap<_, T::AccountId, u128>
 
-/// User collateral positions
-Positions<T: Config> = StorageMap<_, T::AccountId, EDSCPosition<BalanceOf<T>>>
+/// Purchase/redemption history
+TransactionHistory<T: Config> = StorageMap<_, T::AccountId, Vec<EDSCTransaction>>
 
 /// Accumulated stability fees
 StabilityFees<T: Config> = StorageValue<_, BalanceOf<T>>
 
 /// Emergency pause flag
 EmergencyPaused<T: Config> = StorageValue<_, bool>
-
-/// Liquidation history
-LiquidationHistory<T: Config> = StorageMap<_, u32, EDSCLiquidation>
 
 /// Rebalancing history
 RebalanceHistory<T: Config> = StorageMap<_, u32, RebalanceRecord>
@@ -1878,20 +1934,14 @@ EDSCPrice<T: Config> = StorageValue<_, u32>
 
 **User Functions**:
 ```rust
-// Deposit collateral and mint EDSC
-deposit_collateral_mint_edsc(collateral_amount, edsc_amount)
+// Purchase EDSC from reserve with crypto
+purchase_edsc(payment_token: AssetId, payment_amount: Balance)
 
-// Burn EDSC and withdraw collateral
-burn_edsc_withdraw_collateral(edsc_amount)
+// Redeem EDSC back to reserve for crypto
+redeem_edsc(edsc_amount: Balance, preferred_payment: AssetId)
 
-// Add collateral to existing position
-add_collateral(amount)
-```
-
-**Liquidation Functions** (Anyone can call):
-```rust
-// Liquidate undercollateralized position
-liquidate_position(owner: AccountId)
+// Check current reserve backing ratio
+get_backing_ratio() -> Result<u16, Error>
 
 // Trigger reserve rebalancing
 trigger_rebalance()
@@ -2060,7 +2110,7 @@ if deviation > T::EmergencyPauseThreshold::get() {
 1. **Volume Spike**: >1M EDSC redeemed in 1 hour
 2. **Reserve Depletion**: Reserve ratio <90%
 3. **Peg Break**: EDSC price >$1.10 or <$0.90
-4. **Rapid Liquidations**: >100 liquidations per hour
+4. **Rapid Redemptions**: >100,000 EDSC redemptions per hour
 5. **Oracle Failure**: Price feed stale >1 hour
 
 #### Whitelist System
@@ -2443,11 +2493,11 @@ etrid-cli multisig broadcast \
 **EDSC Dashboard** (`edsc.etrid.org`):
 - Current EDSC price
 - Total supply and circulation
-- Collateralization ratio (system-wide)
-- Interest rate history
-- Active positions count
-- Recent liquidations
-- Stability fee revenue
+- Backing ratio (system-wide)
+- Purchase/redemption volume history
+- Active transaction count
+- Recent large transactions
+- Fee revenue (purchase + redemption)
 
 **Circuit Breaker Dashboard** (`safety.etrid.org`):
 - Current circuit status

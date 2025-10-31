@@ -677,7 +677,7 @@ parameter_types! {
 
 ### 4.7.2. Reserve-Backed Token (pallet-reserve-backed-token)
 
-**Purpose**: Create synthetic tokens backed by multi-asset collateral with over-collateralization requirements
+**Purpose**: Create synthetic tokens backed by treasury reserves with organic backing accumulation
 
 **Core Structures**:
 ```rust
@@ -685,36 +685,38 @@ pub struct SyntheticToken {
     pub symbol: BoundedVec<u8, ConstU32<16>>,
     pub name: BoundedVec<u8, ConstU32<64>>,
     pub decimals: u8,
-    pub min_collateral_ratio: u16,  // Basis points: 15000 = 150%
-    pub liquidation_ratio: u16,      // Basis points: 12000 = 120%
+    pub target_peg: u128,            // Target price in USD (e.g., 1_000_000 = $1.00)
+    pub backing_ratio: u16,          // Basis points: 10000 = 100%
     pub total_supply: u128,
     pub is_active: bool,
     pub created_at: u32,
 }
 
-pub struct CollateralPosition<Balance> {
+pub struct ReservePosition<Balance> {
     pub synthetic_id: u32,
-    pub collateral_amount: Balance,
-    pub synthetic_minted: u128,
+    pub reserve_holdings: Vec<(AssetId, Balance)>,  // Multi-asset reserves
+    pub circulating_supply: u128,    // Amount released from vault
     pub last_update: u32,
 }
 ```
 
-**Collateralization Model**:
+**Treasury-Backed Model**:
 
-EDSC and other synthetic tokens require over-collateralization to maintain peg stability:
+EDSC uses a treasury-backed model where backing accumulates organically from user purchases:
 
 ```
-Minimum Collateral Ratio: 150%
-Liquidation Threshold:     120%
-Liquidation Penalty:       5%
+Backing Ratio:           100% (purchase value)
+Initial Supply:          1 billion EDSC (minted to reserve vault)
+Purchase Price:          $1.00 per EDSC
+Redemption Price:        $1.00 per EDSC
+Pre-Funding Required:    None (organic backing)
 
 Example:
-To mint 1000 EDSC ($1000 value):
-→ Requires: $1500 in ÉTR collateral (150%)
-→ Liquidated if collateral falls to $1200 (120%)
-→ Liquidator receives: $1200 + 5% penalty = $1260
-→ Position holder loses: $60
+User purchases 1000 EDSC:
+→ User sends: $1000 in BTC/ETH/SOL/USDC to reserve
+→ Reserve releases: 1000 EDSC to user
+→ Reserve now holds: $1000 backing (100% ratio)
+→ No liquidations (direct purchase/redemption model)
 ```
 
 **Key Operations**:
@@ -727,8 +729,8 @@ pub fn create_synthetic(
     symbol: Vec<u8>,
     name: Vec<u8>,
     decimals: u8,
-    min_collateral_ratio: u16,
-    liquidation_ratio: u16,
+    target_peg: u128,         // Target price in USD (6 decimals)
+    backing_ratio: u16,       // Basis points: 10000 = 100%
 ) -> DispatchResult;
 
 // Deactivate synthetic token (no new minting)
@@ -738,63 +740,67 @@ pub fn deactivate_synthetic(
 ) -> DispatchResult;
 ```
 
-2. **Minting & Burning**:
+2. **Purchase & Redemption**:
 ```rust
-// Mint synthetic tokens by locking collateral
-pub fn mint_synthetic(
+// Purchase synthetic tokens from reserve (e.g., EDSC)
+pub fn purchase_synthetic(
     origin: OriginFor<T>,
     synthetic_id: u32,
-    collateral_amount: BalanceOf<T>,
-    synthetic_amount: u128,
+    payment_token: AssetId,      // BTC, ETH, SOL, USDC, etc.
+    payment_amount: BalanceOf<T>,
+    min_synthetic_amount: u128,
 ) -> DispatchResult;
 
-// Burn synthetic tokens to reclaim collateral
-pub fn burn_synthetic(
+// Redeem synthetic tokens back to reserve for crypto
+pub fn redeem_synthetic(
     origin: OriginFor<T>,
     synthetic_id: u32,
     synthetic_amount: u128,
+    preferred_payment: AssetId,   // Preferred crypto to receive
+    min_payment_amount: BalanceOf<T>,
 ) -> DispatchResult;
 ```
 
-3. **Collateral Management**:
+3. **Reserve Management**:
 ```rust
-// Add more collateral to existing position
-pub fn add_collateral(
-    origin: OriginFor<T>,
+// Check reserve backing value
+pub fn get_reserve_value(
     synthetic_id: u32,
-    amount: BalanceOf<T>,
-) -> DispatchResult;
+) -> Result<u128, DispatchError>;
 
-// Liquidate undercollateralized positions
-pub fn liquidate_position(
-    origin: OriginFor<T>,
-    account: T::AccountId,
+// Get current backing ratio
+pub fn get_backing_ratio(
     synthetic_id: u32,
-) -> DispatchResult;
+) -> Result<u16, DispatchError>;
+
+// Get reserve composition (multi-asset breakdown)
+pub fn get_reserve_composition(
+    synthetic_id: u32,
+) -> Result<Vec<(AssetId, BalanceOf<T>)>, DispatchError>;
 ```
 
 **Storage Items** (6 total):
 - `SyntheticTokens`: Metadata for each synthetic token type
-- `CollateralPositions`: User collateral positions per synthetic
+- `ReserveBalances`: Multi-asset reserves backing each synthetic
 - `NextSyntheticId`: Auto-incrementing ID for new synthetics
-- `TotalCollateral`: Aggregate collateral locked per synthetic
-- `UserPositions`: Mapping of user → synthetic positions
-- `LiquidationHistory`: Record of liquidation events
+- `CirculatingSupply`: Amount released from vault per synthetic
+- `ReserveVault`: Address holding initial token supply
+- `PurchaseHistory`: Record of purchase/redemption events
 
 **Runtime Configuration**:
 ```rust
 parameter_types! {
     pub const MaxSyntheticTokens: u32 = 100;
-    pub const MaxPositionsPerUser: u32 = 50;
-    pub const MinCollateralAmount: u128 = 1_000_000_000_000;  // 1 ÉTR minimum
-    pub const LiquidationPenaltyPercent: u16 = 500;  // 5%
+    pub const MinPurchaseAmount: u128 = 1_000_000_000_000;  // Minimum purchase
+    pub const TargetBackingRatio: u16 = 10000;  // 100% = 10000 basis points
+    pub const PurchaseFeePercent: u16 = 10;  // 0.1% purchase fee
     pub const ReserveBackedTokenPalletId: PalletId = PalletId(*b"py/rbtok");
 }
 ```
 
 **Price Oracle Integration**:
 
-The pallet relies on price oracles to determine collateralization ratios:
+The pallet relies on price oracles to determine purchase/redemption rates:
 
 ```rust
 // Oracle provides real-time pricing
@@ -802,12 +808,21 @@ pub trait PriceOracle {
     fn get_price(asset_id: AssetId) -> Option<u128>;  // Returns price in USD (6 decimals)
 }
 
-// Collateralization check
-fn check_collateral_ratio(position: &CollateralPosition) -> Permill {
-    let collateral_value_usd = position.collateral_amount * oracle::get_price(ETR);
-    let debt_value_usd = position.synthetic_minted * oracle::get_price(synthetic_id);
+// Backing ratio check (treasury-backed model)
+fn check_backing_ratio(position: &ReservePosition) -> Permill {
+    // Calculate total reserve value
+    let reserve_value_usd: u128 = position.reserve_holdings
+        .iter()
+        .map(|(asset_id, balance)| {
+            let price = oracle::get_price(*asset_id).unwrap_or(0);
+            balance * price
+        })
+        .sum();
 
-    Permill::from_rational(collateral_value_usd, debt_value_usd)
+    let circulating_value_usd = position.circulating_supply; // 1:1 USD peg
+
+    // Backing ratio = (reserve value / circulating value) * 100%
+    Permill::from_rational(reserve_value_usd, circulating_value_usd)
 }
 ```
 
@@ -1062,8 +1077,8 @@ ReserveBackedToken: pallet_reserve_backed_token,
 - Automated rebalancing maintains target allocations
 
 **Synthetic Assets**:
-- Over-collateralized positions prevent undercollateralization
-- Liquidation mechanism protects peg stability
+- Treasury-backed model with organic backing accumulation
+- Direct purchase/redemption maintains peg stability
 - Enables creation of diverse synthetic assets (stocks, commodities, indices)
 
 **DEX Liquidity**:
@@ -1072,9 +1087,9 @@ ReserveBackedToken: pallet_reserve_backed_token,
 - 0.3% fee generates sustainable yield for LPs
 
 **Capital Efficiency**:
-- Collateral can back multiple synthetic positions
+- Reserve holds multi-asset portfolio for backing
 - DEX enables efficient price discovery
-- Arbitrage bots maintain peg stability
+- Arbitrage bots maintain peg stability through reserve buy/sell operations
 
 ### Security Considerations
 
@@ -1083,10 +1098,10 @@ ReserveBackedToken: pallet_reserve_backed_token,
 - Rebalancing limits handled by governance
 - Oracle manipulation resistance via multiple price sources
 
-**Collateral Liquidations**:
-- 30% buffer (150% min, 120% liquidation) provides safety margin
-- Liquidation penalty (5%) incentivizes position maintenance
-- Automated liquidation bots ensure timely execution
+**Reserve Stability**:
+- 100% backing from organic purchases provides safety
+- No liquidations needed (direct purchase/redemption model)
+- Automated rebalancing maintains reserve composition
 
 **DEX Security**:
 - Constant product formula prevents price manipulation
@@ -1790,7 +1805,7 @@ polkadot-js-api query.contracts.contractInfoOf <contract-address>
    - Multi-pallet interaction tests
    - Cross-chain message passing
    - Reserve rebalancing scenarios
-   - Liquidation stress tests
+   - Reserve depletion stress tests
 
 2. **Performance Benchmarks**:
    - Transaction throughput (target: 1000+ TPS)
