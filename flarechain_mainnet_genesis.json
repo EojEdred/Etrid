@@ -47,7 +47,7 @@
   },
 
   "sudo": {
-    "key": "5HCvaHrCfXDasyQNRCdJ4jRtcwMmdkPDZEAF3LqF77qf5JtP"
+    "key": "5GBq8WgTBzf6mfyu5qP9JFgJeJt8oFobGpDKjbkSxkn7cQ5K"
   },
 
   "grandpa": {
@@ -104,34 +104,34 @@
   },
 
   "edscToken": {
-    "oracleAuthority": "$ORACLE_AUTH",
-    "custodianManager": "$CUSTODIAN_MGR",
-    "minterAuthority": "$MINTER_AUTH",
-    "emergencyPauseAuthority": "$EMERGENCY_PAUSE"
+    "oracleAuthority": "5GWDz1a6inaKC2vxKgjiY4Miyzv1JUzpHWGRR43LiA5ufZs2",
+    "custodianManager": "5DhrrecXHiyPaNactHLBgN5bzP1tv7nbNGYjkmJq6UxX2XFk",
+    "minterAuthority": "5DvgxdPMHmkR6oYsWVkKPUvcFJo6CtSdtKKsHQg8rc9F8s1p",
+    "emergencyPauseAuthority": "5EHaSsLMDQhqFdex2DxBx4f6uukfAapkwNQngzkajrhN9xHN"
   },
 
   "reserveVault": {
-    "vaultAddress": "$RESERVE_VAULT",
+    "vaultAddress": "5Eq5h1KQkzyDStVVaCnizXPHjL6c8HoetjKvzgdPF6i3w7md",
     "reserveAssets": [
       {
         "asset": "BTC",
-        "custodian": "$BTC_CUSTODIAN"
+        "custodian": "5EkSL1meXtvAvGgmvXHDtiu6cz7Qn2kkdmJ5N8w44KQ2VMcw"
       },
       {
         "asset": "ETH",
-        "custodian": "$ETH_CUSTODIAN"
+        "custodian": "5Ge9ReoKXd4KcdUjh1Swu2a3bnX2e5zUQnqSHhkzvmA8ErKR"
       },
       {
         "asset": "Gold",
-        "custodian": "$GOLD_CUSTODIAN"
+        "custodian": "5DEvKLfWAcRpTtvkpb3BTpTHkokFV3Xrnth1rZCrA3b2Ekrq"
       },
       {
         "asset": "USDC",
-        "custodian": "$USDC_CUSTODIAN"
+        "custodian": "5CAkWrcGVSF46R6U7JkMCz4Z2GKRs3vmaWRHgphkbv3QXcAn"
       },
       {
         "asset": "USDT",
-        "custodian": "$USDT_CUSTODIAN"
+        "custodian": "5EFVubPpceWrYq2LcQGvD9ogyqd53Ntn4SHjtRUkKzciTx8R"
       }
     ]
   }
