@@ -74,6 +74,7 @@ pub mod pallet {
     };
     use frame_system::pallet_prelude::*;
     use sp_runtime::traits::{Zero, SaturatedConversion};
+    use etrid_bridge_common::treasury::TreasuryInterface;
 
     // Currency type for handling ËTR tokens
     type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -106,6 +107,12 @@ pub mod pallet {
         /// Maximum number of withdrawals per account
         #[pallet::constant]
         type MaxWithdrawalsPerAccount: Get<u32>;
+
+        /// Treasury pallet interface for cross-chain fees
+        type Treasury: TreasuryInterface<Self::AccountId, BalanceOf<Self>>;
+
+        /// Validator pool account for receiving bridge fees
+        type ValidatorPoolAccount: Get<Self::AccountId>;
     }
 
     /// SOL to ËTR exchange rate (scaled by 1e9 - Solana uses 9 decimals/lamports)
@@ -283,6 +290,13 @@ pub mod pallet {
         /// Bridge operator changed
         OperatorChanged {
             new_operator: T::AccountId,
+        },
+
+        /// Bridge fee collected [total_fee, treasury_amount, validator_amount]
+        BridgeFeeCollected {
+            total_fee: BalanceOf<T>,
+            treasury_amount: BalanceOf<T>,
+            validator_amount: BalanceOf<T>,
         },
     }
 

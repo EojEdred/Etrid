@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy ËTRID Node - One-Click Setup & Bootstrap</title>
+    <meta name="description" content="Deploy ËTRID validator or full node with one click. Pay with ÉTR tokens.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../validators/" class="text-gray-300 hover:text-white transition-colors">Validators</a>
+                    <a href="https://docs.etrid.org/nodes" target="_blank" class="text-gray-300 hover:text-white transition-colors">Docs</a>
+                    <button id="connect-wallet-btn" class="px-4 py-2 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium text-sm">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-2 rounded-full bg-etrid-blue/20 text-etrid-blue border border-etrid-blue/30 text-sm font-semibold mb-6">
+                    🚀 One-Click Node Deployment
+                </div>
+                <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                    Deploy Your ËTRID Node
+                </h1>
+                <p class="text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                    Launch a validator or full node in minutes. Pay with ÉTR tokens. Fully automated setup and monitoring.
+                </p>
+            </div>
+
+            <!-- Node Type Selection -->
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- Validator Node -->
+                <div class="node-type-card bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border-2 border-etrid-blue/50 rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform relative" data-type="validator">
+                    <div class="absolute top-0 right-0 px-3 py-1 bg-etrid-blue rounded-bl-lg rounded-tr-xl text-xs font-semibold">
+                        POPULAR
+                    </div>
+                    <div class="text-4xl mb-4 text-center">🛡️</div>
+                    <h3 class="text-2xl font-bold mb-2 text-center">Validator Node</h3>
+                    <p class="text-gray-400 text-sm mb-4 text-center">
+                        Secure the network and earn staking rewards
+                    </p>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Earn up to 18.5% APY</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Full consensus participation</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>24/7 monitoring included</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Auto-updates & backups</span>
+                        </li>
+                    </ul>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-400 mb-1">Starting at</div>
+                        <div class="text-3xl font-bold text-etrid-blue mb-2">500 ÉTR/month</div>
+                        <div class="text-sm text-gray-500" data-etr-amount="500" data-format="usd">~$1,225/month</div>
+                        <button class="deploy-btn w-full px-6 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium mt-4">
+                            Deploy Validator
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Full Node -->
+                <div class="node-type-card bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform" data-type="full">
+                    <div class="text-4xl mb-4 text-center">📦</div>
+                    <h3 class="text-2xl font-bold mb-2 text-center">Full Node</h3>
+                    <p class="text-gray-400 text-sm mb-4 text-center">
+                        Full blockchain sync for dApp development
+                    </p>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Complete blockchain history</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>RPC & WebSocket access</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Perfect for dApps</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>99.9% uptime SLA</span>
+                        </li>
+                    </ul>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-400 mb-1">Starting at</div>
+                        <div class="text-3xl font-bold text-etrid-purple mb-2">200 ÉTR/month</div>
+                        <div class="text-sm text-gray-500" data-etr-amount="200" data-format="usd">~$490/month</div>
+                        <button class="deploy-btn w-full px-6 py-3 rounded-lg bg-etrid-purple/20 text-etrid-purple border border-etrid-purple/30 hover:bg-etrid-purple/30 transition-colors font-medium mt-4">
+                            Deploy Full Node
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Local Node -->
+                <div class="node-type-card bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform" data-type="local">
+                    <div class="text-4xl mb-4 text-center">💻</div>
+                    <h3 class="text-2xl font-bold mb-2 text-center">Local Setup</h3>
+                    <p class="text-gray-400 text-sm mb-4 text-center">
+                        Run a node on your own hardware
+                    </p>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Automated setup script</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Docker & systemd support</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Free forever</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-green-400">✓</span>
+                            <span>Community support</span>
+                        </li>
+                    </ul>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-400 mb-1">Cost</div>
+                        <div class="text-3xl font-bold text-green-400 mb-4">FREE</div>
+                        <button class="deploy-btn w-full px-6 py-3 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 transition-colors font-medium">
+                            Get Setup Script
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deployment Wizard Modal -->
+    <div id="deployment-wizard" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-etrid-dark border border-white/10 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Step Indicator -->
+            <div class="border-b border-white/10 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-display font-bold">Deploy Node</h2>
+                    <button id="close-wizard" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="step-indicator active flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-etrid-blue flex items-center justify-center text-sm font-bold">1</div>
+                        <span class="text-sm font-medium hidden sm:inline">Configure</span>
+                    </div>
+                    <div class="flex-1 h-0.5 bg-white/10"></div>
+                    <div class="step-indicator flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">2</div>
+                        <span class="text-sm font-medium text-gray-400 hidden sm:inline">Payment</span>
+                    </div>
+                    <div class="flex-1 h-0.5 bg-white/10"></div>
+                    <div class="step-indicator flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">3</div>
+                        <span class="text-sm font-medium text-gray-400 hidden sm:inline">Deploy</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Content -->
+            <div id="wizard-content" class="p-6">
+                <!-- Step 1: Configuration (will be populated by JS) -->
+                <!-- Step 2: Payment (will be populated by JS) -->
+                <!-- Step 3: Deploy (will be populated by JS) -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Connection Modal -->
+    <div id="wallet-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-etrid-dark border border-white/10 rounded-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-start mb-6">
+                <h2 class="text-2xl font-display font-bold">Connect Wallet</h2>
+                <button id="close-wallet-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <!-- MetaMask -->
+                <button class="wallet-option w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all" data-wallet="metamask">
+                    <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-2xl">🦊</div>
+                    <div class="text-left flex-1">
+                        <div class="font-semibold">MetaMask</div>
+                        <div class="text-xs text-gray-400">Connect using MetaMask</div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+
+                <!-- WalletConnect -->
+                <button class="wallet-option w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all" data-wallet="walletconnect">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-2xl">🔗</div>
+                    <div class="text-left flex-1">
+                        <div class="font-semibold">WalletConnect</div>
+                        <div class="text-xs text-gray-400">Scan QR with mobile wallet</div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+
+                <!-- Polkadot.js -->
+                <button class="wallet-option w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all" data-wallet="polkadot">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500 flex items-center justify-center text-2xl">⚫</div>
+                    <div class="text-left flex-1">
+                        <div class="font-semibold">Polkadot.js</div>
+                        <div class="text-xs text-gray-400">Native ËTRID wallet</div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+
+                <!-- Trust Wallet -->
+                <button class="wallet-option w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all" data-wallet="trust">
+                    <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-2xl">💎</div>
+                    <div class="text-left flex-1">
+                        <div class="font-semibold">Trust Wallet</div>
+                        <div class="text-xs text-gray-400">Mobile wallet support</div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center mt-6">
+                By connecting a wallet, you agree to the ËTRID Terms of Service
+            </p>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-12 text-center">Why Deploy with ËTRID?</h2>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-etrid-blue to-etrid-purple mx-auto mb-4 flex items-center justify-center text-3xl">
+                        ⚡
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Instant Deployment</h3>
+                    <p class="text-gray-400 text-sm">Node ready in under 5 minutes with automated bootstrap and sync</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-etrid-purple to-pink-500 mx-auto mb-4 flex items-center justify-center text-3xl">
+                        💰
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Pay with ÉTR</h3>
+                    <p class="text-gray-400 text-sm">Native token payments with 10% discount. QR codes or wallet integration</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto mb-4 flex items-center justify-center text-3xl">
+                        📊
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">24/7 Monitoring</h3>
+                    <p class="text-gray-400 text-sm">Real-time dashboard with alerts, auto-updates, and performance analytics</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 mx-auto mb-4 flex items-center justify-center text-3xl">
+                        🔐
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Enterprise Security</h3>
+                    <p class="text-gray-400 text-sm">DDoS protection, firewall configuration, and automated security patches</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 mx-auto mb-4 flex items-center justify-center text-3xl">
+                        🌍
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Global Infrastructure</h3>
+                    <p class="text-gray-400 text-sm">Deploy across 20+ regions on Azure, AWS, Google Cloud, or DigitalOcean</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-500 mx-auto mb-4 flex items-center justify-center text-3xl">
+                        🔄
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Auto Scaling</h3>
+                    <p class="text-gray-400 text-sm">Resources scale automatically based on network load and performance needs</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Comparison -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-12 text-center">Transparent Pricing</h2>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-white/10">
+                            <th class="text-left py-4 px-4">Feature</th>
+                            <th class="text-center py-4 px-4">Full Node</th>
+                            <th class="text-center py-4 px-4">Validator Node</th>
+                            <th class="text-center py-4 px-4">Local Setup</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">Monthly Cost</td>
+                            <td class="text-center py-4 px-4 text-etrid-purple font-semibold">200 ÉTR</td>
+                            <td class="text-center py-4 px-4 text-etrid-blue font-semibold">500 ÉTR</td>
+                            <td class="text-center py-4 px-4 text-green-400 font-semibold">FREE</td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">CPU Cores</td>
+                            <td class="text-center py-4 px-4">4 cores</td>
+                            <td class="text-center py-4 px-4">8 cores</td>
+                            <td class="text-center py-4 px-4">Your hardware</td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">RAM</td>
+                            <td class="text-center py-4 px-4">16 GB</td>
+                            <td class="text-center py-4 px-4">32 GB</td>
+                            <td class="text-center py-4 px-4">16 GB min</td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">Storage</td>
+                            <td class="text-center py-4 px-4">500 GB SSD</td>
+                            <td class="text-center py-4 px-4">1 TB NVMe</td>
+                            <td class="text-center py-4 px-4">500 GB min</td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">Network</td>
+                            <td class="text-center py-4 px-4">1 Gbps</td>
+                            <td class="text-center py-4 px-4">10 Gbps</td>
+                            <td class="text-center py-4 px-4">100 Mbps min</td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">Auto Updates</td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-gray-500">Manual</span></td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">24/7 Monitoring</td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-gray-500">—</span></td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="py-4 px-4">Earn Rewards</td>
+                            <td class="text-center py-4 px-4"><span class="text-gray-500">—</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓ 18.5% APY</span></td>
+                            <td class="text-center py-4 px-4"><span class="text-green-400">✓ If validator</span></td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4">Support</td>
+                            <td class="text-center py-4 px-4">Email + Discord</td>
+                            <td class="text-center py-4 px-4">Priority 24/7</td>
+                            <td class="text-center py-4 px-4">Community</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-center text-sm text-gray-400 mt-6">
+                * Prices shown in ÉTR tokens. Pay with ÉTR and get 10% discount. USD/USDT payment also accepted.
+            </p>
+        </div>
+    </section>
+
+    <!-- Validator Staking Requirements -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Validator Staking Requirements</h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <!-- Minimum Requirements -->
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span class="text-3xl">🛡️</span>
+                        Minimum Requirements
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-etrid-blue text-xl">•</span>
+                            <div>
+                                <div class="font-semibold">Minimum Stake (VALIDITY Nodes)</div>
+                                <div class="text-2xl font-bold text-etrid-blue">64 ÉTR</div>
+                                <div class="text-sm text-gray-400" data-etr-amount="64" data-format="usd">~$157 USD</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-etrid-blue text-xl">•</span>
+                            <div>
+                                <div class="font-semibold">Validator Selection</div>
+                                <div class="text-lg">Top 100 by stake + 50 random</div>
+                                <div class="text-sm text-gray-400">Active set limited to 150 validators</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-etrid-blue text-xl">•</span>
+                            <div>
+                                <div class="font-semibold">Commission Rate</div>
+                                <div class="text-lg">0% - 100%</div>
+                                <div class="text-sm text-gray-400">Validator sets their own rate for delegator rewards</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-etrid-blue text-xl">•</span>
+                            <div>
+                                <div class="font-semibold">Unbonding Period</div>
+                                <div class="text-lg">14 days</div>
+                                <div class="text-sm text-gray-400">Tokens locked for 2 weeks after unstaking</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Contract Enforcement -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span class="text-3xl">📜</span>
+                        Smart Contract Enforcement
+                    </h3>
+                    <div class="space-y-4 text-sm">
+                        <div class="bg-etrid-dark border border-white/10 rounded-lg p-4">
+                            <div class="font-semibold mb-2">Validator Staking Contract</div>
+                            <code class="text-xs break-all text-gray-400">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</code>
+                            <a href="#" class="text-etrid-blue hover:text-etrid-purple text-xs mt-2 inline-block">View on Explorer →</a>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <div class="font-semibold text-green-400 mb-1">✓ Automated Enforcement</div>
+                                <div class="text-gray-400">Smart contract automatically validates stake amounts and locks tokens for 14-day unbonding period</div>
+                            </div>
+
+                            <div>
+                                <div class="font-semibold text-green-400 mb-1">✓ Slashing Protection</div>
+                                <div class="text-gray-400">Automated slashing: Downtime >24h (-1% per day), Missed blocks >10% (-0.5%), Equivocation (-10%), Coordinated attack (-50% + removal)</div>
+                            </div>
+
+                            <div>
+                                <div class="font-semibold text-green-400 mb-1">✓ Reward Distribution</div>
+                                <div class="text-gray-400">Automatic reward calculation and distribution based on block production and uptime</div>
+                            </div>
+
+                            <div>
+                                <div class="font-semibold text-green-400 mb-1">✓ Commission Management</div>
+                                <div class="text-gray-400">Validators set their own commission rate (0-100%) on delegator rewards</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staking Process -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">How Staking Works</h3>
+
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-etrid-blue to-etrid-purple mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
+                            1
+                        </div>
+                        <h4 class="font-semibold mb-2">Deploy Validator</h4>
+                        <p class="text-sm text-gray-400">Choose deployment option and configure your validator node</p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-etrid-purple to-pink-500 mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
+                            2
+                        </div>
+                        <h4 class="font-semibold mb-2">Stake Tokens</h4>
+                        <p class="text-sm text-gray-400">Minimum 64 ÉTR stake required for VALIDITY Node activation</p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
+                            3
+                        </div>
+                        <h4 class="font-semibold mb-2">Start Validating</h4>
+                        <p class="text-sm text-gray-400">Node begins producing blocks and earning rewards automatically</p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 mx-auto mb-4 flex items-center justify-center text-2xl font-bold">
+                            4
+                        </div>
+                        <h4 class="font-semibold mb-2">Earn Rewards</h4>
+                        <p class="text-sm text-gray-400">Receive proportional share of ~3% annual validator pool</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rewards Calculator -->
+            <div class="mt-12 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-2xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Validator Rewards Calculator</h3>
+
+                <div class="max-w-2xl mx-auto">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-3">Your Stake Amount (ÉTR)</label>
+                        <input type="number" id="stake-amount" value="100000" min="100000" step="10000" class="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:border-etrid-blue focus:outline-none text-lg">
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                            <div class="text-sm text-gray-400 mb-1">Daily Rewards</div>
+                            <div id="daily-reward" class="text-xl font-bold text-green-400">50.68 ÉTR</div>
+                            <div id="daily-reward-usd" class="text-xs text-gray-500" data-etr-amount="50.68" data-format="usd">~$124</div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                            <div class="text-sm text-gray-400 mb-1">Monthly Rewards</div>
+                            <div id="monthly-reward" class="text-xl font-bold text-green-400">1,520 ÉTR</div>
+                            <div id="monthly-reward-usd" class="text-xs text-gray-500" data-etr-amount="1520" data-format="usd">~$3,724</div>
+                        </div>
+                        <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                            <div class="text-sm text-gray-400 mb-1">Annual Rewards</div>
+                            <div id="annual-reward" class="text-xl font-bold text-green-400">185,000 ÉTR</div>
+                            <div id="annual-reward-usd" class="text-xs text-gray-500" data-etr-amount="185000" data-format="usd">~$453,250</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-sm text-gray-400">
+                        <p>* Rewards based on 18.5% APY and 99% uptime</p>
+                        <p>* Commission and slashing conditions may affect actual rewards</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Validity Nodes & Other Staking Opportunities -->
+    <section class="py-16 border-t border-white/10 bg-etrid-dark/30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center mb-6">
+                <img src="../assets/logos/consensus-logo.svg" alt="Consënsus Protocol" class="h-16 mb-2">
+                <h2 class="text-3xl font-display font-bold mb-4 text-center">Other Network Participation Options</h2>
+            </div>
+            <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+                Besides running validators, you can participate in ËTRID's security and governance through validity nodes, delegation, or Consensus Day voting powered by the <span class="text-etrid-blue font-semibold">Consënsus Protocol</span>.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Validity Nodes -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span class="text-3xl">🔍</span>
+                        Validity Nodes
+                    </h3>
+                    <p class="text-gray-400 mb-6">
+                        Verify cross-chain messages and state proofs between FlareChain and Partition Burst Chains (PBCs).
+                    </p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Minimum Stake</span>
+                            <span class="font-bold text-etrid-blue">64 ÉTR</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Requirements</span>
+                            <span class="text-sm">FlareChain + ≥3 PBCs</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Rewards</span>
+                            <span class="text-sm">0.1% fee on cross-chain txs</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Response Time</span>
+                            <span class="text-sm">Within 10 blocks</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+                        <div class="font-semibold text-red-400 mb-2">⚠️ Slashing Conditions</div>
+                        <div class="space-y-1 text-sm text-gray-400">
+                            <div>• Incorrect verification: -20% stake</div>
+                            <div>• Collusion to pass invalid proofs: -50% stake</div>
+                        </div>
+                    </div>
+
+                    <a href="https://docs.etrid.org/validity-nodes" target="_blank" class="block text-center px-6 py-3 rounded-lg bg-etrid-purple/20 border border-etrid-purple/30 hover:bg-etrid-purple/30 transition-colors font-medium">
+                        Learn More →
+                    </a>
+                </div>
+
+                <!-- Governance Participation -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <span class="text-3xl">🗳️</span>
+                        Governance & Voting
+                    </h3>
+                    <p class="text-gray-400 mb-6">
+                        Participate in Consensus Day (December 1st annually) to vote on proposals, elect Directors, and shape the network's future.
+                    </p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Vote on Proposals (Common Stake Peer)</span>
+                            <span class="font-bold text-green-400">1+ ÉTR minimum</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Run for Director (128 ÉTR)</span>
+                            <span class="font-bold text-etrid-blue">Max 3 lifetime terms</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Quorum Required</span>
+                            <span class="text-sm">33% community + 51% validators</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-400">Voting Period</span>
+                            <span class="text-sm">12 hours (annual event)</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                        <div class="font-semibold text-green-400 mb-2">💰 Participation Rewards</div>
+                        <div class="space-y-1 text-sm text-gray-400">
+                            <div>• 1% of Consensus Day mint distributed to voters</div>
+                            <div>• Bonus for voting on all proposals</div>
+                            <div>• Additional rewards for validators who participate</div>
+                        </div>
+                    </div>
+
+                    <a href="https://governance.etrid.org" target="_blank" class="block text-center px-6 py-3 rounded-lg bg-etrid-blue/20 border border-etrid-blue/30 hover:bg-etrid-blue/30 transition-colors font-medium">
+                        View Governance Portal →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Frequently Asked Questions</h2>
+
+            <div class="space-y-4">
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">How long does deployment take?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        Cloud deployments are instant (1-3 minutes). The node will start syncing immediately and typically catches up to the network within 30-60 minutes depending on blockchain size.
+                    </p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Can I pay with cryptocurrencies other than ÉTR?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        Yes! We accept ÉTR (with 10% discount), ETH, BTC, USDT, USDC, and major stablecoins. You can also pay with credit card, though crypto payments are preferred.
+                    </p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">What's included in monitoring?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        24/7 uptime monitoring, performance metrics (CPU, RAM, disk, network), block production tracking, peer count, sync status, and instant alerts via email/Discord/Telegram when issues are detected.
+                    </p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Can I switch from cloud to local or vice versa?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        Yes! You can export your validator keys and migrate between cloud and local setups anytime. We provide step-by-step migration guides and support.
+                    </p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">What happens if my validator goes offline?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        Cloud validators have 99.9% uptime SLA with automatic failover. If downtime occurs, you'll receive instant alerts. Brief outages may result in small slashing penalties per network rules.
+                    </p>
+                </details>
+
+                <details class="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <summary class="font-semibold cursor-pointer">Do I need technical knowledge?</summary>
+                    <p class="text-gray-400 text-sm mt-3">
+                        No! Cloud deployment is fully automated with one-click setup. For local installation, basic Linux terminal knowledge is helpful but our scripts automate most tasks.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@10/bundle-polkadot-api.js"></script>
+    <script src="price-tracker.js"></script>
+    <script src="nodes.js"></script>
+</body>
+</html>

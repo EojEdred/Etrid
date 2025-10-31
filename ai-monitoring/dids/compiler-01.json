@@ -1,0 +1,32 @@
+{
+  "@context": ["https://www.w3.org/ns/did/v1"],
+  "id": "did:etrid:compiler-01",
+  "verificationMethod": [{
+    "id": "did:etrid:compiler-01#key-1",
+    "type": "Ed25519VerificationKey2020",
+    "controller": "did:etrid:compiler-01",
+    "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+  }],
+  "authentication": [
+    "did:etrid:compiler-01#key-1"
+  ],
+  "service": [{
+    "id": "did:etrid:compiler-01#compiler-service",
+    "type": "AICompilerWorker",
+    "serviceEndpoint": "http://localhost:4001/compiler",
+    "description": "Autonomous compilation and testing agent for Ëtrid Protocol"
+  }],
+  "metadata": {
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z",
+    "agent_type": "Compiler AI",
+    "skills": [
+      "etrid-compile-build",
+      "error-debugging",
+      "workspace-manager",
+      "integration-test"
+    ],
+    "priority": "high",
+    "version": "1.0.0"
+  }
+}

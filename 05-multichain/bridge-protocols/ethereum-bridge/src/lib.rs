@@ -68,6 +68,8 @@ pub mod pallet {
 		BoundedVec,
 	};
 	use frame_system::pallet_prelude::*;
+	// TODO: Re-enable when etrid_bridge_common crate is implemented
+	use etrid_bridge_common::treasury::TreasuryInterface;
 
 	type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -95,6 +97,13 @@ pub mod pallet {
 		/// Maximum number of pending withdrawals per account
 		#[pallet::constant]
 		type MaxWithdrawalsPerAccount: Get<u32>;
+
+		/// TODO: Re-enable when etrid_bridge_common crate is implemented
+		/// Treasury pallet interface for cross-chain fees
+		type Treasury: TreasuryInterface<Self::AccountId, BalanceOf<Self>>;
+
+		/// Validator pool account for receiving bridge fees
+		type ValidatorPoolAccount: Get<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -426,7 +435,12 @@ pub mod pallet {
 			let balance = T::Currency::free_balance(&sender);
 			ensure!(balance >= amount, Error::<T>::InsufficientBalance);
 
-			// Burn ËTR from user
+			// Calculate bridge fee (0.1% of amount)
+			let fee_rate = T::BridgeFeeRate::get();
+			let fee = amount * fee_rate.into() / 1000u32.into();
+			let net_amount = amount.checked_sub(&fee).unwrap_or_else(|| amount);
+
+			// Burn ËTR from user (total amount including fee)
 			T::Currency::withdraw(
 				&sender,
 				amount,
@@ -434,11 +448,29 @@ pub mod pallet {
 				ExistenceRequirement::KeepAlive,
 			)?;
 
-			// Create withdrawal request
+			// Split fee: 10% treasury, 90% validators
+			if !fee.is_zero() {
+				let treasury_fee = fee / 10u32.into();
+				let validator_fee = fee.checked_sub(&treasury_fee).unwrap_or_else(|| fee);
+
+				// TODO: Re-enable when etrid_bridge_common crate is implemented
+				// Send treasury fee to pallet-treasury via Treasury interface
+				if !treasury_fee.is_zero() {
+					let _ = T::Treasury::receive_cross_chain_fees(treasury_fee);
+				}
+
+				// Transfer validator fee to validator pool
+				if !validator_fee.is_zero() {
+					let validator_pool_account = T::ValidatorPoolAccount::get();
+					let _ = T::Currency::deposit_creating(&validator_pool_account, validator_fee);
+				}
+			}
+
+			// Create withdrawal request (use net_amount after fee)
 			let withdrawal = EthereumWithdrawal {
 				etrid_account: sender.clone(),
 				eth_address: eth_address.clone(),
-				amount,
+				amount: net_amount,
 				token_address: None, // ETH withdrawal
 				gas_limit,
 				status: WithdrawalStatus::Pending,
@@ -454,7 +486,7 @@ pub mod pallet {
 			Self::deposit_event(Event::<T>::WithdrawalRequested {
 				etrid_account: sender,
 				eth_address,
-				amount,
+				amount: net_amount,
 			});
 
 			Ok(())

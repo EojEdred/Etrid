@@ -40,6 +40,13 @@
 
 pub use pallet::*;
 
+/// Loose coupling interface for treasury notifications
+/// Allows oracle network slashing proceeds to be recorded by treasury pallet
+pub trait TreasuryNotifier<Balance> {
+	/// Record slashing proceeds received from oracle network
+	fn notify_slashing_proceeds(amount: Balance) -> Result<(), sp_runtime::DispatchError>;
+}
+
 #[cfg(test)]
 mod mock;
 
@@ -54,8 +61,9 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_arithmetic::{Permill, traits::{Saturating, CheckedAdd, CheckedSub}};
-	use sp_runtime::traits::StaticLookup;
+	use sp_runtime::traits::{AccountIdConversion, StaticLookup};
 	use sp_std::vec::Vec;
+	use crate::TreasuryNotifier;
 
 	type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -125,6 +133,10 @@ pub mod pallet {
 
 		/// Currency for staking
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		/// Treasury notifier for slashing proceeds
+		/// Uses loose coupling to avoid circular dependencies
+		type Treasury: crate::TreasuryNotifier<BalanceOf<Self>>;
 
 		/// Minimum stake required to become an oracle operator
 		#[pallet::constant]
@@ -626,6 +638,19 @@ pub mod pallet {
 			// Slash (reduce reserved amount)
 			// slash_reserved returns (NegativeImbalance, Balance)
 			let (_imbalance, actual_slash) = T::Currency::slash_reserved(&oracle_account, slash_amount);
+
+			// Transfer 50% of slashed funds to treasury, 50% burned
+			let treasury_amount = actual_slash / 2u32.into();
+			if !treasury_amount.is_zero() {
+				// Transfer to treasury account via pallet-treasury
+				let treasury_account = frame_support::PalletId(*b"py/trsry").into_account_truncating();
+				let _ = T::Currency::deposit_creating(&treasury_account, treasury_amount);
+
+				// Notify treasury pallet to track the slashing proceeds using loose coupling
+				if let Err(e) = T::Treasury::notify_slashing_proceeds(treasury_amount) {
+					log::warn!("Failed to notify treasury of slashing proceeds: {:?}", e);
+				}
+			}
 
 			// Update operator
 			operator.stake = operator.stake.saturating_sub(actual_slash);

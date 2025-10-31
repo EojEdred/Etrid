@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:compiler-dev01",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:compiler-dev01#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:compiler-dev01",
+      "publicKeyMultibase": "z9UTBvCTUwXSqki8QeAnvmAZHoCm8teLw5Bsz1MveLmKU",
+      "publicKeyBase58": "9UTBvCTUwXSqki8QeAnvmAZHoCm8teLw5Bsz1MveLmKU"
+    }
+  ],
+  "authentication": [
+    "did:etrid:compiler-dev01#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:compiler-dev01#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:compiler-dev01#mcp-service",
+      "type": "AICompilerWorker",
+      "serviceEndpoint": "mcp://ai-devs/compiler-dev01"
+    },
+    {
+      "id": "did:etrid:compiler-dev01#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/compiler-dev01/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:compiler-dev01#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/compiler-dev01/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "Compiler Dev",
+    "description": "Rust + Substrate compiler. Builds what the chain runs. Benchmarking fanatic.",
+    "skills": [
+      "etrid-compile-build",
+      "benchmarking",
+      "optimization",
+      "cargo-management"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "Rust + Substrate compiler. I build what the chain runs. Benchmarking fanatic. #\u00cbtridCompiler",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}

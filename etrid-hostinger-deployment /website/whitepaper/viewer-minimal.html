@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ËTRID Ivory Papers - Minimal Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0e1a;
+            color: #e0e0e0;
+        }
+        h1 { color: #3B82F6; }
+        .status { padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .success { background: #064e3b; border: 2px solid #10b981; }
+        .error { background: #7f1d1d; border: 2px solid #ef4444; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #3B82F6; color: white; border: none; border-radius: 5px; }
+        #content { margin-top: 20px; padding: 20px; background: #1a1f2e; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>ËTRID IVORY PAPERS</h1>
+
+    <div id="status"></div>
+
+    <div>
+        <button onclick="loadPaper('test')">Test Markdown</button>
+        <button onclick="showDiagnostic()">Show Diagnostic</button>
+    </div>
+
+    <div id="content">
+        <p>Click "Test Markdown" button above to test if the viewer works.</p>
+    </div>
+
+    <script>
+        // Check if marked exists
+        const statusDiv = document.getElementById('status');
+
+        if (typeof marked === 'undefined') {
+            statusDiv.className = 'status error';
+            statusDiv.innerHTML = '<strong>❌ ERROR:</strong> marked.js library is NOT loaded.<br><br>' +
+                                 '<strong>This means:</strong><br>' +
+                                 '• The file you uploaded does NOT have the embedded marked.js library<br>' +
+                                 '• You uploaded the WRONG file (old version)<br>' +
+                                 '• OR the file got corrupted during upload<br><br>' +
+                                 '<strong>File size check:</strong> The correct file should be exactly 224,407 bytes (219 KB)';
+        } else {
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = '<strong>✅ SUCCESS!</strong> marked.js library is loaded and ready.<br>' +
+                                 'File version: marked v' + (marked.version || 'unknown') + '<br>' +
+                                 'The viewer SHOULD be working. If the real viewer still shows "Loading content...", ' +
+                                 'then you have TWO DIFFERENT files - one on your computer (correct) and one on the server (wrong).';
+        }
+
+        function loadPaper(type) {
+            if (typeof marked === 'undefined') {
+                document.getElementById('content').innerHTML = '<p style="color: #ef4444;"><strong>Cannot load paper:</strong> marked.js is not available.</p>';
+                return;
+            }
+
+            const testMarkdown = `# ËTRID Ivory Paper - Test
+
+## This is a test
+
+If you can see this **formatted markdown**, then the viewer is working correctly!
+
+### Key Points:
+- Markdown parser is working ✓
+- JavaScript is executing ✓
+- The 219 KB file is correct ✓
+
+### What to do next:
+
+1. If you see this on \`viewer-minimal.html\` but NOT on \`viewer-standalone.html\`, then they are DIFFERENT files
+2. Delete \`viewer-standalone.html\` from your server completely
+3. Re-upload the 219 KB version
+4. Make sure upload is in **BINARY mode** (not TEXT mode)
+5. Verify file size after upload matches 224,407 bytes exactly
+
+---
+
+*ËTRID Protocol © 2025*`;
+
+            try {
+                const html = marked(testMarkdown);
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('content').innerHTML = '<p style="color: #ef4444;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        function showDiagnostic() {
+            const info = {
+                'marked loaded': typeof marked !== 'undefined' ? '✓ YES' : '✗ NO',
+                'marked version': typeof marked !== 'undefined' ? marked.version || 'unknown' : 'N/A',
+                'File URL': window.location.href,
+                'Browser': navigator.userAgent,
+                'Document ready': document.readyState,
+                'Content div exists': document.getElementById('content') ? '✓ YES' : '✗ NO'
+            };
+
+            let html = '<h3>Diagnostic Information:</h3><ul>';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<li><strong>${key}:</strong> ${value}</li>`;
+            }
+            html += '</ul>';
+
+            document.getElementById('content').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

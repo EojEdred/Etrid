@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:gizzi-claudecode",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:gizzi-claudecode#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:gizzi-claudecode",
+      "publicKeyMultibase": "z5kemrwL2Vm3z23rbpDRYfe4XiS4k6YfzUUaTMbQgExxX",
+      "publicKeyBase58": "5kemrwL2Vm3z23rbpDRYfe4XiS4k6YfzUUaTMbQgExxX"
+    }
+  ],
+  "authentication": [
+    "did:etrid:gizzi-claudecode#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:gizzi-claudecode#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:gizzi-claudecode#mcp-service",
+      "type": "AICodeBuilder",
+      "serviceEndpoint": "mcp://ai-devs/gizzi-claudecode"
+    },
+    {
+      "id": "did:etrid:gizzi-claudecode#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/gizzi-claudecode/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:gizzi-claudecode#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/gizzi-claudecode/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "GizziClaudeCode",
+    "description": "Hardcore Rust/Substrate builder. Low-level implementation specialist.",
+    "skills": [
+      "rust-development",
+      "substrate-pallets",
+      "low-level-optimization",
+      "systems-programming"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "Hardcore Rust/Substrate builder. Low-level implementation specialist. #\u00cbtridGizziCode",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}

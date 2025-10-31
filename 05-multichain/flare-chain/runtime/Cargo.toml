@@ -33,6 +33,7 @@ etrid-lightning-bloc = { path = "../../../07-transactions/lightning-bloc", defau
 pallet-transaction = { path = "../../../07-transactions/types", default-features = false }
 
 # Bridge pallets (12 bridges)
+etrid-bridge-common = { path = "../../bridge-protocols/common", default-features = false }
 pallet-bitcoin-bridge = { path = "../../bridge-protocols/bitcoin-bridge", default-features = false }
 eth-bridge = { path = "../../bridge-protocols/ethereum-bridge", default-features = false }
 pallet-doge-bridge = { path = "../../bridge-protocols/doge-bridge", default-features = false }
@@ -66,6 +67,7 @@ pallet-xcm-bridge = { path = "../../../src/pallets/pallet-xcm-bridge", default-f
 # ASF Consensus pallets
 pallet-validator-committee = { path = "../../../src/pallets/pallet-validator-committee", default-features = false }
 pallet-validator-committee-runtime-api = { path = "../../../src/pallets/pallet-validator-committee/runtime-api", default-features = false }
+pallet-validator-rewards = { path = "../../../src/pallets/pallet-validator-rewards", default-features = false }
 
 # OpenDID pallets (Component 02)
 pallet-did-registry = { path = "../../../src/pallets/pallet-did-registry", default-features = false }
@@ -73,6 +75,12 @@ pallet-aidid = { path = "../../../src/pallets/pallet-aidid", default-features = 
 
 # Oracle Network (newly integrated)
 pallet-oracle-network = { path = "../../../src/pallets/pallet-oracle-network", default-features = false }
+
+# New integrated pallets (Consensus Day system & EDSC stability)
+pallet-consensus-day = { path = "../../../src/pallets/pallet-consensus-day", default-features = false }
+pallet-edsc-stability = { path = "../../../src/pallets/pallet-edsc-stability", default-features = false }
+pallet-circuit-breaker = { path = "../../../src/pallets/pallet-circuit-breaker", default-features = false }
+pallet-treasury-etrid = { path = "../../../src/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
 
 # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
 # etrid-post-quantum = { path = "../../../03-security/post-quantum", default-features = false }
@@ -170,6 +178,7 @@ std = [
     "pallet-transaction/std",
 
     # Bridge pallets
+    "etrid-bridge-common/std",
     "pallet-bitcoin-bridge/std",
     "eth-bridge/std",
     "pallet-doge-bridge/std",
@@ -200,6 +209,7 @@ std = [
     # ASF Consensus pallets
     "pallet-validator-committee/std",
     "pallet-validator-committee-runtime-api/std",
+    "pallet-validator-rewards/std",
 
     # OpenDID pallets
     "pallet-did-registry/std",
@@ -207,6 +217,12 @@ std = [
 
     # Oracle Network
     "pallet-oracle-network/std",
+
+    # New integrated pallets
+    "pallet-consensus-day/std",
+    "pallet-edsc-stability/std",
+    "pallet-circuit-breaker/std",
+    "pallet-treasury-etrid/std",
 
     # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
     # "etrid-post-quantum/std",

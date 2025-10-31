@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Events - Community Meetups, Conferences & Workshops</title>
+    <meta name="description" content="Join ËTRID community events, conferences, hackathons, and workshops worldwide">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="../ecosystem/" class="text-gray-300 hover:text-white transition-colors">Ecosystem</a>
+                    <a href="../learn/" class="text-gray-300 hover:text-white transition-colors">Learn</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 text-center bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Community Events
+            </h1>
+            <p class="text-xl text-gray-400 text-center mb-8 max-w-3xl mx-auto">
+                Join us at conferences, hackathons, and meetups around the world. Connect with the ËTRID community and learn from the best.
+            </p>
+
+            <!-- Event Type Filters -->
+            <div class="flex flex-wrap justify-center gap-3 mb-8">
+                <button class="event-filter active px-4 py-2 rounded-lg bg-etrid-blue/20 text-etrid-blue border border-etrid-blue/30 font-medium" data-type="all">
+                    All Events
+                </button>
+                <button class="event-filter px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-type="conference">
+                    Conferences
+                </button>
+                <button class="event-filter px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-type="hackathon">
+                    Hackathons
+                </button>
+                <button class="event-filter px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-type="meetup">
+                    Meetups
+                </button>
+                <button class="event-filter px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-type="workshop">
+                    Workshops
+                </button>
+                <button class="event-filter px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-type="online">
+                    Online
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Event -->
+    <section class="pb-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border-2 border-etrid-blue/50 rounded-2xl overflow-hidden">
+                <div class="md:flex">
+                    <!-- Event Image -->
+                    <div class="md:w-1/3 h-64 md:h-auto bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center text-6xl">
+                        🎉
+                    </div>
+
+                    <!-- Event Details -->
+                    <div class="md:w-2/3 p-8">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-semibold">FEATURED</span>
+                            <span class="px-3 py-1 rounded-full bg-etrid-blue/20 text-etrid-blue text-xs font-semibold">CONFERENCE</span>
+                        </div>
+
+                        <h2 class="text-3xl font-display font-bold mb-3">Consensus Day 2026</h2>
+
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-etrid-blue">📅</span>
+                                <span>March 15-17, 2026</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-etrid-purple">📍</span>
+                                <span>Austin, Texas</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-etrid-blue">👥</span>
+                                <span>5,000+ Expected</span>
+                            </div>
+                        </div>
+
+                        <p class="text-gray-400 mb-6">
+                            ËTRID's flagship annual event bringing together developers, validators, and community members for governance decisions, technical workshops, and networking. Vote on fiscal policy and network upgrades!
+                        </p>
+
+                        <div class="flex gap-3">
+                            <button class="px-6 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium">
+                                Register Now →
+                            </button>
+                            <button class="px-6 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                                View Agenda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">Upcoming Events</h2>
+
+            <div id="events-grid" class="space-y-4">
+                <!-- Events will be rendered here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Past Events -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8">Past Events</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Past Event 1 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🎓</div>
+                    <div class="text-xs text-gray-500 mb-2">October 2025</div>
+                    <h3 class="font-bold mb-2">ËTRID Mainnet Launch Party</h3>
+                    <p class="text-gray-400 text-sm mb-3">Celebrated the successful mainnet launch with 2,000+ community members</p>
+                    <a href="#" class="text-etrid-blue hover:text-etrid-purple text-sm">View Recap →</a>
+                </div>
+
+                <!-- Past Event 2 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">💻</div>
+                    <div class="text-xs text-gray-500 mb-2">September 2025</div>
+                    <h3 class="font-bold mb-2">Cross-Chain Hackathon</h3>
+                    <p class="text-gray-400 text-sm mb-3">48-hour online hackathon with $100K in prizes. 150 teams participated</p>
+                    <a href="#" class="text-etrid-blue hover:text-etrid-purple text-sm">View Winners →</a>
+                </div>
+
+                <!-- Past Event 3 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🌍</div>
+                    <div class="text-xs text-gray-500 mb-2">August 2025</div>
+                    <h3 class="font-bold mb-2">Blockchain Summit SF</h3>
+                    <p class="text-gray-400 text-sm mb-3">ËTRID keynote at San Francisco Blockchain Week attended by 500+ people</p>
+                    <a href="#" class="text-etrid-blue hover:text-etrid-purple text-sm">Watch Video →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Host an Event CTA -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-2xl p-8 text-center">
+                <h2 class="text-3xl font-display font-bold mb-4">Host an ËTRID Event</h2>
+                <p class="text-gray-400 mb-6 max-w-2xl mx-auto">
+                    Organize a meetup, workshop, or hackathon in your city. Get support with venue, speakers, and promotional materials.
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <button class="px-8 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium">
+                        Submit Event Proposal
+                    </button>
+                    <a href="https://docs.etrid.org/community/events" target="_blank" class="px-8 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                        Event Guidelines
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="events.js"></script>
+</body>
+</html>

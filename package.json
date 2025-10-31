@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@polkadot/keyring": "^13.5.7",
+    "@polkadot/util": "^13.5.7",
+    "@polkadot/util-crypto": "^13.5.7"
+  }
+}

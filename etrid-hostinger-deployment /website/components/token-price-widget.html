@@ -1,0 +1,155 @@
+<!-- Token Price Widget - Add to Homepage Header -->
+<!-- Insert this right after the navigation bar -->
+
+<div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
+            <!-- ÉTR Price -->
+            <div class="flex items-center gap-2">
+                <span class="text-gray-400">ÉTR Price:</span>
+                <span id="etr-price" class="font-semibold text-white">$--</span>
+                <span id="etr-change" class="text-xs">--</span>
+            </div>
+
+            <!-- Market Cap -->
+            <div class="flex items-center gap-2">
+                <span class="text-gray-400">Market Cap:</span>
+                <span id="etr-market-cap" class="font-semibold text-white">$--</span>
+            </div>
+
+            <!-- 24h Volume -->
+            <div class="flex items-center gap-2">
+                <span class="text-gray-400">24h Volume:</span>
+                <span id="etr-volume" class="font-semibold text-white">$--</span>
+            </div>
+
+            <!-- Circulating Supply -->
+            <div class="flex items-center gap-2">
+                <span class="text-gray-400">Circulating:</span>
+                <span id="etr-supply" class="font-semibold text-white">-- ÉTR</span>
+            </div>
+
+            <!-- View More Link -->
+            <a href="https://www.coingecko.com/en/coins/etrid" target="_blank" class="text-etrid-blue hover:text-etrid-purple transition-colors text-xs">
+                View Details →
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Token Price Widget Script
+(function() {
+    // CoinGecko API endpoint (free, no API key needed!)
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price';
+
+    // Replace 'etrid' with actual CoinGecko ID once listed
+    // For now, using mock data
+    const TOKEN_ID = 'etrid'; // Change this when listed on CoinGecko
+
+    async function fetchTokenPrice() {
+        try {
+            // Uncomment when listed on CoinGecko:
+            /*
+            const response = await fetch(
+                `${COINGECKO_API}?ids=${TOKEN_ID}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`
+            );
+            const data = await response.json();
+
+            if (data[TOKEN_ID]) {
+                updatePriceDisplay(data[TOKEN_ID]);
+            }
+            */
+
+            // Mock data for demonstration (remove when CoinGecko listed)
+            const mockData = {
+                usd: 2.45,
+                usd_market_cap: 245000000,
+                usd_24h_vol: 12500000,
+                usd_24h_change: 5.23
+            };
+            updatePriceDisplay(mockData);
+
+        } catch (error) {
+            console.error('Error fetching token price:', error);
+            showMockData();
+        }
+    }
+
+    function updatePriceDisplay(data) {
+        // Price
+        const price = data.usd;
+        document.getElementById('etr-price').textContent = `$${price.toFixed(2)}`;
+
+        // 24h Change
+        const change = data.usd_24h_change;
+        const changeElement = document.getElementById('etr-change');
+        const isPositive = change >= 0;
+        changeElement.textContent = `${isPositive ? '+' : ''}${change.toFixed(2)}%`;
+        changeElement.className = `text-xs font-medium px-2 py-0.5 rounded ${
+            isPositive ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'
+        }`;
+
+        // Market Cap
+        const marketCap = data.usd_market_cap;
+        document.getElementById('etr-market-cap').textContent =
+            `$${(marketCap / 1000000).toFixed(1)}M`;
+
+        // 24h Volume
+        const volume = data.usd_24h_vol;
+        document.getElementById('etr-volume').textContent =
+            `$${(volume / 1000000).toFixed(1)}M`;
+
+        // Circulating Supply (100M total for ËTRID)
+        const supply = 100000000; // 100M ÉTR
+        document.getElementById('etr-supply').textContent =
+            `${(supply / 1000000).toFixed(0)}M ÉTR`;
+    }
+
+    function showMockData() {
+        // Fallback to mock data if API fails
+        document.getElementById('etr-price').textContent = '$2.45';
+        document.getElementById('etr-change').textContent = '+5.23%';
+        document.getElementById('etr-change').className = 'text-xs font-medium px-2 py-0.5 rounded text-green-400 bg-green-400/10';
+        document.getElementById('etr-market-cap').textContent = '$245M';
+        document.getElementById('etr-volume').textContent = '$12.5M';
+        document.getElementById('etr-supply').textContent = '100M ÉTR';
+    }
+
+    // Fetch price on load
+    fetchTokenPrice();
+
+    // Update every 60 seconds
+    setInterval(fetchTokenPrice, 60000);
+})();
+</script>
+
+<style>
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+    .flex-wrap > div {
+        font-size: 0.75rem;
+    }
+}
+</style>
+
+<!--
+INSTALLATION INSTRUCTIONS:
+========================
+
+1. Open /website/index.html
+
+2. Find the closing </nav> tag (around line 98-100)
+
+3. Insert this entire file content RIGHT AFTER </nav>
+
+4. The widget will appear as a banner below navigation
+
+5. When ÉTR is listed on CoinGecko:
+   - Get your coin ID from: https://www.coingecko.com/en/coins/etrid
+   - Update TOKEN_ID constant
+   - Uncomment the real API call
+   - Remove mock data
+
+That's it! Token price will show on every page.
+-->

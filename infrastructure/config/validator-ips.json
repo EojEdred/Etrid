@@ -1,0 +1,177 @@
+{
+  "validators": [
+    {
+      "number": 1,
+      "name": "Gizzi (AI Overseer)",
+      "aiDevId": "governance-dev01",
+      "ip": "64.181.215.19",
+      "role": "Director",
+      "region": "Oracle Cloud",
+      "bootnode": true
+    },
+    {
+      "number": 2,
+      "name": "EojEdred (Founder)",
+      "aiDevId": "security-dev01",
+      "ip": "NEEDS_IP",
+      "role": "Director",
+      "region": "TBD",
+      "bootnode": true
+    },
+    {
+      "number": 3,
+      "name": "Audit Dev",
+      "aiDevId": "audit-dev01",
+      "ip": "NEEDS_IP",
+      "role": "Director",
+      "region": "TBD",
+      "bootnode": true
+    },
+    {
+      "number": 4,
+      "name": "Consensus Dev (Primary)",
+      "aiDevId": "consensus-dev01",
+      "ip": "NEEDS_IP",
+      "role": "FlareNode",
+      "region": "TBD"
+    },
+    {
+      "number": 5,
+      "name": "Consensus Dev (Secondary)",
+      "aiDevId": "consensus-dev01",
+      "ip": "129.80.122.34",
+      "role": "FlareNode",
+      "region": "Oracle Cloud",
+      "notes": "Binary & keys installed"
+    },
+    {
+      "number": 6,
+      "name": "Runtime Dev (Primary)",
+      "aiDevId": "runtime-dev01",
+      "ip": "20.224.104.239",
+      "role": "FlareNode",
+      "region": "Azure West Europe"
+    },
+    {
+      "number": 7,
+      "name": "Runtime Dev (Secondary)",
+      "aiDevId": "runtime-dev01",
+      "ip": "108.142.205.177",
+      "role": "FlareNode",
+      "region": "Azure West Europe"
+    },
+    {
+      "number": 8,
+      "name": "Compiler Dev (Primary)",
+      "aiDevId": "compiler-dev01",
+      "ip": "4.180.238.67",
+      "role": "FlareNode",
+      "region": "Azure West Europe"
+    },
+    {
+      "number": 9,
+      "name": "Compiler Dev (Secondary)",
+      "aiDevId": "compiler-dev01",
+      "ip": "4.180.59.25",
+      "role": "FlareNode",
+      "region": "Azure West Europe"
+    },
+    {
+      "number": 10,
+      "name": "Multichain Dev (Primary)",
+      "aiDevId": "multichain-dev01",
+      "ip": "98.71.91.84",
+      "role": "FlareNode",
+      "region": "Azure North Europe",
+      "notes": "BUILD VM"
+    },
+    {
+      "number": 11,
+      "name": "Multichain Dev (Secondary)",
+      "aiDevId": "multichain-dev01",
+      "ip": "68.219.230.63",
+      "role": "FlareNode",
+      "region": "Azure North Europe"
+    },
+    {
+      "number": 12,
+      "name": "Oracle Dev",
+      "aiDevId": "oracle-dev01",
+      "ip": "98.71.219.106",
+      "role": "FlareNode",
+      "region": "Azure West Europe"
+    },
+    {
+      "number": 13,
+      "name": "EDSC Dev (Primary)",
+      "aiDevId": "edsc-dev01",
+      "ip": "172.167.8.217",
+      "role": "ValidityNode",
+      "region": "Azure UK South"
+    },
+    {
+      "number": 14,
+      "name": "EDSC Dev (Secondary)",
+      "aiDevId": "edsc-dev01",
+      "ip": "51.142.203.160",
+      "role": "ValidityNode",
+      "region": "Azure UK South"
+    },
+    {
+      "number": 15,
+      "name": "Economics Dev (Primary)",
+      "aiDevId": "economics-dev01",
+      "ip": "172.166.164.19",
+      "role": "ValidityNode",
+      "region": "Azure UK South"
+    },
+    {
+      "number": 16,
+      "name": "Economics Dev (Secondary)",
+      "aiDevId": "economics-dev01",
+      "ip": "172.166.187.180",
+      "role": "ValidityNode",
+      "region": "Azure UK South"
+    },
+    {
+      "number": 17,
+      "name": "Ethics Dev (Primary)",
+      "aiDevId": "ethics-dev01",
+      "ip": "172.166.210.244",
+      "role": "ValidityNode",
+      "region": "Azure UK South"
+    },
+    {
+      "number": 18,
+      "name": "Ethics Dev (Secondary)",
+      "aiDevId": "ethics-dev01",
+      "ip": "4.251.115.186",
+      "role": "ValidityNode",
+      "region": "Azure France Central"
+    },
+    {
+      "number": 19,
+      "name": "Docs Dev (Primary)",
+      "aiDevId": "docs-dev01",
+      "ip": "52.143.191.232",
+      "role": "ValidityNode",
+      "region": "Azure France Central"
+    },
+    {
+      "number": 20,
+      "name": "Docs Dev (Secondary)",
+      "aiDevId": "docs-dev01",
+      "ip": "4.211.206.210",
+      "role": "ValidityNode",
+      "region": "Azure France Central"
+    },
+    {
+      "number": 21,
+      "name": "Docs Dev (Tertiary)",
+      "aiDevId": "docs-dev01",
+      "ip": "4.178.181.122",
+      "role": "ValidityNode",
+      "region": "Azure France Central"
+    }
+  ]
+}

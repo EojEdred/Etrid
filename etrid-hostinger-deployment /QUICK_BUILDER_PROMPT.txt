@@ -1,0 +1,99 @@
+=== QUICK PROMPT FOR AI WEBSITE BUILDERS ===
+
+I need you to rebuild my blockchain protocol website (ËTRID) to match the quality and interactivity of Fluence Network, Ethereum Foundation, and Solana.org.
+
+PROJECT: ËTRID Protocol - Advanced multichain blockchain infrastructure
+- 142k+ TPS with sub-second finality
+- ASF consensus, FlareChain, 13 blockchain integrations
+- Cross-chain bridge, DeFi ecosystem
+
+BRAND COLORS:
+- Blue: #3B82F6
+- Purple: #8B5CF6
+- Cyan: #06b6d4
+- Dark: #050812
+
+CURRENT STATE (Attached ZIP):
+✅ Complete HTML/CSS website with all content
+✅ Navigation: Features, Technology, Governance, Apps, Network, Docs, GitHub, Community
+✅ 7 major sections on homepage
+✅ 12+ subdomain pages (wallet, explorer, bridge, validator, etc.)
+✅ Whitepaper viewer with 4 volumes
+✅ Logos, branding assets included
+
+WHAT I WANT:
+
+1. VISUAL UPGRADES (Like Fluence):
+   - Animated particle background
+   - Glassmorphism cards with blur
+   - Smooth gradient animations
+   - 3D hover effects
+   - Glowing buttons
+
+2. INTERACTIVE FEATURES (Like Ethereum):
+   - Live network stats dashboard with animated counters
+   - Interactive architecture diagrams
+   - Expandable cards with more info
+   - Code playground with syntax highlighting
+   - Smooth scroll animations
+
+3. MODERN TECH STACK:
+   - React + Next.js 14
+   - Tailwind CSS + Framer Motion
+   - TypeScript
+   - Three.js for 3D effects
+   - Recharts for data viz
+
+4. KEY INTERACTIVE COMPONENTS:
+   - Animated hero with particles
+   - Live TPS counter
+   - Interactive validator map
+   - Web3 wallet connect
+   - Real-time transaction feed
+   - Developer API explorer
+   - Governance proposal dashboard
+
+5. MOBILE EXPERIENCE:
+   - Touch-optimized
+   - Swipe gestures
+   - Bottom nav bar
+   - Fast performance
+   - Smooth animations
+
+INSPIRATION SITES:
+- fluence.network (particle effects, animations)
+- ethereum.org (clean layout, docs structure)
+- solana.org (bold colors, speed)
+
+KEEP:
+✅ All content and text
+✅ Brand colors and logos
+✅ Page structure
+✅ Whitepaper content
+
+UPGRADE:
+🔄 Make EVERYTHING more interactive
+🔄 Add smooth animations throughout
+🔄 Modern component architecture
+🔄 Better mobile experience
+🔄 Web3 integration
+🔄 Live data visualizations
+
+SUCCESS = Website that makes visitors think "This is a serious, cutting-edge protocol I want to build on"
+
+BUILD IT LIKE: A premium SaaS product meets a blockchain protocol
+
+TARGET PERFORMANCE:
+- Lighthouse Score: 90+
+- First Paint: < 1.5s
+- Fully Interactive: < 3.5s
+
+DELIVERABLES:
+1. Complete Next.js project with source code
+2. Component library
+3. Deployment config
+4. Setup documentation
+
+**ATTACHED: website-deploy.zip (592 KB)**
+
+Transform this into something AMAZING! 🚀

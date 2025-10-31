@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Governance Forum | Community Discussion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>tailwind.config = {theme: {extend: {colors: {'etrid-blue': '#3B82F6','etrid-purple': '#8B5CF6','etrid-dark': '#0A0E1A'}}}}</script>
+</head>
+<body class="bg-etrid-dark text-white font-sans min-h-screen">
+    <header class="border-b border-white/10 bg-etrid-dark/80 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="https://etrid.org" class="text-2xl font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                    ËTRID Forum
+                </a>
+                <nav class="flex gap-6">
+                    <a href="https://etrid.org" class="text-gray-300 hover:text-white">Home</a>
+                    <a href="https://governance.etrid.org" class="text-gray-300 hover:text-white">Governance</a>
+                    <a href="https://docs.etrid.org" class="text-gray-300 hover:text-white">Docs</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-16">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Governance Forum
+            </h1>
+            <p class="text-xl text-gray-300">Discuss proposals, vote on protocol changes, and shape the future of ËTRID</p>
+        </div>
+
+        <!-- Forum Categories -->
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
+                <div class="flex items-start gap-4">
+                    <div class="text-3xl">💬</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2">General Discussion</h3>
+                        <p class="text-gray-400 text-sm mb-3">General topics about ËTRID protocol and ecosystem</p>
+                        <div class="flex gap-4 text-sm text-gray-500">
+                            <span>245 topics</span>
+                            <span>•</span>
+                            <span>1.2k posts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
+                <div class="flex items-start gap-4">
+                    <div class="text-3xl">📜</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2">Proposals</h3>
+                        <p class="text-gray-400 text-sm mb-3">Submit and discuss governance proposals</p>
+                        <div class="flex gap-4 text-sm text-gray-500">
+                            <span>42 proposals</span>
+                            <span>•</span>
+                            <span>578 comments</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
+                <div class="flex items-start gap-4">
+                    <div class="text-3xl">🛠️</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2">Development</h3>
+                        <p class="text-gray-400 text-sm mb-3">Technical discussions and developer updates</p>
+                        <div class="flex gap-4 text-sm text-gray-500">
+                            <span>189 topics</span>
+                            <span>•</span>
+                            <span>892 posts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
+                <div class="flex items-start gap-4">
+                    <div class="text-3xl">🎯</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2">Validators</h3>
+                        <p class="text-gray-400 text-sm mb-3">Validator setup, operations, and best practices</p>
+                        <div class="flex gap-4 text-sm text-gray-500">
+                            <span>78 topics</span>
+                            <span>•</span>
+                            <span>324 posts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coming Soon -->
+        <div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-8 text-center">
+            <h3 class="text-2xl font-bold mb-3">🚧 Forum Under Development</h3>
+            <p class="text-gray-300 mb-6">
+                The ËTRID governance forum is currently being built. In the meantime, join our Discord and GitHub Discussions for community engagement.
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="https://discord.gg/etrid" class="bg-etrid-blue px-6 py-3 rounded-lg font-semibold hover:bg-etrid-blue/80 transition-all">
+                    Join Discord
+                </a>
+                <a href="https://github.com/etrid/etrid/discussions" class="bg-white/10 px-6 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all">
+                    GitHub Discussions
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-white/10 mt-16 py-8 text-center text-gray-400 text-sm">
+        <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+    </footer>
+</body>
+</html>
