@@ -1,0 +1,215 @@
+🚀 Configuring All ËTRID Validators for Telemetry
+==================================================
+
+📡 Telemetry URL: ws://98.71.91.84/submit 0
+
+
+============================================================
+🔧 Validator #1: Gizzi (AI Overseer)
+📍 IP: 64.181.215.19 | Username: governance-dev01
+============================================================
+❌ Failed to configure Gizzi (AI Overseer)
+Error: ssh: connect to host 64.181.215.19 port 22: Operation timed out
+
+
+============================================================
+🔧 Validator #2: EojEdred (Founder)
+📍 IP: 20.69.26.209 | Username: security-dev01
+============================================================
+❌ Failed to configure EojEdred (Founder)
+Error: security-dev01@20.69.26.209: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #3: Audit Dev
+📍 IP: 129.80.122.34 | Username: audit-dev01
+============================================================
+❌ Failed to configure Audit Dev
+Error: audit-dev01@129.80.122.34: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #4: Governance Dev
+📍 IP: 20.186.91.207 | Username: governance-dev01
+============================================================
+❌ Failed to configure Governance Dev
+Error: ssh: connect to host 20.186.91.207 port 22: Operation timed out
+
+
+============================================================
+🔧 Validator #5: Consensus Dev (Secondary)
+📍 IP: 129.80.122.34 | Username: consensus-dev01
+============================================================
+❌ Failed to configure Consensus Dev (Secondary)
+Error: consensus-dev01@129.80.122.34: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #6: Runtime Dev (Primary)
+📍 IP: 20.224.104.239 | Username: runtime-dev01
+============================================================
+❌ Failed to configure Runtime Dev (Primary)
+Error: runtime-dev01@20.224.104.239: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #7: Runtime Dev (Secondary)
+📍 IP: 108.142.205.177 | Username: runtime-dev01
+============================================================
+❌ Failed to configure Runtime Dev (Secondary)
+Error: 
+
+============================================================
+🔧 Validator #8: Compiler Dev (Primary)
+📍 IP: 4.180.238.67 | Username: compiler-dev01
+============================================================
+❌ Failed to configure Compiler Dev (Primary)
+Error: compiler-dev01@4.180.238.67: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #9: Compiler Dev (Secondary)
+📍 IP: 4.180.59.25 | Username: compiler-dev01
+============================================================
+❌ Failed to configure Compiler Dev (Secondary)
+Error: 
+
+============================================================
+🔧 Validator #10: Multichain Dev (Primary)
+📍 IP: 98.71.91.84 | Username: multichain-dev01
+============================================================
+⏭️  Skipping BUILD VM
+
+============================================================
+🔧 Validator #11: Multichain Dev (Secondary)
+📍 IP: 68.219.230.63 | Username: multichain-dev01
+============================================================
+❌ Failed to configure Multichain Dev (Secondary)
+Error: 
+
+============================================================
+🔧 Validator #12: Oracle Dev
+📍 IP: 98.71.219.106 | Username: oracle-dev01
+============================================================
+❌ Failed to configure Oracle Dev
+Error: oracle-dev01@98.71.219.106: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #13: EDSC Dev (Primary)
+📍 IP: 172.167.8.217 | Username: edsc-dev01
+============================================================
+❌ Failed to configure EDSC Dev (Primary)
+Error: edsc-dev01@172.167.8.217: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #14: EDSC Dev (Secondary)
+📍 IP: 51.142.203.160 | Username: edsc-dev01
+============================================================
+❌ Failed to configure EDSC Dev (Secondary)
+Error: edsc-dev01@51.142.203.160: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #15: Economics Dev (Primary)
+📍 IP: 172.166.164.19 | Username: economics-dev01
+============================================================
+❌ Failed to configure Economics Dev (Primary)
+Error: economics-dev01@172.166.164.19: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #16: Economics Dev (Secondary)
+📍 IP: 172.166.187.180 | Username: economics-dev01
+============================================================
+❌ Failed to configure Economics Dev (Secondary)
+Error: economics-dev01@172.166.187.180: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #17: Ethics Dev (Primary)
+📍 IP: 172.166.210.244 | Username: ethics-dev01
+============================================================
+❌ Failed to configure Ethics Dev (Primary)
+Error: ethics-dev01@172.166.210.244: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #18: Ethics Dev (Secondary)
+📍 IP: 4.251.115.186 | Username: ethics-dev01
+============================================================
+❌ Failed to configure Ethics Dev (Secondary)
+Error: ethics-dev01@4.251.115.186: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #19: Docs Dev (Primary)
+📍 IP: 52.143.191.232 | Username: docs-dev01
+============================================================
+❌ Failed to configure Docs Dev (Primary)
+Error: docs-dev01@52.143.191.232: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #20: Docs Dev (Secondary)
+📍 IP: 4.211.206.210 | Username: docs-dev01
+============================================================
+❌ Failed to configure Docs Dev (Secondary)
+Error: docs-dev01@4.211.206.210: Permission denied (publickey).
+
+
+============================================================
+🔧 Validator #21: Docs Dev (Tertiary)
+📍 IP: 4.178.181.122 | Username: docs-dev01
+============================================================
+❌ Failed to configure Docs Dev (Tertiary)
+Error: docs-dev01@4.178.181.122: Permission denied (publickey).
+
+
+============================================================
+📊 CONFIGURATION SUMMARY
+============================================================
+✅ Successful: 0
+
+❌ Failed: 20
+   #1 Gizzi (AI Overseer): ssh: connect to host 64.181.215.19 port 22: Operation timed out
+
+   #2 EojEdred (Founder): security-dev01@20.69.26.209: Permission denied (publickey).
+
+   #3 Audit Dev: audit-dev01@129.80.122.34: Permission denied (publickey).
+
+   #4 Governance Dev: ssh: connect to host 20.186.91.207 port 22: Operation timed out
+
+   #5 Consensus Dev (Secondary): consensus-dev01@129.80.122.34: Permission denied (publickey).
+
+   #6 Runtime Dev (Primary): runtime-dev01@20.224.104.239: Permission denied (publickey).
+
+   #7 Runtime Dev (Secondary): 
+   #8 Compiler Dev (Primary): compiler-dev01@4.180.238.67: Permission denied (publickey).
+
+   #9 Compiler Dev (Secondary): 
+   #11 Multichain Dev (Secondary): 
+   #12 Oracle Dev: oracle-dev01@98.71.219.106: Permission denied (publickey).
+
+   #13 EDSC Dev (Primary): edsc-dev01@172.167.8.217: Permission denied (publickey).
+
+   #14 EDSC Dev (Secondary): edsc-dev01@51.142.203.160: Permission denied (publickey).
+
+   #15 Economics Dev (Primary): economics-dev01@172.166.164.19: Permission denied (publickey).
+
+   #16 Economics Dev (Secondary): economics-dev01@172.166.187.180: Permission denied (publickey).
+
+   #17 Ethics Dev (Primary): ethics-dev01@172.166.210.244: Permission denied (publickey).
+
+   #18 Ethics Dev (Secondary): ethics-dev01@4.251.115.186: Permission denied (publickey).
+
+   #19 Docs Dev (Primary): docs-dev01@52.143.191.232: Permission denied (publickey).
+
+   #20 Docs Dev (Secondary): docs-dev01@4.211.206.210: Permission denied (publickey).
+
+   #21 Docs Dev (Tertiary): docs-dev01@4.178.181.122: Permission denied (publickey).
+
+
+🌐 View telemetry: http://98.71.91.84/
+🌐 Website: https://etrid.org/telemetry/
