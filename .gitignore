@@ -61,6 +61,10 @@ coverage/
 # VALIDATOR KEYS AND SENSITIVE DATA - DO NOT COMMIT!
 # ============================================================================
 
+# Consolidated secrets folder - NEVER COMMIT!
+secrets/
+**/secrets/
+
 # Generated validator keys (contains private keys, sudo keys, payment accounts)
 validator-keys-setup/generated-keys/
 **/generated-keys*/

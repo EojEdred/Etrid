@@ -1,0 +1,200 @@
+==============================================
+ËTRID VALIDATOR TELEMETRY SETUP PROMPT
+==============================================
+
+Copy-paste this entire prompt to Claude Code or any AI assistant when configuring validators:
+
+---START PROMPT---
+
+I need to add telemetry reporting to my ËTRID FlareChain validator.
+
+TELEMETRY SERVER: ws://98.71.91.84:30334/submit
+
+TASK:
+1. Edit the systemd service file at /etc/systemd/system/flarechain.service
+2. Add this line right after the --validator line:
+   --telemetry-url 'ws://98.71.91.84:30334/submit 0' \
+3. Reload systemd and restart the service
+4. Verify it's connecting to telemetry
+
+EXAMPLE SERVICE FILE SECTION:
+```
+ExecStart=/usr/local/bin/flarechain-node \
+  --validator \
+  --telemetry-url 'ws://98.71.91.84:30334/submit 0' \
+  --name 'MyValidator' \
+  --base-path /data/validator \
+  --chain flarechain
+```
+
+VERIFICATION:
+After restart, check logs for telemetry connection:
+sudo journalctl -u flarechain -n 30 | grep -i telemetry
+
+Please help me:
+1. Backup the current service file
+2. Add the telemetry line in the correct location
+3. Restart the service
+4. Verify it's working
+
+---END PROMPT---
+
+==============================================
+ALTERNATIVE: MANUAL COMMAND SEQUENCE
+==============================================
+
+If you prefer to do it manually without AI assistance:
+
+# Step 1: Backup
+sudo cp /etc/systemd/system/flarechain.service /etc/systemd/system/flarechain.service.backup-$(date +%Y%m%d-%H%M%S)
+
+# Step 2: Edit (opens nano editor)
+sudo nano /etc/systemd/system/flarechain.service
+
+# In nano:
+# - Find the line with --validator \
+# - Press Enter to create a new line below it
+# - Type:   --telemetry-url 'ws://98.71.91.84:30334/submit 0' \
+# - Make sure there's a space and backslash at the end: \
+# - Press Ctrl+X, then Y, then Enter to save
+
+# Step 3: Reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart flarechain
+
+# Step 4: Check it's working
+sudo systemctl status flarechain
+sudo journalctl -u flarechain -n 30 | grep -i telemetry
+
+# Step 5: Check telemetry dashboard
+# Open in browser: http://98.71.91.84:30334
+# Your validator should appear within 30-60 seconds
+
+==============================================
+CLAUDE CODE SPECIFIC PROMPT
+==============================================
+
+For Claude Code users, copy this:
+
+---
+
+SSH into my validator at [VALIDATOR_IP] and add telemetry reporting:
+
+1. Edit /etc/systemd/system/flarechain.service
+2. Add this line after --validator:
+   --telemetry-url 'ws://98.71.91.84:30334/submit 0' \
+3. Ensure proper formatting with backslash continuation
+4. systemctl daemon-reload
+5. systemctl restart flarechain
+6. Verify with: journalctl -u flarechain -n 30 | grep telemetry
+
+Telemetry server: http://98.71.91.84:30334
+
+---
+
+==============================================
+BATCH PROCESSING (For Multiple Validators)
+==============================================
+
+If you have SSH access to multiple validators, use this script:
+
+#!/bin/bash
+# save as: add_telemetry.sh
+
+VALIDATORS=(
+  "validator01@98.71.91.84"
+  "validator02@129.80.122.34"
+  # Add all your validators here
+)
+
+for VALIDATOR in "${VALIDATORS[@]}"; do
+  echo "Configuring $VALIDATOR..."
+
+  ssh "$VALIDATOR" << 'ENDSSH'
+    # Backup
+    sudo cp /etc/systemd/system/flarechain.service /etc/systemd/system/flarechain.service.backup
+
+    # Add telemetry (using sed)
+    sudo sed -i '/--validator/a\  --telemetry-url '"'"'ws://98.71.91.84:30334/submit 0'"'"' \\' /etc/systemd/system/flarechain.service
+
+    # Restart
+    sudo systemctl daemon-reload
+    sudo systemctl restart flarechain
+
+    # Verify
+    sleep 3
+    sudo journalctl -u flarechain -n 10 | grep -i telemetry
+ENDSSH
+
+  echo "Done with $VALIDATOR"
+  echo "---"
+done
+
+echo "All validators configured! Check dashboard: http://98.71.91.84:30334"
+
+# Make executable: chmod +x add_telemetry.sh
+# Run: ./add_telemetry.sh
+
+==============================================
+TROUBLESHOOTING PROMPT
+==============================================
+
+If telemetry isn't working, use this prompt:
+
+---
+
+My ËTRID validator isn't showing up on the telemetry dashboard at http://98.71.91.84:30334
+
+Current setup:
+- Telemetry URL in service file: ws://98.71.91.84:30334/submit
+- Validator is running
+- No errors in systemctl status flarechain
+
+Please help me:
+1. Check the service file formatting
+2. Verify telemetry connection in logs
+3. Test connectivity to telemetry server
+4. Debug why it's not appearing on dashboard
+
+Commands to run:
+sudo cat /etc/systemd/system/flarechain.service | grep -A 5 -B 5 telemetry
+sudo journalctl -u flarechain -n 50 | grep -i telemetry
+curl -I http://98.71.91.84:30334
+
+---
+
+==============================================
+QUICK TEST PROMPT
+==============================================
+
+To test if telemetry is reachable from your validator:
+
+---
+
+Test telemetry server connectivity from my validator:
+
+1. Test HTTP endpoint:
+   curl -I http://98.71.91.84:30334
+
+2. Test WebSocket endpoint (if wscat is installed):
+   wscat -c ws://98.71.91.84:30334/submit
+
+3. Test with telnet:
+   telnet 98.71.91.84 30334
+
+All should succeed. If any fail, there's a network issue.
+
+---
+
+==============================================
+NOTES
+==============================================
+
+- Telemetry server: 98.71.91.84:30334
+- Port 30334 is already open (blockchain p2p range)
+- No firewall changes needed
+- Takes 30 seconds per validator
+- Dashboard updates every 5 seconds
+- Validators appear within 30-60 seconds of connection
+
+==============================================

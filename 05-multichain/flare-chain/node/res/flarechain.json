@@ -73,6 +73,7 @@
     "flamePurpose": "To illuminate the path to decentralized democracy for all humanity"
   },
   "protocolId": "flarechain",
+  "bootNodes": [],
 
   "balances": {
     "balances": [
