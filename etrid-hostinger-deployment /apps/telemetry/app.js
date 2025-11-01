@@ -2,8 +2,7 @@
 // Connects to blockchain nodes and displays real-time network data
 
 const BOOTSTRAP_NODES = [
-    { endpoint: 'ws://20.186.91.207:9944', name: 'Alice (Azure VM #1)', location: 'East US', lat: 40, lon: -74, type: 'bootstrap' },
-    { endpoint: 'ws://172.177.44.73:9944', name: 'Bob (Azure VM #2)', location: 'West US', lat: 37, lon: -122, type: 'validator' },
+    { endpoint: 'ws://98.71.91.84:9944', name: 'FlareChain Validator Node', location: 'Primary', lat: 40, lon: -74, type: 'validator' },
 ];
 
 // Mock nodes for demonstration (when real nodes not available)
