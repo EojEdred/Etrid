@@ -172,67 +172,6 @@
     </footer>
 
     <script>
-        // Show development status banner
-        function showDevBanner() {
-            const banner = document.createElement('div');
-            banner.style.cssText = `
-                position: fixed;
-                top: 80px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-                color: white;
-                padding: 1.5rem 2rem;
-                border-radius: 12px;
-                box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);
-                z-index: 1000;
-                max-width: 90%;
-                width: 600px;
-                font-size: 0.95rem;
-                line-height: 1.6;
-            `;
-            banner.innerHTML = `
-                <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">🚧 Explorer In Development</div>
-                <div>Showing simulated blockchain data for demonstration.</div>
-                <div style="margin-top: 0.8rem; font-size: 0.9rem; opacity: 0.95;">
-                    <strong>For real blockchain data:</strong><br>
-                    • Connect via RPC endpoints shown below<br>
-                    • Use Polkadot.js Apps or Subscan<br>
-                    • Full explorer coming soon!
-                </div>
-            `;
-            document.body.appendChild(banner);
-
-            // Add demo badge
-            const demoBadge = document.createElement('div');
-            demoBadge.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-                color: white;
-                padding: 0.6rem 1.2rem;
-                border-radius: 8px;
-                font-weight: 600;
-                font-size: 0.9rem;
-                z-index: 999;
-                box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-                letter-spacing: 0.5px;
-            `;
-            demoBadge.textContent = '📊 DEMO DATA';
-            document.body.appendChild(demoBadge);
-
-            // Auto-hide banner after 12 seconds
-            setTimeout(() => {
-                banner.style.transition = 'opacity 0.5s ease';
-                banner.style.opacity = '0';
-                setTimeout(() => banner.remove(), 500);
-            }, 12000);
-        }
-
-        // Show banner on load
-        showDevBanner();
-
         // Simulate loading network stats
         setTimeout(() => {
             document.getElementById('latestBlock').textContent = '#1,234,567';

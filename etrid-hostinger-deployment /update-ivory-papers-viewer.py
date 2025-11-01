@@ -36,6 +36,11 @@ PAPERS = [
         'key': 'vol3',
         'title': 'Volume III: Governance & Fiscal Mechanics',
         'filename': 'ivory-paper-vol3-governance.md'
+    },
+    {
+        'key': 'charter',
+        'title': 'ËTRID Protocol Charter',
+        'filename': 'protocol-charter.md'
     }
 ]
 
