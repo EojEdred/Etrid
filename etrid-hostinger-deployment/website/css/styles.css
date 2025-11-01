@@ -353,6 +353,24 @@ body {
     .floating-orb {
         display: none;
     }
+
+    /* Table responsiveness */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    /* Reduce font sizes on mobile */
+    th, td {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.25rem;
+    }
 }
 
 /* ==================== */

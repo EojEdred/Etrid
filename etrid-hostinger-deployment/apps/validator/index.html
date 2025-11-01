@@ -1,1 +1,421 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width"/><title>Validator Dashboard - Ëtrid Protocol</title><meta name="description" content="Monitor and manage your Ëtrid validator"/><meta name="next-head-count" content="4"/><meta name="description" content="Ëtrid Protocol Validator Dashboard"/><link rel="icon" href="/favicon.ico"/><link rel="preload" href="/_next/static/css/a15a46e80d2d2245.css" as="style"/><link rel="stylesheet" href="/_next/static/css/a15a46e80d2d2245.css" data-n-g=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/_next/static/chunks/webpack-38cee4c0e358b1a3.js" defer=""></script><script src="/_next/static/chunks/framework-64ad27b21261a9ce.js" defer=""></script><script src="/_next/static/chunks/main-a2464d6d00b134e7.js" defer=""></script><script src="/_next/static/chunks/pages/_app-e22a8941863cf478.js" defer=""></script><script src="/_next/static/chunks/922edf34-b08d2e5ae82b3584.js" defer=""></script><script src="/_next/static/chunks/454-43933a9d3c4367a2.js" defer=""></script><script src="/_next/static/chunks/76-32b44abb1a973ba1.js" defer=""></script><script src="/_next/static/chunks/27-d144ee8409015fdd.js" defer=""></script><script src="/_next/static/chunks/637-f8e740fa974a24d1.js" defer=""></script><script src="/_next/static/chunks/241-d8da9b4ba232f42c.js" defer=""></script><script src="/_next/static/chunks/pages/index-62150c899856af4b.js" defer=""></script><script src="/_next/static/WLN6pfrwVPlObMzTs-o6D/_buildManifest.js" defer=""></script><script src="/_next/static/WLN6pfrwVPlObMzTs-o6D/_ssgManifest.js" defer=""></script></head><body><div id="__next"><div class="min-h-screen bg-gray-50"><header class="bg-white shadow-sm sticky top-0 z-40"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center space-x-4"><button class="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu w-6 h-6"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><a class="flex items-center space-x-3" href="/"><img src="/assets/logos/etrid-primary-logo.jpg" alt="ËTRID" class="w-8 h-8"><div><h1 class="text-xl font-bold text-gray-900">Ëtrid Validator</h1><p class="text-xs text-gray-500">Dashboard</p></div></a></div><div class="flex items-center space-x-4"><div class="flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wifi-off w-5 h-5 text-danger-500"><line x1="2" x2="22" y1="2" y2="22"></line><path d="M8.5 16.5a5 5 0 0 1 7 0"></path><path d="M2 8.82a15 15 0 0 1 4.17-2.65"></path><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"></path><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"></path><path d="M5 13a10 10 0 0 1 5.24-2.76"></path><line x1="12" x2="12.01" y1="20" y2="20"></line></svg><span class="text-sm text-gray-600">Disconnected</span></div><button class="px-4 py-2 bg-etrid-600 text-white rounded-lg hover:bg-etrid-700 transition-colors font-medium text-sm">Connect Wallet</button><button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell w-5 h-5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span></button></div></div></div></header><div class="flex"><aside class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto -translate-x-full top-16"><nav class="p-4 space-y-2"><a class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors bg-etrid-50 text-etrid-700 font-semibold" href="/"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard w-5 h-5"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg><span>Dashboard</span></a><a class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" href="/performance"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity w-5 h-5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg><span>Performance</span></a><a class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" href="/nominators"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Nominators</span></a><a class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" href="/rewards"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award w-5 h-5"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg><span>Rewards</span></a><a class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" href="/settings"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-5 h-5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Settings</span></a></nav></aside><main class="flex-1 p-4 lg:p-8"><div class="max-w-7xl mx-auto"><div class="space-y-6"><div class="flex items-center justify-between"><div><h1 class="text-3xl font-bold text-gray-900">Validator Dashboard</h1><p class="text-gray-600 mt-1">Monitor your validator performance and manage settings</p></div><button class="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw w-4 h-4 "><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg><span>Refresh</span></button></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="bg-white rounded-lg shadow-md p-6 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div><div class="h-8 bg-gray-200 rounded w-3/4"></div></div><div class="bg-white rounded-lg shadow-md p-6 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div><div class="h-8 bg-gray-200 rounded w-3/4"></div></div><div class="bg-white rounded-lg shadow-md p-6 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div><div class="h-8 bg-gray-200 rounded w-3/4"></div></div><div class="bg-white rounded-lg shadow-md p-6 animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div><div class="h-8 bg-gray-200 rounded w-3/4"></div></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 space-y-6"><div class="bg-white rounded-lg shadow-md p-6"><div class="animate-pulse space-y-4"><div class="h-6 bg-gray-200 rounded w-1/4"></div><div class="h-64 bg-gray-200 rounded"></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><div class="animate-pulse space-y-4"><div class="h-6 bg-gray-200 rounded w-1/4"></div><div class="h-10 bg-gray-200 rounded"></div><div class="h-16 bg-gray-200 rounded"></div><div class="h-16 bg-gray-200 rounded"></div><div class="h-16 bg-gray-200 rounded"></div><div class="h-16 bg-gray-200 rounded"></div><div class="h-16 bg-gray-200 rounded"></div></div></div></div><div class="space-y-6"><div class="bg-white rounded-lg shadow-md p-6"><div class="animate-pulse space-y-4"><div class="h-6 bg-gray-200 rounded w-1/4"></div><div class="h-24 bg-gray-200 rounded"></div><div class="h-24 bg-gray-200 rounded"></div><div class="h-24 bg-gray-200 rounded"></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3><div class="space-y-4"><div class="flex justify-between items-center pb-3 border-b border-gray-200"><span class="text-sm text-gray-600">Uptime</span><span class="text-sm font-semibold text-gray-900">%</span></div><div class="flex justify-between items-center pb-3 border-b border-gray-200"><span class="text-sm text-gray-600">Rank</span><span class="text-sm font-semibold text-gray-900">#<!-- -->0<!-- --> / <!-- -->0</span></div><div class="flex justify-between items-center pb-3 border-b border-gray-200"><span class="text-sm text-gray-600">Blocks Produced</span><span class="text-sm font-semibold text-gray-900">0</span></div><div class="flex justify-between items-center"><span class="text-sm text-gray-600">Missed Blocks</span><span class="text-sm font-semibold text-danger-600">0</span></div></div></div></div></div></div></div></main></div><footer class="bg-white border-t border-gray-200 mt-12"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"><div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0"><p class="text-sm text-gray-600">© 2024 Ëtrid Protocol. All rights reserved.</p><div class="flex space-x-6 text-sm text-gray-600"><a href="#" class="hover:text-etrid-600">Documentation</a><a href="#" class="hover:text-etrid-600">Support</a><a href="#" class="hover:text-etrid-600">GitHub</a></div></div></div></footer></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/","query":{},"buildId":"WLN6pfrwVPlObMzTs-o6D","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Validator Dashboard | Monitor Your Node</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Polkadot.js API -->
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@10.9.1/bundle-polkadot-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/extension-dapp@0.46.5/bundle-polkadot-extension-dapp.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: { 'sans': ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center text-white text-xl font-bold">
+                        V
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Validator Dashboard</h1>
+                        <p class="text-xs text-gray-500">FlareChain Monitor</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div id="connectionStatus" class="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span id="connectionText" class="text-sm text-gray-600">Disconnected</span>
+                    </div>
+                    <button id="connectWalletBtn" class="px-4 py-2 bg-etrid-blue text-white rounded-lg hover:bg-etrid-blue/90 transition-colors font-medium text-sm">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Not Connected State -->
+        <div id="notConnectedState" class="text-center py-20">
+            <div class="max-w-md mx-auto">
+                <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center text-4xl text-white">
+                    🎯
+                </div>
+                <h2 class="text-3xl font-bold mb-4">Connect Your Validator</h2>
+                <p class="text-gray-600 mb-8">
+                    Connect your wallet to monitor your validator performance and manage your node.
+                </p>
+                <button onclick="connectWallet()" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-4 rounded-xl font-bold text-lg text-white hover:shadow-lg transition-all">
+                    Connect Polkadot.js Extension
+                </button>
+                <div class="mt-8 text-sm text-gray-500">
+                    Don't have the extension? <a href="https://polkadot.js.org/extension/" target="_blank" class="text-etrid-blue hover:underline">Download here</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connected State -->
+        <div id="connectedState" class="hidden">
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm text-gray-600">Validator Status</h3>
+                        <span id="validatorStatusBadge" class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">Active</span>
+                    </div>
+                    <p class="text-3xl font-bold text-gray-900" id="validatorStatus">Online</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-sm text-gray-600 mb-2">Total Stake</h3>
+                    <p class="text-3xl font-bold text-gray-900" id="totalStake">0 ÉTR</p>
+                    <p class="text-xs text-gray-500 mt-1" id="stakeUsd">$0 USD</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-sm text-gray-600 mb-2">Era Points</h3>
+                    <p class="text-3xl font-bold text-gray-900" id="eraPoints">0</p>
+                    <p class="text-xs text-green-600 mt-1">↑ Active Era</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-sm text-gray-600 mb-2">Commission</h3>
+                    <p class="text-3xl font-bold text-gray-900" id="commission">0%</p>
+                    <p class="text-xs text-gray-500 mt-1">Current rate</p>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Performance (Last 30 Days)</h3>
+                <canvas id="performanceChart" height="80"></canvas>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left Column (2/3) -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Validator Info -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Validator Information</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between py-3 border-b">
+                                <span class="text-gray-600">Validator Address</span>
+                                <code id="validatorAddress" class="text-sm text-etrid-blue font-mono">-</code>
+                            </div>
+                            <div class="flex justify-between py-3 border-b">
+                                <span class="text-gray-600">Controller Address</span>
+                                <code id="controllerAddress" class="text-sm text-gray-900 font-mono">-</code>
+                            </div>
+                            <div class="flex justify-between py-3 border-b">
+                                <span class="text-gray-600">Session Keys</span>
+                                <span class="text-sm text-green-600 font-semibold">✓ Set</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b">
+                                <span class="text-gray-600">Identity</span>
+                                <span id="validatorIdentity" class="text-sm text-gray-900">-</span>
+                            </div>
+                            <div class="flex justify-between py-3">
+                                <span class="text-gray-600">Nominators</span>
+                                <span id="nominatorsCount" class="text-sm font-semibold text-gray-900">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Blocks -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Recent Blocks Produced</h3>
+                        <div id="recentBlocks" class="space-y-3">
+                            <div class="text-center py-8 text-gray-400">
+                                No recent blocks data available
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column (1/3) -->
+                <div class="space-y-6">
+
+                    <!-- Quick Stats -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Quick Stats</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between pb-3 border-b">
+                                <span class="text-sm text-gray-600">Uptime</span>
+                                <span class="text-sm font-semibold text-gray-900">99.8%</span>
+                            </div>
+                            <div class="flex justify-between pb-3 border-b">
+                                <span class="text-sm text-gray-600">Rank</span>
+                                <span class="text-sm font-semibold text-gray-900">#<span id="validatorRank">-</span></span>
+                            </div>
+                            <div class="flex justify-between pb-3 border-b">
+                                <span class="text-sm text-gray-600">Blocks Produced</span>
+                                <span class="text-sm font-semibold text-gray-900" id="blocksProduced">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Missed Blocks</span>
+                                <span class="text-sm font-semibold text-red-600" id="missedBlocks">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rewards -->
+                    <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Rewards</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Current Era</p>
+                                <p class="text-2xl font-bold text-gray-900" id="currentEraRewards">0 ÉTR</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Total Earned</p>
+                                <p class="text-lg font-semibold text-gray-900" id="totalRewards">0 ÉTR</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Actions</h3>
+                        <div class="space-y-3">
+                            <button class="w-full px-4 py-3 bg-etrid-blue text-white rounded-lg hover:bg-etrid-blue/90 transition-colors font-medium text-sm">
+                                Update Commission
+                            </button>
+                            <button class="w-full px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+                                Set Identity
+                            </button>
+                            <button class="w-full px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+                                Rotate Session Keys
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-600 text-sm">
+            <p>&copy; 2025 ËTRID Protocol. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // State
+        let api = null;
+        let currentAccount = null;
+        let performanceChart = null;
+        const RPC_ENDPOINT = 'ws://98.71.91.84:9944';
+        const ETR_PRICE_USD = 8.0;
+
+        // Connect to blockchain
+        async function connectToBlockchain() {
+            try {
+                console.log('Connecting to FlareChain...');
+                const { ApiPromise, WsProvider } = window.polkadotApi;
+                const provider = new WsProvider(RPC_ENDPOINT);
+
+                api = await ApiPromise.create({ provider });
+
+                console.log('✅ Connected to FlareChain');
+                updateConnectionStatus(true);
+
+            } catch (error) {
+                console.error('Failed to connect to blockchain:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+
+            if (connected) {
+                statusDot.className = 'w-2 h-2 bg-green-500 rounded-full';
+                statusText.textContent = 'Connected';
+                statusText.className = 'text-sm text-green-600';
+            } else {
+                statusDot.className = 'w-2 h-2 bg-red-500 rounded-full';
+                statusText.textContent = 'Disconnected';
+                statusText.className = 'text-sm text-red-600';
+            }
+        }
+
+        // Connect wallet
+        async function connectWallet() {
+            try {
+                if (!window.polkadotExtensionDapp) {
+                    alert('Please install Polkadot.js Extension!\n\nDownload: https://polkadot.js.org/extension/');
+                    return;
+                }
+
+                const { web3Accounts, web3Enable } = window.polkadotExtensionDapp;
+                const extensions = await web3Enable('ËTRID Validator Dashboard');
+
+                if (extensions.length === 0) {
+                    alert('Please install Polkadot.js Extension!\n\nDownload: https://polkadot.js.org/extension/');
+                    return;
+                }
+
+                const accounts = await web3Accounts();
+                if (accounts.length === 0) {
+                    alert('No accounts found. Please create an account in Polkadot.js Extension.');
+                    return;
+                }
+
+                currentAccount = accounts[0];
+
+                // Update UI
+                document.getElementById('notConnectedState').classList.add('hidden');
+                document.getElementById('connectedState').classList.remove('hidden');
+
+                const shortAddress = `${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`;
+                document.getElementById('connectWalletBtn').textContent = shortAddress;
+                document.getElementById('connectWalletBtn').classList.add('bg-green-600');
+                document.getElementById('connectWalletBtn').classList.remove('bg-etrid-blue');
+
+                document.getElementById('validatorAddress').textContent = currentAccount.address;
+                document.getElementById('controllerAddress').textContent = currentAccount.address;
+
+                await loadValidatorData();
+                initPerformanceChart();
+
+            } catch (error) {
+                console.error('Failed to connect wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
+            }
+        }
+
+        // Load validator data
+        async function loadValidatorData() {
+            if (!api || !currentAccount) return;
+
+            try {
+                // Get account balance
+                const { data: balance } = await api.query.system.account(currentAccount.address);
+                const totalBalance = (balance.free.toString() / 1e18).toFixed(2);
+
+                document.getElementById('totalStake').textContent = `${totalBalance} ÉTR`;
+                document.getElementById('stakeUsd').textContent = `$${(parseFloat(totalBalance) * ETR_PRICE_USD).toFixed(2)} USD`;
+
+                // Get current block
+                const chain = await api.rpc.chain.getHeader();
+                const blockNumber = chain.number.toNumber();
+
+                // Simulate validator data (would come from chain in production)
+                document.getElementById('eraPoints').textContent = Math.floor(Math.random() * 500 + 100);
+                document.getElementById('commission').textContent = '5%';
+                document.getElementById('nominatorsCount').textContent = Math.floor(Math.random() * 50 + 10);
+                document.getElementById('blocksProduced').textContent = Math.floor(blockNumber / 100);
+                document.getElementById('missedBlocks').textContent = Math.floor(Math.random() * 5);
+                document.getElementById('validatorRank').textContent = Math.floor(Math.random() * 21 + 1);
+                document.getElementById('currentEraRewards').textContent = (Math.random() * 50 + 10).toFixed(2) + ' ÉTR';
+                document.getElementById('totalRewards').textContent = (Math.random() * 500 + 100).toFixed(2) + ' ÉTR';
+
+            } catch (error) {
+                console.error('Failed to load validator data:', error);
+            }
+        }
+
+        // Initialize performance chart
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
+
+            // Generate sample data
+            const labels = [];
+            const data = [];
+            for (let i = 30; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                data.push(Math.floor(Math.random() * 20) + 80); // 80-100 range
+            }
+
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Uptime %',
+                        data: data,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Validator Dashboard Initializing...');
+            await connectToBlockchain();
+
+            document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
+
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                if (currentAccount) {
+                    loadValidatorData();
+                }
+            }, 30000);
+        });
+    </script>
+
+</body>
+</html>

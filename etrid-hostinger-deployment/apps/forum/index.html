@@ -6,114 +6,336 @@
     <title>ËTRID Governance Forum | Community Discussion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>tailwind.config = {theme: {extend: {colors: {'etrid-blue': '#3B82F6','etrid-purple': '#8B5CF6','etrid-dark': '#0A0E1A'}}}}</script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(to right, #3B82F6, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-etrid-dark text-white font-sans min-h-screen">
+<body class="bg-etrid-darker text-white font-sans min-h-screen">
+    <!-- Header -->
     <header class="border-b border-white/10 bg-etrid-dark/80 backdrop-blur-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
-                <a href="https://etrid.org" class="text-2xl font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                <a href="https://etrid.org" class="text-2xl font-bold gradient-text">
                     ËTRID Forum
                 </a>
-                <nav class="flex gap-6">
-                    <a href="https://etrid.org" class="text-gray-300 hover:text-white">Home</a>
-                    <a href="https://governance.etrid.org" class="text-gray-300 hover:text-white">Governance</a>
-                    <a href="https://docs.etrid.org" class="text-gray-300 hover:text-white">Docs</a>
+                <nav class="flex gap-6 items-center">
+                    <a href="https://etrid.org" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="https://governance.etrid.org" class="text-gray-300 hover:text-white transition-colors">Governance</a>
+                    <a href="https://docs.etrid.org" class="text-gray-300 hover:text-white transition-colors">Docs</a>
+                    <button onclick="showLoginModal()" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
+                        Connect Wallet
+                    </button>
                 </nav>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
-                Governance Forum
-            </h1>
-            <p class="text-xl text-gray-300">Discuss proposals, vote on protocol changes, and shape the future of ËTRID</p>
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <!-- Category View (Default) -->
+        <div id="categoryView">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold mb-4 gradient-text">Governance Forum</h1>
+                <p class="text-xl text-gray-300">Discuss proposals, vote on protocol changes, and shape the future of ËTRID</p>
+            </div>
+
+            <!-- Forum Categories -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div onclick="loadCategory('general')" class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
+                    <div class="flex items-start gap-4">
+                        <div class="text-3xl">💬</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">General Discussion</h3>
+                            <p class="text-gray-400 text-sm mb-3">General topics about ËTRID protocol and ecosystem</p>
+                            <div class="flex gap-4 text-sm text-gray-500">
+                                <span>12 topics</span>
+                                <span>•</span>
+                                <span>45 posts</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div onclick="loadCategory('proposals')" class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
+                    <div class="flex items-start gap-4">
+                        <div class="text-3xl">📜</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">Proposals</h3>
+                            <p class="text-gray-400 text-sm mb-3">Submit and discuss governance proposals</p>
+                            <div class="flex gap-4 text-sm text-gray-500">
+                                <span>8 proposals</span>
+                                <span>•</span>
+                                <span>67 comments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div onclick="loadCategory('development')" class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
+                    <div class="flex items-start gap-4">
+                        <div class="text-3xl">🛠️</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">Development</h3>
+                            <p class="text-gray-400 text-sm mb-3">Technical discussions and developer updates</p>
+                            <div class="flex gap-4 text-sm text-gray-500">
+                                <span>15 topics</span>
+                                <span>•</span>
+                                <span>89 posts</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div onclick="loadCategory('validators')" class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
+                    <div class="flex items-start gap-4">
+                        <div class="text-3xl">🎯</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">Validators</h3>
+                            <p class="text-gray-400 text-sm mb-3">Validator setup, operations, and best practices</p>
+                            <div class="flex gap-4 text-sm text-gray-500">
+                                <span>6 topics</span>
+                                <span>•</span>
+                                <span>28 posts</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Links -->
+            <div class="mt-12 bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">Join the Discussion</h3>
+                <p class="text-center text-gray-300 mb-6">
+                    Connect with the ËTRID community across multiple platforms
+                </p>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <a href="https://discord.gg/etrid" target="_blank" class="bg-etrid-blue/20 border border-etrid-blue/40 px-6 py-4 rounded-lg text-center hover:bg-etrid-blue/30 transition-all">
+                        <div class="text-2xl mb-2">💬</div>
+                        <div class="font-semibold">Discord</div>
+                        <div class="text-sm text-gray-400">Live chat</div>
+                    </a>
+                    <a href="https://github.com/etrid/etrid/discussions" target="_blank" class="bg-etrid-purple/20 border border-etrid-purple/40 px-6 py-4 rounded-lg text-center hover:bg-etrid-purple/30 transition-all">
+                        <div class="text-2xl mb-2">💻</div>
+                        <div class="font-semibold">GitHub</div>
+                        <div class="text-sm text-gray-400">Development</div>
+                    </a>
+                    <a href="https://governance.etrid.org" target="_blank" class="bg-etrid-blue/20 border border-etrid-blue/40 px-6 py-4 rounded-lg text-center hover:bg-etrid-blue/30 transition-all">
+                        <div class="text-2xl mb-2">🗳️</div>
+                        <div class="font-semibold">Governance</div>
+                        <div class="text-sm text-gray-400">Vote on-chain</div>
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <!-- Forum Categories -->
-        <div class="grid md:grid-cols-2 gap-6 mb-12">
-            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
-                <div class="flex items-start gap-4">
-                    <div class="text-3xl">💬</div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold mb-2">General Discussion</h3>
-                        <p class="text-gray-400 text-sm mb-3">General topics about ËTRID protocol and ecosystem</p>
-                        <div class="flex gap-4 text-sm text-gray-500">
-                            <span>245 topics</span>
-                            <span>•</span>
-                            <span>1.2k posts</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- Thread List View (Hidden by default) -->
+        <div id="threadListView" class="hidden">
+            <button onclick="showCategories()" class="mb-6 text-etrid-blue hover:text-etrid-purple transition-colors">
+                ← Back to Categories
+            </button>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-2" id="categoryTitle">Category</h2>
+                <p class="text-gray-400" id="categoryDesc">Description</p>
             </div>
 
-            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
-                <div class="flex items-start gap-4">
-                    <div class="text-3xl">📜</div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold mb-2">Proposals</h3>
-                        <p class="text-gray-400 text-sm mb-3">Submit and discuss governance proposals</p>
-                        <div class="flex gap-4 text-sm text-gray-500">
-                            <span>42 proposals</span>
-                            <span>•</span>
-                            <span>578 comments</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <button onclick="showNewThreadModal()" class="mb-6 bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
+                + New Thread
+            </button>
 
-            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
-                <div class="flex items-start gap-4">
-                    <div class="text-3xl">🛠️</div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold mb-2">Development</h3>
-                        <p class="text-gray-400 text-sm mb-3">Technical discussions and developer updates</p>
-                        <div class="flex gap-4 text-sm text-gray-500">
-                            <span>189 topics</span>
-                            <span>•</span>
-                            <span>892 posts</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all cursor-pointer">
-                <div class="flex items-start gap-4">
-                    <div class="text-3xl">🎯</div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold mb-2">Validators</h3>
-                        <p class="text-gray-400 text-sm mb-3">Validator setup, operations, and best practices</p>
-                        <div class="flex gap-4 text-sm text-gray-500">
-                            <span>78 topics</span>
-                            <span>•</span>
-                            <span>324 posts</span>
-                        </div>
-                    </div>
-                </div>
+            <div id="threadsList" class="space-y-4">
+                <!-- Threads will be loaded here -->
             </div>
         </div>
 
-        <!-- Coming Soon -->
-        <div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-8 text-center">
-            <h3 class="text-2xl font-bold mb-3">🚧 Forum Under Development</h3>
-            <p class="text-gray-300 mb-6">
-                The ËTRID governance forum is currently being built. In the meantime, join our Discord and GitHub Discussions for community engagement.
-            </p>
-            <div class="flex justify-center gap-4">
-                <a href="https://discord.gg/etrid" class="bg-etrid-blue px-6 py-3 rounded-lg font-semibold hover:bg-etrid-blue/80 transition-all">
-                    Join Discord
-                </a>
-                <a href="https://github.com/etrid/etrid/discussions" class="bg-white/10 px-6 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all">
-                    GitHub Discussions
-                </a>
+        <!-- Thread View (Hidden by default) -->
+        <div id="threadView" class="hidden">
+            <button onclick="backToThreadList()" class="mb-6 text-etrid-blue hover:text-etrid-purple transition-colors">
+                ← Back to Threads
+            </button>
+
+            <div id="threadContent">
+                <!-- Thread content will be loaded here -->
             </div>
         </div>
     </main>
 
+    <!-- Footer -->
     <footer class="border-t border-white/10 mt-16 py-8 text-center text-gray-400 text-sm">
         <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
     </footer>
+
+    <script>
+        // Sample forum data (in production, this would come from a database)
+        const forumData = {
+            general: {
+                title: 'General Discussion',
+                desc: 'General topics about ËTRID protocol and ecosystem',
+                threads: [
+                    { id: 1, title: 'Welcome to ËTRID Forum!', author: 'Admin', replies: 12, views: 245, timestamp: '2 days ago' },
+                    { id: 2, title: 'Best practices for staking ÉTR', author: 'validator_alice', replies: 8, views: 156, timestamp: '5 days ago' },
+                    { id: 3, title: 'FlareChain vs other L1 blockchains', author: 'crypto_analyst', replies: 23, views: 412, timestamp: '1 week ago' },
+                ]
+            },
+            proposals: {
+                title: 'Proposals',
+                desc: 'Submit and discuss governance proposals',
+                threads: [
+                    { id: 4, title: '[PROPOSAL] Reduce inflation to 2.0%', author: 'validator_bob', replies: 45, views: 890, timestamp: '3 days ago' },
+                    { id: 5, title: '[PROPOSAL] Treasury funding for developer grants', author: 'foundation', replies: 34, views: 678, timestamp: '1 week ago' },
+                ]
+            },
+            development: {
+                title: 'Development',
+                desc: 'Technical discussions and developer updates',
+                threads: [
+                    { id: 6, title: 'ASF Consensus implementation details', author: 'core_dev', replies: 19, views: 345, timestamp: '4 days ago' },
+                    { id: 7, title: 'MasterChef pallet deployment timeline', author: 'defi_dev', replies: 15, views: 278, timestamp: '6 days ago' },
+                ]
+            },
+            validators: {
+                title: 'Validators',
+                desc: 'Validator setup, operations, and best practices',
+                threads: [
+                    { id: 8, title: 'Setting up your first validator node', author: 'validator_charlie', replies: 11, views: 189, timestamp: '3 days ago' },
+                    { id: 9, title: 'Telemetry configuration guide', author: 'devops_expert', replies: 7, views: 145, timestamp: '1 week ago' },
+                ]
+            }
+        };
+
+        let currentCategory = '';
+
+        function showCategories() {
+            document.getElementById('categoryView').classList.remove('hidden');
+            document.getElementById('threadListView').classList.add('hidden');
+            document.getElementById('threadView').classList.add('hidden');
+        }
+
+        function loadCategory(category) {
+            currentCategory = category;
+            const categoryData = forumData[category];
+
+            document.getElementById('categoryTitle').textContent = categoryData.title;
+            document.getElementById('categoryDesc').textContent = categoryData.desc;
+
+            let threadsHTML = '';
+            categoryData.threads.forEach(thread => {
+                threadsHTML += `
+                    <div onclick="loadThread(${thread.id})" class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-2 text-etrid-blue">${thread.title}</h3>
+                                <div class="flex gap-4 text-sm text-gray-400">
+                                    <span>by ${thread.author}</span>
+                                    <span>•</span>
+                                    <span>${thread.replies} replies</span>
+                                    <span>•</span>
+                                    <span>${thread.views} views</span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-500">${thread.timestamp}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('threadsList').innerHTML = threadsHTML;
+
+            document.getElementById('categoryView').classList.add('hidden');
+            document.getElementById('threadListView').classList.remove('hidden');
+        }
+
+        function backToThreadList() {
+            document.getElementById('threadView').classList.add('hidden');
+            document.getElementById('threadListView').classList.remove('hidden');
+        }
+
+        function loadThread(threadId) {
+            // Sample thread content
+            const threadHTML = `
+                <div class="bg-etrid-dark border border-white/10 rounded-xl p-8 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">Welcome to ËTRID Forum!</h2>
+                    <div class="flex gap-4 text-sm text-gray-400 mb-6">
+                        <span>by Admin</span>
+                        <span>•</span>
+                        <span>2 days ago</span>
+                    </div>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-gray-300 mb-4">
+                            Welcome to the official ËTRID Governance Forum! This is the place to discuss proposals,
+                            technical developments, and community initiatives.
+                        </p>
+                        <p class="text-gray-300">
+                            Feel free to create new threads, participate in discussions, and help shape the future of ËTRID.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-4">Replies (12)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-etrid-dark/50 border border-white/5 rounded-xl p-6">
+                            <div class="flex gap-4 text-sm text-gray-400 mb-3">
+                                <span class="font-semibold text-etrid-purple">validator_alice</span>
+                                <span>•</span>
+                                <span>2 days ago</span>
+                            </div>
+                            <p class="text-gray-300">Thanks for setting this up! Looking forward to productive discussions.</p>
+                        </div>
+                        <div class="bg-etrid-dark/50 border border-white/5 rounded-xl p-6">
+                            <div class="flex gap-4 text-sm text-gray-400 mb-3">
+                                <span class="font-semibold text-etrid-purple">crypto_analyst</span>
+                                <span>•</span>
+                                <span>1 day ago</span>
+                            </div>
+                            <p class="text-gray-300">Great to see the community growing! When can we expect more governance proposals?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <h4 class="font-semibold mb-4">Post a Reply</h4>
+                    <textarea
+                        class="w-full bg-etrid-darker border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 mb-4"
+                        rows="4"
+                        placeholder="Write your reply..."
+                    ></textarea>
+                    <button onclick="alert('Connect your wallet to post!')" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all">
+                        Post Reply
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('threadContent').innerHTML = threadHTML;
+            document.getElementById('threadListView').classList.add('hidden');
+            document.getElementById('threadView').classList.remove('hidden');
+        }
+
+        function showNewThreadModal() {
+            alert('New Thread\n\nTo create a new thread, connect your wallet first.\n\nThis will be fully functional once the forum backend is deployed.');
+        }
+
+        function showLoginModal() {
+            alert('Connect Wallet\n\nWallet connection for forum authentication coming soon!\n\nFor now, join Discord or GitHub Discussions for community engagement.');
+        }
+    </script>
 </body>
 </html>

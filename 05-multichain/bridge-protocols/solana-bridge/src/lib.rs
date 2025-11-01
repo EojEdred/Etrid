@@ -77,16 +77,16 @@ pub mod pallet {
     use etrid_bridge_common::treasury::TreasuryInterface;
 
     // Currency type for handling ËTR tokens
-    type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+    type BalanceOf<T> = <<T as pallet_etr_lock::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
 
     /// Configuration trait for Solana bridge
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config: frame_system::Config + pallet_etr_lock::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-        type Currency: Currency<Self::AccountId>;
+        // Note: Currency is inherited from pallet_etr_lock::Config
 
         /// Minimum confirmations required (31 for Solana - finalized state)
         type MinConfirmations: Get<u32>;
@@ -191,6 +191,17 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn wormhole_enabled)]
     pub type WormholeEnabled<T> = StorageValue<_, bool, ValueQuery>;
+
+    /// Processed Solana burn transactions (to prevent replay attacks)
+    #[pallet::storage]
+    #[pallet::getter(fn processed_solana_burns)]
+    pub type ProcessedSolanaBurns<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        SolanaSignature,
+        bool,
+        ValueQuery,
+    >;
 
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
@@ -298,6 +309,20 @@ pub mod pallet {
             treasury_amount: BalanceOf<T>,
             validator_amount: BalanceOf<T>,
         },
+
+        /// ETR bridged to Solana [from, amount, sol_destination]
+        EtrBridgedToSolana {
+            from: T::AccountId,
+            amount: BalanceOf<T>,
+            sol_destination: SolanaPublicKey,
+        },
+
+        /// ETR unlocked from Solana burn [to, amount, sol_burn_tx]
+        EtrUnlockedFromSolana {
+            to: T::AccountId,
+            amount: BalanceOf<T>,
+            sol_burn_tx: SolanaSignature,
+        },
     }
 
     #[pallet::error]
@@ -334,6 +359,10 @@ pub mod pallet {
         TooManyDeposits,
         /// Too many withdrawals
         TooManyWithdrawals,
+        /// Burn transaction already processed
+        BurnAlreadyProcessed,
+        /// Lock account not configured
+        LockAccountNotSet,
     }
 
     #[pallet::call]
@@ -418,7 +447,7 @@ pub mod pallet {
             let etr_amount = Self::convert_sol_to_etr(net_amount, rate)?;
 
             // Mint ËTR to user
-            let _ = T::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
+            let _ = <T as pallet_etr_lock::Config>::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
 
             // Update deposit status
             deposit.is_confirmed = true;
@@ -553,11 +582,11 @@ pub mod pallet {
             ensure!(compute_units <= T::MaxComputeUnits::get(), Error::<T>::ComputeUnitsExceeded);
 
             // Check balance
-            let balance = T::Currency::free_balance(&sender);
+            let balance = <T as pallet_etr_lock::Config>::Currency::free_balance(&sender);
             ensure!(balance >= amount, Error::<T>::InsufficientBalance);
 
             // Burn ËTR from user
-            let _ = T::Currency::withdraw(
+            let _ = <T as pallet_etr_lock::Config>::Currency::withdraw(
                 &sender,
                 amount,
                 frame_support::traits::WithdrawReasons::all(),
@@ -690,6 +719,92 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Bridge ETR tokens to Solana
+        ///
+        /// Locks ETR on FlareChain and emits event for relayer to mint on Solana
+        #[pallet::call_index(10)]
+        #[pallet::weight(150_000)]
+        pub fn bridge_etr_to_solana(
+            origin: OriginFor<T>,
+            amount: BalanceOf<T>,
+            sol_destination: SolanaPublicKey,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Convert Solana public key to bytes
+            let destination_bytes = sol_destination.as_bytes().to_vec();
+
+            // Lock ETR using shared locking pallet
+            pallet_etr_lock::Pallet::<T>::lock_for_bridge(
+                frame_system::RawOrigin::Signed(who.clone()).into(),
+                pallet_etr_lock::ChainId::Solana,
+                amount,
+                destination_bytes.clone(),
+            )?;
+
+            // Emit event for relayer
+            Self::deposit_event(Event::<T>::EtrBridgedToSolana {
+                from: who,
+                amount,
+                sol_destination,
+            });
+
+            Ok(())
+        }
+
+        /// Process ETR burn from Solana (called by relayer)
+        ///
+        /// Unlocks ETR on FlareChain when wrapped ETR is burned on Solana
+        #[pallet::call_index(11)]
+        #[pallet::weight(150_000)]
+        pub fn process_etr_burn_from_solana(
+            origin: OriginFor<T>,
+            etrid_recipient: T::AccountId,
+            amount: BalanceOf<T>,
+            sol_burn_tx: SolanaSignature,
+        ) -> DispatchResult {
+            // Should be called by authorized relayer/oracle
+            let _relayer = ensure_signed(origin)?;
+            // TODO: Add relayer authorization check
+
+            // Verify burn hasn't been processed
+            ensure!(
+                !ProcessedSolanaBurns::<T>::contains_key(&sol_burn_tx),
+                Error::<T>::BurnAlreadyProcessed
+            );
+
+            // Unlock ETR
+            pallet_etr_lock::Pallet::<T>::unlock_from_bridge(
+                frame_system::RawOrigin::Root.into(),
+                pallet_etr_lock::ChainId::Solana,
+                amount,
+            )?;
+
+            // Get lock account
+            let lock_account = pallet_etr_lock::Pallet::<T>::lock_account()
+                .ok_or(Error::<T>::LockAccountNotSet)?;
+
+            // Transfer to recipient
+            <T as pallet_etr_lock::Config>::Currency::transfer(
+                &lock_account,
+                &etrid_recipient,
+                amount,
+                ExistenceRequirement::KeepAlive,
+            )?;
+
+            // Mark as processed
+            ProcessedSolanaBurns::<T>::insert(&sol_burn_tx, true);
+
+            // Emit event
+            Self::deposit_event(Event::<T>::EtrUnlockedFromSolana {
+                to: etrid_recipient,
+                amount,
+                sol_burn_tx,
+            });
+
+            Ok(())
+        }
     }
 
     impl<T: Config> Pallet<T> {
@@ -715,7 +830,7 @@ pub mod pallet {
             let etr_amount = Self::convert_sol_to_etr(deposit.amount, rate)?;
 
             // Mint ËTR
-            let _ = T::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
+            let _ = <T as pallet_etr_lock::Config>::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
 
             // Check if this is USDC (73% of Solana stablecoins)
             let is_usdc = UsdcMint::<T>::get()

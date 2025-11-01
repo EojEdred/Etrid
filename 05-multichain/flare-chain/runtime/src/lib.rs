@@ -19,6 +19,7 @@ use sp_runtime::{
 };
 use sp_arithmetic::Permill;
 use sp_std::prelude::*;
+use frame_system::EnsureRoot;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -410,10 +411,22 @@ parameter_types! {
     pub PolygonValidatorPoolAccount: AccountId = PolygonBridgePalletId::get().into_account_truncating();
 }
 
+/// Configure ETR Lock Pallet (shared by all bridges)
+parameter_types! {
+    pub const EtrLockId: [u8; 8] = *b"etr/lock";
+}
+
+impl pallet_etr_lock::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BridgeOrigin = EnsureRoot<AccountId>; // Foundation multisig in production
+    type MaxLockAmount = ConstU128<250_000_000_000_000_000_000_000_000>; // 250M ETR max lock
+    type LockIdentifier = EtrLockId;
+}
+
 /// Configure Bitcoin Bridge
 impl pallet_bitcoin_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
     type Treasury = BridgeTreasuryInterface;
     type MinConfirmations = ConstU32<6>;
     type MinDepositAmount = ConstU64<1_000_000>; // 0.01 BTC in satoshis
@@ -460,7 +473,6 @@ impl stellar_bridge::Config for Runtime {
 /// Configure XRP Bridge
 impl xrp_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
     type MinConfirmations = ConstU32<3>;
     type BridgeFeeRate = ConstU32<10>; // 0.1%
     type MaxFeeDrops = ConstU64<1_000_000>; // 1 XRP
@@ -471,7 +483,6 @@ impl xrp_bridge::Config for Runtime {
 /// Configure Solana Bridge
 impl sol_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
     type Treasury = BridgeTreasuryInterface;
     type MinConfirmations = ConstU32<32>;
     type BridgeFeeRate = ConstU32<10>; // 0.1%
@@ -507,7 +518,6 @@ impl chainlink_bridge::Config for Runtime {
 /// Configure Polygon (MATIC) Bridge
 impl polygon_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
     type MinConfirmations = ConstU32<128>;
     type BridgeFeeRate = ConstU32<10>; // 0.1%
     type MaxGasLimit = ConstU64<10_000_000>;
@@ -520,7 +530,6 @@ impl polygon_bridge::Config for Runtime {
 /// Configure BNB Bridge
 impl bnb_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
     type MinConfirmations = ConstU32<15>;
     type BridgeFeeRate = ConstU32<10>; // 0.1%
     type MaxGasLimit = ConstU64<10_000_000>;
@@ -1076,6 +1085,9 @@ construct_runtime!(
         BnbBridge: bnb_bridge,
         TronBridge: trx_bridge,
         UsdtBridge: stablecoin_usdt_bridge,
+
+        // ETR Lock (shared by all bridges for ETR token locking)
+        EtrLock: pallet_etr_lock,
 
         // EDSC pallets (Ëtrid Dollar Stablecoin system)
         EdscToken: pallet_edsc_token,

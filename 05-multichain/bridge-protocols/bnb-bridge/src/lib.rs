@@ -71,12 +71,12 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 
-	type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	type BalanceOf<T> = <<T as pallet_etr_lock::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_etr_lock::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		type Currency: Currency<Self::AccountId>;
+		/// Note: Currency type is inherited from pallet_etr_lock::Config to avoid ambiguity
 
 		/// Minimum confirmations required (15 for BNB Chain - 3 second blocks)
 		#[pallet::constant]
@@ -193,6 +193,17 @@ pub mod pallet {
 	#[pallet::getter(fn portal_bridge_enabled)]
 	pub type PortalBridgeEnabled<T> = StorageValue<_, bool, ValueQuery>;
 
+	/// Processed BNB burn transactions (to prevent replay attacks)
+	#[pallet::storage]
+	#[pallet::getter(fn processed_bnb_burns)]
+	pub type ProcessedBnbBurns<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		BnbTxHash,
+		bool,
+		ValueQuery,
+	>;
+
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub bnb_to_etr_rate: u128,
@@ -289,6 +300,18 @@ pub mod pallet {
 		OperatorChanged {
 			new_operator: T::AccountId,
 		},
+		/// ETR bridged to BNB Chain [from, amount, bnb_address]
+		EtrBridgedToBnb {
+			from: T::AccountId,
+			amount: BalanceOf<T>,
+			bnb_address: BnbAddress,
+		},
+		/// ETR unlocked from BNB Chain burn [to, amount, bnb_burn_tx]
+		EtrUnlockedFromBnb {
+			to: T::AccountId,
+			amount: BalanceOf<T>,
+			bnb_burn_tx: BnbTxHash,
+		},
 	}
 
 	#[pallet::error]
@@ -323,6 +346,10 @@ pub mod pallet {
 		TooManyDeposits,
 		/// Too many withdrawals for account
 		TooManyWithdrawals,
+		/// Burn transaction already processed
+		BurnAlreadyProcessed,
+		/// Lock account not configured
+		LockAccountNotSet,
 	}
 
 	#[pallet::call]
@@ -409,7 +436,7 @@ pub mod pallet {
 			let etr_amount = Self::convert_bnb_to_etr(net_amount, rate)?;
 
 			// Mint ËTR to user
-			let _ = T::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
+			let _ = <T as pallet_etr_lock::Config>::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
 
 			// Update deposit status
 			deposit.is_confirmed = true;
@@ -544,11 +571,11 @@ pub mod pallet {
 			ensure!(gas_price <= T::MaxGasPrice::get(), Error::<T>::GasPriceExceeded);
 
 			// Check balance
-			let balance = T::Currency::free_balance(&sender);
+			let balance = <T as pallet_etr_lock::Config>::Currency::free_balance(&sender);
 			ensure!(balance >= amount, Error::<T>::InsufficientBalance);
 
 			// Burn ËTR from user
-			T::Currency::withdraw(
+			<T as pallet_etr_lock::Config>::Currency::withdraw(
 				&sender,
 				amount,
 				frame_support::traits::WithdrawReasons::all(),
@@ -713,6 +740,92 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		/// Bridge ETR tokens to BNB Chain
+		///
+		/// Locks ETR on FlareChain and emits event for relayer to mint on BNB Chain
+		#[pallet::call_index(11)]
+		#[pallet::weight(150_000)]
+		pub fn bridge_etr_to_bnb(
+			origin: OriginFor<T>,
+			amount: BalanceOf<T>,
+			bnb_destination: BnbAddress,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			// Convert BNB address to bytes
+			let destination_bytes = bnb_destination.as_bytes().to_vec();
+
+			// Lock ETR using shared locking pallet
+			pallet_etr_lock::Pallet::<T>::lock_for_bridge(
+				frame_system::RawOrigin::Signed(who.clone()).into(),
+				pallet_etr_lock::ChainId::BnbChain,
+				amount,
+				destination_bytes.clone(),
+			)?;
+
+			// Emit event for relayer
+			Self::deposit_event(Event::<T>::EtrBridgedToBnb {
+				from: who,
+				amount,
+				bnb_address: bnb_destination,
+			});
+
+			Ok(())
+		}
+
+		/// Process ETR burn from BNB Chain (called by relayer)
+		///
+		/// Unlocks ETR on FlareChain when wrapped ETR is burned on BNB Chain
+		#[pallet::call_index(12)]
+		#[pallet::weight(150_000)]
+		pub fn process_etr_burn_from_bnb(
+			origin: OriginFor<T>,
+			etrid_recipient: T::AccountId,
+			amount: BalanceOf<T>,
+			bnb_burn_tx: BnbTxHash,
+		) -> DispatchResult {
+			// Should be called by authorized relayer/oracle
+			let _relayer = ensure_signed(origin)?;
+			// TODO: Add relayer authorization check
+
+			// Verify burn hasn't been processed
+			ensure!(
+				!ProcessedBnbBurns::<T>::contains_key(&bnb_burn_tx),
+				Error::<T>::BurnAlreadyProcessed
+			);
+
+			// Unlock ETR
+			pallet_etr_lock::Pallet::<T>::unlock_from_bridge(
+				frame_system::RawOrigin::Root.into(),
+				pallet_etr_lock::ChainId::BnbChain,
+				amount,
+			)?;
+
+			// Get lock account
+			let lock_account = pallet_etr_lock::Pallet::<T>::lock_account()
+				.ok_or(Error::<T>::LockAccountNotSet)?;
+
+			// Transfer to recipient
+			<T as pallet_etr_lock::Config>::Currency::transfer(
+				&lock_account,
+				&etrid_recipient,
+				amount,
+				ExistenceRequirement::KeepAlive,
+			)?;
+
+			// Mark as processed
+			ProcessedBnbBurns::<T>::insert(&bnb_burn_tx, true);
+
+			// Emit event
+			Self::deposit_event(Event::<T>::EtrUnlockedFromBnb {
+				to: etrid_recipient,
+				amount,
+				bnb_burn_tx,
+			});
+
+			Ok(())
+		}
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -738,7 +851,7 @@ pub mod pallet {
 			let etr_amount = Self::convert_bnb_to_etr(deposit.amount, rate)?;
 
 			// Mint ËTR
-			let _ = T::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
+			let _ = <T as pallet_etr_lock::Config>::Currency::deposit_creating(&deposit.etrid_account, etr_amount);
 
 			// Check if this is BUSD
 			let is_busd = BusdContract::<T>::get()

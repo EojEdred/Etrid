@@ -137,3 +137,24 @@ release-packages/**/flarechain-node
 mainnet-deployment-package/*.node
 mainnet-deployment-package/flarechain-node
 validator-deployment-kit/*.node
+
+# ============================================================================
+# AI MONITORING SYSTEM - SENSITIVE DATA
+# ============================================================================
+
+# AI API keys and environment files
+ai-monitoring/.env
+ai-monitoring/.env.clean
+ai-monitoring/.env.production
+ai-monitoring/.env.local
+
+# AI monitoring runtime data
+ai-monitoring/logs/*.log
+ai-monitoring/GLOBAL_MEMORY.md
+etrid-monitoring-package.tar.gz
+
+# Python cache
+ai-monitoring/__pycache__/
+ai-monitoring/**/__pycache__/
+*.pyc
+*.pyo

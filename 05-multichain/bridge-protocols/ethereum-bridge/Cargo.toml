@@ -24,6 +24,9 @@ sp-std = { workspace = true }
 # Etrid Bridge Common
 etrid-bridge-common = { path = "../common", default-features = false }
 
+# Etrid Core Dependencies
+pallet-etr-lock = { workspace = true }
+
 # Additional dependencies for Ethereum support
 ethereum = { version = "0.15.0", default-features = false }
 ethereum-types = { version = "0.14.1", default-features = false }

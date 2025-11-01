@@ -6,6 +6,9 @@
     <title>ËTRID Bridge | Cross-Chain Asset Transfer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Polkadot.js API for blockchain connection -->
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@latest/bundle-polkadot-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/extension-dapp@latest/bundle-polkadot-extension-dapp.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -131,7 +134,7 @@
             </div>
 
             <!-- Connect Wallet Button -->
-            <button class="w-full mt-6 bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-etrid-blue/50 transition-all">
+            <button id="connectWalletBtn" class="w-full mt-6 bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-etrid-blue/50 transition-all">
                 Connect Wallet
             </button>
         </div>
@@ -207,6 +210,87 @@
             <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        // Blockchain connection
+        const RPC_ENDPOINT = 'ws://98.71.91.84:9944';
+        let api = null;
+        let currentAccount = null;
+
+        // Connect to blockchain on page load
+        async function connectToBlockchain() {
+            try {
+                console.log('Connecting to FlareChain...');
+                const { ApiPromise, WsProvider } = window.polkadotApi;
+                const provider = new WsProvider(RPC_ENDPOINT);
+                api = await ApiPromise.create({ provider });
+                console.log('Connected to FlareChain');
+            } catch (error) {
+                console.error('Failed to connect to blockchain:', error);
+            }
+        }
+
+        // Connect wallet function
+        async function connectWallet() {
+            try {
+                const { web3Accounts, web3Enable } = window.polkadotExtensionDapp;
+
+                // Request access to Polkadot.js extension
+                const extensions = await web3Enable('ËTRID Bridge');
+
+                if (extensions.length === 0) {
+                    alert('Please install Polkadot.js extension to use the bridge.\n\nDownload from: https://polkadot.js.org/extension/');
+                    return;
+                }
+
+                // Get all accounts
+                const accounts = await web3Accounts();
+
+                if (accounts.length === 0) {
+                    alert('No accounts found in Polkadot.js extension.\n\nPlease create an account first.');
+                    return;
+                }
+
+                // Use first account
+                currentAccount = accounts[0];
+
+                // Update button
+                const btn = document.getElementById('connectWalletBtn');
+                const shortAddress = `${currentAccount.address.slice(0, 8)}...${currentAccount.address.slice(-8)}`;
+                btn.textContent = `Connected: ${shortAddress}`;
+                btn.classList.add('bg-green-600');
+                btn.classList.remove('from-etrid-blue', 'to-etrid-purple');
+
+                // Fetch balance if API is connected
+                if (api) {
+                    const { data: balance } = await api.query.system.account(currentAccount.address);
+                    const freeBalance = (balance.free.toString() / 1e18).toFixed(4);
+                    console.log(`Balance: ${freeBalance} ÉTR`);
+
+                    // Update balance displays
+                    document.querySelectorAll('.bg-etrid-darker .text-sm.text-gray-400').forEach(el => {
+                        if (el.textContent.includes('Balance:')) {
+                            el.textContent = `Balance: ${freeBalance}`;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to connect wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await connectToBlockchain();
+
+            // Add click handler to connect button
+            const btn = document.getElementById('connectWalletBtn');
+            if (btn) {
+                btn.addEventListener('click', connectWallet);
+            }
+        });
+    </script>
 
 </body>
 </html>

@@ -9,8 +9,34 @@
 
     <title>ËTRID Protocol - The Future of Multichain Infrastructure</title>
 
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://etrid.org/">
+    <meta property="og:title" content="ËTRID Protocol - The Future of Multichain Infrastructure">
+    <meta property="og:description" content="Advanced multichain infrastructure with FlareChain, Partition-Burst Chains, and ASF consensus. Delivering 142k+ TPS with sub-second finality.">
+    <meta property="og:image" content="https://etrid.org/assets/logos/etrid-og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="ËTRID Protocol">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://etrid.org/">
+    <meta name="twitter:title" content="ËTRID Protocol - The Future of Multichain Infrastructure">
+    <meta name="twitter:description" content="Advanced multichain infrastructure with FlareChain, Partition-Burst Chains, and ASF consensus. Delivering 142k+ TPS with sub-second finality.">
+    <meta name="twitter:image" content="https://etrid.org/assets/logos/etrid-og-image.png">
+    <meta name="twitter:site" content="@EtridProtocol">
+    <meta name="twitter:creator" content="@EtridProtocol">
+
+    <!-- Additional SEO -->
+    <link rel="canonical" href="https://etrid.org/">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/assets/logos/etrid-primary-logo.svg">
+    <link rel="apple-touch-icon" href="/assets/logos/etrid-primary-logo.svg">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#8B5CF6">
 
@@ -154,12 +180,11 @@
                     <a href="#technology" class="hover:text-etrid-purple transition-colors">Technology</a>
                     <a href="#governance" class="hover:text-etrid-cyan transition-colors">Governance</a>
                     <a href="#apps" class="hover:text-etrid-blue transition-colors">Apps</a>
-                    <a href="/network/" class="hover:text-etrid-purple transition-colors">Network</a>
+                    <a href="https://telemetry.etrid.org" class="hover:text-etrid-purple transition-colors" target="_blank">Network</a>
                     <a href="https://docs.etrid.org" class="hover:text-etrid-cyan transition-colors">Docs</a>
-                    <a href="https://github.com/EojEdred/Etrid" target="_blank" class="hover:text-gray-300 transition-colors">GitHub</a>
-                    <a href="#community" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-2 rounded-lg hover:shadow-lg transition-all hover:scale-105">
-                        Join Community
-                    </a>
+                    <button id="connectWalletBtn" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-2 rounded-lg hover:shadow-lg transition-all hover:scale-105 font-semibold">
+                        Connect Wallet
+                    </button>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -178,10 +203,11 @@
                 <a href="#technology" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Technology</a>
                 <a href="#governance" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Governance</a>
                 <a href="#apps" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Apps</a>
-                <a href="/network/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Network</a>
+                <a href="https://telemetry.etrid.org" target="_blank" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Network</a>
                 <a href="https://docs.etrid.org" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">Docs</a>
-                <a href="https://github.com/EojEdred/Etrid" target="_blank" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">GitHub</a>
-                <a href="#community" class="block px-3 py-2 rounded-md text-base font-medium text-etrid-blue hover:text-white hover:bg-white/10 transition-colors">Community</a>
+                <button id="connectWalletMobileBtn" class="w-full text-left block px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-etrid-blue to-etrid-purple hover:shadow-lg transition-all">
+                    Connect Wallet
+                </button>
             </div>
         </div>
     </nav>
@@ -358,22 +384,73 @@
     <section id="governance" class="py-20 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12" data-aos="fade-up">
-                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4 gradient-text">Decentralized Governance</h2>
+                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4 gradient-text">CONSËNSUS Governance</h2>
                 <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-                    Community-driven decision making through transparent on-chain voting
+                    Annual Consensus Day • On-Chain Democracy • Community-Driven Protocol Evolution
                 </p>
             </div>
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div class="bg-white/5 border border-white/10 rounded-xl p-8 hover-scale" data-aos="fade-right">
-                    <h3 class="text-2xl font-bold mb-3 text-etrid-blue">Propose</h3>
-                    <p class="text-gray-300 mb-4">Submit proposals for protocol upgrades, parameter changes, and treasury allocation</p>
-                    <a href="https://governance.etrid.org" class="text-etrid-blue hover:text-etrid-purple transition-colors">Submit Proposal →</a>
+
+            <!-- Consensus Day Highlight -->
+            <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/30 rounded-2xl p-8 mb-12 max-w-4xl mx-auto" data-aos="fade-up" style="box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);">
+                <div class="text-center">
+                    <h3 class="text-2xl font-display font-bold mb-3 gradient-text">Next Consensus Day</h3>
+                    <p class="text-gray-300 text-lg mb-4">December 1st, 2026 • 00:00 UTC</p>
+                    <p class="text-gray-400 text-sm mb-6">Annual governance event with 4 phases: Registration → Voting → Minting → Distribution</p>
+                    <a href="https://governance.etrid.org" class="inline-block bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                        Launch CONSËNSUS Portal →
+                    </a>
                 </div>
-                <div class="bg-white/5 border border-white/10 rounded-xl p-8 hover-scale" data-aos="fade-left">
-                    <h3 class="text-2xl font-bold mb-3 text-etrid-purple">Vote</h3>
-                    <p class="text-gray-300 mb-4">Participate in governance by voting on active proposals with your ÉTR tokens</p>
-                    <a href="https://governance.etrid.org" class="text-etrid-purple hover:text-etrid-blue transition-colors">View Proposals →</a>
+            </div>
+
+            <!-- Governance Features Grid -->
+            <div class="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-12 h-12 bg-etrid-blue/20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-etrid-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Submit Proposals</h3>
+                    <p class="text-gray-400 text-sm">Protocol upgrades, parameter changes, budget allocation, and policy decisions</p>
                 </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-12 h-12 bg-etrid-purple/20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-etrid-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Vote On-Chain</h3>
+                    <p class="text-gray-400 text-sm">Participate in 12-hour voting phase with your staked ÉTR tokens</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-12 h-12 bg-etrid-blue/20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-etrid-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Earn Rewards</h3>
+                    <p class="text-gray-400 text-sm">Voters receive share of newly minted tokens during distribution phase</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 hover-scale" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-12 h-12 bg-etrid-purple/20 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-etrid-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">24-Hour Event</h3>
+                    <p class="text-gray-400 text-sm">Annual Consensus Day runs through 4 structured phases each year</p>
+                </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="text-center mt-12" data-aos="fade-up">
+                <p class="text-gray-400 mb-4">Ready to participate in decentralized governance?</p>
+                <a href="https://governance.etrid.org" class="inline-block bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-4 rounded-lg font-bold text-lg hover:shadow-lg transition-all hover:-translate-y-1">
+                    Open CONSËNSUS Portal
+                </a>
             </div>
         </div>
     </section>
@@ -618,6 +695,109 @@
         mobileMenuBtn?.addEventListener('click', () => {
             mobileMenu?.classList.toggle('hidden');
         });
+
+        // Wallet Connection
+        let currentAccount = null;
+        const FLARECHAIN_RPC = 'ws://98.71.91.84:9944';
+
+        async function connectWallet() {
+            const connectWalletBtn = document.getElementById('connectWalletBtn');
+            const connectWalletMobileBtn = document.getElementById('connectWalletMobileBtn');
+
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    currentAccount = accounts[0];
+
+                    // Update button text
+                    const shortAddress = `${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
+                    if (connectWalletBtn) {
+                        connectWalletBtn.textContent = shortAddress;
+                        connectWalletBtn.classList.add('bg-green-600');
+                    }
+                    if (connectWalletMobileBtn) {
+                        connectWalletMobileBtn.textContent = shortAddress;
+                    }
+
+                    // Try to switch to FlareChain network
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x8274' }], // FlareChain chain ID (33396 in hex)
+                        });
+                    } catch (switchError) {
+                        // Network doesn't exist, add it
+                        if (switchError.code === 4902) {
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [{
+                                        chainId: '0x8274',
+                                        chainName: 'FlareChain Mainnet',
+                                        nativeCurrency: {
+                                            name: 'ÉTR',
+                                            symbol: 'ÉTR',
+                                            decimals: 18
+                                        },
+                                        rpcUrls: ['http://98.71.91.84:9933'],
+                                        blockExplorerUrls: ['https://explorer.etrid.org']
+                                    }]
+                                });
+                            } catch (addError) {
+                                console.error('Failed to add FlareChain network:', addError);
+                            }
+                        }
+                    }
+
+                    console.log('✅ Wallet connected:', currentAccount);
+                } catch (error) {
+                    console.error('Failed to connect wallet:', error);
+                    alert('Failed to connect wallet. Please try again.');
+                }
+            } else {
+                // MetaMask not installed
+                alert('MetaMask is not installed!\n\n' +
+                      'To connect your wallet, please install:\n' +
+                      '• MetaMask (https://metamask.io)\n' +
+                      '• Or use WalletConnect\n\n' +
+                      'Then refresh and try again.');
+            }
+        }
+
+        // Listen for account changes
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected
+                    currentAccount = null;
+                    const connectWalletBtn = document.getElementById('connectWalletBtn');
+                    const connectWalletMobileBtn = document.getElementById('connectWalletMobileBtn');
+                    if (connectWalletBtn) {
+                        connectWalletBtn.textContent = 'Connect Wallet';
+                        connectWalletBtn.classList.remove('bg-green-600');
+                    }
+                    if (connectWalletMobileBtn) {
+                        connectWalletMobileBtn.textContent = 'Connect Wallet';
+                    }
+                } else {
+                    currentAccount = accounts[0];
+                    const shortAddress = `${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
+                    const connectWalletBtn = document.getElementById('connectWalletBtn');
+                    const connectWalletMobileBtn = document.getElementById('connectWalletMobileBtn');
+                    if (connectWalletBtn) {
+                        connectWalletBtn.textContent = shortAddress;
+                    }
+                    if (connectWalletMobileBtn) {
+                        connectWalletMobileBtn.textContent = shortAddress;
+                    }
+                }
+            });
+        }
+
+        // Attach click handlers
+        document.getElementById('connectWalletBtn')?.addEventListener('click', connectWallet);
+        document.getElementById('connectWalletMobileBtn')?.addEventListener('click', connectWallet);
     </script>
 </body>
 </html>

@@ -265,6 +265,7 @@ pallet-grandpa = { default-features = false, git = "https://github.com/paritytec
 pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-sudo = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-etr-lock = { default-features = false, path = "pallets/pallet-etr-lock" }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Serialization & Encoding                                                    │

@@ -15,6 +15,7 @@ frame-support = { default-features = false, git = "https://github.com/paritytech
 frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-etr-lock = { workspace = true }
 
 [dev-dependencies]
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }

@@ -47,6 +47,9 @@ bnb-bridge = { path = "../../bridge-protocols/bnb-bridge", default-features = fa
 trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = false }
 stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
 
+# ETR Lock pallet (shared by all bridges)
+pallet-etr-lock = { path = "../../../pallets/pallet-etr-lock", default-features = false }
+
 # EDSC pallets (8 pallets)
 # Core EDSC pallets (for reference - mainly on PBC-EDSC)
 pallet-edsc-token = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-token", default-features = false }
@@ -191,6 +194,7 @@ std = [
     "bnb-bridge/std",
     "trx-bridge/std",
     "stablecoin-usdt-bridge/std",
+    "pallet-etr-lock/std",
 
     # EDSC pallets
     "pallet-edsc-token/std",

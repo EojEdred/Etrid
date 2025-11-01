@@ -13,6 +13,7 @@ sp-std = { workspace = true }
 sp-io = { workspace = true }
 sp-core = { workspace = true }
 etrid-bridge-common = { path = "../common", default-features = false }
+pallet-etr-lock = { workspace = true }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
