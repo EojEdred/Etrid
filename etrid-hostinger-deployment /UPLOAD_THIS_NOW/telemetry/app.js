@@ -23,18 +23,6 @@ let refreshCountdown = 10;
 async function initTelemetry() {
     console.log('🚀 Initializing ËTRID Network Telemetry...');
 
-    // Check for mixed content issues (HTTPS → WS)
-    const isMixedContent = window.location.protocol === 'https:' && BOOTSTRAP_NODES[0].endpoint.startsWith('ws:');
-
-    if (isMixedContent) {
-        console.warn('⚠️ Mixed content detected: HTTPS page cannot connect to WS endpoint');
-        console.warn('💡 Solution: Use WSS endpoint or access via HTTP');
-        showConnectionWarning();
-        renderMockData();
-        setupAutoRefresh();
-        return;
-    }
-
     // Try to connect to real nodes
     const connected = await connectToNetwork();
 
@@ -43,85 +31,11 @@ async function initTelemetry() {
         await fetchNetworkData();
     } else {
         console.log('⚠️ Using mock data (nodes not available)');
-        showOfflineWarning();
         renderMockData();
     }
 
     // Setup auto-refresh
     setupAutoRefresh();
-}
-
-// Show connection warning banner
-function showConnectionWarning() {
-    const banner = document.createElement('div');
-    banner.style.cssText = `
-        position: fixed;
-        top: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(255, 107, 107, 0.3);
-        z-index: 1000;
-        max-width: 90%;
-        width: 600px;
-        font-size: 0.95rem;
-        line-height: 1.6;
-    `;
-    banner.innerHTML = `
-        <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">⚠️ Connection Blocked</div>
-        <div>Browser security blocks WebSocket (WS) connections from HTTPS pages.</div>
-        <div style="margin-top: 0.8rem; font-size: 0.9rem; opacity: 0.95;">
-            <strong>Solutions:</strong><br>
-            • Set up SSL/TLS on node: Use WSS instead of WS<br>
-            • Or access via HTTP: <a href="http://etrid.org/telemetry/" style="color: #fff; text-decoration: underline;">http://etrid.org/telemetry/</a><br>
-            • Showing demo data below ↓
-        </div>
-    `;
-    document.body.appendChild(banner);
-
-    // Auto-hide after 10 seconds
-    setTimeout(() => {
-        banner.style.transition = 'opacity 0.5s ease';
-        banner.style.opacity = '0';
-        setTimeout(() => banner.remove(), 500);
-    }, 10000);
-}
-
-// Show offline warning
-function showOfflineWarning() {
-    const banner = document.createElement('div');
-    banner.style.cssText = `
-        position: fixed;
-        top: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);
-        z-index: 1000;
-        max-width: 90%;
-        width: 600px;
-        font-size: 0.95rem;
-    `;
-    banner.innerHTML = `
-        <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">📡 Node Offline</div>
-        <div>Cannot connect to FlareChain node at ${BOOTSTRAP_NODES[0].endpoint}</div>
-        <div style="margin-top: 0.8rem; font-size: 0.9rem; opacity: 0.95;">
-            Showing demo data below. Check that your node is running and ports 9933/9944 are open.
-        </div>
-    `;
-    document.body.appendChild(banner);
-
-    setTimeout(() => {
-        banner.style.transition = 'opacity 0.5s ease';
-        banner.style.opacity = '0';
-        setTimeout(() => banner.remove(), 500);
-    }, 8000);
 }
 
 // Connect to ËTRID network
@@ -214,25 +128,6 @@ async function fetchNetworkData() {
 // Render mock data when nodes unavailable
 function renderMockData() {
     nodes = MOCK_NODES;
-
-    // Add demo mode badge
-    const demoBadge = document.createElement('div');
-    demoBadge.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        z-index: 999;
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        letter-spacing: 0.5px;
-    `;
-    demoBadge.textContent = '📊 DEMO DATA';
-    document.body.appendChild(demoBadge);
 
     // Update metrics with mock data
     document.getElementById('best-block').textContent = '0';

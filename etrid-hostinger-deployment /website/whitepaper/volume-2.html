@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume II: Technical Specification - ËTRID</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #0077ff;
+            --dark-bg: #0a0e1a;
+            --card-bg: #151b2e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --accent: #00ff88;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f1729 100%);
+            color: var(--text-primary);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            background: linear-gradient(180deg, rgba(0,212,255,0.05) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(0,212,255,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 1rem 0 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0,212,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .content h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .content h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content h4 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .content p {
+            margin: 1rem 0;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .content ul, .content ol {
+            margin: 1rem 0 1rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .content li {
+            margin: 0.5rem 0;
+        }
+
+        .content code {
+            background: rgba(0,212,255,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+
+        .content pre {
+            background: rgba(0,0,0,0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-primary);
+        }
+
+        .content blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .content table th,
+        .content table td {
+            padding: 1rem;
+            border: 1px solid rgba(0,212,255,0.2);
+            text-align: left;
+        }
+
+        .content table th {
+            background: rgba(0,212,255,0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .content a:hover {
+            border-bottom-color: var(--primary-color);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Volume II: Technical Specification</h1>
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+    </header>
+
+    <div class="container">
+        <div class="content">
+<h1 id="etrid-ivory-papers">ËTRID IVORY PAPERS</h1>
+<h2 id="volume-ii-technical-specification">Volume II: Technical Specification</h2>
+<p><strong>Document ID</strong>: ETRID-IP-VOL2-2025
+<strong>Status</strong>: ACTIVE PROTOCOL SPECIFICATION
+<strong>Publication Date</strong>: October 24, 2025
+<strong>Founder</strong>: Eoj Edred
+<strong>License</strong>: GPLv3 (Open Source, Non-Commercial)</p>
+<hr />
+<h2 id="volume-ii-contents">VOLUME II CONTENTS</h2>
+<ol>
+<li>E³20 Protocol Architecture</li>
+<li>Ascending Scale of Finality (ASF) Consensus</li>
+<li>Virtual Machine Watts (VMw) Computation Model</li>
+<li>FlareChain &amp; Partition Burst Chains
+   4.7. Reserve-Backed Assets &amp; DEX Infrastructure</li>
+<li>Cross-Chain Security &amp; Validity Nodes</li>
+<li>EtwasmVM &amp; Smart Contract Runtime</li>
+<li>Network &amp; P2P Layer (DETR)</li>
+<li>Cryptographic Primitives &amp; Post-Quantum Security</li>
+<li>Implementation Gap Analysis</li>
+</ol>
+<hr />
+<h2 id="1-e320-protocol-architecture">1. E³20 PROTOCOL ARCHITECTURE</h2>
+<h3 id="overview">Overview</h3>
+<p><strong>E³20</strong> = <strong>Essential Elements to Operate</strong></p>
+<p>The minimum viable components required for a sovereign, self-sustaining blockchain network.</p>
+<h3 id="the-13-core-components">The 13 Core Components</h3>
+<pre class="codehilite"><code>Layer 4: Application
+    ├─ 13. Clients (CLI, Web, Mobile, 4 SDKs)
+
+Layer 3: Governance
+    ├─ 12. Consensus Day (Annual governance event)
+    ├─ 11. Peer Roles (Common Stake Peers, VALIDITY Nodes, Directors)
+    └─ 10. Foundation (Constitutional parameters)
+
+Layer 2: Execution
+    ├─ 09. Consensus (FODDoS.ASF.Consensus - Ascending Scale of Finality)
+    ├─ 08. ËtwasmVM (WebAssembly smart contracts)
+    ├─ 07. Transactions (Transfer, smart contract calls)
+    └─ 06. Native Currency (ÉTR with Bite denomination, EDSC, VMw)
+
+Layer 1: Coordination
+    ├─ 05. Multichain (FlareChain + 12-13 PBCs)
+    ├─ 04. Accounts (EBCA, RCA, RCWA, SCA, SSCA)
+    ├─ 03. Security (Post-quantum cryptography)
+    ├─ 02. EOpenDID (Decentralized Identity system)
+    └─ 01. DETR P2P (Lightning-Bloc network)
+</code></pre>
+
+<h3 id="component-status">Component Status</h3>
+<p><strong>All 13 components: ✅ 100% Alpha Complete</strong>
+- Total test coverage: 87.3% (412+ tests passing)
+- Documentation: 32,000+ lines
+- Production code: 2.8M+ lines</p>
+<hr />
+<h2 id="2-foddosasfconsensus-ascending-scale-of-finality">2. FODDoS.ASF.CONSENSUS (ASCENDING SCALE OF FINALITY)</h2>
+<p><strong>Full Name</strong>: Free and Open Decentralized Democracy of Stakeholders – Ascending Scale of Finality</p>
+<p>A BFT committee-based Proof-of-Stake variant with probabilistic finality, combining HotStuff principles with leader election, stake-weighting, and rotating committees (PPFA sets).</p>
+<h3 id="the-problem-with-traditional-finality">The Problem with Traditional Finality</h3>
+<p><strong>Binary Finality</strong> (Traditional PoS):
+- Block is either "finalized" or "not finalized"
+- Fixed threshold (e.g., 2/3 validators)
+- No granularity in confidence levels
+- Can't adapt to network conditions</p>
+<p><strong>Probabilistic Finality</strong> (Traditional PoW):
+- Finality is never absolute, only probabilistic
+- Must wait arbitrary number of confirmations
+- Attack cost doesn't scale optimally with time</p>
+<h3 id="asf-solution-finality-as-a-spectrum">ASF Solution: Finality as a Spectrum</h3>
+<p><strong>Core Concept</strong>: Treat finality as a <strong>continuous variable</strong> that increases over time and participation.</p>
+<pre class="codehilite"><code>Time →    0s      10s      30s      60s      100s     200s
+Finality: 0%  →   25%  →   60%  →   85%  →   95%  →   99.9%
+
+Validators
+Required:  10% →  30%  →   50%  →   67%  →   80%  →   95%
+</code></pre>
+
+<h3 id="how-asf-works">How ASF Works</h3>
+<h4 id="phase-1-block-proposal-0-10s">Phase 1: Block Proposal (0-10s)</h4>
+<pre class="codehilite"><code>Validator proposes new block
+├─ Block hash + state root
+├─ Parent block reference
+├─ Transaction merkle root
+└─ Initial validator signature
+</code></pre>
+
+<p><strong>Finality</strong>: 0-25% (single validator)
+<strong>Reorg Cost</strong>: Low (can be challenged easily)</p>
+<h4 id="phase-2-initial-validation-10-30s">Phase 2: Initial Validation (10-30s)</h4>
+<pre class="codehilite"><code>Validators begin confirming:
+├─ 30% of stake weight confirms → 25% finality
+├─ 40% of stake weight confirms → 40% finality
+└─ 50% of stake weight confirms → 60% finality
+</code></pre>
+
+<p><strong>Finality</strong>: 25-60% (growing confidence)
+<strong>Reorg Cost</strong>: Medium (requires significant stake)</p>
+<h4 id="phase-3-majority-confirmation-30-60s">Phase 3: Majority Confirmation (30-60s)</h4>
+<pre class="codehilite"><code>Supermajority forming:
+├─ 60% of stake weight confirms → 75% finality
+├─ 67% of stake weight confirms → 85% finality (safety threshold)
+└─ 75% of stake weight confirms → 92% finality
+</code></pre>
+
+<p><strong>Finality</strong>: 60-92% (high confidence)
+<strong>Reorg Cost</strong>: High (requires coordinated attack from large stake)</p>
+<h4 id="phase-4-near-absolute-finality-60s">Phase 4: Near-Absolute Finality (60s+)</h4>
+<pre class="codehilite"><code>Overwhelming consensus:
+├─ 80% of stake weight confirms → 95% finality
+├─ 90% of stake weight confirms → 99% finality
+└─ 95% of stake weight confirms → 99.9% finality
+</code></pre>
+
+<p><strong>Finality</strong>: 92-99.9% (practical certainty)
+<strong>Reorg Cost</strong>: Prohibitive (would require destroying majority of staked value)</p>
+<h3 id="asf-formula">ASF Formula</h3>
+<p><strong>Finality Confidence = f(stake_weight, time_elapsed, participation_rate)</strong></p>
+<pre class="codehilite"><code class="language-rust">fn calculate_finality(
+    confirmed_stake: u128,
+    total_stake: u128,
+    blocks_elapsed: u32,
+    participation_rate: f64
+) -&gt; f64 {
+    let stake_ratio = confirmed_stake as f64 / total_stake as f64;
+    let time_factor = 1.0 - (-0.05 * blocks_elapsed as f64).exp();
+    let participation_bonus = participation_rate.powf(0.5);
+
+    // Weighted combination
+    let base_finality = stake_ratio * 0.7 + time_factor * 0.2 + participation_bonus * 0.1;
+
+    // Apply sigmoid curve for smooth progression
+    1.0 / (1.0 + (-10.0 * (base_finality - 0.5)).exp())
+}
+</code></pre>
+
+<h3 id="dynamic-threshold-adjustment">Dynamic Threshold Adjustment</h3>
+<p>ASF adapts to network conditions:</p>
+<p><strong>High Participation</strong> (80%+ validators online):
+- Lower initial thresholds
+- Faster finality progression
+- More efficient operation</p>
+<p><strong>Low Participation</strong> (50-70% validators online):
+- Higher safety thresholds
+- Slower finality progression
+- Increased security margin</p>
+<p><strong>Attack Scenario</strong> (unusual patterns detected):
+- Emergency threshold increase
+- Extended confirmation period
+- Alert validators to potential attack</p>
+<h3 id="benefits-of-asf">Benefits of ASF</h3>
+<h4 id="1-adaptive-security">1. Adaptive Security</h4>
+<ul>
+<li>Automatically adjusts to network health</li>
+<li>No manual parameter changes needed</li>
+<li>Responds to real-time conditions</li>
+</ul>
+<h4 id="2-flexible-application-requirements">2. Flexible Application Requirements</h4>
+<ul>
+<li>Payment apps: Accept at 60% finality (fast)</li>
+<li>Exchanges: Wait for 95% finality (secure)</li>
+<li>Governance: Require 99%+ finality (critical)</li>
+</ul>
+<h4 id="3-attack-cost-scaling">3. Attack Cost Scaling</h4>
+<pre class="codehilite"><code>Reorg cost grows exponentially with time:
+
+Cost(t) = BaseStake × e^(k×t) × ParticipationRate
+
+Where:
+- BaseStake = Minimum stake to attempt attack
+- k = Growth constant (~0.1)
+- t = Time elapsed (seconds)
+- ParticipationRate = Network participation (0-1)
+</code></pre>
+
+<p><strong>Example</strong>:
+- 10s elapsed: Cost = 1M ÉTR
+- 30s elapsed: Cost = 20M ÉTR
+- 60s elapsed: Cost = 400M ÉTR
+- 100s elapsed: Cost = 22B ÉTR (prohibitive)</p>
+<h4 id="4-graceful-degradation">4. Graceful Degradation</h4>
+<p>If network participation drops:
+- System doesn't halt (unlike 2/3 threshold systems)
+- Finality slows but continues
+- Applications adjust expectations automatically</p>
+<h3 id="asf-vs-other-consensus-mechanisms">ASF vs Other Consensus Mechanisms</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>ASF (Ëtrid)</th>
+<th>Tendermint</th>
+<th>Grandpa (Polkadot)</th>
+<th>Casper FFG</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Finality Type</strong></td>
+<td>Spectrum (0-100%)</td>
+<td>Binary (finalized/not)</td>
+<td>Binary (finalized/not)</td>
+<td>Binary (finalized/not)</td>
+</tr>
+<tr>
+<td><strong>Threshold</strong></td>
+<td>Dynamic (adapts)</td>
+<td>Fixed (2/3)</td>
+<td>Fixed (2/3)</td>
+<td>Fixed (2/3)</td>
+</tr>
+<tr>
+<td><strong>Time to Finality</strong></td>
+<td>Variable (app-defined)</td>
+<td>Fixed (~6s)</td>
+<td>Fixed (~12-60s)</td>
+<td>Fixed (~15 min)</td>
+</tr>
+<tr>
+<td><strong>Graceful Degradation</strong></td>
+<td>Yes</td>
+<td>No (halts &lt;2/3)</td>
+<td>No (halts &lt;2/3)</td>
+<td>No (halts &lt;2/3)</td>
+</tr>
+<tr>
+<td><strong>Attack Cost</strong></td>
+<td>Exponential growth</td>
+<td>Linear</td>
+<td>Linear</td>
+<td>Linear</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-virtual-machine-watts-vmw">3. VIRTUAL MACHINE WATTS (VMw)</h2>
+<h3 id="the-problem-with-gas">The Problem with Gas</h3>
+<p><strong>Traditional Gas Models</strong> (Ethereum, etc.):
+- Arbitrary units with no physical meaning
+- Gas prices fluctuate wildly based on demand
+- No correlation to actual computational cost
+- Difficult to reason about resource usage</p>
+<h3 id="vmw-solution-energy-based-metering">VMw Solution: Energy-Based Metering</h3>
+<p><strong>Core Concept</strong>: Measure computation in <strong>actual energy units</strong> (Watts).</p>
+<pre class="codehilite"><code>1 VMw = Computational equivalent of 1 Watt-second of CPU energy
+</code></pre>
+
+<h3 id="why-energy-based">Why Energy-Based?</h3>
+<h4 id="1-physical-grounding">1. Physical Grounding</h4>
+<ul>
+<li>Watts are real, measurable units</li>
+<li>Direct correlation to hardware cost</li>
+<li>Predictable and stable over time</li>
+</ul>
+<h4 id="2-economic-rationality">2. Economic Rationality</h4>
+<ul>
+<li>Validator costs are primarily energy (electricity)</li>
+<li>Fees should roughly match actual cost</li>
+<li>Prevents overcharging or undercharging</li>
+</ul>
+<h4 id="3-cross-platform-consistency">3. Cross-Platform Consistency</h4>
+<ul>
+<li>Modern CPUs: ~100-200 Watts TDP</li>
+<li>Can normalize across different hardware</li>
+<li>Fair pricing regardless of validator specs</li>
+</ul>
+<h3 id="vmw-computation-model">VMw Computation Model</h3>
+<h4 id="instruction-weights">Instruction Weights</h4>
+<p>Each operation has a VMw cost:</p>
+<pre class="codehilite"><code class="language-rust">// Basic operations (CPU cycles)
+add:        1 VMw    // Simple arithmetic
+mul:        2 VMw    // Multiplication
+div:        4 VMw    // Division (more complex)
+sqrt:       8 VMw    // Square root
+crypto:     100 VMw  // Cryptographic operations
+
+// Memory operations (RAM energy)
+read:       10 VMw   // Memory read
+write:      15 VMw   // Memory write
+allocate:   20 VMw   // Memory allocation
+
+// Storage operations (I/O energy)
+storage_read:   1000 VMw   // Read from disk/state
+storage_write:  2000 VMw   // Write to disk/state
+
+// Network operations
+cross_chain_msg: 5000 VMw  // Cross-PBC message
+</code></pre>
+
+<h4 id="transaction-vmw-limits">Transaction VMw Limits</h4>
+<pre class="codehilite"><code>Transfer transaction:           10,000 VMw    (~0.01 ÉTR fee)
+Simple smart contract call:    100,000 VMw    (~0.10 ÉTR fee)
+Complex contract (DeFi swap):  500,000 VMw    (~0.50 ÉTR fee)
+Governance proposal submit:  1,000,000 VMw    (~1.00 ÉTR fee)
+
+Block VMw limit:          10,000,000 VMw    (~10M operations/block)
+</code></pre>
+
+<h3 id="vmw-etr-conversion">VMw → ÉTR Conversion</h3>
+<p><strong>Dynamic Price Oracle</strong>:</p>
+<pre class="codehilite"><code>VMw_to_ETR_rate = f(
+    validator_energy_cost,  // Real electricity prices
+    network_congestion,     // Supply/demand
+    treasury_target         // Target fee income
+)
+</code></pre>
+
+<p><strong>Example Calculation</strong>:</p>
+<pre class="codehilite"><code>Average validator cost: $0.10/kWh electricity
+1 kWh = 1,000 Wh = 1,000,000 mW
+Target profit margin: 20%
+
+Base rate: 1,000 VMw = 0.001 ÉTR
+
+If ÉTR = $10:
+→ 1,000 VMw costs $0.01
+→ Break-even at ~$0.012/kWh validator cost
+→ 20% profit margin built in
+</code></pre>
+
+<h3 id="vmw-metering-runtime">VMw Metering Runtime</h3>
+<p><strong>Pre-execution</strong>:</p>
+<pre class="codehilite"><code class="language-rust">fn execute_transaction(tx: Transaction) -&gt; Result&lt;Receipt, Error&gt; {
+    let vmw_limit = tx.vmw_limit;
+    let mut vmw_used = 0;
+
+    // Start metering
+    let meter = VMwMeter::new(vmw_limit);
+
+    // Execute transaction
+    for instruction in tx.instructions {
+        vmw_used += instruction.weight();
+
+        if vmw_used &gt; vmw_limit {
+            return Err(Error::OutOfVMw);
+        }
+    }
+
+    // Charge fee
+    let fee = vmw_used * vmw_to_etr_rate();
+    charge_fee(tx.sender, fee)?;
+
+    Ok(Receipt { vmw_used, fee })
+}
+</code></pre>
+
+<h3 id="benefits-of-vmw">Benefits of VMw</h3>
+<h4 id="1-predictable-costs">1. Predictable Costs</h4>
+<ul>
+<li>Energy prices change slowly (unlike network demand)</li>
+<li>Validators can accurately price operations</li>
+<li>Users know approximate costs in advance</li>
+</ul>
+<h4 id="2-fair-resource-allocation">2. Fair Resource Allocation</h4>
+<ul>
+<li>Heavy computations pay proportionally more</li>
+<li>Light operations remain cheap</li>
+<li>Incentivizes efficient smart contract design</li>
+</ul>
+<h4 id="3-economic-sustainability">3. Economic Sustainability</h4>
+<ul>
+<li>Fee income covers validator operational costs</li>
+<li>No subsidized computation</li>
+<li>Network remains economically viable long-term</li>
+</ul>
+<hr />
+<h2 id="4-flarechain-partition-burst-chains">4. FLARECHAIN &amp; PARTITION BURST CHAINS</h2>
+<h3 id="architecture-overview">Architecture Overview</h3>
+<pre class="codehilite"><code>                    ┌────────────────┐
+                    │  FlareChain    │
+                    │  (Root Chain)  │
+                    └────────┬───────┘
+                             │
+            ┌────────────────┼────────────────┐
+            │                │                │
+    ┌───────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐
+    │  BTC-PBC     │  │  ETH-PBC  │  │  EDSC-PBC   │
+    │  (Bridge)    │  │  (Bridge) │  │  (Native)   │
+    └──────────────┘  └───────────┘  └─────────────┘
+            │                │                │
+    ┌───────▼──────┐  ┌─────▼─────┐  ┌──────▼──────┐
+    │ Bitcoin Net  │  │Ethereum Net│  │ Treasury    │
+    └──────────────┘  └───────────┘  └─────────────┘
+</code></pre>
+
+<h3 id="flarechain-root-coordination-layer">FlareChain (Root Coordination Layer)</h3>
+<p><strong>Purpose</strong>: Coordination hub for all PBCs</p>
+<p><strong>Responsibilities</strong>:
+1. <strong>Consensus</strong>: Runs ASF for entire network
+2. <strong>Cross-Chain Routing</strong>: Routes messages between PBCs
+3. <strong>State Anchoring</strong>: Stores merkle roots from all PBCs
+4. <strong>Governance</strong>: Hosts Consensus Day runtime
+5. <strong>Treasury</strong>: Manages global fiscal state</p>
+<p><strong>Block Structure</strong>:</p>
+<pre class="codehilite"><code class="language-rust">struct FlareBlock {
+    header: FlareBlockHeader,
+    extrinsics: Vec&lt;Extrinsic&gt;,
+    pbc_roots: HashMap&lt;PbcId, StateRoot&gt;,
+    governance_digest: Option&lt;GovernanceDigest&gt;,
+}
+
+struct FlareBlockHeader {
+    parent_hash: H256,
+    number: BlockNumber,
+    state_root: H256,
+    extrinsics_root: H256,
+    timestamp: Timestamp,
+    validator: ValidatorId,
+    asf_signatures: Vec&lt;AsfSignature&gt;,
+}
+</code></pre>
+
+<p><strong>Block Time</strong>: ~6 seconds
+<strong>Finality</strong>: ASF (60s for 95%)
+<strong>Throughput</strong>: 1,000+ TPS (10M VMw/block limit)</p>
+<h3 id="partition-burst-chains-pbcs">Partition Burst Chains (PBCs)</h3>
+<p><strong>Purpose</strong>: Specialized sovereign runtimes for specific domains</p>
+<p><strong>Initial Design: 12 PBCs</strong> (expandable based on governance vote)</p>
+<p>The original ivory paper specified 12 Partitioned Burst Chains. The network has been expanded to include additional chains based on ecosystem needs:</p>
+<ol>
+<li><strong>BTC-PBC</strong>: Bitcoin bridge (SPV proofs)</li>
+<li><strong>ETH-PBC</strong>: Ethereum bridge (event logs)</li>
+<li><strong>DOGE-PBC</strong>: Dogecoin bridge</li>
+<li><strong>SOL-PBC</strong>: Solana bridge (state proofs)</li>
+<li><strong>XLM-PBC</strong>: Stellar bridge (federation)</li>
+<li><strong>XRP-PBC</strong>: Ripple bridge (payment channels)</li>
+<li><strong>BNB-PBC</strong>: Binance Chain bridge</li>
+<li><strong>TRX-PBC</strong>: Tron bridge (TRC-20)</li>
+<li><strong>ADA-PBC</strong>: Cardano bridge (UTxO proofs)</li>
+<li><strong>LINK-PBC</strong>: Chainlink integration (oracles)</li>
+<li><strong>MATIC-PBC</strong>: Polygon bridge (plasma)</li>
+<li><strong>USDT-PBC</strong>: Tether multi-chain bridge</li>
+<li><strong>EDSC-PBC</strong>: Ëtrid Dollar stablecoin (native) <em>(expansion from original 12)</em></li>
+</ol>
+<p><strong>Note</strong>: The network currently operates 13 PBCs, with EDSC-PBC added to support the native stablecoin. Additional PBCs may be added through governance proposals.</p>
+<h3 id="pbc-architecture">PBC Architecture</h3>
+<p><strong>Each PBC has</strong>:
+- Independent runtime (specialized for domain)
+- Own collator set (validators specific to that PBC)
+- Native token for operations (if needed)
+- Bridge logic for external chain
+- State checkpoint to FlareChain every 100 blocks</p>
+<p><strong>Example: BTC-PBC Structure</strong></p>
+<pre class="codehilite"><code class="language-rust">struct BtcPbcRuntime {
+    // Bitcoin SPV verification
+    spv_verifier: SpvVerifier,
+
+    // Bitcoin headers stored on-chain
+    bitcoin_headers: Vec&lt;BitcoinHeader&gt;,
+
+    // Pending BTC → ÉTR swaps
+    pending_swaps: HashMap&lt;SwapId, BtcSwap&gt;,
+
+    // FlareChain synchronization
+    last_flare_checkpoint: BlockNumber,
+}
+
+struct BtcSwap {
+    bitcoin_txid: BitcoinTxId,
+    amount_btc: u64,
+    recipient_etr: AccountId,
+    confirmations: u32,
+    status: SwapStatus,
+}
+</code></pre>
+
+<h3 id="cross-chain-message-passing">Cross-Chain Message Passing</h3>
+<p><strong>Step 1</strong>: PBC sends message to FlareChain</p>
+<pre class="codehilite"><code class="language-rust">fn send_cross_chain_message(
+    origin_pbc: PbcId,
+    dest_pbc: PbcId,
+    message: Vec&lt;u8&gt;
+) -&gt; Result&lt;(), Error&gt; {
+    // Validate message
+    ensure!(message.len() &lt;= MAX_MESSAGE_SIZE, Error::MessageTooLarge);
+
+    // Calculate VMw cost
+    let vmw_cost = calculate_message_cost(message.len());
+    charge_vmw(origin_pbc, vmw_cost)?;
+
+    // Submit to FlareChain message queue
+    FlareChain::enqueue_message(CrossChainMessage {
+        origin: origin_pbc,
+        destination: dest_pbc,
+        payload: message,
+        timestamp: now(),
+    })?;
+
+    Ok(())
+}
+</code></pre>
+
+<p><strong>Step 2</strong>: FlareChain routes to destination PBC</p>
+<pre class="codehilite"><code class="language-rust">fn route_messages() {
+    for msg in pending_messages {
+        // Verify origin PBC signature
+        ensure!(verify_pbc_signature(&amp;msg), &quot;Invalid signature&quot;);
+
+        // Forward to destination PBC
+        Pbc::deliver_message(msg.destination, msg)?;
+
+        // Update state root
+        update_state_root(msg.destination);
+    }
+}
+</code></pre>
+
+<p><strong>Step 3</strong>: Destination PBC processes message</p>
+<pre class="codehilite"><code class="language-rust">fn process_message(msg: CrossChainMessage) {
+    match msg.payload {
+        Payload::TokenTransfer { amount, recipient } =&gt; {
+            mint_tokens(recipient, amount)?;
+        }
+        Payload::ContractCall { contract, data } =&gt; {
+            execute_contract(contract, data)?;
+        }
+        _ =&gt; {}
+    }
+}
+</code></pre>
+
+<h3 id="state-synchronization">State Synchronization</h3>
+<p><strong>Every 100 PBC blocks</strong>:
+1. PBC computes merkle root of current state
+2. PBC submits root to FlareChain
+3. Validity nodes verify root correctness
+4. FlareChain stores root in PBC registry
+5. Other PBCs can reference this root for cross-chain operations</p>
+<p><strong>State Root Structure</strong>:</p>
+<pre class="codehilite"><code class="language-rust">struct PbcStateRoot {
+    pbc_id: PbcId,
+    block_number: BlockNumber,
+    state_root: H256,
+    timestamp: Timestamp,
+    collator_signatures: Vec&lt;Signature&gt;,
+    validity_attestations: Vec&lt;ValidityAttestation&gt;,
+}
+</code></pre>
+
+<hr />
+<h2 id="47-reserve-backed-assets-dex-infrastructure">4.7. RESERVE-BACKED ASSETS &amp; DEX INFRASTRUCTURE</h2>
+<h3 id="overview_1">Overview</h3>
+<p>To support the EDSC stablecoin and broader DeFi ecosystem, FlareChain includes specialized infrastructure for reserve management, synthetic asset creation, and decentralized exchange functionality.</p>
+<p><strong>Components</strong>:
+1. <strong>pallet-multiasset-reserve</strong>: Multi-asset treasury management with automated rebalancing
+2. <strong>pallet-reserve-backed-token</strong>: Synthetic token creation with collateral management
+3. <strong>FlareSwap DEX Core</strong>: Automated market maker (AMM) with liquidity pools
+4. <strong>FlareSwap DEX Periphery</strong>: Routing and helper contracts for optimal trade execution</p>
+<h3 id="471-multi-asset-reserve-pallet-multiasset-reserve">4.7.1. Multi-Asset Reserve (pallet-multiasset-reserve)</h3>
+<p><strong>Purpose</strong>: Manage diversified reserve assets backing EDSC and other synthetic tokens</p>
+<p><strong>Architecture</strong>:</p>
+<pre class="codehilite"><code class="language-rust">pub struct AssetConfig {
+    pub asset_id: AssetId,
+    pub target_allocation: Permill,  // Target percentage of total reserve
+    pub current_balance: Balance,
+    pub oracle_price: u128,          // Price in USD (6 decimals)
+    pub last_rebalance: BlockNumber,
+}
+
+pub enum AllocationStrategy {
+    EqualWeight = 0,        // Equal distribution across assets
+    MarketCapWeighted = 1,  // Weight by market capitalization
+    RiskAdjusted = 2,       // Weight by volatility/risk metrics
+    Custom = 3,             // Custom weights set by governance
+}
+</code></pre>
+
+<p><strong>Storage Items</strong> (8 total):
+- <code>AssetConfigs</code>: Configuration for each reserve asset
+- <code>ReserveComposition</code>: Current holdings per asset
+- <code>CurrentStrategy</code>: Active allocation strategy (stored as u8)
+- <code>TotalReserveValue</code>: Aggregate USD value of reserve
+- <code>WhitelistedAssets</code>: Approved assets for reserve inclusion
+- <code>AssetCount</code>: Number of assets in reserve
+- <code>LastRebalance</code>: Timestamp of last rebalancing operation
+- <code>RebalancingEnabled</code>: Global rebalancing on/off switch</p>
+<p><strong>Key Operations</strong>:</p>
+<ol>
+<li><strong>Asset Management</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">// Add new asset to reserve
+pub fn add_asset(
+    origin: OriginFor&lt;T&gt;,
+    asset_id: AssetId,
+    target_allocation: Permill,
+) -&gt; DispatchResult;
+
+// Remove asset from reserve
+pub fn remove_asset(
+    origin: OriginFor&lt;T&gt;,
+    asset_id: AssetId,
+) -&gt; DispatchResult;
+</code></pre>
+
+<ol>
+<li><strong>Rebalancing</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">// Automated rebalancing based on target allocations
+pub fn trigger_rebalance(origin: OriginFor&lt;T&gt;) -&gt; DispatchResult;
+
+// Rebalancing triggers when:
+// - Deviation exceeds threshold (default: 5%)
+// - Sufficient time elapsed since last rebalance (default: 14,400 blocks ~24h)
+</code></pre>
+
+<ol>
+<li><strong>Strategy Management</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">pub fn set_allocation_strategy(
+    origin: OriginFor&lt;T&gt;,
+    strategy_code: u8,  // 0=EqualWeight, 1=MarketCap, 2=RiskAdjusted, 3=Custom
+) -&gt; DispatchResult;
+</code></pre>
+
+<p><strong>Runtime Configuration</strong>:</p>
+<pre class="codehilite"><code class="language-rust">parameter_types! {
+    pub const MaxReserveAssets: u32 = 50;
+    pub const RebalanceIntervalBlocks: u32 = 14_400;  // ~24 hours
+    pub const RebalanceThreshold: Permill = Permill::from_percent(5);
+    pub const MultiassetReservePalletId: PalletId = PalletId(*b&quot;py/marve&quot;);
+}
+</code></pre>
+
+<p><strong>Events</strong>:
+- <code>AssetAdded</code>: New asset added to reserve
+- <code>AssetRemoved</code>: Asset removed from reserve
+- <code>RebalanceExecuted</code>: Automated rebalancing completed
+- <code>StrategyChanged</code>: Allocation strategy updated
+- <code>DepositReceived</code>: Funds deposited to reserve
+- <code>WithdrawalExecuted</code>: Funds withdrawn from reserve</p>
+<h3 id="472-reserve-backed-token-pallet-reserve-backed-token">4.7.2. Reserve-Backed Token (pallet-reserve-backed-token)</h3>
+<p><strong>Purpose</strong>: Create synthetic tokens backed by treasury reserves with organic backing accumulation</p>
+<p><strong>Core Structures</strong>:</p>
+<pre class="codehilite"><code class="language-rust">pub struct SyntheticToken {
+    pub symbol: BoundedVec&lt;u8, ConstU32&lt;16&gt;&gt;,
+    pub name: BoundedVec&lt;u8, ConstU32&lt;64&gt;&gt;,
+    pub decimals: u8,
+    pub target_peg: u128,            // Target price in USD (e.g., 1_000_000 = $1.00)
+    pub backing_ratio: u16,          // Basis points: 10000 = 100%
+    pub total_supply: u128,
+    pub is_active: bool,
+    pub created_at: u32,
+}
+
+pub struct ReservePosition&lt;Balance&gt; {
+    pub synthetic_id: u32,
+    pub reserve_holdings: Vec&lt;(AssetId, Balance)&gt;,  // Multi-asset reserves
+    pub circulating_supply: u128,    // Amount released from vault
+    pub last_update: u32,
+}
+</code></pre>
+
+<p><strong>Treasury-Backed Model</strong>:</p>
+<p>EDSC uses a treasury-backed model where backing accumulates organically from user purchases:</p>
+<pre class="codehilite"><code>Backing Ratio:           100% (purchase value)
+Initial Supply:          1 billion EDSC (minted to reserve vault)
+Purchase Price:          $1.00 per EDSC
+Redemption Price:        $1.00 per EDSC
+Pre-Funding Required:    None (organic backing)
+
+Example:
+User purchases 1000 EDSC:
+→ User sends: $1000 in BTC/ETH/SOL/USDC to reserve
+→ Reserve releases: 1000 EDSC to user
+→ Reserve now holds: $1000 backing (100% ratio)
+→ No liquidations (direct purchase/redemption model)
+</code></pre>
+
+<p><strong>Key Operations</strong>:</p>
+<ol>
+<li><strong>Token Lifecycle</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">// Create new synthetic token type
+pub fn create_synthetic(
+    origin: OriginFor&lt;T&gt;,
+    symbol: Vec&lt;u8&gt;,
+    name: Vec&lt;u8&gt;,
+    decimals: u8,
+    target_peg: u128,         // Target price in USD (6 decimals)
+    backing_ratio: u16,       // Basis points: 10000 = 100%
+) -&gt; DispatchResult;
+
+// Deactivate synthetic token (no new minting)
+pub fn deactivate_synthetic(
+    origin: OriginFor&lt;T&gt;,
+    synthetic_id: u32,
+) -&gt; DispatchResult;
+</code></pre>
+
+<ol>
+<li><strong>Purchase &amp; Redemption</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">// Purchase synthetic tokens from reserve (e.g., EDSC)
+pub fn purchase_synthetic(
+    origin: OriginFor&lt;T&gt;,
+    synthetic_id: u32,
+    payment_token: AssetId,      // BTC, ETH, SOL, USDC, etc.
+    payment_amount: BalanceOf&lt;T&gt;,
+    min_synthetic_amount: u128,
+) -&gt; DispatchResult;
+
+// Redeem synthetic tokens back to reserve for crypto
+pub fn redeem_synthetic(
+    origin: OriginFor&lt;T&gt;,
+    synthetic_id: u32,
+    synthetic_amount: u128,
+    preferred_payment: AssetId,   // Preferred crypto to receive
+    min_payment_amount: BalanceOf&lt;T&gt;,
+) -&gt; DispatchResult;
+</code></pre>
+
+<ol>
+<li><strong>Reserve Management</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-rust">// Check reserve backing value
+pub fn get_reserve_value(
+    synthetic_id: u32,
+) -&gt; Result&lt;u128, DispatchError&gt;;
+
+// Get current backing ratio
+pub fn get_backing_ratio(
+    synthetic_id: u32,
+) -&gt; Result&lt;u16, DispatchError&gt;;
+
+// Get reserve composition (multi-asset breakdown)
+pub fn get_reserve_composition(
+    synthetic_id: u32,
+) -&gt; Result&lt;Vec&lt;(AssetId, BalanceOf&lt;T&gt;)&gt;, DispatchError&gt;;
+</code></pre>
+
+<p><strong>Storage Items</strong> (6 total):
+- <code>SyntheticTokens</code>: Metadata for each synthetic token type
+- <code>ReserveBalances</code>: Multi-asset reserves backing each synthetic
+- <code>NextSyntheticId</code>: Auto-incrementing ID for new synthetics
+- <code>CirculatingSupply</code>: Amount released from vault per synthetic
+- <code>ReserveVault</code>: Address holding initial token supply
+- <code>PurchaseHistory</code>: Record of purchase/redemption events</p>
+<p><strong>Runtime Configuration</strong>:</p>
+<pre class="codehilite"><code class="language-rust">parameter_types! {
+    pub const MaxSyntheticTokens: u32 = 100;
+    pub const MinPurchaseAmount: u128 = 1_000_000_000_000;  // Minimum purchase
+    pub const TargetBackingRatio: u16 = 10000;  // 100% = 10000 basis points
+    pub const PurchaseFeePercent: u16 = 10;  // 0.1% purchase fee
+    pub const ReserveBackedTokenPalletId: PalletId = PalletId(*b&quot;py/rbtok&quot;);
+}
+</code></pre>
+
+<p><strong>Price Oracle Integration</strong>:</p>
+<p>The pallet relies on price oracles to determine purchase/redemption rates:</p>
+<pre class="codehilite"><code class="language-rust">// Oracle provides real-time pricing
+pub trait PriceOracle {
+    fn get_price(asset_id: AssetId) -&gt; Option&lt;u128&gt;;  // Returns price in USD (6 decimals)
+}
+
+// Backing ratio check (treasury-backed model)
+fn check_backing_ratio(position: &amp;ReservePosition) -&gt; Permill {
+    // Calculate total reserve value
+    let reserve_value_usd: u128 = position.reserve_holdings
+        .iter()
+        .map(|(asset_id, balance)| {
+            let price = oracle::get_price(*asset_id).unwrap_or(0);
+            balance * price
+        })
+        .sum();
+
+    let circulating_value_usd = position.circulating_supply; // 1:1 USD peg
+
+    // Backing ratio = (reserve value / circulating value) * 100%
+    Permill::from_rational(reserve_value_usd, circulating_value_usd)
+}
+</code></pre>
+
+<h3 id="473-flareswap-dex-core-infrastructure">4.7.3. FlareSwap DEX - Core Infrastructure</h3>
+<p><strong>Purpose</strong>: Decentralized exchange for ÉTR, EDSC, and synthetic assets using automated market maker (AMM) model</p>
+<p><strong>Architecture</strong>: Uniswap V2-inspired constant product formula (x × y = k)</p>
+<p><strong>Components</strong>:</p>
+<ol>
+<li><strong>FlareSwap Factory</strong> (<code>FlareSwapFactory.sol</code>)</li>
+<li>Creates new trading pairs</li>
+<li>Tracks all pair contracts</li>
+<li>
+<p>Manages protocol fees</p>
+</li>
+<li>
+<p><strong>FlareSwap Pair</strong> (<code>FlareSwapPair.sol</code>)</p>
+</li>
+<li>Implements liquidity pool for token pair</li>
+<li>Handles swaps using constant product formula</li>
+<li>
+<p>Distributes LP fees to liquidity providers</p>
+</li>
+<li>
+<p><strong>FlareSwap ERC20</strong> (<code>FlareSwapERC20.sol</code>)</p>
+</li>
+<li>LP token implementation</li>
+<li>Represents liquidity provider shares</li>
+<li>Standard ERC20 with permit functionality</li>
+</ol>
+<p><strong>Constant Product Formula</strong>:</p>
+<pre class="codehilite"><code class="language-solidity">// For any swap, the product of reserves must remain constant
+x * y = k
+
+// Where:
+// x = reserve of token A
+// y = reserve of token B
+// k = constant (invariant)
+
+// Example swap:
+// Initial state: 100 ETR × 1000 EDSC = 100,000
+// User swaps 10 ETR → receives 90.9 EDSC
+// Final state: 110 ETR × 909.1 EDSC ≈ 100,000 (minus 0.3% fee)
+</code></pre>
+
+<p><strong>Key Operations</strong>:</p>
+<ol>
+<li><strong>Liquidity Provision</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-solidity">// Add liquidity to pool (mints LP tokens)
+function addLiquidity(
+    address tokenA,
+    address tokenB,
+    uint amountADesired,
+    uint amountBDesired,
+    uint amountAMin,
+    uint amountBMin,
+    address to,
+    uint deadline
+) external returns (uint amountA, uint amountB, uint liquidity);
+
+// Remove liquidity (burns LP tokens)
+function removeLiquidity(
+    address tokenA,
+    address tokenB,
+    uint liquidity,
+    uint amountAMin,
+    uint amountBMin,
+    address to,
+    uint deadline
+) external returns (uint amountA, uint amountB);
+</code></pre>
+
+<ol>
+<li><strong>Token Swapping</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-solidity">// Swap exact input amount for minimum output
+function swapExactTokensForTokens(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+
+// Swap for exact output using maximum input
+function swapTokensForExactTokens(
+    uint amountOut,
+    uint amountInMax,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+</code></pre>
+
+<p><strong>Fee Structure</strong>:
+- <strong>Swap Fee</strong>: 0.3% of each trade
+  - 0.25% → Liquidity providers (via LP token value appreciation)
+  - 0.05% → Protocol treasury (for development/operations)</p>
+<p><strong>Price Impact</strong>:</p>
+<pre class="codehilite"><code>Price Impact = (amountIn / reserveIn) × 100%
+
+Examples:
+- Swap 1 ÉTR in 1000 ÉTR pool → 0.1% impact (negligible)
+- Swap 50 ÉTR in 1000 ÉTR pool → 5% impact (moderate)
+- Swap 100 ÉTR in 1000 ÉTR pool → 10% impact (high slippage)
+</code></pre>
+
+<h3 id="474-flareswap-dex-periphery-contracts">4.7.4. FlareSwap DEX - Periphery Contracts</h3>
+<p><strong>Purpose</strong>: User-facing contracts that simplify interaction with core DEX</p>
+<p><strong>Components</strong>:</p>
+<ol>
+<li><strong>FlareSwap Router</strong> (<code>FlareSwapRouter.sol</code>)</li>
+<li>Simplifies multi-hop swaps</li>
+<li>Handles slippage protection</li>
+<li>Manages deadline enforcement</li>
+<li>
+<p>Wraps/unwraps native ÉTR</p>
+</li>
+<li>
+<p><strong>FlareSwap Library</strong> (<code>FlareSwapLibrary.sol</code>)</p>
+</li>
+<li>Price calculation utilities</li>
+<li>Quote functions for UI/bots</li>
+<li>
+<p>Optimal path finding for multi-hop trades</p>
+</li>
+<li>
+<p><strong>WETH Wrapper</strong> (<code>WETH.sol</code>)</p>
+</li>
+<li>Wraps native ÉTR into ERC20-compatible WETR</li>
+<li>Required for ÉTR trading on DEX</li>
+<li>1:1 peg with native ÉTR</li>
+</ol>
+<p><strong>Router Functions</strong>:</p>
+<ol>
+<li><strong>Multi-Hop Trading</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-solidity">// Optimal routing through multiple pairs
+// Example: ÉTR → EDSC → USDT (saves fees vs direct pool)
+function swapExactTokensForTokens(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,  // [ÉTR, EDSC, USDT]
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+</code></pre>
+
+<ol>
+<li><strong>Price Quotes</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-solidity">// Get quote for exact input
+function getAmountsOut(
+    uint amountIn,
+    address[] memory path
+) public view returns (uint[] memory amounts);
+
+// Get quote for exact output (reverse calculation)
+function getAmountsIn(
+    uint amountOut,
+    address[] memory path
+) public view returns (uint[] memory amounts);
+</code></pre>
+
+<ol>
+<li><strong>Native ÉTR Support</strong>:</li>
+</ol>
+<pre class="codehilite"><code class="language-solidity">// Swap ÉTR for tokens (auto-wraps to WETR)
+function swapExactETRForTokens(
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external payable returns (uint[] memory amounts);
+
+// Swap tokens for ÉTR (auto-unwraps WETR)
+function swapExactTokensForETR(
+    uint amountIn,
+    uint amountOutMin,
+    address[] calldata path,
+    address to,
+    uint deadline
+) external returns (uint[] memory amounts);
+</code></pre>
+
+<p><strong>Library Utilities</strong>:</p>
+<pre class="codehilite"><code class="language-solidity">library FlareSwapLibrary {
+    // Calculate output amount given input
+    function getAmountOut(
+        uint amountIn,
+        uint reserveIn,
+        uint reserveOut
+    ) internal pure returns (uint amountOut);
+
+    // Calculate required input for desired output
+    function getAmountIn(
+        uint amountOut,
+        uint reserveIn,
+        uint reserveOut
+    ) internal pure returns (uint amountIn);
+
+    // Sort tokens (deterministic pair ordering)
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) internal pure returns (address token0, address token1);
+}
+</code></pre>
+
+<h3 id="implementation-status">Implementation Status</h3>
+<p><strong>✅ Completed Components</strong>:
+1. pallet-multiasset-reserve (~670 lines)
+   - All 8 storage items
+   - All 8 extrinsics
+   - Runtime integration complete</p>
+<ol>
+<li>pallet-reserve-backed-token (~850 lines)</li>
+<li>All 6 storage items</li>
+<li>All 6 extrinsics</li>
+<li>Collateralization logic implemented</li>
+<li>
+<p>Runtime integration complete</p>
+</li>
+<li>
+<p>FlareSwap DEX Core (~881 lines total)</p>
+</li>
+<li>Factory contract (interface + implementation)</li>
+<li>Pair contract (AMM logic)</li>
+<li>
+<p>ERC20 LP token contract</p>
+</li>
+<li>
+<p>FlareSwap DEX Periphery (completed in parallel terminal)</p>
+</li>
+<li>Router contract with multi-hop support</li>
+<li>Library with price calculation utilities</li>
+<li>WETH wrapper for native ÉTR</li>
+</ol>
+<p><strong>Runtime Integration</strong>:</p>
+<p>All components integrated into FlareChain runtime at <code>05-multichain/flare-chain/runtime/src/lib.rs</code>:</p>
+<pre class="codehilite"><code class="language-rust">// Reserve infrastructure
+MultiassetReserve: pallet_multiasset_reserve,
+ReserveBackedToken: pallet_reserve_backed_token,
+
+// DEX deployed as smart contracts on ËtwasmVM
+// (not runtime pallets, but WASM contracts)
+</code></pre>
+
+<p><strong>Code Metrics</strong>:
+- Total new code: ~2,400+ lines
+- Test coverage: Integration tests pending
+- Documentation: Technical specs complete
+- Audit status: Pre-audit (requires security review)</p>
+<h3 id="economic-impact">Economic Impact</h3>
+<p><strong>Reserve Diversification</strong>:
+- EDSC backed by multi-asset reserve (not just ÉTR)
+- Reduced correlation risk
+- Automated rebalancing maintains target allocations</p>
+<p><strong>Synthetic Assets</strong>:
+- Treasury-backed model with organic backing accumulation
+- Direct purchase/redemption maintains peg stability
+- Enables creation of diverse synthetic assets (stocks, commodities, indices)</p>
+<p><strong>DEX Liquidity</strong>:
+- Native ÉTR/EDSC trading without external bridges
+- LP incentives encourage liquidity provision
+- 0.3% fee generates sustainable yield for LPs</p>
+<p><strong>Capital Efficiency</strong>:
+- Reserve holds multi-asset portfolio for backing
+- DEX enables efficient price discovery
+- Arbitrage bots maintain peg stability through reserve buy/sell operations</p>
+<h3 id="security-considerations">Security Considerations</h3>
+<p><strong>Reserve Security</strong>:
+- Multi-asset reduces single-asset risk
+- Rebalancing limits handled by governance
+- Oracle manipulation resistance via multiple price sources</p>
+<p><strong>Reserve Stability</strong>:
+- 100% backing from organic purchases provides safety
+- No liquidations needed (direct purchase/redemption model)
+- Automated rebalancing maintains reserve composition</p>
+<p><strong>DEX Security</strong>:
+- Constant product formula prevents price manipulation
+- Reentrancy protection on all state-changing functions
+- Slippage limits protect against front-running
+- Deadline enforcement prevents stale transactions</p>
+<hr />
+<h2 id="5-cross-chain-security-validity-nodes">5. CROSS-CHAIN SECURITY &amp; VALIDITY NODES</h2>
+<h3 id="the-bridge-problem">The Bridge Problem</h3>
+<p><strong>Traditional Bridges</strong>:
+- Trusted multi-sig custodians (honeypot for hackers)
+- Off-chain verification (opaque)
+- Single point of failure
+- Billions lost to bridge hacks (2021-2024)</p>
+<h3 id="etrid-solution-native-cross-chain-verification">Ëtrid Solution: Native Cross-Chain Verification</h3>
+<p><strong>No external bridges. No trusted custodians.</strong></p>
+<h3 id="validity-nodes-validity-nodes">Validity Nodes (VALIDITY Nodes)</h3>
+<p><strong>Role</strong>: Verify cross-chain proofs and PBC state roots, participate in consensus on Partition Burst Chains</p>
+<p><strong>Requirements</strong>:
+- <strong>Minimum stake: 64 ÉTR</strong>
+- Hardware: 8-core CPU, 32GB RAM, 1TB SSD, 1Gbps network
+- Uptime: &gt;98% (measured over 30-day rolling window)
+- Must run full nodes for FlareChain + ≥1 PBC</p>
+<p><strong>Node Statuses</strong>:
+- <strong>Registered</strong>: Node has staked 64+ ÉTR and registered identity
+- <strong>Pending</strong>: Awaiting selection for active validator set
+- <strong>Sequenced</strong>: Active validator participating in consensus
+- <strong>Chilled</strong>: Temporarily inactive due to performance issues
+- <strong>De-Sequenced</strong>: Removed from active set (can re-enter after resolution)
+- <strong>Re-Sequenced</strong>: Returned to active validator set after fixing issues</p>
+<p><strong>Responsibilities</strong>:
+1. Monitor all PBC state submissions to FlareChain
+2. Verify merkle proofs against submitted roots
+3. Attest to validity or flag discrepancies
+4. Participate in dispute resolution
+5. Produce blocks on assigned PBCs
+6. Maintain cross-chain state synchronization</p>
+<p><strong>Incentives</strong>:
+- Earn rewards for correct attestations
+- Earn block production rewards
+- Slashed for false attestations
+- Higher reputation = more weight</p>
+<p><strong>Architecture</strong>:</p>
+<pre class="codehilite"><code class="language-rust">struct ValidityNode {
+    did: DecentralizedId,
+    stake: Balance,
+    reputation: ReputationScore,
+    monitored_pbcs: Vec&lt;PbcId&gt;,
+}
+
+fn verify_pbc_state_root(
+    pbc_id: PbcId,
+    claimed_root: H256,
+    block_number: BlockNumber
+) -&gt; AttestationResult {
+    // Fetch actual PBC state
+    let pbc_state = fetch_pbc_state(pbc_id, block_number)?;
+
+    // Compute merkle root locally
+    let computed_root = compute_state_root(&amp;pbc_state);
+
+    // Compare
+    if computed_root == claimed_root {
+        AttestationResult::Valid
+    } else {
+        AttestationResult::Invalid {
+            expected: computed_root,
+            actual: claimed_root,
+        }
+    }
+}
+</code></pre>
+
+<h3 id="multi-sig-custodians-where-unavoidable">Multi-Sig Custodians (Where Unavoidable)</h3>
+<p>For external chain bridges (BTC, ETH), some trusted elements unavoidable.</p>
+<p><strong>Mitigation Strategy</strong>:</p>
+<pre class="codehilite"><code>M-of-N Multi-Sig:
+- M = 7 (threshold)
+- N = 10 (total custodians)
+- Geographic distribution: 5 continents
+- Entity distribution: Independent operators
+- Key rotation: Every 6 months
+- Slashing: Loss of stake for misbehavior
+</code></pre>
+
+<p><strong>Example: BTC-PBC Custodian Set</strong>:</p>
+<pre class="codehilite"><code class="language-rust">struct MultisigCustodian {
+    pubkey: BitcoinPublicKey,
+    operator: AccountId,
+    stake: Balance,
+    jurisdiction: String,
+    last_rotation: Timestamp,
+}
+
+fn verify_btc_transaction(
+    tx: BitcoinTransaction,
+    required_sigs: u8
+) -&gt; Result&lt;(), Error&gt; {
+    let sigs = extract_signatures(&amp;tx);
+    ensure!(sigs.len() &gt;= required_sigs, Error::InsufficientSignatures);
+
+    // Verify each signature against custodian set
+    for sig in sigs {
+        let custodian = find_custodian(sig.pubkey)?;
+        ensure!(verify_signature(sig), Error::InvalidSignature);
+    }
+
+    Ok(())
+}
+</code></pre>
+
+<h3 id="security-guarantees">Security Guarantees</h3>
+<p><strong>Byzantine Fault Tolerance</strong>:
+- Tolerate up to 1/3 malicious validators
+- Require 2/3+ agreement for finalization
+- Slashing for provably malicious behavior</p>
+<p><strong>Economic Security</strong>:</p>
+<pre class="codehilite"><code>Attack Cost = Stake × SlashingRatio × (1 + ReputationPenalty)
+
+Example:
+- Validator stake: 1M ÉTR
+- Slashing ratio: 100% (full slash)
+- Reputation penalty: 50% (future earnings lost)
+→ Attack cost: 1.5M ÉTR
+</code></pre>
+
+<hr />
+<h2 id="6-etwasmvm-smart-contract-runtime">6. ETWASMVM &amp; SMART CONTRACT RUNTIME</h2>
+<h3 id="etwasmvm-overview">EtwasmVM Overview</h3>
+<p><strong>WebAssembly-based virtual machine</strong> optimized for:
+- Deterministic execution
+- Post-quantum security
+- VMw metering
+- Reentrancy protection</p>
+<h3 id="why-wasm">Why WASM?</h3>
+<p><strong>Advantages over EVM</strong>:
+- Near-native performance (~90% of native)
+- Multiple source languages (Rust, C, AssemblyScript)
+- Industry-standard tooling
+- Smaller bytecode size
+- Better optimization opportunities</p>
+<p><strong>Security Enhancements</strong>:
+- Bounded execution (no infinite loops)
+- Memory safety (no buffer overflows)
+- Sandboxed execution (no syscalls)
+- Resource metering (VMw tracking)</p>
+<h3 id="contract-structure">Contract Structure</h3>
+<p><strong>Example Contract</strong> (Pseudo-Rust/ink!):</p>
+<pre class="codehilite"><code class="language-rust">#[etrid::contract]
+mod token {
+    use etrid_contract::*;
+
+    #[state]
+    pub struct Token {
+        total_supply: Balance,
+        balances: Mapping&lt;AccountId, Balance&gt;,
+        allowances: Mapping&lt;(AccountId, AccountId), Balance&gt;,
+    }
+
+    #[constructor]
+    pub fn new(initial_supply: Balance) -&gt; Self {
+        let caller = Self::env().caller();
+        let mut balances = Mapping::default();
+        balances.insert(caller, &amp;initial_supply);
+
+        Self {
+            total_supply: initial_supply,
+            balances,
+            allowances: Mapping::default(),
+        }
+    }
+
+    #[message]
+    pub fn transfer(&amp;mut self, to: AccountId, amount: Balance) -&gt; Result&lt;()&gt; {
+        let from = self.env().caller();
+        self.transfer_impl(from, to, amount)
+    }
+
+    fn transfer_impl(
+        &amp;mut self,
+        from: AccountId,
+        to: AccountId,
+        amount: Balance
+    ) -&gt; Result&lt;()&gt; {
+        let from_balance = self.balance_of(from);
+        ensure!(from_balance &gt;= amount, Error::InsufficientBalance);
+
+        self.balances.insert(from, &amp;(from_balance - amount));
+        let to_balance = self.balance_of(to);
+        self.balances.insert(to, &amp;(to_balance + amount));
+
+        self.env().emit_event(Transfer { from, to, amount });
+        Ok(())
+    }
+}
+</code></pre>
+
+<h3 id="reentrancy-protection">Reentrancy Protection</h3>
+<p><strong>Built-in runtime check</strong>:</p>
+<pre class="codehilite"><code class="language-rust">thread_local! {
+    static CALL_STACK: RefCell&lt;Vec&lt;ContractId&gt;&gt; = RefCell::new(Vec::new());
+}
+
+fn execute_contract(contract: ContractId, data: Vec&lt;u8&gt;) -&gt; Result&lt;Vec&lt;u8&gt;&gt; {
+    // Check for reentrancy
+    CALL_STACK.with(|stack| {
+        if stack.borrow().contains(&amp;contract) {
+            return Err(Error::ReentrancyDetected);
+        }
+        stack.borrow_mut().push(contract);
+    });
+
+    // Execute
+    let result = run_wasm(contract, data);
+
+    // Pop call stack
+    CALL_STACK.with(|stack| stack.borrow_mut().pop());
+
+    result
+}
+</code></pre>
+
+<h3 id="vmw-metering-integration">VMw Metering Integration</h3>
+<p><strong>Injected into WASM bytecode</strong>:</p>
+<pre class="codehilite"><code class="language-wasm">;; Original: (i32.add (local.get 0) (local.get 1))
+;; Metered:
+(call $charge_vmw (i32.const 1))  ;; Charge 1 VMw for add
+(i32.add (local.get 0) (local.get 1))
+</code></pre>
+
+<p><strong>Runtime metering</strong>:</p>
+<pre class="codehilite"><code class="language-rust">static mut VMW_REMAINING: u64 = 0;
+
+fn charge_vmw(amount: u64) {
+    unsafe {
+        if VMW_REMAINING &lt; amount {
+            panic!(&quot;Out of VMw&quot;);
+        }
+        VMW_REMAINING -= amount;
+    }
+}
+</code></pre>
+
+<hr />
+<h2 id="7-network-p2p-layer-detr">7. NETWORK &amp; P2P LAYER (DETR)</h2>
+<h3 id="detr-p2p-protocol">DETR P2P Protocol</h3>
+<p><strong>DETR</strong> = Distributed Ëtrid Transaction Relay</p>
+<p><strong>Based on</strong>:
+- libp2p for transport
+- S/Kademlia for DHT
+- ECIES for encryption
+- Gossipsub for message propagation</p>
+<h3 id="network-topology">Network Topology</h3>
+<p><strong>Three Layers</strong>:</p>
+<ol>
+<li><strong>Validator Network</strong> (FlareChain)</li>
+<li>Full mesh between validators</li>
+<li>Low latency requirements (&lt;100ms)</li>
+<li>
+<p>Authenticated connections (Ed25519)</p>
+</li>
+<li>
+<p><strong>Collator Networks</strong> (PBCs)</p>
+</li>
+<li>Star topology around FlareChain validators</li>
+<li>Periodic state synchronization</li>
+<li>
+<p>Cross-PBC messaging via FlareChain</p>
+</li>
+<li>
+<p><strong>Public Network</strong> (Light Clients)</p>
+</li>
+<li>Connect to any validator/collator</li>
+<li>DHT for peer discovery</li>
+<li>Receive block headers only</li>
+</ol>
+<h3 id="message-types">Message Types</h3>
+<pre class="codehilite"><code class="language-rust">enum NetworkMessage {
+    // Block propagation
+    NewBlock(Block),
+    BlockRequest(BlockNumber),
+    BlockResponse(Block),
+
+    // Transaction pool
+    NewTransaction(Transaction),
+    TransactionRequest(TxHash),
+
+    // Consensus
+    AsfSignature(AsfSignature),
+    ValidatorHeartbeat(ValidatorId),
+
+    // Cross-chain
+    CrossChainMessage(CrossChainMessage),
+    StateRootSubmission(PbcStateRoot),
+}
+</code></pre>
+
+<h3 id="lightning-bloc-layer-2">Lightning-Bloc (Layer 2)</h3>
+<p><strong>Payment channels</strong> for instant, low-fee transactions:</p>
+<p><strong>Channel Lifecycle</strong>:
+1. <strong>Open</strong>: Lock funds in on-chain contract
+2. <strong>Transact</strong>: Off-chain signed updates
+3. <strong>Close</strong>: Submit final state on-chain
+4. <strong>Dispute</strong>: Time-locked challenge period</p>
+<p><strong>Multi-hop routing</strong>:</p>
+<pre class="codehilite"><code>Alice → Bob → Carol → Dave
+  2 ÉTR   2 ÉTR   2 ÉTR
+</code></pre>
+
+<p><strong>Watchtowers</strong>: Monitor channels for fraud attempts</p>
+<hr />
+<h2 id="8-cryptographic-primitives-post-quantum-security">8. CRYPTOGRAPHIC PRIMITIVES &amp; POST-QUANTUM SECURITY</h2>
+<h3 id="current-cryptography">Current Cryptography</h3>
+<p><strong>Signing</strong>: Ed25519 (Curve25519)
+- Public key: 32 bytes
+- Signature: 64 bytes
+- Fast verification (~60k sigs/sec)</p>
+<p><strong>Hashing</strong>: BLAKE3
+- Output: 32 bytes
+- Speed: 10 GB/s per core
+- Merkle tree optimized</p>
+<p><strong>Encryption</strong>: ChaCha20-Poly1305
+- Symmetric AEAD cipher
+- Nonce: 12 bytes
+- Tag: 16 bytes</p>
+<h3 id="post-quantum-migration-path">Post-Quantum Migration Path</h3>
+<p><strong>Hybrid Scheme</strong> (Current + PQ):</p>
+<pre class="codehilite"><code>Signature = Ed25519_Sign(msg) || Dilithium_Sign(msg)
+Verification = Ed25519_Verify() AND Dilithium_Verify()
+</code></pre>
+
+<p><strong>PQ Algorithms</strong> (NIST selected):
+- <strong>Signing</strong>: CRYSTALS-Dilithium (lattice-based)
+- <strong>KEM</strong>: CRYSTALS-Kyber (key encapsulation)
+- <strong>Alternative</strong>: SPHINCS+ (hash-based signatures)</p>
+<p><strong>Migration Timeline</strong>:
+- 2025: Hybrid support added (optional)
+- 2026: Hybrid enabled by default
+- 2027: PQ-only mode available
+- 2028+: Transition to PQ-only (if quantum threat emerges)</p>
+<hr />
+<h2 id="9-implementation-gap-analysis">9. IMPLEMENTATION GAP ANALYSIS</h2>
+<h3 id="overview_2">Overview</h3>
+<p>This section documents components specified in the Ivory Papers that require additional implementation work. While the E³20 architecture is complete at the alpha stage, several advanced features require further development before mainnet launch.</p>
+<h3 id="91-vmw-metering-runtime-partial-implementation">9.1. VMw Metering Runtime ⚠️ PARTIAL IMPLEMENTATION</h3>
+<p><strong>Status</strong>: Specification complete, runtime implementation incomplete</p>
+<p><strong>What's Described</strong> (Section 3):
+- Energy-based computation metering (1 VMw = 1 Watt-second)
+- Instruction-level weight assignments
+- Dynamic VMw → ÉTR price oracle
+- Pre-execution metering with runtime enforcement</p>
+<p><strong>What's Missing</strong>:
+1. <strong>VMw Injector</strong>: WASM bytecode instrumentation to inject metering calls
+2. <strong>Instruction Weight Database</strong>: Comprehensive mapping of WASM opcodes to VMw costs
+3. <strong>Dynamic Price Oracle</strong>: Real-time VMw → ÉTR conversion based on network conditions
+4. <strong>Execution Metering</strong>: Runtime enforcement of VMw limits during transaction execution</p>
+<p><strong>Implementation Priority</strong>: HIGH (required for mainnet)</p>
+<p><strong>Recommended Approach</strong>:</p>
+<pre class="codehilite"><code class="language-rust">// Required components:
+
+// 1. VMw Weight Database
+pub struct InstructionWeights {
+    add: u64,           // 1 VMw
+    mul: u64,           // 2 VMw
+    div: u64,           // 4 VMw
+    crypto_hash: u64,   // 100 VMw
+    storage_read: u64,  // 1000 VMw
+    storage_write: u64, // 2000 VMw
+    // ... complete mapping
+}
+
+// 2. WASM Instrumentation
+pub fn inject_metering(wasm_module: &amp;[u8]) -&gt; Result&lt;Vec&lt;u8&gt;, Error&gt; {
+    // Parse WASM module
+    // Inject VMw charging before each instruction
+    // Return instrumented bytecode
+}
+
+// 3. Runtime Metering
+pub struct VMwMeter {
+    limit: u64,
+    used: u64,
+}
+
+impl VMwMeter {
+    pub fn charge(&amp;mut self, amount: u64) -&gt; Result&lt;(), OutOfVMw&gt; {
+        if self.used + amount &gt; self.limit {
+            return Err(OutOfVMw);
+        }
+        self.used += amount;
+        Ok(())
+    }
+}
+</code></pre>
+
+<p><strong>Estimated Work</strong>: 2-3 weeks for experienced WASM developer</p>
+<p><strong>Location</strong>: <code>08-etwasm-vm/vmw-metering/</code> (needs creation)</p>
+<h3 id="92-etwasmvm-contract-runtime-partial-implementation">9.2. ËtwasmVM Contract Runtime ⚠️ PARTIAL IMPLEMENTATION</h3>
+<p><strong>Status</strong>: Architecture defined, runtime incomplete</p>
+<p><strong>What's Described</strong> (Section 6):
+- WebAssembly-based smart contract execution
+- VMw metering integration
+- Reentrancy protection
+- Contract state management
+- Multi-language support (Rust, C, AssemblyScript)</p>
+<p><strong>What's Missing</strong>:
+1. <strong>Contract Deployment</strong>: Upload and instantiate WASM contracts
+2. <strong>Contract Calls</strong>: Inter-contract communication
+3. <strong>State Persistence</strong>: Storage rent and garbage collection
+4. <strong>Gas Refunds</strong>: Unused VMw refund mechanism
+5. <strong>Contract Upgradeability</strong>: Proxy pattern support</p>
+<p><strong>Implementation Priority</strong>: HIGH (required for mainnet)</p>
+<p><strong>Recommended Approach</strong>:</p>
+<p>Use existing Substrate pallets as foundation:
+- <code>pallet-contracts</code>: Substrate's WASM contract pallet
+- Customize for VMw metering (replace gas with VMw)
+- Add reentrancy guards
+- Implement storage rent model</p>
+<p><strong>Estimated Work</strong>: 4-6 weeks</p>
+<p><strong>Location</strong>: <code>08-etwasm-vm/pallet/src/lib.rs</code> (exists but needs completion)</p>
+<h3 id="93-lightning-bloc-layer-2-not-implemented">9.3. Lightning-Bloc (Layer 2) ⚠️ NOT IMPLEMENTED</h3>
+<p><strong>Status</strong>: Conceptual design only, no implementation</p>
+<p><strong>What's Described</strong> (Section 7):
+- Payment channel network for instant, low-fee transactions
+- Multi-hop routing
+- Watchtower services for fraud prevention
+- Time-locked dispute resolution</p>
+<p><strong>What's Missing</strong>:
+1. <strong>Channel Opening</strong>: On-chain contract for locking funds
+2. <strong>Off-Chain Updates</strong>: Signed state updates between parties
+3. <strong>Channel Closing</strong>: Submit final state or trigger dispute
+4. <strong>Routing Protocol</strong>: Path-finding for multi-hop payments
+5. <strong>Watchtowers</strong>: Monitor channels for fraud attempts</p>
+<p><strong>Implementation Priority</strong>: MEDIUM (post-mainnet enhancement)</p>
+<p><strong>Recommended Approach</strong>:</p>
+<p>Adapt existing Lightning Network concepts:</p>
+<pre class="codehilite"><code class="language-rust">pub struct PaymentChannel {
+    pub participants: (AccountId, AccountId),
+    pub capacity: Balance,
+    pub balances: (Balance, Balance),
+    pub nonce: u64,
+    pub timeout: BlockNumber,
+    pub status: ChannelStatus,
+}
+
+pub enum ChannelStatus {
+    Open,
+    Disputed,
+    Closed,
+}
+
+// Extrinsics
+pub fn open_channel(counterparty: AccountId, amount: Balance);
+pub fn close_channel(channel_id: H256, final_state: ChannelState);
+pub fn dispute_close(channel_id: H256, newer_state: ChannelState);
+</code></pre>
+
+<p><strong>Estimated Work</strong>: 8-12 weeks for full implementation</p>
+<p><strong>Location</strong>: <code>07-transactions/lightning-bloc/</code> (exists as placeholder)</p>
+<h3 id="94-post-quantum-cryptography-not-implemented">9.4. Post-Quantum Cryptography ⚠️ NOT IMPLEMENTED</h3>
+<p><strong>Status</strong>: Migration path defined, no implementation</p>
+<p><strong>What's Described</strong> (Section 8):
+- Hybrid signature scheme (Ed25519 + Dilithium)
+- CRYSTALS-Kyber for key encapsulation
+- SPHINCS+ as alternative hash-based signature
+- Phased migration timeline (2025-2028)</p>
+<p><strong>What's Missing</strong>:
+1. <strong>Hybrid Signing</strong>: Dual signature verification
+2. <strong>Key Derivation</strong>: Generate both classical and PQ keys
+3. <strong>Migration Tools</strong>: Convert existing accounts to hybrid mode
+4. <strong>Performance Testing</strong>: Benchmark PQ signature verification
+5. <strong>Storage Overhead</strong>: Handle larger signature sizes (Ed25519: 64 bytes → Dilithium: 2420 bytes)</p>
+<p><strong>Implementation Priority</strong>: LOW (future-proofing, not immediate threat)</p>
+<p><strong>Recommended Approach</strong>:</p>
+<p>Use NIST-selected PQ algorithms:</p>
+<pre class="codehilite"><code class="language-rust">pub enum SignatureScheme {
+    Ed25519,                          // Current (32 byte pubkey, 64 byte sig)
+    Hybrid(Ed25519, Dilithium2),      // Transition (verify both)
+    Dilithium2,                       // Future PQ-only (1312 byte pubkey, 2420 byte sig)
+}
+
+pub fn verify_hybrid(
+    message: &amp;[u8],
+    ed25519_sig: &amp;[u8; 64],
+    dilithium_sig: &amp;[u8; 2420],
+    pubkey: &amp;HybridPublicKey,
+) -&gt; bool {
+    verify_ed25519(message, ed25519_sig, &amp;pubkey.ed25519)
+        &amp;&amp; verify_dilithium(message, dilithium_sig, &amp;pubkey.dilithium)
+}
+</code></pre>
+
+<p><strong>Estimated Work</strong>: 6-8 weeks</p>
+<p><strong>Location</strong>: <code>03-security/post-quantum/</code> (needs creation)</p>
+<p><strong>Crate Dependencies</strong>:
+- <code>pqcrypto-dilithium</code>
+- <code>pqcrypto-kyber</code>
+- <code>pqcrypto-sphincsplus</code></p>
+<h3 id="95-cross-chain-oracle-network-partial-implementation">9.5. Cross-Chain Oracle Network ⚠️ PARTIAL IMPLEMENTATION</h3>
+<p><strong>Status</strong>: Architecture defined, production oracles not deployed</p>
+<p><strong>What's Needed</strong>:</p>
+<p>The reserve-backed token system requires reliable price feeds for:
+- ÉTR/USD pricing
+- Synthetic asset pricing
+- Reserve asset valuations</p>
+<p><strong>Current State</strong>:
+- Oracle pallet exists (<code>pallet-reserve-oracle</code>)
+- Price submission mechanism implemented
+- No production oracle operators</p>
+<p><strong>Implementation Priority</strong>: HIGH (required for EDSC mainnet)</p>
+<p><strong>Recommended Approach</strong>:</p>
+<p>Deploy oracle node network:</p>
+<pre class="codehilite"><code class="language-rust">// Oracle data providers
+pub struct OracleProvider {
+    pub account: AccountId,
+    pub stake: Balance,              // Minimum 1000 ÉTR
+    pub reputation: ReputationScore,
+    pub price_feeds: Vec&lt;AssetId&gt;,
+}
+
+// Price aggregation
+pub fn submit_price(
+    origin: OriginFor&lt;T&gt;,
+    asset_id: AssetId,
+    price: u128,      // USD price (6 decimals)
+    timestamp: u64,
+) -&gt; DispatchResult;
+
+pub fn aggregate_prices(asset_id: AssetId) -&gt; Option&lt;u128&gt; {
+    // Median of all submitted prices (outlier rejection)
+    let mut prices = PriceSubmissions::&lt;T&gt;::get(asset_id);
+    prices.sort();
+    prices.get(prices.len() / 2).copied()
+}
+</code></pre>
+
+<p><strong>Oracle Incentives</strong>:
+- Accurate submissions → Earn fees (0.1% of trades using oracle price)
+- Outlier submissions → Reputation penalty
+- Provably false data → Slashing</p>
+<p><strong>Estimated Work</strong>: 4-6 weeks to deploy production oracle network</p>
+<p><strong>Location</strong>: <code>src/pallets/pallet-reserve-oracle/</code> (exists, needs production deployment)</p>
+<h3 id="96-flareswap-dex-deployment-contracts-ready-not-deployed">9.6. FlareSwap DEX Deployment ⚠️ CONTRACTS READY, NOT DEPLOYED</h3>
+<p><strong>Status</strong>: Smart contracts complete, deployment pending</p>
+<p><strong>What's Complete</strong>:
+- FlareSwap Factory, Pair, ERC20 (Core)
+- FlareSwap Router, Library, WETH (Periphery)
+- Solidity contracts tested locally</p>
+<p><strong>What's Missing</strong>:
+1. <strong>Contract Compilation</strong>: Compile to WASM for ËtwasmVM
+2. <strong>Deployment Scripts</strong>: Automated deployment to FlareChain
+3. <strong>Frontend Integration</strong>: Web UI for swapping
+4. <strong>Liquidity Bootstrapping</strong>: Initial ÉTR/EDSC pools
+5. <strong>Subgraph/Indexer</strong>: Track trades, volume, TVL</p>
+<p><strong>Implementation Priority</strong>: HIGH (DeFi ecosystem enabler)</p>
+<p><strong>Deployment Steps</strong>:</p>
+<pre class="codehilite"><code class="language-bash"># 1. Compile contracts to WASM
+solang compile --target substrate FlareSwapFactory.sol
+solang compile --target substrate FlareSwapPair.sol
+solang compile --target substrate FlareSwapRouter.sol
+
+# 2. Deploy via extrinsic
+polkadot-js-api tx.contracts.instantiateWithCode \
+  --gas 1000000 \
+  --value 0 \
+  --code FlareSwapFactory.wasm \
+  --data 0x... # constructor args
+
+# 3. Verify deployment
+polkadot-js-api query.contracts.contractInfoOf &lt;contract-address&gt;
+</code></pre>
+
+<p><strong>Estimated Work</strong>: 2-3 weeks for full deployment + UI</p>
+<p><strong>Location</strong>:
+- Contracts: <code>05-multichain/flareswap/</code> (complete)
+- Deployment: Needs scripts in <code>scripts/deploy-dex.sh</code></p>
+<h3 id="97-comprehensive-testing-in-progress">9.7. Comprehensive Testing ⚠️ IN PROGRESS</h3>
+<p><strong>Status</strong>: Unit tests exist, integration/stress tests incomplete</p>
+<p><strong>Test Coverage</strong>:
+- Unit tests: ~60% coverage
+- Integration tests: ~30% coverage
+- Stress tests: Not implemented
+- Security audits: Not completed</p>
+<p><strong>What's Needed</strong>:</p>
+<ol>
+<li><strong>Runtime Integration Tests</strong>:</li>
+<li>Multi-pallet interaction tests</li>
+<li>Cross-chain message passing</li>
+<li>Reserve rebalancing scenarios</li>
+<li>
+<p>Reserve depletion stress tests</p>
+</li>
+<li>
+<p><strong>Performance Benchmarks</strong>:</p>
+</li>
+<li>Transaction throughput (target: 1000+ TPS)</li>
+<li>Block finalization time (target: &lt;60s for 95% finality)</li>
+<li>VMw metering overhead</li>
+<li>
+<p>Cross-chain latency</p>
+</li>
+<li>
+<p><strong>Security Audits</strong>:</p>
+</li>
+<li>Third-party audit of all runtime code</li>
+<li>Fuzzing tests for edge cases</li>
+<li>Formal verification of critical components</li>
+</ol>
+<p><strong>Implementation Priority</strong>: CRITICAL (before mainnet)</p>
+<p><strong>Estimated Work</strong>: 6-8 weeks for comprehensive test suite + audits</p>
+<h3 id="summary-implementation-roadmap">Summary: Implementation Roadmap</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Estimated Work</th>
+<th>Blocker for Mainnet?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VMw Metering Runtime</td>
+<td>HIGH</td>
+<td>40%</td>
+<td>2-3 weeks</td>
+<td>✅ YES</td>
+</tr>
+<tr>
+<td>ËtwasmVM Completion</td>
+<td>HIGH</td>
+<td>60%</td>
+<td>4-6 weeks</td>
+<td>✅ YES</td>
+</tr>
+<tr>
+<td>Oracle Network</td>
+<td>HIGH</td>
+<td>70%</td>
+<td>4-6 weeks</td>
+<td>✅ YES</td>
+</tr>
+<tr>
+<td>FlareSwap Deployment</td>
+<td>HIGH</td>
+<td>90%</td>
+<td>2-3 weeks</td>
+<td>⚠️ PARTIAL</td>
+</tr>
+<tr>
+<td>Lightning-Bloc</td>
+<td>MEDIUM</td>
+<td>10%</td>
+<td>8-12 weeks</td>
+<td>❌ NO (post-mainnet)</td>
+</tr>
+<tr>
+<td>Post-Quantum Crypto</td>
+<td>LOW</td>
+<td>5%</td>
+<td>6-8 weeks</td>
+<td>❌ NO (future upgrade)</td>
+</tr>
+<tr>
+<td>Comprehensive Testing</td>
+<td>CRITICAL</td>
+<td>45%</td>
+<td>6-8 weeks</td>
+<td>✅ YES</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total Pre-Mainnet Work</strong>: 18-26 weeks (~4-6 months) for critical components</p>
+<p><strong>Mainnet Readiness Checklist</strong>:
+- [x] Core E³20 components (13/13 complete)
+- [ ] VMw metering runtime
+- [ ] ËtwasmVM contract execution
+- [ ] Oracle network deployment
+- [ ] FlareSwap DEX deployment
+- [ ] Comprehensive test suite
+- [ ] Security audit completion
+- [x] Reserve infrastructure (pallet-multiasset-reserve, pallet-reserve-backed-token)</p>
+<p><strong>Current Status</strong>: <strong>ALPHA COMPLETE</strong> (all architecture defined, ~70% implementation complete)</p>
+<p><strong>Next Milestone</strong>: <strong>BETA LAUNCH</strong> (all mainnet blockers resolved, audited)</p>
+<hr />
+<h2 id="conclusion">CONCLUSION</h2>
+<p>The E³20 protocol provides a complete, modular foundation for sovereign blockchain networks:</p>
+<ul>
+<li><strong>ASF</strong>: Adaptive, spectrum-based finality</li>
+<li><strong>VMw</strong>: Energy-based computation metering</li>
+<li><strong>Multichain</strong>: Native coordination without bridges</li>
+<li><strong>EtwasmVM</strong>: Secure, efficient smart contracts</li>
+<li><strong>DETR</strong>: Robust P2P networking</li>
+<li><strong>Post-Quantum</strong>: Future-proof cryptography</li>
+</ul>
+<p><strong>Status</strong>: ✅ All 13 components at 100% Alpha Complete</p>
+<hr />
+<p><strong>End of Volume II</strong></p>
+<p><strong>Next</strong>: Volume III - Governance &amp; Fiscal Mechanics</p>
+<hr />
+<h2 id="closing-remarks">CLOSING REMARKS</h2>
+<p>To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.</p>
+<p>Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.</p>
+<p>This idea does not promote growth, prosperity, fairness, or decentralization.</p>
+<p>It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.</p>
+<p>This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.</p>
+<p>We are in a unique period in which power can be reclaimed by the powerless.</p>
+<p>Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.</p>
+<p>Borders can be reimagined.</p>
+<p>When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.</p>
+<p>The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.</p>
+<p>By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.</p>
+<p><strong>– Eoj Edred</strong>
+<strong>Founder, Ëtrid FODDoS Project</strong></p>
+<hr />
+<p><em>"Provide a flare and guide the way, the future of tomorrow is decided today."</em></p>
+<p><strong>– Eoj Edred</strong></p>
+        </div>
+    </div>
+
+    <a href="#" class="back-to-top" id="back-to-top">↑</a>
+
+    <footer>
+        <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Back to top button
+        const backToTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        backToTop.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

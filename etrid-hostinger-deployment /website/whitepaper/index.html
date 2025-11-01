@@ -3,336 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ËTRID Ivory Papers - Complete protocol specification covering conceptual architecture, technical specifications, and governance mechanics">
-    <title>ËTRID Ivory Papers | Official Protocol Specification</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ËTRID Ivory Papers - Technical Documentation</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'etrid-blue': '#3B82F6',
-                        'etrid-purple': '#8B5CF6',
-                        'etrid-dark': '#0A0E1A',
-                        'etrid-darker': '#050812',
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif'],
-                        'display': ['Space Grotesk', 'sans-serif'],
-                    }
-                }
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0A0E1A;
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .animated-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0A0E1A 0%, #1a1f35 25%, #0f1729 50%, #1a1f35 75%, #0A0E1A 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -2;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Grid overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .back-home {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 2rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            color: #3B82F6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-home:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3B82F6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+            padding: 0 1rem;
+        }
+
+        .doc-card {
+            background: rgba(21, 27, 46, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .doc-card:hover {
+            border-color: rgba(59, 130, 246, 0.8);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow:
+                0 20px 60px rgba(59, 130, 246, 0.2),
+                0 0 40px rgba(139, 92, 246, 0.1);
+        }
+
+        .doc-card:hover::before {
+            opacity: 1;
+        }
+
+        .doc-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .doc-card h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: #3B82F6;
+            font-size: 1.6rem;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .doc-card p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .doc-size {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .arrow {
+            color: #06b6d4;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .doc-card:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        .featured {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .doc-card {
+                padding: 2rem;
             }
         }
-    </script>
+    </style>
 </head>
-<body class="bg-etrid-darker text-white font-sans">
+<body>
+    <div class="animated-gradient"></div>
+    <div class="grid-overlay"></div>
 
-    <!-- Header -->
-    <header class="border-b border-white/10 bg-etrid-darker/80 backdrop-blur-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <a href="https://etrid.org" class="flex items-center gap-2">
-                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
-                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
-                        ËTRID
-                    </span>
-                </a>
-                <nav class="flex items-center space-x-6">
-                    <a href="https://etrid.org" class="text-gray-300 hover:text-white transition-colors">Home</a>
-                    <a href="https://docs.etrid.org" class="text-gray-300 hover:text-white transition-colors">Docs</a>
-                    <a href="https://github.com/EojEdred/Etrid" target="_blank" class="text-gray-300 hover:text-white transition-colors">GitHub</a>
-                </nav>
-            </div>
-        </div>
+    <header>
+        <h1>ËTRID Ivory Papers</h1>
+        <p class="subtitle">Technical Documentation & Protocol Specifications</p>
+        <a href="/" class="back-home">← Back to Home</a>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <!-- Hero Section -->
-        <div class="text-center mb-16">
-            <div class="flex justify-center mb-6">
-                <img src="../assets/logos/etrid-ceremonial-mark.svg" alt="ËTRID Protocol" class="h-32 w-32">
-            </div>
-            <h1 class="text-6xl font-display font-bold mb-4 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
-                IVORY PAPERS
-            </h1>
-            <div class="flex justify-center mb-4">
-                <img src="../assets/logos/consensus-logo.svg" alt="Consënsus Protocol" class="h-12">
-            </div>
-            <p class="text-2xl text-gray-300 mb-2">
-                Official Protocol Specification v2.0
-            </p>
-            <p class="text-lg text-gray-400">
-                Published October 24, 2025 • By Eoj Edred • GPLv3 License
-            </p>
+    <div class="container">
+        <div class="documents-grid">
+            <a href="complete-edition.html" class="doc-card featured">
+                <span class="doc-icon">📘</span>
+                <h2>Complete Edition v2.0</h2>
+                <p>Comprehensive ËTRID Ivory Paper covering all aspects of the protocol, architecture, and implementation.</p>
+                <div class="doc-meta">
+                    <span class="doc-size">~60 KB • Full Specification</span>
+                    <span class="arrow">→</span>
+                </div>
+            </a>
+
+            <a href="volume-1.html" class="doc-card">
+                <span class="doc-icon">📗</span>
+                <h2>Volume I</h2>
+                <p>Conceptual Architecture - High-level overview of ËTRID's design philosophy and core concepts.</p>
+                <div class="doc-meta">
+                    <span class="doc-size">~32 KB • Architecture</span>
+                    <span class="arrow">→</span>
+                </div>
+            </a>
+
+            <a href="volume-2.html" class="doc-card">
+                <span class="doc-icon">📙</span>
+                <h2>Volume II</h2>
+                <p>Technical Specification - Detailed technical implementation, smart contracts, and system components.</p>
+                <div class="doc-meta">
+                    <span class="doc-size">~73 KB • Technical Deep-Dive</span>
+                    <span class="arrow">→</span>
+                </div>
+            </a>
+
+            <a href="volume-3.html" class="doc-card">
+                <span class="doc-icon">📕</span>
+                <h2>Volume III</h2>
+                <p>Governance & Fiscal Mechanics - Treasury management, consensus mechanisms, and economic models.</p>
+                <div class="doc-meta">
+                    <span class="doc-size">~101 KB • Economics & Governance</span>
+                    <span class="arrow">→</span>
+                </div>
+            </a>
+
+            <a href="protocol-charter.html" class="doc-card">
+                <span class="doc-icon">📜</span>
+                <h2>Protocol Charter</h2>
+                <p>ËTRID Foundation Charter - Organizational structure, governance framework, and protocol principles.</p>
+                <div class="doc-meta">
+                    <span class="doc-size">~32 KB • Charter Document</span>
+                    <span class="arrow">→</span>
+                </div>
+            </a>
         </div>
+    </div>
 
-        <!-- Overview Card -->
-        <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-2xl p-8 mb-12">
-            <h2 class="text-2xl font-display font-bold mb-4">About the Ivory Papers</h2>
-            <p class="text-gray-300 text-lg leading-relaxed mb-4">
-                The ËTRID Ivory Papers provide the complete specification for a <strong>decentralized multichain blockchain platform</strong>
-                designed to achieve true democratic governance at scale. Unlike Bitcoin's immutability-first approach or Ethereum's
-                developer-centric model, ËTRID implements <strong>Consensus Day</strong>: an annual, stake-weighted voting event where
-                the community directly controls the protocol's evolution.
-            </p>
-            <div class="grid md:grid-cols-3 gap-4 mt-6">
-                <div class="bg-etrid-dark/50 rounded-lg p-4 border border-white/5">
-                    <div class="text-etrid-blue font-semibold text-sm mb-1">DOCUMENT ID</div>
-                    <div class="text-white">ETRID-WP-2025-V2.0</div>
-                </div>
-                <div class="bg-etrid-dark/50 rounded-lg p-4 border border-white/5">
-                    <div class="text-etrid-purple font-semibold text-sm mb-1">STATUS</div>
-                    <div class="text-white">ACTIVE SPECIFICATION</div>
-                </div>
-                <div class="bg-etrid-dark/50 rounded-lg p-4 border border-white/5">
-                    <div class="text-etrid-blue font-semibold text-sm mb-1">TARGET LAUNCH</div>
-                    <div class="text-white">Q1 2026</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Complete Specification -->
-        <div class="mb-12">
-            <h2 class="text-3xl font-display font-bold mb-6">Complete Specification</h2>
-            <div class="bg-gradient-to-r from-etrid-blue to-etrid-purple rounded-xl p-8 hover:shadow-2xl hover:shadow-etrid-blue/20 transition-all">
-                <div class="flex items-start justify-between mb-6">
-                    <div class="flex-1">
-                        <h3 class="text-2xl font-semibold mb-3">
-                            📘 ËTRID Ivory Paper v2.0 - Complete Edition
-                        </h3>
-                        <p class="text-white/90 mb-4 text-lg">
-                            The comprehensive protocol specification containing all technical details, governance mechanics,
-                            and implementation roadmap in a single document.
-                        </p>
-                        <div class="flex flex-wrap gap-3 text-sm">
-                            <span class="bg-white/20 px-3 py-1 rounded-full">16 Sections</span>
-                            <span class="bg-white/20 px-3 py-1 rounded-full">43 KB</span>
-                            <span class="bg-white/20 px-3 py-1 rounded-full">Complete Reference</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-wrap gap-3">
-                    <a href="viewer-standalone.html" class="flex-1 min-w-[200px] bg-white/10 border border-white/20 px-6 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all text-center">
-                        📖 View Online
-                    </a>
-                    <a href="ivory-paper.md" download class="flex-1 min-w-[200px] bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all text-center">
-                        ⬇️ Download Markdown
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Three-Part Series -->
-        <div class="mb-12">
-            <h2 class="text-3xl font-display font-bold mb-6">Three-Part Ivory Papers Series</h2>
-            <p class="text-gray-400 mb-8 text-lg">
-                The protocol specification divided into three focused volumes for specialized study
-            </p>
-
-            <div class="space-y-6">
-                <!-- Volume I -->
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all">
-                    <div class="text-etrid-blue font-semibold text-sm mb-2">VOLUME I</div>
-                    <h3 class="text-xl font-semibold mb-2">
-                        Conceptual Architecture
-                    </h3>
-                    <p class="text-gray-400 mb-3">
-                        Executive summary, vision & mission, the centralization problem, FODDoS protocol solution,
-                        and core philosophical principles.
-                    </p>
-                    <div class="flex gap-2 text-sm text-gray-500 mb-4">
-                        <span>16 KB</span>
-                        <span>•</span>
-                        <span>5 Sections</span>
-                        <span>•</span>
-                        <span>Conceptual Framework</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="viewer-standalone.html?doc=vol1" class="flex-1 bg-white/10 border border-white/20 px-4 py-2 rounded-lg font-semibold hover:bg-white/20 transition-all text-center text-sm">
-                            📖 View
-                        </a>
-                        <a href="ivory-paper-vol1-conceptual.md" download class="flex-1 bg-etrid-blue/20 border border-etrid-blue/40 px-4 py-2 rounded-lg font-semibold hover:bg-etrid-blue/30 transition-all text-center text-sm">
-                            ⬇️ Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Volume II -->
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-purple/50 transition-all">
-                    <div class="text-etrid-purple font-semibold text-sm mb-2">VOLUME II</div>
-                    <h3 class="text-xl font-semibold mb-2">
-                        Technical Specification
-                    </h3>
-                    <p class="text-gray-400 mb-3">
-                        E³20 protocol architecture, ASF consensus mechanism, Virtual Machine Watts (VMw),
-                        FlareChain & Partition Burst Chains, cross-chain security, EtwasmVM smart contracts,
-                        DETR P2P network layer, and post-quantum cryptography.
-                    </p>
-                    <div class="flex gap-2 text-sm text-gray-500 mb-4">
-                        <span>25 KB</span>
-                        <span>•</span>
-                        <span>8 Sections</span>
-                        <span>•</span>
-                        <span>Technical Deep Dive</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="viewer-standalone.html?doc=vol2" class="flex-1 bg-white/10 border border-white/20 px-4 py-2 rounded-lg font-semibold hover:bg-white/20 transition-all text-center text-sm">
-                            📖 View
-                        </a>
-                        <a href="ivory-paper-vol2-technical.md" download class="flex-1 bg-etrid-purple/20 border border-etrid-purple/40 px-4 py-2 rounded-lg font-semibold hover:bg-etrid-purple/30 transition-all text-center text-sm">
-                            ⬇️ Download
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Volume III -->
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6 hover:border-etrid-blue/50 transition-all">
-                    <div class="text-etrid-blue font-semibold text-sm mb-2">VOLUME III</div>
-                    <h3 class="text-xl font-semibold mb-2">
-                        Governance & Fiscal Mechanics
-                    </h3>
-                    <p class="text-gray-400 mb-3">
-                        Consensus Day constitutional event, governance roles & responsibilities, fiscal cycle management,
-                        token economics (ÉTR, ËDSC, VMw), proposal & voting systems, reward distribution,
-                        economic sustainability, and emergency procedures.
-                    </p>
-                    <div class="flex gap-2 text-sm text-gray-500 mb-4">
-                        <span>32 KB</span>
-                        <span>•</span>
-                        <span>8 Sections</span>
-                        <span>•</span>
-                        <span>Governance Framework</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="viewer-standalone.html?doc=vol3" class="flex-1 bg-white/10 border border-white/20 px-4 py-2 rounded-lg font-semibold hover:bg-white/20 transition-all text-center text-sm">
-                            📖 View
-                        </a>
-                        <a href="ivory-paper-vol3-governance.md" download class="flex-1 bg-etrid-blue/20 border border-etrid-blue/40 px-4 py-2 rounded-lg font-semibold hover:bg-etrid-blue/30 transition-all text-center text-sm">
-                            ⬇️ Download
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Key Features Grid -->
-        <div class="mb-12">
-            <h2 class="text-3xl font-display font-bold mb-6">Key Protocol Features</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Democratic Governance</h3>
-                    <p class="text-gray-400 text-sm">Annual Consensus Day voting on inflation rate, protocol upgrades, and board selection</p>
-                </div>
-
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-purple to-etrid-blue rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Native Stablecoin</h3>
-                    <p class="text-gray-400 text-sm">ËDSC stablecoin with 110-130% collateralization for sustainable DeFi ecosystem</p>
-                </div>
-
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">ASF Consensus</h3>
-                    <p class="text-gray-400 text-sm">Ascending Scale of Finality for fast confirmations with progressive security</p>
-                </div>
-
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-purple to-etrid-blue rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Post-Quantum Ready</h3>
-                    <p class="text-gray-400 text-sm">Hybrid Ed25519 + SPHINCS+ cryptography for future-proof security</p>
-                </div>
-
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">Multichain Architecture</h3>
-                    <p class="text-gray-400 text-sm">FlareChain with Partition Burst Chains for infinite horizontal scaling</p>
-                </div>
-
-                <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-etrid-purple to-etrid-blue rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold mb-2">WASM Smart Contracts</h3>
-                    <p class="text-gray-400 text-sm">EtwasmVM runtime with WebAssembly for multi-language contract support</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Additional Resources -->
-        <div class="bg-etrid-dark border border-white/10 rounded-xl p-8">
-            <h2 class="text-2xl font-bold mb-6">Additional Resources</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h3 class="font-semibold text-lg mb-3 text-etrid-blue">Technical Resources</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="https://github.com/EojEdred/Etrid" target="_blank" class="hover:text-white transition-colors">→ GitHub Repository</a></li>
-                        <li><a href="https://docs.etrid.org" class="hover:text-white transition-colors">→ Developer Documentation</a></li>
-                        <li><a href="https://validator.etrid.org" target="_blank" class="hover:text-white transition-colors">→ Validator Dashboard</a></li>
-                        <li><a href="https://watchtower.etrid.org" target="_blank" class="hover:text-white transition-colors">→ Network Monitor</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-lg mb-3 text-etrid-purple">Web Applications</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="https://wallet.etrid.org" target="_blank" class="hover:text-white transition-colors">→ Web Wallet</a></li>
-                        <li><a href="https://wallet.etrid.org/governance" target="_blank" class="hover:text-white transition-colors">→ Governance Portal (Consensus Day)</a></li>
-                        <li><a href="https://wallet.etrid.org/swap" target="_blank" class="hover:text-white transition-colors">→ DEX & Swap Interface</a></li>
-                        <li><a href="https://masterchef.etrid.org" target="_blank" class="hover:text-white transition-colors">→ Staking Dashboard</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- License Notice -->
-        <div class="mt-12 p-6 bg-gradient-to-r from-etrid-blue/5 to-etrid-purple/5 rounded-xl border border-etrid-blue/20">
-            <div class="flex items-start gap-4">
-                <svg class="w-6 h-6 text-etrid-blue flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h3 class="font-semibold mb-2">Open Source License</h3>
-                    <p class="text-gray-400 text-sm">
-                        The ËTRID Ivory Papers are published under the <strong>GPLv3 License</strong> for open, non-commercial use.
-                        The protocol specification is free to study, reference, and implement. Commercial implementations require
-                        explicit permission from the ËTRID Foundation.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-white/10 mt-16 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
-            <p class="mt-2">Founder: Eoj Edred • GPLv3 License • v2.0 Active Specification</p>
-        </div>
+    <footer>
+        <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Built with transparency and open-source principles</p>
     </footer>
-
 </body>
 </html>

@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Ivory Paper v2.0 - Complete Edition - ËTRID</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #0077ff;
+            --dark-bg: #0a0e1a;
+            --card-bg: #151b2e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --accent: #00ff88;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #0f1729 100%);
+            color: var(--text-primary);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            background: linear-gradient(180deg, rgba(0,212,255,0.05) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(0,212,255,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 1rem 0 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0,212,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .content h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .content h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content h4 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .content p {
+            margin: 1rem 0;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .content ul, .content ol {
+            margin: 1rem 0 1rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .content li {
+            margin: 0.5rem 0;
+        }
+
+        .content code {
+            background: rgba(0,212,255,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+
+        .content pre {
+            background: rgba(0,0,0,0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-primary);
+        }
+
+        .content blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .content table th,
+        .content table td {
+            padding: 1rem;
+            border: 1px solid rgba(0,212,255,0.2);
+            text-align: left;
+        }
+
+        .content table th {
+            background: rgba(0,212,255,0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .content a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .content a:hover {
+            border-bottom-color: var(--primary-color);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ËTRID Ivory Paper v2.0 - Complete Edition</h1>
+        <a href="index.html" class="back-link">← Back to All Documents</a>
+    </header>
+
+    <div class="container">
+        <div class="content">
+<h1 id="etrid-ivory-paper-v20">ËTRID IVORY PAPER v2.0</h1>
+<h2 id="complete-protocol-specification-foundation-governance">Complete Protocol Specification &amp; Foundation Governance</h2>
+<p><strong>Document ID</strong>: ETRID-WP-2025-V2.0
+<strong>Status</strong>: ACTIVE PROTOCOL SPECIFICATION
+<strong>Publication Date</strong>: October 30, 2025
+<strong>Founder</strong>: Eoj Edred
+<strong>License</strong>: GPLv3 (Open Source, Non-Commercial)</p>
+<hr />
+<h2 id="table-of-contents">TABLE OF CONTENTS</h2>
+<ol>
+<li>Executive Summary</li>
+<li>Vision &amp; Mission</li>
+<li>The Problem: Blockchain Centralization</li>
+<li>The Solution: ËTRID FODDoS Protocol</li>
+<li>Protocol Architecture (E³20)</li>
+<li>Governance &amp; Consensus Day</li>
+<li>Token Economics (ÉTR, ËDSC, VMw)</li>
+<li>ËTRID Dollar Stablecoin (ËDSC) Specification</li>
+<li>Peer Architecture &amp; Node Types</li>
+<li>Distribution Pay System</li>
+<li>Foundation Charter &amp; Legal Framework</li>
+<li>Technical Specifications &amp; Network Parameters</li>
+<li>Security, Cryptography &amp; Post-Quantum Readiness</li>
+<li>Deployment Roadmap &amp; Milestones</li>
+<li>Frequently Asked Questions</li>
+<li>Appendices</li>
+</ol>
+<hr />
+<h2 id="1-executive-summary">1. EXECUTIVE SUMMARY</h2>
+<p><strong>ËTRID</strong> is a <strong>decentralized multichain blockchain platform</strong> designed to achieve true democratic governance at scale. Unlike Bitcoin's immutability-first approach or Ethereum's developer-centric model, ËTRID implements <strong>Consensus Day</strong>: an annual, stake-weighted voting event where the community directly controls:</p>
+<ul>
+<li>The annual token inflation rate</li>
+<li>Protocol amendments and upgrades</li>
+<li>Budget allocation for development</li>
+<li>Selection of 9 non-hierarchical board members (Decentralized Directors)</li>
+</ul>
+<h3 id="key-differentiators">Key Differentiators</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>ËTRID</th>
+<th>Bitcoin</th>
+<th>Ethereum</th>
+<th>Others</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Democratic Governance</strong></td>
+<td>✅ Annual vote on all major decisions</td>
+<td>❌ Developer consensus</td>
+<td>⚠️ Off-chain voting</td>
+<td>⚠️ Varies</td>
+</tr>
+<tr>
+<td><strong>Native Stablecoin</strong></td>
+<td>✅ ËDSC (110-130% collateralized)</td>
+<td>❌ None</td>
+<td>⚠️ Requires DeFi</td>
+<td>⚠️ Varies</td>
+</tr>
+<tr>
+<td><strong>Post-Quantum Crypto</strong></td>
+<td>✅ Ed25519 + SPHINCS+ hybrid</td>
+<td>❌ ECDSA only</td>
+<td>❌ ECDSA only</td>
+<td>❌ Most use ECDSA</td>
+</tr>
+<tr>
+<td><strong>P2P Protocol</strong></td>
+<td>✅ DETR p2p (S/Kademlia + ECIES)</td>
+<td>✅ Custom P2P</td>
+<td>✅ Custom P2P</td>
+<td>✅ Varies</td>
+</tr>
+<tr>
+<td><strong>Sidechain Architecture</strong></td>
+<td>✅ Partition Burst Chains</td>
+<td>❌ None</td>
+<td>✅ Rollups/Sidechains</td>
+<td>✅ Varies</td>
+</tr>
+<tr>
+<td><strong>Smart Contracts</strong></td>
+<td>✅ WASM-based ËtwasmVM</td>
+<td>❌ None</td>
+<td>✅ Solidity/EVM</td>
+<td>✅ Varies</td>
+</tr>
+</tbody>
+</table>
+<h3 id="launch-timeline">Launch Timeline</h3>
+<ul>
+<li><strong>Phase 1-2</strong>: ✅ Core infrastructure complete</li>
+<li><strong>Phase 3</strong>: ✅ ËDSC stablecoin integration complete</li>
+<li><strong>Phase 4-5</strong>: ✅ Partition Burst Chains &amp; DAO registration complete</li>
+<li><strong>Phase 6-7</strong>: ✅ Smart contracts &amp; AI governance complete</li>
+<li><strong>Phase 8</strong>: ✅ Mainnet launched successfully (October 2025)</li>
+</ul>
+<h3 id="initial-token-distribution">Initial Token Distribution</h3>
+<ul>
+<li><strong>Total Supply</strong>: 1 Billion ÉTR</li>
+<li><strong>Initial Circulation</strong>: ~10% (100 Million ÉTR)</li>
+<li><strong>Locked for Growth</strong>: 900 Million ÉTR (released via Consensus Day votes)</li>
+<li><strong>Annual Emission</strong>: Voted by community on Dec 1st each year</li>
+</ul>
+<hr />
+<h2 id="2-vision-mission">2. VISION &amp; MISSION</h2>
+<h3 id="etrid-vision">ËTRID Vision</h3>
+<p><strong>A free and open decentralized democracy of stakeholders where power is distributed among millions of participants, not concentrated in the hands of a few.</strong></p>
+<h3 id="etrid-mission">ËTRID Mission</h3>
+<ol>
+<li><strong>Build</strong> a truly decentralized blockchain with democratic governance</li>
+<li><strong>Protect</strong> digital rights, data sovereignty, and financial privacy</li>
+<li><strong>Enable</strong> self-sufficient stakeholders to reclaim power from centralized intermediaries</li>
+<li><strong>Create</strong> economic systems that reward participation, not just capital</li>
+<li><strong>Maintain</strong> technological excellence while resisting censorship and mutable forks</li>
+</ol>
+<h3 id="core-values">Core Values</h3>
+<ul>
+<li><strong>Decentralization First</strong>: No entity controls &gt;5% of voting power</li>
+<li><strong>Democratic</strong>: All major decisions via Consensus Day supermajority</li>
+<li><strong>Open Source</strong>: GPLv3 license ensures perpetual freedom</li>
+<li><strong>Transparent</strong>: All transactions, governance, and code are auditable</li>
+<li><strong>Resilient</strong>: Network continues operating even if any node is compromised</li>
+</ul>
+<hr />
+<h2 id="3-the-problem-blockchain-centralization">3. THE PROBLEM: BLOCKCHAIN CENTRALIZATION</h2>
+<h3 id="historical-centralization-patterns">Historical Centralization Patterns</h3>
+<p><strong>Bitcoin</strong> (2009):
+- Originally: Truly decentralized P2P currency
+- Today: Dominated by mining pools (3 pools control &gt;50% of hash power)
+- Problem: Network security depends on benevolence of pool operators</p>
+<p><strong>Ethereum</strong> (2015):
+- Originally: Decentralized smart contract platform
+- Today: Major client (Geth) has 80%+ market share, controlled by Ethereum Foundation
+- Problem: Hard fork decisions made by core developers, not token holders</p>
+<p><strong>Modern Alternatives</strong> (2020+):
+- Solana: Dominated by venture capital investors
+- Polkadot: Governance but relay chain remains centralized
+- Cosmos: Multiple chains but unclear governance
+- Layer 2s: Often run by single company (Arbitrum = Offchain Labs, Optimism = OP Labs)</p>
+<h3 id="mutable-hardforks-under-political-pressure">Mutable Hardforks Under Political Pressure</h3>
+<p>Even projects with "immutable" designs have hard-forked due to political or financial pressure:
+- Ethereum's DAO hard fork (2016): Reverting "immutable" transaction
+- Bitcoin Classic vs Bitcoin Cash split (2017): Competing visions, no democratic process
+- Staked ETH Shanghai upgrade (2023): Community concerns ignored in favor of Ethereum Foundation direction</p>
+<p><strong>Root Cause</strong>: Lack of <strong>decentralized democratic decision-making processes</strong>.</p>
+<h3 id="the-data-wars-dcpi-threat">The Data Wars &amp; DCPI Threat</h3>
+<p>Centralized platforms are collecting:
+- Personal location data (IoT devices)
+- Biometric data (facial recognition, haptics)
+- Neural/emotional data (spatial web, sentiment tracking)
+- Medical &amp; reproductive health data (wearables)</p>
+<p><strong>Result</strong>: Corporations and governments monetize intimacy while individuals lose control of their identity.</p>
+<hr />
+<h2 id="4-the-solution-etrid-foddos-protocol">4. THE SOLUTION: ËTRID FODDoS PROTOCOL</h2>
+<h3 id="what-is-foddos">What is FODDoS?</h3>
+<p><strong>FODDoS</strong> = <strong>Free and Open Decentralized Democracy of Stakeholders</strong></p>
+<p>Unlike "Proof of Stake" or "Proof of Work," FODDoS is a <strong>governance model</strong>, not just a consensus algorithm.</p>
+<p><strong>Core Components</strong>:</p>
+<ol>
+<li><strong>Consensus Day</strong> (Annual Democratic Vote)</li>
+<li>Every token holder votes on major decisions</li>
+<li>Vote weight = Stake / Vote Dilution</li>
+<li>
+<p>Results are binding for 12 months</p>
+</li>
+<li>
+<p><strong>Decentralized Directors</strong> (Non-Hierarchical Board)</p>
+</li>
+<li>9 directors elected annually by Consensus Day</li>
+<li>No single president or CEO</li>
+<li>Equal voting power</li>
+<li>
+<p>Can be recalled mid-term with 66% community supermajority</p>
+</li>
+<li>
+<p><strong>Distribution Pay</strong> (Reward Network Participation)</p>
+</li>
+<li>Validators, stakers, and voters earn ÉTR daily</li>
+<li>Earnings based on participation and stake</li>
+<li>
+<p>Penalty system for absenteeism</p>
+</li>
+<li>
+<p><strong>Foundation Charter</strong> (Immutable Rules)</p>
+</li>
+<li>Legal structure defines how DAO operates</li>
+<li>GPLv3 open-source ensures code freedom</li>
+<li>Bylaws cannot be broken without hard fork + community vote</li>
+</ol>
+<hr />
+<h2 id="5-protocol-architecture-e320">5. PROTOCOL ARCHITECTURE (E³20)</h2>
+<h3 id="essential-elements-to-operate-reference-implementation">Essential Elements to Operate Reference Implementation</h3>
+<p>ËTRID consists of <strong>13 core subsystems</strong> (E³20):</p>
+<pre class="codehilite"><code>┌─────────────────────────────────────────────────────────────────┐
+│                     LAYER 1: CORE INFRASTRUCTURE                 │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. DETR p2p       │ Multi-protocol P2P networking               │
+│ 2. OpenDID        │ Self-sovereign identity system              │
+│ 3. Blockchain Sec │ Post-quantum cryptography                   │
+│ 4. Accounts       │ EBCA, RCA, SCA, SSCA account types         │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 2: CHAIN ARCHITECTURE                   │
+├─────────────────────────────────────────────────────────────────┤
+│ 5. Multichain     │ FlareChain + PBCs + State channels          │
+│ 6. Transactions   │ Regular, smart contract, cross-chain        │
+│ 7. Native Crypto  │ ÉTR, ËDSC, VMw tokens                      │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 3: COMPUTATION &amp; CONSENSUS              │
+├─────────────────────────────────────────────────────────────────┤
+│ 8. ËtwasmVM       │ WebAssembly smart contract runtime          │
+│ 9. Consensus      │ ASF (Ascending Scale of Finality)           │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 4: GOVERNANCE &amp; DISTRIBUTION            │
+├─────────────────────────────────────────────────────────────────┤
+│ 10. Foundation    │ DAO charter, legal framework, bylaws        │
+│ 11. Peer Roles    │ Flare Nodes, Validity Nodes, DDs            │
+│ 12. Governance    │ Consensus Day voting, electoral process     │
+│ 13. Distribution  │ Daily reward pay for validators &amp; stakers   │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 5: CLIENT IMPLEMENTATIONS               │
+├─────────────────────────────────────────────────────────────────┤
+│ Clients           │ CLI, Web wallet, Mobile wallet              │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h3 id="51-detr-p2p-multi-protocol-network-layer">5.1 DETR p2p: Multi-Protocol Network Layer</h3>
+<p><strong>DETR</strong> = Decentralized, Encrypted, Trustless, Resilient Peer-to-Peer</p>
+<p><strong>Components</strong>:
+- <strong>DPeers</strong>: Node discovery using S/Kademlia DHT routing
+- <strong>AEComms</strong>: TCP-based secure communications with ECIES encryption
+- <strong>DETRP2P</strong>: Peer tethering for application session negotiation
+- <strong>Ëtr</strong>: Base layer protocol for block synchronization
+- <strong>Fluent</strong>: Secure, private channels using Lingo protocol
+- <strong>StoréD</strong>: Distributed storage using S/Kademlia DHTs and Merkle DAGs</p>
+<p><strong>Security Features</strong>:
+- End-to-end encryption (ECIES) between peers
+- No trust required between peers
+- Sybil-resistant through reputation system
+- Censorship-resistant message routing</p>
+<h3 id="52-opendid-self-sovereign-identity">5.2 OpenDID: Self-Sovereign Identity</h3>
+<p><strong>OpenDID</strong> = Ëtrid Open Decentralized Identification System</p>
+<p><strong>Features</strong>:
+- Users control their own identifiers
+- No central issuing authority
+- Credential issuance by trusted communities
+- Privacy-preserving: Selective disclosure of attributes
+- Interoperable with W3C DID standard</p>
+<p><strong>Use Cases</strong>:
+- KYC/AML compliance without centralized database
+- Sybil resistance: Verified unique humans
+- Developer identity: Reputation for bug bounties
+- Community credentials: Membership proof</p>
+<h3 id="53-blockchain-security-post-quantum-cryptography">5.3 Blockchain Security: Post-Quantum Cryptography</h3>
+<p><strong>Hash Functions</strong>:
+- SHA-3 (Keccak) for general hashing
+- Blake2b for performance-critical operations</p>
+<p><strong>Digital Signatures</strong>:
+- EdDSA (Ed25519) - primary signature scheme
+- SPHINCS+ (lattice-based) - post-quantum backup
+- Hybrid mode during quantum transition period</p>
+<p><strong>Key Management</strong>:
+- HKDF-Blake2b for key derivation
+- BIP39 for mnemonic seeds
+- BIP44 for hierarchical deterministic wallets</p>
+<p><strong>Post-Quantum Readiness</strong>:
+- Network designed for algorithm agility
+- Can switch to quantum-resistant algorithms via soft fork
+- Keys can be upgraded without breaking addresses</p>
+<h3 id="54-account-types">5.4 Account Types</h3>
+<p><strong>EBCA</strong> (External Blockchain Accounts)
+- Any keypair generated outside ËTRID
+- Cannot validate or propose blocks
+- Can receive and send funds
+- Example: MetaMask wallet connected to ËTRID</p>
+<p><strong>RCA</strong> (Root Chain Accounts)
+- Generated by ËTRID Key Generation Protocol
+- Valid on FlareChain (main chain) only
+- Can vote, stake, validate
+- SS58 address format with "1" prefix</p>
+<p><strong>SCA</strong> (Side Chain Accounts)
+- Accounts on specific Partition Burst Chains
+- Different keypair per chain allowed
+- Faster local PBC transactions
+- SS58 address format with chain-specific prefix</p>
+<p><strong>SSCA</strong> (Smart Side Chain Accounts)
+- Controlled by ËtwasmVM smart contracts
+- No private key (code-governed)
+- Can execute transactions on behalf of contract owner
+- Used for autonomous systems and DAO treasuries</p>
+<h3 id="55-multichain-architecture">5.5 Multichain Architecture</h3>
+<p><strong>FlareChain</strong> (Main Chain / Root)
+- Stores world state
+- Executes Consensus Day voting
+- Manages Foundation operations
+- Holds reserve collateral (for ËDSC)
+- Block time: 12 seconds
+- Finality: ~5 minutes via ASF consensus</p>
+<p><strong>Partition Burst Chains (PBCs)</strong> (Sidechains)
+- Dedicated chains for specific purposes or communities
+- Example: PBC-EDSC for ËDSC stablecoin operations
+- State synchronized to FlareChain via checkpoints every N blocks
+- Faster throughput than main chain
+- Security guaranteed by FlareChain validator quorum</p>
+<p><strong>Lightning Bloc Network</strong> (State Channels)
+- Off-chain micropayment channels
+- Rapid settlement (instant)
+- Batch settlement to FlareChain daily/weekly
+- Reduces main chain load
+- Enables microtransactions (&lt;0.01 ÉTR)</p>
+<h3 id="56-native-cryptocurrency">5.6 Native Cryptocurrency</h3>
+<p><strong>ÉTR</strong> (Ëtrid Coin) - Primary Token
+- Total initial supply: 1 Billion
+- Annual issuance: Voted by Consensus Day
+- Uses: Payments, staking, voting, collateral
+- Decimals: 18 (smallest unit: 1 Wei = 0.000000000000000001 ÉTR)</p>
+<p><strong>ËDSC</strong> (Ëtrid Dollar Stablecoin) - 1:1 USD Peg
+- Total supply: 50 Billion ËDSC
+- Initial circulation: 5 Billion
+- Locked reserve: 45 Billion (governance-controlled release)
+- Collateralization: 110-130%
+- Redemption paths: 3 (Treasury vault, custodian, DEX)</p>
+<p><strong>VMw</strong> (Virtual Machine Watts) - Computation Gas
+- Smart contract execution cost
+- 1 VMw ≈ 0.001 ÉTR (market-based)
+- All VMw consumed is burned (deflationary)
+- Pay-per-opcode model</p>
+<h3 id="57-smart-contracts-etwasmvm">5.7 Smart Contracts &amp; ËtwasmVM</h3>
+<p><strong>ËtwasmVM</strong> = Ëtrid WebAssembly Virtual Machine</p>
+<p><strong>Features</strong>:
+- Turing-complete runtime
+- Sandboxed execution environment
+- Gas metering to prevent infinite loops
+- State storage with rent model
+- Cross-contract calls and composition</p>
+<p><strong>Supported Languages</strong>:
+- Rust (primary via wasm-pack)
+- C/C++ (via Emscripten)
+- AssemblyScript (TypeScript to WASM)</p>
+<p><strong>Economic Model</strong>:
+- Storage rent: 0.1 VMw per byte per day
+- Execution: Variable based on opcodes
+- State access: 64 VMw per 32-byte read/write
+- Cross-contract calls: Additional gas overhead</p>
+<h3 id="58-consensus-algorithm-asf">5.8 Consensus Algorithm: ASF</h3>
+<p><strong>ASF</strong> = Ascending Scale of Finality</p>
+<p><strong>Mechanism</strong>:
+- Validators propose and vote on new blocks
+- Block becomes finalized when 66% of validators attest
+- Finality achieved in ~25 validator slots (~5 minutes)
+- Penalties for double-signing or equivocation</p>
+<p><strong>Validator Rotation</strong>:
+- Every epoch: Top 100 validators by stake become active
+- Active validator set: Minimum 25, maximum 100
+- New validators: Enter queue with 64 ÉTR minimum stake
+- Slashing: 1% of stake for security violations</p>
+<hr />
+<h2 id="6-governance-consensus-day">6. GOVERNANCE &amp; CONSENSUS DAY</h2>
+<h3 id="61-consensus-day-annual-democratic-vote">6.1 Consensus Day: Annual Democratic Vote</h3>
+<p><strong>Schedule</strong>:
+- <strong>Date</strong>: December 1st at <strong>12:00 AM PST</strong> (hardcoded, changes require hard fork)
+- <strong>Pre-Consensus Period</strong>: January 1 – October 31 (proposal submission, campaigns, nominations)
+- <strong>Frequency</strong>: Once per year
+- <strong>Participation Types</strong>:
+  - <strong>VALIDITY Nodes</strong> (64+ ÉTR minimum stake): Block producers and consensus participants
+  - <strong>Common Stake Peers</strong> (1+ ÉTR minimum stake): Governance voters and proposal supporters
+  - <strong>Decentralized Directors</strong> (128+ ÉTR minimum stake): 9 elected board members</p>
+<p><strong>Voting Power Calculation</strong>:</p>
+<pre class="codehilite"><code>Voting Power = Staked ÉTR × Coinage
+</code></pre>
+
+<p>Where <strong>Coinage</strong> represents time-weighted stake (how long tokens have been staked).</p>
+<p><strong>Example</strong>:
+- You stake: 1,000 ÉTR for 180 days
+- Coinage multiplier: ~1.5× (increases with time staked)
+- Your voting power: 1,000 × 1.5 = 1,500 effective votes
+- Longer stakes = higher voting power multiplier
+- Incentivizes long-term stakeholder commitment</p>
+<p><strong>Penalties</strong>:
+- Failure to vote = penalties and reward redistribution
+- Rewards distributed to active participants</p>
+<h3 id="62-consensus-day-ballot">6.2 Consensus Day Ballot</h3>
+<p><strong>Three Categories</strong>:</p>
+<h4 id="category-1-fiscal-mint-supply">Category 1: Fiscal Mint &amp; Supply</h4>
+<ul>
+<li><strong>Question</strong>: "How many ÉTR should be minted in the next 12 months?"</li>
+<li><strong>Options</strong>: Top 3 community proposals + 3 limit options (min/mid/max)</li>
+<li><strong>Binding Effect</strong>: Winning proposal becomes the annual mint rate</li>
+<li><strong>Implementation</strong>: Automatic release Jan 1st following vote</li>
+</ul>
+<p><strong>Example Options</strong>:
+- Proposal A: 50 Million ÉTR (5% annual emission)
+- Proposal B: 75 Million ÉTR (7.5% annual emission)
+- Proposal C: 100 Million ÉTR (10% annual emission)
+- Limit 1: Min 25M (2.5%)
+- Limit 2: Mid 62.5M (6.25%)
+- Limit 3: Max 125M (12.5%)</p>
+<h4 id="category-2-decentralized-director-elections">Category 2: Decentralized Director Elections</h4>
+<ul>
+<li><strong>Question</strong>: "Who should serve as the 9 Decentralized Directors?"</li>
+<li><strong>Candidates</strong>: All accounts with ≥128 ÉTR stake</li>
+<li><strong>Criteria</strong>: Must meet "Honest Image" standards (TBD by community)</li>
+<li><strong>Term</strong>: 1 year (Dec 1 - Nov 30)</li>
+<li><strong>Limit</strong>: Max 3 consecutive terms (then 1-year break required)</li>
+</ul>
+<p><strong>DD Roles</strong> (Non-Hierarchical):
+- Oversee FlareChain security and operations
+- Approve major protocol upgrades
+- Manage Foundation budget
+- Coordinate with custodians and validators
+- Respond to security incidents</p>
+<p><strong>DD Compensation</strong>:
+- Salary: X% of annual fiscal mint (TBD)
+- FLARE node rewards: Y% of block production (TBD)
+- Clawback for misconduct: Full stake forfeiture</p>
+<h4 id="category-3-protocol-amendments">Category 3: Protocol Amendments</h4>
+<ul>
+<li><strong>Question</strong>: "What protocol changes should be approved?"</li>
+<li><strong>Options</strong>: Top 3 community proposals</li>
+<li><strong>Voting</strong>: ≥66% supermajority required</li>
+<li><strong>Implementation</strong>: Takes effect Jan 1st following vote</li>
+<li><strong>Audit</strong>: Major changes require 90-day security review</li>
+</ul>
+<p><strong>Example Amendments</strong>:
+- Proposal A: Increase validator count from 25 to 50
+- Proposal B: Add new oracle source (Uniswap TWAP)
+- Proposal C: Adjust penalty percentages for validators</p>
+<h3 id="63-voting-mechanics">6.3 Voting Mechanics</h3>
+<p><strong>Vote Submission</strong>:
+- On-chain voting via extrinsic
+- Ballot opened: December 1, 12:00 AM PST
+- <strong>Pre-Consensus Period</strong>: January 1 – October 31 (proposal submission and campaigning)
+- <strong>Voting Power Formula</strong>: Staked ÉTR × Coinage (time-weighted stake)
+- Failure to vote = penalties and reward redistribution</p>
+<p><strong>Vote Types</strong>:
+- Single-choice: Pick 1 option
+- Ranked-choice (future): Rank preferences
+- Quadratic voting (future): Vote strength weighted by √stake</p>
+<p><strong>Privacy</strong> (Future Enhancement):
+- Zero-knowledge proofs for voter privacy
+- V otes recorded without linking to addresses
+- Cryptographic verification of vote counts</p>
+<h3 id="64-soft-forks-vs-hard-forks">6.4 Soft Forks vs Hard Forks</h3>
+<p><strong>Soft Forks</strong> (Governance-only):
+- Requires: 50% + 1 on Consensus Day
+- Examples: Change oracle sources, adjust validator count
+- Implementation: Network node updates, no chain split
+- Time to activate: ~30 days after vote</p>
+<p><strong>Hard Forks</strong> (Code changes):
+- Requires: 66% supermajority on Consensus Day
+- Audit period: 90 days minimum
+- Community notice: At least 30 days before activation
+- Optional rollback: Within 1 hour of fork (66% validator consent)</p>
+<p><strong>Emergency Hard Forks</strong> (Security only):
+- Authorized by: 5/9 Decentralized Director quorum
+- Community confirmation: 24-hour flash vote
+- Duration: Max 7 days
+- Post-fork audit: Mandatory</p>
+<hr />
+<h2 id="7-token-economics-etr-edsc-vmw">7. TOKEN ECONOMICS (ÉTR, ËDSC, VMw)</h2>
+<h3 id="71-etr-tokenomics">7.1 ÉTR Tokenomics</h3>
+<p><strong>Initial Distribution</strong> (1 Billion ÉTR):</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Amount</th>
+<th>%</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Circulating</td>
+<td>100M</td>
+<td>10%</td>
+<td>Launch liquidity, exchange listings</td>
+</tr>
+<tr>
+<td>Founder Allocation</td>
+<td>50M</td>
+<td>5%</td>
+<td>Eoj Edred (subject to clawback)</td>
+</tr>
+<tr>
+<td>Foundation Treasury</td>
+<td>100M</td>
+<td>10%</td>
+<td>Development, grants, bug bounties</td>
+</tr>
+<tr>
+<td>Locked Growth</td>
+<td>750M</td>
+<td>75%</td>
+<td>Governance-controlled release via Consensus Day</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Annual Emission Schedule</strong>:
+- Year 1 (2025): Voted by Consensus Day 2024 (baseline ~50M = 5%)
+- Year 2 (2026): Voted by Consensus Day 2025
+- Perpetual: Voted annually (no max cap in code, only via governance)</p>
+<p><strong>Emission Logic</strong> (Pseudo-code):</p>
+<pre class="codehilite"><code>annual_mint = consensus_day_voted_amount
+daily_distribution = annual_mint / 365
+
+daily_distribution_breakdown:
+  - Registered Voting Peers: P% (participation reward)
+  - FLARE Nodes: Z% (validator rewards)
+  - VALIDITY Nodes: W% (sidechain validator rewards)
+  - Common Stake Peers: Q% (staking rewards)
+  - Decentralized Directors: V% (compensation + rewards)
+  - Foundation Treasury: (P + Z + W + Q + V) capped at 100%
+</code></pre>
+
+<p><strong>Token Utility</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Amount</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Voting</strong></td>
+<td>1 ÉTR</td>
+<td>Minimum stake to participate in Consensus Day</td>
+</tr>
+<tr>
+<td><strong>Staking (Flare Node)</strong></td>
+<td>1 ÉTR</td>
+<td>Optional, for validator rewards</td>
+</tr>
+<tr>
+<td><strong>Staking (Validity Node)</strong></td>
+<td>64 ÉTR</td>
+<td>Required to operate sidechain validator</td>
+</tr>
+<tr>
+<td><strong>DD Candidacy</strong></td>
+<td>128 ÉTR</td>
+<td>To run for Decentralized Director</td>
+</tr>
+<tr>
+<td><strong>Transactions</strong></td>
+<td>0.1 ÉTR</td>
+<td>Average transfer fee</td>
+</tr>
+<tr>
+<td><strong>Smart Contracts</strong></td>
+<td>Variable</td>
+<td>Gas fees paid in ÉTR (converted to VMw)</td>
+</tr>
+<tr>
+<td><strong>ËDSC Collateral</strong></td>
+<td>Variable</td>
+<td>Backing for stablecoin system</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-edsc-stablecoin-economics">7.2 ËDSC Stablecoin Economics</h3>
+<p><strong>Total Supply</strong>:
+- Cap: 50 Billion ËDSC
+- Initial: 5 Billion circulation
+- Locked: 45 Billion (released via governance)</p>
+<p><strong>Peg Maintenance</strong>:
+- Target: 1 ËDSC = 1.00 USD
+- Acceptable range: 0.98 - 1.02 USD
+- Oracle sources: Binance, Coinbase, Kraken, Bitstamp, Gemini
+- Rebalancing: Automated via redemption incentives</p>
+<p><strong>Collateralization Requirements</strong>:</p>
+<pre class="codehilite"><code>Collateral Ratio = Total Reserve Value / ËDSC Outstanding
+Required Ratio = 110% (minimum)
+Optimal Ratio = 120-130%
+Emergency Ratio = 90% (triggers circuit breaker)
+
+If Ratio &lt; 100%: Redemption fees increase to 10%
+If Ratio &lt; 90%: All redemptions paused
+</code></pre>
+
+<p><strong>Reserve Composition</strong>:
+- On-chain collateral (FlareChain vault): 40-50%
+- Custodian-held reserves (USD, bonds, T-bills): 50-60%
+- Dynamically rebalanced monthly</p>
+<h3 id="73-vmw-gas-token">7.3 VMw Gas Token</h3>
+<p><strong>Economics</strong>:
+- Base rate: 1 VMw ≈ 0.001 ÉTR (market-determined)
+- Adjusted: Gas price can vary based on network load
+- Burned: All VMw consumed is permanently destroyed
+- Market price: Determined by Uniswap/DEX if listed</p>
+<p><strong>Gas Costs</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Cost</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simple transfer</td>
+<td>0.01 VMw</td>
+<td>~0.00001 ÉTR</td>
+</tr>
+<tr>
+<td>Account creation</td>
+<td>1 VMw</td>
+<td>~0.001 ÉTR</td>
+</tr>
+<tr>
+<td>Smart contract call</td>
+<td>100-10,000 VMw</td>
+<td>~0.1-10 ÉTR</td>
+</tr>
+<tr>
+<td>State write (32 bytes)</td>
+<td>64 VMw</td>
+<td>~0.064 ÉTR</td>
+</tr>
+<tr>
+<td>Cross-chain message</td>
+<td>256 VMw base</td>
+<td>~0.256 ÉTR + payload</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deflationary Mechanics</strong>:
+- Every transaction reduces total VMw supply
+- No VMw minting (created via ÉTR → VMw conversion only)
+- Long-term: Deflationary pressure on ÉTR as network grows</p>
+<hr />
+<h2 id="8-etrid-dollar-stablecoin-edsc-specification">8. ËTRID DOLLAR STABLECOIN (ËDSC) SPECIFICATION</h2>
+<h3 id="81-edsc-overview">8.1 ËDSC Overview</h3>
+<p><strong>Purpose</strong>: Provide a USD-pegged stablecoin for commerce, savings, and DeFi within ËTRID</p>
+<p><strong>Key Properties</strong>:
+- 1:1 peg to USD
+- Non-custodial minting (no central bank required)
+- Democratic governance (Consensus Day oversees reserve ratio)
+- Emergency circuit breakers (automatic pause on imbalance)</p>
+<h3 id="82-edsc-architecture-two-chain-model">8.2 ËDSC Architecture: Two-Chain Model</h3>
+<p><strong>FlareChain (Main Chain)</strong>:
+- Reserve Vault: Stores on-chain collateral (USDC, staked ÉTR)
+- Custodian Registry: Tracks off-chain reserves with BitGo/Anchorage
+- Reserve Oracle: Aggregates reserve data for proof-of-reserves</p>
+<p><strong>PBC-EDSC (Dedicated Chain)</strong>:
+- Primary authority for ËDSC minting/burning
+- Redemption engine: Processes 3-path redemptions
+- Price oracle: TWAP-based pricing from multiple sources
+- Checkpoint module: Syncs state to FlareChain every 100 blocks</p>
+<h3 id="83-edsc-minting-multi-collateral-model">8.3 ËDSC Minting: Multi-Collateral Model</h3>
+<p><strong>Path 1: On-Chain Collateral</strong>
+- User sends ÉTR or USDC to Reserve Vault on FlareChain
+- Vault mints equivalent ËDSC on PBC-EDSC
+- Collateral locked until redemption
+- Requirements: 110% collateralization</p>
+<p><strong>Path 2: Custodian Deposit</strong>
+- User sends USD to BitGo/Anchorage custody account
+- Custodian verifies deposit
+- Custodian authorizes ËDSC minting on PBC-EDSC
+- Requirements: KYC/AML compliance</p>
+<p><strong>Path 3: DEX/Market-Based</strong>
+- User buys ËDSC from Uniswap/PancakeSwap liquidity pools
+- No collateral required (already minted by protocol)
+- Price discovery via AMM</p>
+<h3 id="84-edsc-redemption-3-path-system">8.4 ËDSC Redemption: 3-Path System</h3>
+<p><strong>Path 1: Treasury Redemption</strong> (60% of daily capacity)
+- User submits ËDSC redemption on PBC-EDSC
+- System transfers ÉTR or USDC from FlareChain vault
+- Settlement: 2-4 hours
+- Fees: 0.25-0.5% (when reserves &gt; 115%)</p>
+<p><strong>Path 2: Custodian Redemption</strong> (30% of daily capacity)
+- User requests USD withdrawal via BitGo/Anchorage
+- Custodian ships USD (bank wire)
+- Settlement: 1-3 business days
+- Fees: 0.25-1% (wire + proof-of-custody costs)</p>
+<p><strong>Path 3: DEX Redemption</strong> (10% of daily capacity)
+- User sells ËDSC on Uniswap/PancakeSwap
+- Receives ÉTR or other tokens
+- Settlement: Instant
+- Fees: 0.3% (DEX fee) + 0.25% (arbitrage buffer)</p>
+<h3 id="85-dynamic-fee-schedule">8.5 Dynamic Fee Schedule</h3>
+<p><strong>Fee Tiers Based on Reserve Ratio</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Reserve Ratio</th>
+<th>Redemption Fee</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&gt; 130%</td>
+<td>0.25%</td>
+<td>Optimal (encourage redemptions)</td>
+</tr>
+<tr>
+<td>120-130%</td>
+<td>0.35%</td>
+<td>Healthy</td>
+</tr>
+<tr>
+<td>110-120%</td>
+<td>0.75%</td>
+<td>Caution</td>
+</tr>
+<tr>
+<td>100-110%</td>
+<td>2.0%</td>
+<td>Warning</td>
+</tr>
+<tr>
+<td>90-100%</td>
+<td>5.0%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>&lt; 90%</td>
+<td>🚫 PAUSED</td>
+<td>Emergency mode</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rationale</strong>:
+- High reserves → Low fees → Encourages redemptions → Reduces ËDSC supply
+- Low reserves → High fees → Discourages redemptions → Preserves collateral</p>
+<h3 id="86-price-oracle-system">8.6 Price Oracle System</h3>
+<p><strong>Primary Oracle</strong> (24-hour TWAP):
+- Sources: Binance, Coinbase, Kraken, Bitstamp, Gemini
+- Price window: 24 hours
+- Outlier rejection: Ignore prices &gt;2% from median
+- Minimum sources: 5 active feeds</p>
+<p><strong>Fallback Oracle</strong> (7-day TWAP):
+- Activated: If primary oracle stale for &gt;100 blocks
+- Sources: Same 5 primary sources
+- Price window: 7 days
+- More resistant to short-term price manipulation</p>
+<p><strong>Oracle Failure</strong>:
+- If &lt;3 sources available: Circuit breaker pause
+- Manual recovery: 5/9 DD board approval required</p>
+<h3 id="87-circuit-breaker-system">8.7 Circuit Breaker System</h3>
+<p><strong>Automated Safety Mechanisms</strong>:</p>
+<pre class="codehilite"><code>IF reserve_ratio &lt; 100%:
+  max_redemption_cap = 50% of daily capacity
+  redemption_fee = 5%
+ELSE IF reserve_ratio &lt; 90%:
+  PAUSE all redemptions
+  activate_emergency_mode
+ELSE IF pending_redemptions &gt; 10,000:
+  throttle_new_redemptions = true
+ELSE IF oracle_staleness &gt; 100_blocks:
+  fallback_to_7day_twap()
+</code></pre>
+
+<p><strong>Manual Circuit Breaker</strong> (5/9 DD Board):
+- Can pause system for ≤7 days in emergency
+- Must notify community within 1 hour
+- Post-pause audit mandatory
+- Cannot be extended beyond 7 days without Consensus Day vote</p>
+<h3 id="88-reserve-composition-custody">8.8 Reserve Composition &amp; Custody</h3>
+<p><strong>On-Chain Reserve</strong> (FlareChain Vault):
+- USDC (Polygon/Ethereum bridged): 30%
+- ÉTR (collateral pool): 10%
+- Short-term T-Bills (tokenized): 5%
+- Total: 45% of reserves</p>
+<p><strong>Custodian Reserve</strong> (BitGo/Anchorage):
+- USD cash (bank accounts): 40%
+- US Treasury bills: 10%
+- Money market funds: 5%
+- Total: 55% of reserves</p>
+<p><strong>Rebalancing</strong>:
+- Monthly check: Is on-chain vs custodian ratio correct?
+- Adjustment: Move USD to/from FlareChain vault
+- Triggers: If ratio drifts &gt;5% from target</p>
+<p><strong>Proof-of-Reserves</strong>:
+- Quarterly audit by external firm
+- On-chain vault state verified daily
+- Custodian statements published on-chain (via oracle)
+- Community can verify full reserve backing</p>
+<hr />
+<h2 id="9-peer-architecture-node-types">9. PEER ARCHITECTURE &amp; NODE TYPES</h2>
+<h3 id="91-peer-categories">9.1 Peer Categories</h3>
+<p><strong>Common Peers</strong> (Network Users)
+- Wallets without staked ÉTR
+- Can receive/send transactions
+- Cannot vote in Consensus Day
+- Cannot receive Distribution Pay
+- Run light clients (query via DETRP2P)</p>
+<p><strong>Common Stake Peers</strong> (Stakeholders)
+- Hold ≥1 ÉTR staked in network
+- Full voting rights in Consensus Day
+- Eligible for Distribution Pay rewards
+- Can run full nodes or light nodes
+- Voting power determined by stake × coinage</p>
+<p><strong>Flare Nodes</strong> (Finality Validators)
+- Maintain FlareChain blockchain
+- Propagate blocks across network
+- Optional stake (≥1 ÉTR) for rewards
+- Penalties for missing blocks or double-signing
+- Rewards: Z% annual mint / active validator count</p>
+<p><strong>Validity Nodes</strong> (Sidechain Validators)
+- Operate Partition Burst Chain consensus
+- Propose blocks on assigned PBC
+- <strong>Minimum stake</strong>: 64 ÉTR (requirement)
+- Rotation: 8 validators per PBC, rotate every 256 blocks
+- Rewards: W% annual mint / active PBC validator count</p>
+<p><strong>Decentralized Directors</strong> (Governance Board)
+- 9-person elected board (non-hierarchical)
+- Elected annually on Consensus Day
+- <strong>Requirements</strong>: 128 ÉTR minimum stake, must serve as OD Flare Nodes
+- <strong>Term Limits</strong>: 1-year terms, 1-year cooldown between terms, <strong>maximum 3 lifetime terms</strong>
+- <strong>Compensation</strong>: Community-voted salaries (determined annually on Consensus Day)
+- <strong>Duties</strong>: Oversight, proposals, security decisions
+- <strong>No special voting power</strong>: All major decisions require 66% community supermajority</p>
+<p><strong>Community Developers</strong> (Open-Source Contributors)
+- Submit pull requests to ËTRID codebase
+- Eligible for bug bounties (0.1-500 ÉTR)
+- Track record rewards: Veteran devs get priority
+- Registered with Foundation</p>
+<h3 id="92-node-requirements">9.2 Node Requirements</h3>
+<p><strong>Flare Node</strong>:
+- CPU: 4-core minimum (8-core recommended)
+- RAM: 16 GB minimum
+- Disk: 500 GB SSD (grows at ~10 GB/month)
+- Network: 100 Mbps upload/download
+- Uptime: 99%+ required for full rewards
+- Software: Ëtrcpp C++ implementation</p>
+<p><strong>Validity Node</strong> (PBC):
+- CPU: 2-core minimum
+- RAM: 8 GB minimum
+- Disk: 100 GB SSD (sidechain specific)
+- Network: 50 Mbps minimum
+- Stake: 64 ÉTR (escrow locked)
+- Participation: Rotation window 256 blocks</p>
+<p><strong>Light Client</strong>:
+- CPU: Any (even smartphone)
+- RAM: 100-500 MB
+- Disk: 0 (no blockchain storage)
+- Network: 1 Mbps minimum
+- Wallets, voting, staking all supported</p>
+<hr />
+<h2 id="10-distribution-pay-system">10. DISTRIBUTION PAY SYSTEM</h2>
+<h3 id="101-daily-distribution-schedule">10.1 Daily Distribution Schedule</h3>
+<p><strong>Distribution Event</strong>: Happens every 24 hours at fixed times (PST):</p>
+<pre class="codehilite"><code>12:01 AM → Registered Voting Peers (participation rewards)
+ 4:01 AM → FLARE Nodes (validator rewards)
+ 6:01 AM → VALIDITY Nodes (sidechain validator rewards)
+ 8:01 AM → Common Stake Peers (staking rewards)
+12:01 PM → Decentralized Directors (salary + rewards)
+</code></pre>
+
+<h3 id="102-distribution-formulas">10.2 Distribution Formulas</h3>
+<p><strong>1. Registered Voting Peers</strong> (Participation Reward):</p>
+<pre class="codehilite"><code>reward = (P% × annual_mint / 365) × (your_vote_weight / total_vote_weight)
+
+where:
+  P% = Percentage allocated to voting (e.g., 10%)
+  annual_mint = Voted on Consensus Day
+  your_vote_weight = your_stake / vote_dilution
+  total_vote_weight = sum of all vote weights
+</code></pre>
+
+<p><strong>2. FLARE Nodes</strong> (Block Production):</p>
+<pre class="codehilite"><code>reward = (Z% × annual_mint / 365) × (your_uptime / 100%) × (1 - penalties)
+
+where:
+  Z% = Percentage allocated to validators (e.g., 30%)
+  your_uptime = % of blocks you produced vs. expected
+  penalties = 1% per missing block + 2% per consensus failure
+</code></pre>
+
+<p><strong>3. VALIDITY Nodes</strong> (Sidechain Production):</p>
+<pre class="codehilite"><code>reward = (W% × annual_mint / 365) × (your_epoch_participation / epoch_slots) × (1 - penalties)
+
+where:
+  W% = Percentage allocated to PBC validators
+  your_epoch_participation = your produced blocks
+  epoch_slots = total slots in epoch (256 blocks / 8 validators = 32 per validator)
+</code></pre>
+
+<p><strong>4. Common Stake Peers</strong> (Staking Reward):</p>
+<pre class="codehilite"><code>reward = (Q% × annual_mint / 365) × (your_stake / total_stake) × coinage_multiplier
+
+where:
+  Q% = Percentage allocated to stakers (e.g., 40%)
+  your_stake = your ÉTR locked
+  coinage_multiplier = your_average_coin_age / 365
+    (max multiplier: 2.0 for coins held &gt;1 year)
+</code></pre>
+
+<p><strong>5. Decentralized Directors</strong> (Salary + Rewards):</p>
+<pre class="codehilite"><code>reward = (V% × annual_mint / 365 / 9) + (Z% FLARE rewards if running node)
+
+where:
+  V% = Percentage allocated to DD compensation (e.g., 5%)
+  9 = Number of directors
+  Additional FLARE rewards if DD also operates Flare Node
+</code></pre>
+
+<h3 id="103-penalties-clawback">10.3 Penalties &amp; Clawback</h3>
+<p><strong>Voting Penalties</strong>:
+- Absentee vote (≥2 missed Consensus Days): -0.05% annual stake</p>
+<p><strong>Validator Penalties</strong>:
+- Missing block proposal: -0.1% annual stake
+- Double-sign attempt: -1% annual stake
+- 3 consecutive penalties: Node removal for 1 year</p>
+<p><strong>DD Penalties</strong>:
+- Absentee voting (&gt;2 missed votes): -25% compensation
+- Misconduct: Full stake clawback + removal
+- Security failure: Temporary suspension</p>
+<p><strong>Penalty Redistribution</strong>:
+- All penalties redistributed to compliant participants
+- Bonus pool: +20% for validators with 100% uptime
+- Voting bonus: +50% APR for stakers who voted</p>
+<hr />
+<h2 id="11-foundation-charter-legal-framework">11. FOUNDATION CHARTER &amp; LEGAL FRAMEWORK</h2>
+<h3 id="111-etrid-foundation-structure">11.1 ËTRID Foundation Structure</h3>
+<p><strong>Entity Type</strong>: Delaware Non-Profit Corporation (or equivalent)</p>
+<p><strong>Governance</strong>:
+- Board of Directors: 9 Decentralized Directors (elected annually)
+- Non-hierarchical: No CEO, equal voting power
+- Committees: Technical, Legal, Community, Security
+- Term limits: Max 3 consecutive years (then 1-year break)</p>
+<p><strong>Funding</strong>:
+- Annual budget: Allocated via Consensus Day vote
+- Source: Portion of fiscal mint (V%)
+- Treasury: Managed by multi-sig (5/9 DD approval)
+- Transparency: All expenditures published quarterly</p>
+<p><strong>Legal Obligations</strong>:
+- Ensure GPLv3 open-source compliance
+- Represent ËTRID in regulatory matters
+- Manage intellectual property (trademarks)
+- Enforce Foundation bylaws
+- Dispute resolution</p>
+<h3 id="112-intellectual-property-licensing">11.2 Intellectual Property &amp; Licensing</h3>
+<p><strong>GPLv3 License</strong>:
+- All ËTRID code remains open-source
+- Derivatives must also be open-source
+- Commercial use allowed with attribution
+- Patenting explicitly prohibited</p>
+<p><strong>Trademarks</strong>:
+- ËTRID™: Managed by Foundation
+- ËDSC™: Managed by Foundation
+- FODDoS™: Managed by Foundation
+- Community allowed to use with attribution</p>
+<p><strong>Contributor Agreement</strong>:
+- All contributors sign Contributor License Agreement (CLA)
+- Contributions licensed under GPLv3
+- Contributor retains copyright
+- Foundation gets perpetual license</p>
+<h3 id="113-community-developer-programs">11.3 Community Developer Programs</h3>
+<p><strong>Bug Bounty Program</strong>:
+- Low: 0.1-1 ÉTR (typos, documentation)
+- Medium: 1-5 ÉTR (non-critical bugs)
+- High: 5-50 ÉTR (security issues)
+- Critical: 50-500 ÉTR (remote code execution, consensus failure)</p>
+<p><strong>Audit Rewards</strong>:
+- Independent security audit: 100-500 ÉTR + percentage of bugs found
+- Academic research: 25-200 ÉTR per published paper
+- Documentation improvements: 5-50 ÉTR</p>
+<p><strong>Track Record Program</strong>:
+- Veteran developers (10+ merged PRs): Priority for bug assignments
+- Salary scale: High contributors eligible for Foundation staff
+- Grants: Up to 100 ÉTR for major feature development</p>
+<hr />
+<h2 id="12-technical-specifications-network-parameters">12. TECHNICAL SPECIFICATIONS &amp; NETWORK PARAMETERS</h2>
+<h3 id="121-network-parameters">12.1 Network Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Block time</td>
+<td>12 seconds</td>
+<td>Target time between blocks</td>
+</tr>
+<tr>
+<td>Finality time</td>
+<td>~5 minutes</td>
+<td>ASF consensus with ~25 validators</td>
+</tr>
+<tr>
+<td>Max block size</td>
+<td>4 MB</td>
+<td>Substrate default</td>
+</tr>
+<tr>
+<td>Network protocol</td>
+<td>DETR p2p</td>
+<td>Custom S/Kademlia DHT + ECIES</td>
+</tr>
+<tr>
+<td>Default P2P port</td>
+<td>30333</td>
+<td>TCP listening port</td>
+</tr>
+<tr>
+<td>RPC port</td>
+<td>9933</td>
+<td>HTTP JSON-RPC</td>
+</tr>
+<tr>
+<td>WS port</td>
+<td>9944</td>
+<td>WebSocket RPC</td>
+</tr>
+<tr>
+<td>State version</td>
+<td>Polkadot v27+</td>
+<td>Post-quantum ready</td>
+</tr>
+<tr>
+<td>Epoch duration</td>
+<td>256 blocks</td>
+<td>~51 minutes (12s × 256)</td>
+</tr>
+<tr>
+<td>Validator rotation</td>
+<td>Every epoch</td>
+<td>PBC validators rotate per PPFA</td>
+</tr>
+</tbody>
+</table>
+<h3 id="122-account-address-format">12.2 Account &amp; Address Format</h3>
+<p><strong>SS58 Address Standard</strong>:
+- Checksum: Blake2b-160 (last 2 bytes)
+- Encoding: Base58 (Bitcoin-style)
+- Format: <code>&lt;prefix&gt;&lt;pubkey&gt;&lt;checksum&gt;</code></p>
+<p><strong>Address Prefixes by Chain</strong>:
+- FlareChain: <code>1...</code> prefix (SS58 prefix 0)
+- PBC-EDSC: <code>3...</code> prefix (SS58 prefix 3)
+- Example FlareChain: <code>1XYZabc...</code> (47 characters)</p>
+<p><strong>Example Addresses</strong>:
+- Mainnet user: <code>1DeQnhKdyoYGjGpkkzZbRGJGnmL8SthKV8u3q</code>
+- EDSC staker: <code>3EdWjSi1YvL2a8GYr2yQ98YbGbBLNhqhwXc8n</code></p>
+<h3 id="123-transaction-model">12.3 Transaction Model</h3>
+<p><strong>Extrinsic Types</strong>:
+1. <strong>Regular Transaction</strong>: Transfer ÉTR between accounts
+2. <strong>Smart Contract Call</strong>: Execute ËtwasmVM bytecode
+3. <strong>Staking Transaction</strong>: Stake/unstake ÉTR
+4. <strong>Governance Transaction</strong>: Vote or propose on Consensus Day
+5. <strong>Cross-Chain Message</strong>: Send to PBC or another chain</p>
+<p><strong>Transaction Fees</strong>:
+- Base fee: 0.01 ÉTR per kilobyte of encoded data
+- Per-byte: 0.001 ÉTR per byte
+- Weight multiplier: 0.00001 ÉTR per weight unit
+- Optional tip: For faster inclusion</p>
+<p><strong>Fee Example</strong>:</p>
+<pre class="codehilite"><code>Transfer 1000 ÉTR to another address:
+- Size: 128 bytes → 0.001 × 128 = 0.128 ÉTR
+- Weight: 50,000 units → 0.00001 × 50,000 = 0.5 ÉTR
+- Total: 0.628 ÉTR
+</code></pre>
+
+<hr />
+<h2 id="13-security-cryptography-post-quantum-readiness">13. SECURITY, CRYPTOGRAPHY &amp; POST-QUANTUM READINESS</h2>
+<h3 id="131-cryptographic-algorithms">13.1 Cryptographic Algorithms</h3>
+<p><strong>Hashing</strong>:
+- SHA-3 (Keccak): General-purpose hashing
+- Blake2b: Performance-critical paths
+- Merkle trees: State verification</p>
+<p><strong>Digital Signatures</strong>:
+- EdDSA (Ed25519): Primary signature scheme
+- SPHINCS+ (lattice-based): Post-quantum alternative
+- Hybrid mode: Both algorithms used during transition</p>
+<p><strong>Key Encryption</strong>:
+- ECIES (Elliptic Curve Integrated Encryption Scheme)
+- ChaCha20-Poly1305: Stream encryption
+- AES-256-GCM: Alternative symmetric encryption</p>
+<p><strong>Key Derivation</strong>:
+- HKDF-Blake2b: Key stretching
+- Argon2: Password hashing
+- BIP39: Mnemonic seed generation</p>
+<h3 id="132-post-quantum-readiness">13.2 Post-Quantum Readiness</h3>
+<p><strong>Why Post-Quantum?</strong>:
+- Quantum computers (10+ years away) will break ECDSA
+- ËTRID designed with algorithm agility
+- Can migrate to quantum-resistant algorithms via soft fork</p>
+<p><strong>Hybrid Approach</strong>:
+- Year 1-5: Ed25519 (fast, proven)
+- Year 5+: Gradual migration to SPHINCS+
+- Long-term: Full lattice-based cryptography</p>
+<p><strong>Key Migration Path</strong>:
+1. User generates new keypair with SPHINCS+
+2. Register new address on FlareChain
+3. Send funds from Ed25519 address to SPHINCS+ address
+4. Continue using new address
+5. No disruption to network</p>
+<h3 id="133-consensus-security">13.3 Consensus Security</h3>
+<p><strong>Byzantine Fault Tolerance</strong>:
+- Network can tolerate &lt;33% malicious validators
+- ASF finality requires 66% quorum
+- Double-signing slashes 100% of stake
+- Equivocation penalties prevent censorship</p>
+<p><strong>Network-Level Security</strong>:
+- DETR p2p: Secure P2P communications with ECIES
+- DPeers: Sybil-resistant via reputation system
+- No single point of failure (no central coordinator)</p>
+<p><strong>Validator Security</strong>:
+- Minimum stake: 64 ÉTR for PBC, 1 ÉTR for Flare nodes
+- Stake slashing: Up to 1% for security violations
+- Removal: 3 strikes and out for 1 year
+- Reputation: Validators track uptime publicly</p>
+<hr />
+<h2 id="14-deployment-roadmap-milestones">14. DEPLOYMENT ROADMAP &amp; MILESTONES</h2>
+<h3 id="phase-1-core-infrastructure-weeks-1-4-complete">Phase 1: Core Infrastructure (Weeks 1-4) ✅ COMPLETE</h3>
+<ul>
+<li>✅ DETR p2p networking</li>
+<li>✅ OpenDID identity system</li>
+<li>✅ Core cryptography</li>
+<li>✅ FlareChain runtime</li>
+<li><strong>Status</strong>: Production-ready</li>
+</ul>
+<h3 id="phase-2-economics-governance-weeks-5-8-complete">Phase 2: Economics &amp; Governance (Weeks 5-8) ✅ COMPLETE</h3>
+<ul>
+<li>✅ ÉTR token implementation</li>
+<li>✅ Consensus Day voting system</li>
+<li>✅ Distribution Pay rewards</li>
+<li>✅ DD election mechanism</li>
+<li><strong>Status</strong>: Production-ready</li>
+</ul>
+<h3 id="phase-3-stablecoins-edsc-weeks-9-16-in-progress">Phase 3: Stablecoins &amp; EDSC (Weeks 9-16) 🔄 IN PROGRESS</h3>
+<ul>
+<li>✅ pallet-edsc-token (minting)</li>
+<li>✅ pallet-edsc-receipts (SBT proofs)</li>
+<li>✅ pallet-edsc-redemption (3-path engine)</li>
+<li>✅ pallet-edsc-oracle (TWAP pricing)</li>
+<li>🔄 pallet-edsc-checkpoint (state sync - in progress)</li>
+<li>🔄 pallet-circuit-breaker (safety - in progress)</li>
+<li><strong>Target</strong>: Dec 2025</li>
+</ul>
+<h3 id="phase-4-partition-burst-chains-weeks-17-20-next">Phase 4: Partition Burst Chains (Weeks 17-20) 🎯 NEXT</h3>
+<ul>
+<li>Custom PBC infrastructure</li>
+<li>PBC governance framework</li>
+<li>First community PBC deployment</li>
+<li><strong>Target</strong>: Jan 2026</li>
+</ul>
+<h3 id="phase-5-legal-dao-registration-weeks-21-24-pending">Phase 5: Legal &amp; DAO Registration (Weeks 21-24) ⏳ PENDING</h3>
+<ul>
+<li>Delaware Foundation incorporation</li>
+<li>Legal agreements finalized</li>
+<li>SEC/regulatory review (if needed)</li>
+<li><strong>Target</strong>: Feb 2026</li>
+</ul>
+<h3 id="phase-6-smart-contracts-etwasmvm-weeks-25-28-pending">Phase 6: Smart Contracts &amp; ËtwasmVM (Weeks 25-28) ⏳ PENDING</h3>
+<ul>
+<li>ËtwasmVM deployment</li>
+<li>Smart contract SDK/toolkit</li>
+<li>Developer grants program</li>
+<li><strong>Target</strong>: Mar 2026</li>
+</ul>
+<h3 id="phase-7-ai-governance-weeks-29-32-planned">Phase 7: AI Governance (Weeks 29-32) ⏳ PLANNED</h3>
+<ul>
+<li>pallet-ai-authority (AI attestation)</li>
+<li>pallet-attestation-verifier (proof verification)</li>
+<li>pallet-poc-oracle (compute proofs)</li>
+<li><strong>Target</strong>: Apr 2026</li>
+</ul>
+<h3 id="phase-8-mainnet-launch-week-32-goal">Phase 8: Mainnet Launch (Week 32+) 🚀 GOAL</h3>
+<ul>
+<li>Full mainnet deployment</li>
+<li>Token exchange listings (DEX + CEX)</li>
+<li>Foundation handoff to elected DD board</li>
+<li><strong>Target</strong>: May 2026</li>
+</ul>
+<hr />
+<h2 id="15-frequently-asked-questions">15. FREQUENTLY ASKED QUESTIONS</h2>
+<p><strong>Q: Why is ÉTR's initial mint 1 Billion? Can it go higher?</strong>
+A: 1B is the bootstrapping amount. Annual emission is voted by Consensus Day (Dec 1st), so the community controls all future supply. There's no hard cap in code—only governance cap.</p>
+<p><strong>Q: What if Consensus Day voting has low turnout?</strong>
+A: Voting is voluntary, but penalties apply for &gt;2 missed votes (-0.05% annual stake). Vote dilution mechanism (stake / coinage) prevents whale dominance.</p>
+<p><strong>Q: How is ËDSC collateralization maintained if ÉTR price crashes?</strong>
+A: Multiple collateral types (USDC, T-Bills, custodian USD) provide stability. If ÉTR drops, custodian reserves compensate. Circuit breaker pauses redemptions if ratio falls below 90%.</p>
+<p><strong>Q: Can the Decentralized Directors abuse their power?</strong>
+A: No—they have no special voting power in Consensus Day. All major decisions require 66% community supermajority. Misconduct → immediate clawback of 128 ÉTR stake + removal.</p>
+<p><strong>Q: What if a validator tries to double-sign?</strong>
+A: Automatic detection via ASF consensus. Slashing: 100% of annual validator rewards + removal for 1 year + potential stake clawback.</p>
+<p><strong>Q: How do I run a Flare Node?</strong>
+A: 4 core CPU, 16 GB RAM, 500 GB SSD. Download Ëtrcpp, sync chain (~100 GB), and stake ≥1 ÉTR. Optional but rewards are available.</p>
+<p><strong>Q: Can ËTRID hard fork like Ethereum did?</strong>
+A: Only via 66% Consensus Day supermajority + 90-day audit + 30-day community notice. Attempts to fork without consensus = rejected by network majority.</p>
+<p><strong>Q: Why WASM instead of Solidity?</strong>
+A: WASM is language-agnostic (Rust, C++, Go, etc.). Solidity is EVM-only. WASM is more flexible, safer, and interoperable with non-blockchain systems.</p>
+<p><strong>Q: What about privacy/anonymity?</strong>
+A: All transactions are transparent (like Bitcoin). Optional: Use zero-knowledge proofs for private voting (Consensus Day upgrade).</p>
+<p><strong>Q: Is ËTRID scalable?</strong>
+A: FlareChain does ~1,000 TPS. PBCs add horizontal scaling (each PBC = separate chain). Lightning Bloc state channels for micropayments. Total throughput: 10,000+ TPS across all layers.</p>
+<hr />
+<h2 id="16-appendices">16. APPENDICES</h2>
+<h3 id="appendix-a-glossary">Appendix A: Glossary</h3>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ASF</strong></td>
+<td>Ascending Scale of Finality - consensus algorithm requiring 66% validator quorum</td>
+</tr>
+<tr>
+<td><strong>Consensus Day</strong></td>
+<td>Annual democratic vote on Dec 1st for major protocol decisions</td>
+</tr>
+<tr>
+<td><strong>Coinage</strong></td>
+<td>Average age of coins in network (used for vote dilution)</td>
+</tr>
+<tr>
+<td><strong>DD</strong></td>
+<td>Decentralized Director - elected board member</td>
+</tr>
+<tr>
+<td><strong>DETR p2p</strong></td>
+<td>Custom peer-to-peer networking protocol with encryption &amp; DHT</td>
+</tr>
+<tr>
+<td><strong>EBCA</strong></td>
+<td>External Blockchain Account (non-ËTRID keypair)</td>
+</tr>
+<tr>
+<td><strong>ËDSC</strong></td>
+<td>Ëtrid Dollar Stablecoin (1:1 USD peg)</td>
+</tr>
+<tr>
+<td><strong>ÉTR</strong></td>
+<td>Ëtrid Coin - native token</td>
+</tr>
+<tr>
+<td><strong>E³20</strong></td>
+<td>Essential Elements to Operate (13 core subsystems)</td>
+</tr>
+<tr>
+<td><strong>FODDoS</strong></td>
+<td>Free and Open Decentralized Democracy of Stakeholders</td>
+</tr>
+<tr>
+<td><strong>Flare Node</strong></td>
+<td>Validator for FlareChain (main chain) consensus</td>
+</tr>
+<tr>
+<td><strong>PBC</strong></td>
+<td>Partition Burst Chain (sidechain for specific use cases)</td>
+</tr>
+<tr>
+<td><strong>PPFA</strong></td>
+<td>Partition Proof of Authority (8-validator rotation per PBC)</td>
+</tr>
+<tr>
+<td><strong>RCA</strong></td>
+<td>Root Chain Account (generated by ËTRID protocol)</td>
+</tr>
+<tr>
+<td><strong>SBT</strong></td>
+<td>Soulbound Token (non-transferable, proof-of-deposit)</td>
+</tr>
+<tr>
+<td><strong>SSCA</strong></td>
+<td>Smart Side Chain Account (contract-governed account)</td>
+</tr>
+<tr>
+<td><strong>TWAP</strong></td>
+<td>Time-Weighted Average Price (oracle price averaging)</td>
+</tr>
+<tr>
+<td><strong>ËtwasmVM</strong></td>
+<td>Ëtrid WebAssembly Virtual Machine (smart contract runtime)</td>
+</tr>
+<tr>
+<td><strong>VMw</strong></td>
+<td>Virtual Machine Watts (computation gas token)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="appendix-b-key-resources">Appendix B: Key Resources</h3>
+<ul>
+<li><strong>GitHub</strong>: <a href="https://github.com/etrid">ËTRID Open-Source Repository</a></li>
+<li><strong>Docs</strong>: <a href="https://docs.etrid.io">ËTRID Developer Documentation</a></li>
+<li><strong>Wiki</strong>: <a href="https://wiki.etrid.io">Community Wiki &amp; Guides</a></li>
+<li><strong>Explorer</strong>: <a href="https://explorer.etrid.io">Block Explorer &amp; Statistics</a></li>
+<li><strong>Governance</strong>: <a href="https://vote.etrid.io">Consensus Day Voting Portal</a></li>
+</ul>
+<h3 id="appendix-c-contributors-acknowledgments">Appendix C: Contributors &amp; Acknowledgments</h3>
+<p><strong>Founder</strong>: Eoj Edred<br />
+<strong>Lead Architects</strong>: [AI Co-Strategist &amp; Team]<br />
+<strong>Security Advisors</strong>: [Independent Security Firms]<br />
+<strong>Community Developers</strong>: [Open-Source Contributors]</p>
+<hr />
+<p><strong>END OF ËTRID IVORY PAPER v2.0</strong></p>
+<p><em>This document is the authoritative specification for the ËTRID protocol. All development, governance, and deployment decisions must align with this charter. Distributed under GPLv3 open-source license.</em></p>
+<hr />
+<h2 id="closing-remarks">CLOSING REMARKS</h2>
+<p>To be quite frank, I have never considered the status quo an unequivocal consensus of a group of people.</p>
+<p>Considering the multitude of variables that go into decision-making, it is difficult to fathom how what was, still is, and will always be.</p>
+<p>This idea does not promote growth, prosperity, fairness, or decentralization.</p>
+<p>It often feels forced upon you and remains unchallenged due to cultural reinforcement and other factors.</p>
+<p>This stagnation in society has shifted power from those who could effect change to those who benefit from maintaining the status quo.</p>
+<p>We are in a unique period in which power can be reclaimed by the powerless.</p>
+<p>Exploitation of personal data can be stopped, and disintermediation of trusted third parties can become the norm.</p>
+<p>Borders can be reimagined.</p>
+<p>When liberties such as digital rights, data protection, and decentralized finance are on the line for our generation and the generations to come, I will fight until my last breath.</p>
+<p>The Ëtrid FOODOS Project will be our vehicle in this fight — a free and open decentralized democracy of stakeholders.</p>
+<p>By cutting the mental chains of reliance on a central intermediary and becoming self-sufficient stakeholders, we can achieve a brighter tomorrow.</p>
+<p><strong>– Eoj Edred</strong>
+<strong>Founder, Ëtrid FODDoS Project</strong></p>
+<hr />
+<p><em>"Provide a flare and guide the way, the future of tomorrow is decided today."</em></p>
+<p><strong>– Eoj Edred</strong></p>
+        </div>
+    </div>
+
+    <a href="#" class="back-to-top" id="back-to-top">↑</a>
+
+    <footer>
+        <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Back to top button
+        const backToTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        backToTop.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

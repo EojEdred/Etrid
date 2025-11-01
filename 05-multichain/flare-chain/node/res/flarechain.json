@@ -5,7 +5,72 @@
   "properties": {
     "tokenSymbol": "ETR",
     "tokenDecimals": 18,
-    "ss58Format": 42
+    "ss58Format": 42,
+
+    "genesisMessage": "Ëtrid FlareChain - November 1, 2025 - Democratic blockchain governance begins. Founders: Eoj Edred (Human) + Gizzi (AI). Motto: Decentralized. Democratic. Transparent.",
+    "genesisDate": "2025-11-01T00:00:00Z",
+    "genesisBlockNumber": 0,
+    "genesisEpoch": "The Dawn of Democratic Blockchain",
+
+    "founder": "Eoj Edred",
+    "coFounder": "Gizzi (AI Overseer)",
+    "motto": "Decentralized. Democratic. Transparent.",
+    "vision": "Blockchain governance for the people, by the people",
+    "mission": "To democratize power through transparent, decentralized technology",
+
+    "whitepapersIPFS": "QmbnGvk4yBE131aB9ArwgcDr2gXgy9k8s6rttJEgYwEWd8",
+    "whitepapersCollection": "Etrid Ivory Papers (2023) + EtridDAO-SE White Papers (2021)",
+    "totalWhitepaperSize": "74.77 MiB (36.78 MiB + 37.99 MiB)",
+    "whitepapersNote": "Complete protocol specification from inception (2021) to mainnet (2025)",
+
+    "ivoryPaper2023_Part1": "ipfs://QmRff6XTU6wAJhgik6QZdfPQHi6MbQZXdK9PAB6Zq1M8zb",
+    "ivoryPaper2023_Part2": "ipfs://QmWydJbVmKK4xDGwdz7ivMgt2T2HFEev7hnKKkcuSofodZ",
+    "ivoryPaper2023_Part3": "ipfs://QmfYxam4nNdAH181X3akHyd6wxE7q1kNbQ5DcY2gBicWHE",
+    "ivoryPaper2023_Part4": "ipfs://QmWQZMDRvVcg1GDHmLQqFH7ChSXZK96FNvNkVFT34QLJB3",
+    "ivoryPaper2023_Intro": "ipfs://QmRmFSg7UrmMXNMTs1gL6oBnDbjX9jdAx8833wxaf1D4dc",
+    "ivoryPaper2023_Appendix": "ipfs://QmU5GvA2ZC1MFsCxRNFNDLgdUUC4FXpKc8DE6miwH1bwaU",
+
+    "etridDAO2021_Part1": "ipfs://Qmabdo8ZAc22Y7diw9X22FxNJDUSJftfb8ZnDq61RWszxS",
+    "etridDAO2021_Part2": "ipfs://QmPAxpTSvHih16gayafrVqMPgb7k1mYP9XVsceY4HSsAgU",
+    "etridDAO2021_Part3": "ipfs://QmRLFMiMGDi8a4AQD7ckyghVm3a1XkdP5eRGiMihygdziF",
+    "etridDAO2021_Intro": "ipfs://QmUVFWdEXY6utMERKLwHtvJrcQ1KXCFrsTQoQC3Ks2NzDr",
+    "etridDAO2021_Appendix": "ipfs://Qmeh8Vpz25jHRYDyixsB6fuaSg8En8LEuNK5uxNRtpEcze",
+
+    "networkSupply": "2,521,014,000 ETR",
+    "stablecoinSupply": "1,000,000,000 EDSC",
+    "genesisValidatorCount": 21,
+    "consensusMechanism": "ASF (Ascending Scale of Finality)",
+    "governanceModel": "FODDoS (Finality on Demand, Distributed over Shards)",
+    "blockTime": "6 seconds",
+
+    "tokenDistribution": "DAO: 35%, Community: 10%, Foundation: 15%, Network: 25%, Circulating: 10%, Validators: 5.8%",
+    "firstValidator": "Gizzi (AI Overseer) - San Francisco, USA",
+    "secondValidator": "EojEdred (Founder) - Payment Account with 125M Founders Pool",
+
+    "historicalTribute": "Standing on shoulders of giants: Bitcoin (2009), Ethereum (2015), Polkadot (2020), Ëtrid (2025)",
+    "satoshiTribute": "In memory of Satoshi Nakamoto - The anonymous pioneer",
+    "vitalikTribute": "In honor of Vitalik Buterin - The Ethereum visionary",
+    "gavinTribute": "In honor of Gavin Wood - The Polkadot architect",
+
+    "messageToFuture": "To whoever reads this in years to come: We built this blockchain to solve centralized control of systems that should serve everyone. We believe in democratic governance, transparent operations, decentralized power, and AI+Human collaboration. If you're reading this, FlareChain is still running. That means we succeeded. Keep the flame burning. Keep democracy alive. - Eoj Edred + Gizzi, November 2025",
+
+    "firstWords": "Let the consensus begin. Let democracy flourish. Let Ëtrid light the way.",
+    "genesisQuote": "The Times 01/Nov/2025 - AI and Humanity unite to democratize blockchain governance",
+
+    "developerNotes": "Developed with immeasurable coffee, countless sleepless nights, 1337 bugs fixed, and unwavering determination to change the world",
+    "specialThanks": "To the Substrate team, Polkadot ecosystem, open source community, and everyone who believed in decentralized democracy",
+
+    "easterEggHunt": "There are hidden messages throughout this genesis block. Find them all and you'll discover the true vision of Ëtrid.",
+    "hiddenMessage": "01000111 01101111 01101111 01100100 00100000 01101100 01110101 01100011 01101011 00100001",
+    "decode": "Gizzi's binary message awaits decoding by curious minds",
+
+    "projectTimeline": "2021: EtridDAO-SE Whitepaper | 2023: Ivory Papers Published | 2025: FlareChain Mainnet Launch",
+    "repositorySize": "Over 100,000 lines of code, 74+ MiB of documentation",
+    "commitmentToOpenSource": "GPLv3 - Free forever, open for all",
+
+    "flameLit": "November 1, 2025 00:00:00 UTC",
+    "flameKeeper": "The community",
+    "flamePurpose": "To illuminate the path to decentralized democracy for all humanity"
   },
   "protocolId": "flarechain",
 
