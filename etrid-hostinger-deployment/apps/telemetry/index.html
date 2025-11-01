@@ -333,9 +333,24 @@
                 align-items: flex-start;
             }
 
+            /* Table responsiveness */
+            .node-table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                min-width: 800px;
+            }
+
             th, td {
-                padding: 8px;
-                font-size: 0.8em;
+                padding: 8px 6px;
+                font-size: 0.75em;
+            }
+
+            /* Hide less important columns on mobile */
+            th:nth-child(8), td:nth-child(8) { /* Version */
+                display: none;
             }
         }
 
@@ -347,15 +362,58 @@
         .loading {
             animation: pulse 2s ease-in-out infinite;
         }
+
+        /* Error Banner */
+        .error-banner {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-banner-text {
+            flex: 1;
+            color: #fbbf24;
+            font-size: 0.9em;
+        }
+
+        /* Demo Data Badge */
+        .demo-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 0.85em;
+            border: 1px solid #a855f7;
+            z-index: 1000;
+            display: none;
+            animation: pulse 2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Demo Data Badge -->
+        <div id="demo-badge" class="demo-badge">📊 DEMO DATA</div>
+
         <header>
             <h1>🚀 ËTRID Network Telemetry</h1>
             <p class="subtitle">ASF Consensus • PPFA Block Production • 21-Validator Committee</p>
             <div id="connection-status" class="status warning">Connecting...</div>
         </header>
+
+        <!-- Error Banner -->
+        <div id="error-banner" class="error-banner">
+            <div id="error-banner-text" class="error-banner-text"></div>
+        </div>
 
         <!-- Consensus Health Bar -->
         <div class="consensus-health-bar">
@@ -448,6 +506,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app-telemetry-feed.js"></script>
 </body>
 </html>

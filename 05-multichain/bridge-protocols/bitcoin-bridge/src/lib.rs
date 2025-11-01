@@ -33,16 +33,16 @@ pub mod pallet {
     // Import the generic Bridge trait
     // use etrid_bridge_interface::BridgeTrait;
 
-    type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+    type BalanceOf<T> = <<T as pallet_etr_lock::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config: frame_system::Config + pallet_etr_lock::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-        type Currency: Currency<Self::AccountId>;
+        // Note: Currency is inherited from pallet_etr_lock::Config
 
         /// Minimum BTC confirmations required
         #[pallet::constant]
@@ -160,6 +160,17 @@ pub mod pallet {
         OptionQuery,
     >;
 
+    /// Processed Bitcoin burn transactions (to prevent replay attacks)
+    #[pallet::storage]
+    #[pallet::getter(fn processed_bitcoin_burns)]
+    pub type ProcessedBitcoinBurns<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        BoundedVec<u8, ConstU32<64>>,
+        bool,
+        ValueQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -188,6 +199,18 @@ pub mod pallet {
         BridgeFeeCollected {
             total_fee: BalanceOf<T>,
             validator_amount: BalanceOf<T>,
+        },
+        /// ETR bridged to Bitcoin [from, amount, btc_destination]
+        EtrBridgedToBitcoin {
+            from: T::AccountId,
+            amount: BalanceOf<T>,
+            btc_destination: Vec<u8>,
+        },
+        /// ETR unlocked from Bitcoin burn [to, amount, bitcoin_burn_tx]
+        EtrUnlockedFromBitcoin {
+            to: T::AccountId,
+            amount: BalanceOf<T>,
+            bitcoin_burn_tx: Vec<u8>,
         },
     }
 
@@ -239,6 +262,10 @@ pub mod pallet {
         AlreadyApproved,
         /// Invalid custodian set configuration
         InvalidCustodianSet,
+        /// Burn transaction already processed
+        BurnAlreadyProcessed,
+        /// Lock account not configured
+        LockAccountNotSet,
     }
 
     #[pallet::genesis_config]
@@ -344,7 +371,7 @@ pub mod pallet {
             Deposits::<T>::insert(&btc_txid_bounded, deposit.clone());
 
             // Mint ETR
-            T::Currency::deposit_creating(&deposit.depositor, deposit.amount_etr);
+            <T as pallet_etr_lock::Config>::Currency::deposit_creating(&deposit.depositor, deposit.amount_etr);
 
             // Update totals
             TotalBtcLocked::<T>::mutate(|total| *total = total.saturating_add(deposit.amount_satoshi));
@@ -385,7 +412,7 @@ pub mod pallet {
             let net_amount = amount_etr.saturating_sub(fee);
 
             // Burn ETR (total amount including fee)
-            T::Currency::withdraw(
+            <T as pallet_etr_lock::Config>::Currency::withdraw(
                 &withdrawer,
                 amount_etr,
                 WithdrawReasons::all(),
@@ -405,7 +432,7 @@ pub mod pallet {
                 // Transfer validator fee to validator pool
                 if !validator_fee.is_zero() {
                     let validator_pool_account = T::ValidatorPoolAccount::get();
-                    let _ = T::Currency::deposit_creating(&validator_pool_account, validator_fee);
+                    let _ = <T as pallet_etr_lock::Config>::Currency::deposit_creating(&validator_pool_account, validator_fee);
                 }
 
                 // Emit fee event
@@ -560,6 +587,96 @@ pub mod pallet {
                 ));
             }
             PendingApprovals::<T>::insert(operation_hash, pending);
+
+            Ok(())
+        }
+
+        /// Bridge ETR tokens to Bitcoin
+        ///
+        /// Locks ETR on FlareChain and emits event for relayer to mint on Bitcoin
+        #[pallet::call_index(7)]
+        #[pallet::weight(150_000)]
+        pub fn bridge_etr_to_bitcoin(
+            origin: OriginFor<T>,
+            amount: BalanceOf<T>,
+            btc_destination: Vec<u8>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Validate BTC address
+            ensure!(btc_destination.len() <= 64, Error::<T>::InvalidBtcAddress);
+
+            // Lock ETR using shared locking pallet
+            pallet_etr_lock::Pallet::<T>::lock_for_bridge(
+                frame_system::RawOrigin::Signed(who.clone()).into(),
+                pallet_etr_lock::ChainId::Bitcoin,
+                amount,
+                btc_destination.clone(),
+            )?;
+
+            // Emit event for relayer
+            Self::deposit_event(Event::<T>::EtrBridgedToBitcoin {
+                from: who,
+                amount,
+                btc_destination,
+            });
+
+            Ok(())
+        }
+
+        /// Process ETR burn from Bitcoin (called by relayer)
+        ///
+        /// Unlocks ETR on FlareChain when wrapped ETR is burned on Bitcoin
+        #[pallet::call_index(8)]
+        #[pallet::weight(150_000)]
+        pub fn process_etr_burn_from_bitcoin(
+            origin: OriginFor<T>,
+            etrid_recipient: T::AccountId,
+            amount: BalanceOf<T>,
+            bitcoin_burn_tx: Vec<u8>,
+        ) -> DispatchResult {
+            // Should be called by authorized relayer/oracle
+            let _relayer = ensure_signed(origin)?;
+            // TODO: Add relayer authorization check
+
+            // Convert to bounded vec for storage lookup
+            let burn_tx_bounded: BoundedVec<u8, ConstU32<64>> = bitcoin_burn_tx.clone().try_into()
+                .map_err(|_| Error::<T>::InvalidBtcTxId)?;
+
+            // Verify burn hasn't been processed
+            ensure!(
+                !ProcessedBitcoinBurns::<T>::contains_key(&burn_tx_bounded),
+                Error::<T>::BurnAlreadyProcessed
+            );
+
+            // Unlock ETR
+            pallet_etr_lock::Pallet::<T>::unlock_from_bridge(
+                frame_system::RawOrigin::Root.into(),
+                pallet_etr_lock::ChainId::Bitcoin,
+                amount,
+            )?;
+
+            // Get lock account
+            let lock_account = pallet_etr_lock::Pallet::<T>::lock_account()
+                .ok_or(Error::<T>::LockAccountNotSet)?;
+
+            // Transfer to recipient
+            <T as pallet_etr_lock::Config>::Currency::transfer(
+                &lock_account,
+                &etrid_recipient,
+                amount,
+                ExistenceRequirement::KeepAlive,
+            )?;
+
+            // Mark as processed
+            ProcessedBitcoinBurns::<T>::insert(&burn_tx_bounded, true);
+
+            // Emit event
+            Self::deposit_event(Event::<T>::EtrUnlockedFromBitcoin {
+                to: etrid_recipient,
+                amount,
+                bitcoin_burn_tx,
+            });
 
             Ok(())
         }

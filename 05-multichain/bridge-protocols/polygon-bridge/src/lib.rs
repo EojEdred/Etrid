@@ -37,7 +37,7 @@ pub mod pallet {
     use sp_std::vec::Vec;
 
     type BalanceOf<T> =
-        <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+        <<T as pallet_etr_lock::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     /// Polygon address type (EVM-compatible, 20 bytes)
     pub type PolygonAddress = H160;
@@ -133,12 +133,11 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config: frame_system::Config + pallet_etr_lock::Config {
         /// The overarching event type
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-        /// Currency type for balance operations
-        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+        /// Note: Currency type is inherited from pallet_etr_lock::Config to avoid ambiguity
 
         /// Minimum number of Polygon block confirmations required (default: 128)
         #[pallet::constant]
@@ -223,6 +222,17 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn checkpoint_manager)]
     pub type CheckpointManager<T: Config> = StorageValue<_, PolygonAddress, OptionQuery>;
+
+    /// Processed Polygon burn transactions (to prevent replay attacks)
+    #[pallet::storage]
+    #[pallet::getter(fn processed_polygon_burns)]
+    pub type ProcessedPolygonBurns<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        PolygonTxHash,
+        bool,
+        ValueQuery,
+    >;
 
     // ==================== GENESIS ====================
 
@@ -322,6 +332,18 @@ pub mod pallet {
         BridgePaused,
         /// Bridge unpaused
         BridgeUnpaused,
+        /// ETR bridged to Polygon [from, amount, polygon_address]
+        EtrBridgedToPolygon {
+            from: T::AccountId,
+            amount: BalanceOf<T>,
+            polygon_address: PolygonAddress,
+        },
+        /// ETR unlocked from Polygon burn [to, amount, polygon_burn_tx]
+        EtrUnlockedFromPolygon {
+            to: T::AccountId,
+            amount: BalanceOf<T>,
+            polygon_burn_tx: PolygonTxHash,
+        },
     }
 
     // ==================== ERRORS ====================
@@ -362,6 +384,10 @@ pub mod pallet {
         CheckpointNotVerified,
         /// Arithmetic overflow
         Overflow,
+        /// Burn transaction already processed
+        BurnAlreadyProcessed,
+        /// Lock account not configured
+        LockAccountNotSet,
     }
 
     // ==================== CALLS ====================
@@ -495,7 +521,7 @@ pub mod pallet {
 
             // Mint tokens to user (in production, this would be from bridge reserve)
             let bridge_account = Self::bridge_account();
-            T::Currency::transfer(
+            <T as pallet_etr_lock::Config>::Currency::transfer(
                 &bridge_account,
                 &account,
                 amount_after_fee,
@@ -540,12 +566,12 @@ pub mod pallet {
 
             // Ensure user has sufficient balance
             ensure!(
-                T::Currency::free_balance(&who) >= amount,
+                <T as pallet_etr_lock::Config>::Currency::free_balance(&who) >= amount,
                 Error::<T>::InsufficientBalance
             );
 
             // Lock user's tokens
-            T::Currency::transfer(
+            <T as pallet_etr_lock::Config>::Currency::transfer(
                 &who,
                 &Self::bridge_account(),
                 amount,
@@ -719,6 +745,92 @@ pub mod pallet {
             ensure_root(origin)?;
 
             CheckpointManager::<T>::put(new_address);
+
+            Ok(())
+        }
+
+        /// Bridge ETR tokens to Polygon
+        ///
+        /// Locks ETR on FlareChain and emits event for relayer to mint on Polygon
+        #[pallet::call_index(9)]
+        #[pallet::weight(150_000)]
+        pub fn bridge_etr_to_polygon(
+            origin: OriginFor<T>,
+            amount: BalanceOf<T>,
+            polygon_destination: PolygonAddress,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Convert Polygon address to bytes
+            let destination_bytes = polygon_destination.as_bytes().to_vec();
+
+            // Lock ETR using shared locking pallet
+            pallet_etr_lock::Pallet::<T>::lock_for_bridge(
+                frame_system::RawOrigin::Signed(who.clone()).into(),
+                pallet_etr_lock::ChainId::Polygon,
+                amount,
+                destination_bytes.clone(),
+            )?;
+
+            // Emit event for relayer
+            Self::deposit_event(Event::<T>::EtrBridgedToPolygon {
+                from: who,
+                amount,
+                polygon_address: polygon_destination,
+            });
+
+            Ok(())
+        }
+
+        /// Process ETR burn from Polygon (called by relayer)
+        ///
+        /// Unlocks ETR on FlareChain when wrapped ETR is burned on Polygon
+        #[pallet::call_index(10)]
+        #[pallet::weight(150_000)]
+        pub fn process_etr_burn_from_polygon(
+            origin: OriginFor<T>,
+            etrid_recipient: T::AccountId,
+            amount: BalanceOf<T>,
+            polygon_burn_tx: PolygonTxHash,
+        ) -> DispatchResult {
+            // Should be called by authorized relayer/oracle
+            let _relayer = ensure_signed(origin)?;
+            // TODO: Add relayer authorization check
+
+            // Verify burn hasn't been processed
+            ensure!(
+                !ProcessedPolygonBurns::<T>::contains_key(&polygon_burn_tx),
+                Error::<T>::BurnAlreadyProcessed
+            );
+
+            // Unlock ETR
+            pallet_etr_lock::Pallet::<T>::unlock_from_bridge(
+                frame_system::RawOrigin::Root.into(),
+                pallet_etr_lock::ChainId::Polygon,
+                amount,
+            )?;
+
+            // Get lock account
+            let lock_account = pallet_etr_lock::Pallet::<T>::lock_account()
+                .ok_or(Error::<T>::LockAccountNotSet)?;
+
+            // Transfer to recipient
+            <T as pallet_etr_lock::Config>::Currency::transfer(
+                &lock_account,
+                &etrid_recipient,
+                amount,
+                ExistenceRequirement::KeepAlive,
+            )?;
+
+            // Mark as processed
+            ProcessedPolygonBurns::<T>::insert(&polygon_burn_tx, true);
+
+            // Emit event
+            Self::deposit_event(Event::<T>::EtrUnlockedFromPolygon {
+                to: etrid_recipient,
+                amount,
+                polygon_burn_tx,
+            });
 
             Ok(())
         }

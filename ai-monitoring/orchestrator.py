@@ -6,6 +6,17 @@ Part of AI Dev Blockchain Monitoring System
 import os
 import time
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path('/opt/ai-monitoring/.env')
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+    print(f"✓ Loaded environment from {env_path}")
+else:
+    print(f"⚠ Warning: .env file not found at {env_path}")
+
 from validator_monitor import ValidatorMonitor
 from ai_dev_workers import AIDevWorker
 

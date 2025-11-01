@@ -21,6 +21,9 @@ sp-io = { workspace = true }
 sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 
+# Etrid Core Dependencies
+pallet-etr-lock = { workspace = true }
+
 # TRON-specific dependencies (TRC-20 support)
 bs58 = { version = "0.5.0", default-features = false }
 sha3 = { version = "0.10.8", default-features = false }

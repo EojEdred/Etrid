@@ -8,6 +8,9 @@ let nodes = [];
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_DELAY = 3000;
+const CONNECTION_TIMEOUT = 10000; // 10 seconds
+let connectionTimeout = null;
+let usingDemoData = false;
 
 // Committee and consensus tracking
 let committeeSize = 21;
@@ -15,49 +18,157 @@ let currentEpoch = 0;
 let lastProposer = null;
 let blocksSinceFinality = 0;
 
+// Demo data for fallback
+const DEMO_NODES = [
+    { id: 1, name: 'Gizzi-Director-01', validator: true, best: 142850, finalized: 142845, peers: 20, version: 'flarechain-1.0', timestamp: Date.now() },
+    { id: 2, name: 'EojEdred-Director-02', validator: true, best: 142850, finalized: 142845, peers: 20, version: 'flarechain-1.0', timestamp: Date.now() },
+    { id: 3, name: 'Audit-Director-03', validator: true, best: 142850, finalized: 142845, peers: 20, version: 'flarechain-1.0', timestamp: Date.now() },
+    { id: 4, name: 'FlareNode-Governance', validator: true, best: 142849, finalized: 142844, peers: 19, version: 'flarechain-1.0', timestamp: Date.now() },
+    { id: 5, name: 'FlareNode-Consensus', validator: true, best: 142849, finalized: 142844, peers: 19, version: 'flarechain-1.0', timestamp: Date.now() },
+];
+
+// Check for mixed content issues
+function checkMixedContent() {
+    const isHTTPS = window.location.protocol === 'https:';
+    const isWS = TELEMETRY_FEED.startsWith('ws://');
+    return isHTTPS && isWS;
+}
+
+// Show error banner
+function showErrorBanner(type) {
+    const banner = document.getElementById('error-banner');
+    const bannerText = document.getElementById('error-banner-text');
+    if (!banner || !bannerText) return;
+
+    let message = '';
+    let link = '';
+
+    if (type === 'mixed-content') {
+        message = '⚠️ Connection blocked by browser security (HTTPS→WS). ';
+        link = '<a href="http://etrid.org/telemetry/" style="color: #fbbf24; text-decoration: underline;">Use HTTP version</a> or configure WSS.';
+    } else if (type === 'timeout') {
+        message = '⚠️ Connection timeout. Telemetry server may be offline. ';
+        link = 'Showing demo data.';
+    } else if (type === 'failed') {
+        message = '❌ Connection failed after multiple attempts. ';
+        link = '<a href="#" onclick="location.reload()" style="color: #3b82f6; text-decoration: underline;">Click to retry</a>';
+    }
+
+    bannerText.innerHTML = message + link;
+    banner.style.display = 'flex';
+
+    // Show demo data badge
+    const demoBadge = document.getElementById('demo-badge');
+    if (demoBadge) demoBadge.style.display = 'block';
+}
+
+// Hide error banner
+function hideErrorBanner() {
+    const banner = document.getElementById('error-banner');
+    if (banner) banner.style.display = 'none';
+
+    const demoBadge = document.getElementById('demo-badge');
+    if (demoBadge) demoBadge.style.display = 'none';
+}
+
 // Initialize connection
 function connectToTelemetry() {
     console.log('🔌 Connecting to ËTRID Telemetry...');
 
-    ws = new WebSocket(TELEMETRY_FEED);
+    // Check for mixed content
+    if (checkMixedContent()) {
+        console.warn('⚠️ Mixed content detected: HTTPS→WS');
+        showErrorBanner('mixed-content');
+        // Try anyway, browser might allow it
+    }
 
-    ws.onopen = () => {
-        console.log('✅ Connected to telemetry feed');
-        reconnectAttempts = 0;
-        updateStatus('Connected - ASF Active', 'success');
-    };
+    // Set connection timeout
+    connectionTimeout = setTimeout(() => {
+        console.error('⏱️ Connection timeout');
+        if (ws && ws.readyState !== WebSocket.OPEN) {
+            ws.close();
+            showErrorBanner('timeout');
+            loadDemoData();
+        }
+    }, CONNECTION_TIMEOUT);
 
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
+    try {
+        ws = new WebSocket(TELEMETRY_FEED);
 
-            if (data.type === 'node_list' || data.type === 'node_update') {
-                nodes = data.nodes || [];
-                analyzeConsensusHealth();
-                updateDisplay();
+        ws.onopen = () => {
+            console.log('✅ Connected to telemetry feed');
+            clearTimeout(connectionTimeout);
+            reconnectAttempts = 0;
+            usingDemoData = false;
+            hideErrorBanner();
+            updateStatus('Connected - ASF Active', 'success');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'node_list' || data.type === 'node_update') {
+                    nodes = data.nodes || [];
+                    usingDemoData = false;
+                    analyzeConsensusHealth();
+                    updateDisplay();
+                }
+            } catch (e) {
+                console.error('Error parsing telemetry data:', e);
             }
-        } catch (e) {
-            console.error('Error parsing telemetry data:', e);
+        };
+
+        ws.onerror = (error) => {
+            console.error('❌ WebSocket error:', error);
+            clearTimeout(connectionTimeout);
+            updateStatus('Connection error', 'error');
+        };
+
+        ws.onclose = () => {
+            console.log('⚠️  Connection closed');
+            clearTimeout(connectionTimeout);
+            updateStatus('Reconnecting...', 'warning');
+
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                console.log(`🔄 Reconnecting (attempt ${reconnectAttempts})...`);
+                setTimeout(connectToTelemetry, RECONNECT_DELAY);
+            } else {
+                updateStatus('Connection failed', 'error');
+                showErrorBanner('failed');
+                loadDemoData();
+            }
+        };
+    } catch (error) {
+        console.error('❌ Failed to create WebSocket:', error);
+        clearTimeout(connectionTimeout);
+        showErrorBanner('failed');
+        loadDemoData();
+    }
+}
+
+// Load demo data as fallback
+function loadDemoData() {
+    console.log('📊 Loading demo data');
+    usingDemoData = true;
+    nodes = DEMO_NODES;
+    analyzeConsensusHealth();
+    updateDisplay();
+
+    // Update demo data periodically to simulate activity
+    setInterval(() => {
+        if (usingDemoData) {
+            nodes = nodes.map(node => ({
+                ...node,
+                best: node.best + Math.floor(Math.random() * 2),
+                finalized: node.finalized + (Math.random() > 0.5 ? 1 : 0),
+                timestamp: Date.now() - Math.floor(Math.random() * 5000)
+            }));
+            analyzeConsensusHealth();
+            updateDisplay();
         }
-    };
-
-    ws.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
-        updateStatus('Connection error', 'error');
-    };
-
-    ws.onclose = () => {
-        console.log('⚠️  Connection closed');
-        updateStatus('Reconnecting...', 'warning');
-
-        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-            reconnectAttempts++;
-            console.log(`🔄 Reconnecting (attempt ${reconnectAttempts})...`);
-            setTimeout(connectToTelemetry, RECONNECT_DELAY);
-        } else {
-            updateStatus('Connection failed - refresh page', 'error');
-        }
-    };
+    }, 6000);
 }
 
 // Analyze consensus health and calculate ASF finality metrics
