@@ -84,7 +84,7 @@ jobs:
         continue-on-error: true
 
       - name: Run Slither (if Solidity files changed)
-        uses: crytic/slither-action@v0.3.0
+        uses: crytic/slither-action@v0.4.1
         with:
           target: 05-multichain/bridge/adapters/bsc/contracts/
         continue-on-error: true
