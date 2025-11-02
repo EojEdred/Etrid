@@ -1,64 +1,111 @@
-# Ëtrid FlareChain Mainnet - Bootstrap Documentation
+# Ëtrid FlareChain Mainnet - Validator Documentation
 
 **Last Updated:** November 2, 2025
-**Status:** ✅ Production Verified (4 validators running)
+**Status:** ✅ Production Verified
 
 ---
 
 ## Overview
 
-This directory contains the complete, tested, and verified configuration for bootstrapping Ëtrid FlareChain mainnet validators.
-
-All configurations have been tested on 4 live validators and are known to work correctly.
+This directory contains complete documentation for running Ëtrid FlareChain validators. All configurations have been tested on live mainnet validators and are known to work correctly.
 
 ---
 
-## Critical Files
+## 📚 Documentation Files
 
-### 1. `VALIDATOR_SERVICE_TEMPLATE.md` ⭐
-**Complete validator configuration templates with all critical flags**
+### 🚀 **HOW_TO_RUN_A_VALIDATOR.md** - START HERE
 
-- Systemd service templates for Azure and Oracle Cloud
-- Working configurations from all 4 live validators
-- Complete flag reference
-- Common issues and solutions
-- **START HERE** if setting up a new validator
+**Complete guide for anyone wanting to run a validator**
 
-### 2. `BOOTSTRAP_QUICK_REFERENCE.md` ⭐
-**Quick step-by-step bootstrap guide**
+This is the primary guide for setting up and running your own Ëtrid FlareChain validator node, whether joining the mainnet or creating your own testnet.
 
-- Copy-paste commands for rapid deployment
-- Pre-filled templates
-- Verification checklist
-- Troubleshooting guide
-- **USE THIS** for deploying validators 5-21
+**Covers:**
+- Building the validator binary from source
+- Generating and managing session keys
+- Network configuration and firewall setup
+- Creating systemd service
+- Troubleshooting common issues
+- Security best practices
 
-### 3. `chainspec-mainnet-raw.json` ⭐
-**The working mainnet chainspec**
+**Who it's for:**
+- Developers wanting to join the mainnet
+- Anyone setting up their own testnet
+- Operators learning to run validators
 
-- Genesis Hash: `0x2fb6d755006726bd6898f9334f31876b65ab5395436309f7ecf90540e73084c4`
+**Time required:** 30-60 minutes
+
+---
+
+### 🔧 **VALIDATOR_SERVICE_TEMPLATE.md** - Technical Reference
+
+**Detailed systemd service templates and flag reference**
+
+Technical documentation with working configurations from live mainnet validators.
+
+**Covers:**
+- Systemd service templates for different platforms
+- Complete flag reference and explanations
+- Working configurations from production validators
+- Common issues and their solutions
+- Platform-specific differences (Azure vs Oracle Cloud)
+
+**Who it's for:**
+- Operators customizing their setup
+- Developers debugging configuration issues
+- Anyone needing detailed flag documentation
+
+---
+
+### 📋 **chainspec-mainnet-raw.json** - Mainnet Chainspec
+
+**The official Ëtrid FlareChain mainnet chainspec**
+
+This is the chainspec file used by all mainnet validators.
+
+**Details:**
 - Chain: "Ëtrid FlareChain Mainnet"
-- Type: "Live"
-- **REQUIRED** for all validators
+- Genesis Hash: `0x2fb6d755006726bd6898f9334f31876b65ab5395436309f7ecf90540e73084c4`
+- Chain Type: "Live"
 
-### 4. Other Documentation
-- `VALIDATOR_QUICKSTART.md` - Original quick start guide
-- `VALIDATOR_FIREWALL_RULES.md` - Detailed firewall setup
-- `GENESIS_SETUP_GUIDE.md` - Genesis configuration details
-- Other reference documents
+**Usage:**
+```bash
+# Download
+wget https://raw.githubusercontent.com/EojEdred/Etrid/main/docs/mainnet/chainspec-mainnet-raw.json
+
+# Or copy from this repo
+cp docs/mainnet/chainspec-mainnet-raw.json /etc/etrid/chainspec.json
+```
 
 ---
 
-## Quick Start for New Validator
+### 📖 **Other Documentation**
 
-### For Validators 5-21:
+- **VALIDATOR_QUICKSTART.md** - Original quick start guide
+- **VALIDATOR_FIREWALL_RULES.md** - Detailed firewall configuration
+- **GENESIS_SETUP_GUIDE.md** - Genesis block configuration
+- **VALIDATOR_MONITORING_INTEGRATION.md** - Monitoring setup
 
-1. Read `BOOTSTRAP_QUICK_REFERENCE.md`
-2. Copy `chainspec-mainnet-raw.json` to your VM
-3. Follow the step-by-step commands
-4. Verify with the checklist
+---
 
-**Time to deploy:** ~5 minutes
+## Quick Start
+
+### For New Validators
+
+**1. Read the main guide:**
+```bash
+cat docs/mainnet/HOW_TO_RUN_A_VALIDATOR.md
+```
+
+**2. Follow the steps:**
+- Build the binary
+- Generate session keys
+- Configure your server
+- Start the validator
+
+**3. Verify it's working:**
+```bash
+sudo journalctl -u etrid-validator -f
+```
 
 ---
 
@@ -66,54 +113,87 @@ All configurations have been tested on 4 live validators and are known to work c
 
 These are **non-negotiable** and will cause failures if missed:
 
-### 1. ✅ `--public-addr` Flag (CRITICAL)
+### ✅ 1. `--public-addr` Flag (CRITICAL)
+
 ```bash
 --public-addr /ip4/YOUR_PUBLIC_IP/tcp/30333
 ```
-**Without this:** Validator will only connect to 1 peer (the bootnode) and others cannot discover it.
 
-### 2. ✅ Correct Chainspec
+**Why it matters:** Without this flag, your validator cannot be discovered by other peers. You'll only connect to 1 peer (the bootnode) instead of 3+.
+
+**How to verify:**
 ```bash
---chain=/home/azureuser/chainspec-mainnet-raw.json
+sudo systemctl cat etrid-validator | grep public-addr
 ```
-**Must contain:**
-- Name: "Ëtrid FlareChain Mainnet"
-- Genesis: `0x2fb6...84c4`
-- Chain Type: "Live"
-
-### 3. ✅ Correct Bootnode
-```bash
---bootnodes /ip4/20.69.26.209/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
-```
-**This is VM1 (EojEdred).** Do not use old peer IDs.
-
-### 4. ✅ Unique Node Key
-Each validator needs a unique 64-character hex node key.
-```
-Validator 5: 0000000000000000000000000000000000000000000000000000000000000005
-Validator 6: 0000000000000000000000000000000000000000000000000000000000000006
-...etc
-```
-
-### 5. ✅ Session Keys Inserted
-Three keys required:
-- AURA (sr25519) - key type: `aura`
-- GRANDPA (ed25519) - key type: `gran`
-- ASF (sr25519) - key type: `asfk`
 
 ---
 
-## What Changed (Nov 2, 2025 Fixes)
+### ✅ 2. Correct Chainspec
+
+**For mainnet:**
+```bash
+--chain=/etc/etrid/chainspec.json
+```
+
+Must be the file from `docs/mainnet/chainspec-mainnet-raw.json`
+
+**Verify:**
+```bash
+head -5 /etc/etrid/chainspec.json
+# Should show: "name": "Ëtrid FlareChain Mainnet"
+```
+
+---
+
+### ✅ 3. Unique Node Key
+
+Each validator needs a unique 64-character hex node key for network identity.
+
+**Generate:**
+```bash
+openssl rand -hex 32
+```
+
+**Never reuse** node keys between validators.
+
+---
+
+### ✅ 4. Session Keys Inserted
+
+Three keys required:
+- **AURA** (sr25519) - Block authoring - key type: `aura`
+- **GRANDPA** (ed25519) - Finality voting - key type: `gran`
+- **ASF** (sr25519) - Attestation - key type: `asfk`
+
+**Verify:**
+```bash
+ls ~/.local/share/etrid-validator/chains/*/keystore/
+# Should show 3 files
+```
+
+---
+
+### ✅ 5. Port 30333 Open
+
+```bash
+# Verify firewall
+sudo ufw status | grep 30333
+
+# Should show: 30333/tcp ALLOW Anywhere
+```
+
+---
+
+## What We Fixed (Nov 2, 2025)
 
 ### Before (Broken):
 ```bash
-# Missing --public-addr
 ExecStart=/usr/local/bin/etrid-validator \
   --validator \
   --name "validator-name" \
-  --chain=/home/azureuser/chainspec-mainnet-raw.json \
-  --node-key 0000...0003 \
-  --bootnodes /ip4/20.69.26.209/tcp/30333/p2p/12D3KooW... \
+  --chain=/path/to/chainspec.json \
+  --node-key abc123... \
+  --bootnodes /ip4/... \
   --port 30333
 
 # RESULT: Only 1 peer connected ❌
@@ -121,74 +201,62 @@ ExecStart=/usr/local/bin/etrid-validator \
 
 ### After (Fixed):
 ```bash
-# Added --public-addr flag
 ExecStart=/usr/local/bin/etrid-validator \
   --validator \
   --name "validator-name" \
-  --chain=/home/azureuser/chainspec-mainnet-raw.json \
-  --node-key 0000...0003 \
-  --public-addr /ip4/20.186.91.207/tcp/30333 \  # ← ADDED THIS
-  --bootnodes /ip4/20.69.26.209/tcp/30333/p2p/12D3KooW... \
+  --chain=/path/to/chainspec.json \
+  --node-key abc123... \
+  --public-addr /ip4/YOUR_PUBLIC_IP/tcp/30333 \  # ← ADDED THIS
+  --bootnodes /ip4/... \
   --port 30333
 
-# RESULT: 20 peers connected ✅
+# RESULT: 3-20 peers connected ✅
 ```
 
-**This one flag fixed the entire network connectivity issue.**
+**The missing `--public-addr` flag was preventing peer discovery.**
 
 ---
 
 ## Verification After Bootstrap
 
-After starting your validator, verify these within 60 seconds:
+After starting your validator, verify within 60 seconds:
 
 ```bash
-# 1. Chain name
-sudo journalctl -u etrid-validator --no-pager | grep "Chain specification"
-# ✅ Expected: Chain specification: Ëtrid FlareChain Mainnet
+# 1. Service is running
+sudo systemctl is-active etrid-validator
+# Expected: active
 
-# 2. Genesis hash
-sudo journalctl -u etrid-validator --no-pager | grep "finalized #0"
-# ✅ Expected: finalized #0 (0x2fb6…84c4)
+# 2. Chain name (if joining mainnet)
+sudo journalctl -u etrid-validator --no-pager | grep "Chain specification"
+# Expected: Chain specification: Ëtrid FlareChain Mainnet
 
 # 3. Peer count
 sudo journalctl -u etrid-validator -n 5 | grep "Idle"
-# ✅ Expected: 💤 Idle (3+ peers)
+# Expected: 💤 Idle (3+ peers) for mainnet, (1+ peers) for testnet
 
 # 4. Block sync
 sudo journalctl -u etrid-validator -n 10 | grep "Imported"
-# ✅ Expected: Multiple "Imported #XXXX" messages
+# Expected: Multiple "Imported #XXXX" messages
 ```
 
 ---
 
-## Current Network Status
+## Current Mainnet Status
 
 **As of November 2, 2025:**
 
-| Validator | IP | Status | Peers | Block |
-|-----------|-----|--------|-------|-------|
-| VM1 (EojEdred) | 20.69.26.209 | ✅ Running | 20 | #1800+ |
-| Gizzi (Foundation) | 64.181.215.19 | ✅ Running | 3 | #1800+ |
-| VM2 (governance) | 20.186.91.207 | ✅ Running | 20 | #1800+ |
-| VM3 (security) | 52.252.142.146 | ✅ Running | 20 | #1800+ |
+- ✅ Mainnet is live and operational
+- ✅ Multiple validators running
+- ✅ Producing blocks consistently
+- ✅ All validators synchronized
+- ✅ ASF PPFA + GRANDPA consensus working
 
-**Network Health:** ✅ All validators synchronized and producing blocks
+**Genesis Hash:** `0x2fb6d755006726bd6898f9334f31876b65ab5395436309f7ecf90540e73084c4`
 
----
-
-## Next Steps
-
-### To Deploy Validator 5:
-1. Get validator info from `secrets/validator-keys/generated-keys/COMPLETE_VALIDATOR_NETWORK_MAP.md`
-2. Follow `BOOTSTRAP_QUICK_REFERENCE.md`
-3. Use node key: `0000000000000000000000000000000000000000000000000000000000000005`
-
-### To Deploy Validators 6-21:
-Repeat for each, incrementing node key:
-- Validator 6: `...0006`
-- Validator 7: `...0007`
-- ... etc
+**Bootnode:**
+```
+/ip4/20.69.26.209/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+```
 
 ---
 
@@ -202,56 +270,62 @@ Repeat for each, incrementing node key:
 **Cause:** Using wrong chainspec
 **Fix:** Use `chainspec-mainnet-raw.json` from this directory
 
-### Can't Connect to Bootnode
-**Cause:** Old bootnode peer ID
-**Fix:** Use `12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp`
+### Service Won't Start
+**Cause:** Various (keys, permissions, paths)
+**Fix:** Check detailed logs: `sudo journalctl -u etrid-validator -n 100`
 
-### Wrong Genesis Hash
-**Cause:** Wrong chainspec
-**Fix:** Verify genesis is `0x2fb6...84c4`
+### Can't Connect to Bootnode
+**Cause:** Firewall blocking port 30333
+**Fix:** `sudo ufw allow 30333/tcp`
+
+See **HOW_TO_RUN_A_VALIDATOR.md** for complete troubleshooting guide.
 
 ---
 
-## File Checksums (for verification)
+## Mainnet Network Details
 
-### chainspec-mainnet-raw.json
+### Connection Information
+
+**Bootnode Multiaddr:**
+```
+/ip4/20.69.26.209/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+```
+
+**Required in your service file:**
 ```bash
-# Verify you have the correct file
-head -5 chainspec-mainnet-raw.json
+--bootnodes /ip4/20.69.26.209/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+```
 
-# Should show:
-# {
+### Chainspec Verification
+
+```bash
+# Verify you have the correct chainspec
+head -10 /etc/etrid/chainspec.json | grep -E "(name|id|chainType)"
+
+# Expected output:
 #   "name": "Ëtrid FlareChain Mainnet",
 #   "id": "flarechain_mainnet",
 #   "chainType": "Live",
-#   "bootNodes": [],
 ```
 
 ---
 
-## Support
+## Support & Community
 
-If you encounter issues not covered in the documentation:
+### Getting Help
 
-1. Check `VALIDATOR_SERVICE_TEMPLATE.md` - Common Issues section
-2. Check `BOOTSTRAP_QUICK_REFERENCE.md` - Troubleshooting section
-3. Verify your configuration matches the working templates exactly
-4. Review logs: `sudo journalctl -u etrid-validator -n 100`
+1. **Documentation First:** Read HOW_TO_RUN_A_VALIDATOR.md thoroughly
+2. **Check Logs:** `sudo journalctl -u etrid-validator -n 100`
+3. **Verify Configuration:** Compare with templates in this directory
+4. **GitHub Issues:** https://github.com/EojEdred/Etrid/issues
 
----
+### Reporting Issues
 
-## Document History
-
-**November 2, 2025:**
-- Added `VALIDATOR_SERVICE_TEMPLATE.md` with complete configurations
-- Added `BOOTSTRAP_QUICK_REFERENCE.md` for quick deployment
-- Added `chainspec-mainnet-raw.json` (working mainnet chainspec)
-- Documented `--public-addr` flag requirement
-- All configurations tested on 4 live validators
-
-**October 31, 2025:**
-- Original documentation created
-- Basic quickstart guide
+When reporting an issue, include:
+- Your validator setup (OS, specs)
+- Service configuration (`sudo systemctl cat etrid-validator`)
+- Recent logs (`sudo journalctl -u etrid-validator -n 100`)
+- Steps to reproduce
 
 ---
 
@@ -259,17 +333,54 @@ If you encounter issues not covered in the documentation:
 
 Your validator is working correctly when:
 
-- ✅ Service is active and running
-- ✅ Logs show "Ëtrid FlareChain Mainnet"
-- ✅ Genesis hash is `0x2fb6...84c4`
-- ✅ Connected to 3+ peers
-- ✅ Importing blocks (best: #XXXX increasing)
+- ✅ Service status is "active (running)"
+- ✅ Logs show correct chain name
+- ✅ Connected to 3+ peers (mainnet) or 1+ (testnet)
+- ✅ Importing blocks (`best: #XXXX` increasing)
 - ✅ No errors in logs
-
-**After these checks pass, your validator is successfully bootstrapped to mainnet.**
+- ✅ Resource usage is stable
 
 ---
 
-**Maintained By:** Eoj (with Claude AI assistance)
+## Document History
+
+**November 2, 2025:**
+- Added HOW_TO_RUN_A_VALIDATOR.md (complete public guide)
+- Updated README_BOOTSTRAP.md for public use
+- Removed internal deployment references
+- All configurations tested on live validators
+
+**Previous Updates:**
+- Added VALIDATOR_SERVICE_TEMPLATE.md
+- Added chainspec-mainnet-raw.json
+- Documented --public-addr flag requirement
+
+---
+
+## Files Checksum Reference
+
+### chainspec-mainnet-raw.json
+```bash
+# Verify file integrity
+sha256sum docs/mainnet/chainspec-mainnet-raw.json
+
+# Or simply check the header:
+head -5 docs/mainnet/chainspec-mainnet-raw.json
+# Should show: "name": "Ëtrid FlareChain Mainnet"
+```
+
+---
+
+## Additional Resources
+
+- **Main Repository:** https://github.com/EojEdred/Etrid
+- **Documentation:** `docs/` directory
+- **Release Packages:** `release-packages/` directory
+- **Scripts:** `scripts/` directory
+
+---
+
+**Maintained By:** Ëtrid Development Team
 **Repository:** https://github.com/EojEdred/Etrid
+**License:** See LICENSE file
 **Status:** ✅ Production Ready
