@@ -1760,7 +1760,7 @@ pub fn new_full_with_params(
 
         // Load genesis validators from runtime ValidatorCommittee pallet
         let genesis_validators = {
-            use sp_api::BlockId;
+            use sp_runtime::generic::BlockId;
 
             // Query genesis committee from runtime at block 0
             let genesis_block_id = BlockId::Number(0u32.into());
@@ -1775,7 +1775,7 @@ pub fn new_full_with_params(
                     // Convert runtime API ValidatorInfo to validator_management ValidatorInfo
                     committee.into_iter().map(|v| {
                         validator_management::ValidatorInfo::new(
-                            v.validator_id,
+                            v.id,
                             v.stake,
                             v.peer_type,
                         )
