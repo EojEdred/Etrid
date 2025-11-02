@@ -1760,12 +1760,10 @@ pub fn new_full_with_params(
 
         // Load genesis validators from runtime ValidatorCommittee pallet
         let genesis_validators = {
-            use sp_runtime::generic::BlockId;
+            // Query genesis committee from runtime at genesis block
+            let genesis_hash = client.info().genesis_hash;
 
-            // Query genesis committee from runtime at block 0
-            let genesis_block_id = BlockId::Number(0u32.into());
-
-            match client.runtime_api().validator_committee(genesis_block_id) {
+            match client.runtime_api().validator_committee(genesis_hash) {
                 Ok(committee) if !committee.is_empty() => {
                     log::info!(
                         "✅ Loaded {} validators from genesis ValidatorCommittee",
