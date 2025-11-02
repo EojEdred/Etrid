@@ -1,0 +1,43 @@
+name: Build FlareChain Binary
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+        rustup target add wasm32-unknown-unknown
+        rustup component add rust-src
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential protobuf-compiler
+
+    - name: Build flarechain-node
+      run: |
+        source $HOME/.cargo/env
+        cd 05-multichain/flare-chain/node
+        cargo build --release --bin flarechain-node
+
+    - name: Verify binary
+      run: |
+        ls -lh target/release/flarechain-node
+        file target/release/flarechain-node
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flarechain-node-linux-x86_64
+        path: target/release/flarechain-node
+        retention-days: 7
