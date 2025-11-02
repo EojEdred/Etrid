@@ -1,0 +1,18 @@
+{
+  "name": "etrid-bridge-setup",
+  "version": "1.0.0",
+  "description": "FlareChain bridge setup scripts",
+  "main": "set-lock-account.js",
+  "scripts": {
+    "set-lock": "node set-lock-account.js",
+    "check-lock": "node check-lock-status.js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^10.11.2",
+    "@polkadot/util": "^12.6.2",
+    "@polkadot/util-crypto": "^12.6.2",
+    "@polkadot/keyring": "^12.6.2"
+  },
+  "author": "Etrid Foundation",
+  "license": "Apache-2.0"
+}
