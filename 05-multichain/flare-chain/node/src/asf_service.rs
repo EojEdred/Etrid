@@ -1758,25 +1758,56 @@ pub fn new_full_with_params(
             asf_params.epoch_duration
         );
 
-        // Create genesis validators for dev mode
-        // TODO: In production, load from genesis config/keystore
-        let genesis_validators = vec![
-            validator_management::ValidatorInfo::new(
-                validator_management::ValidatorId::from([0u8; 32]),
-                asf_params.min_validator_stake,
-                validator_management::PeerType::FlareNode,
-            ),
-            validator_management::ValidatorInfo::new(
-                validator_management::ValidatorId::from([1u8; 32]),
-                asf_params.min_validator_stake,
-                validator_management::PeerType::FlareNode,
-            ),
-            validator_management::ValidatorInfo::new(
-                validator_management::ValidatorId::from([2u8; 32]),
-                asf_params.min_validator_stake,
-                validator_management::PeerType::FlareNode,
-            ),
-        ];
+        // Load genesis validators from runtime ValidatorCommittee pallet
+        let genesis_validators = {
+            use sp_api::BlockId;
+
+            // Query genesis committee from runtime at block 0
+            let genesis_block_id = BlockId::Number(0u32.into());
+
+            match client.runtime_api().validator_committee(genesis_block_id) {
+                Ok(committee) if !committee.is_empty() => {
+                    log::info!(
+                        "✅ Loaded {} validators from genesis ValidatorCommittee",
+                        committee.len()
+                    );
+
+                    // Convert runtime API ValidatorInfo to validator_management ValidatorInfo
+                    committee.into_iter().map(|v| {
+                        validator_management::ValidatorInfo::new(
+                            v.validator_id,
+                            v.stake,
+                            v.peer_type,
+                        )
+                    }).collect::<Vec<_>>()
+                },
+                Ok(_) => {
+                    log::warn!(
+                        "⚠️  Genesis ValidatorCommittee is empty. Using fallback single validator."
+                    );
+                    vec![
+                        validator_management::ValidatorInfo::new(
+                            validator_management::ValidatorId::from([0u8; 32]),
+                            asf_params.min_validator_stake,
+                            validator_management::PeerType::FlareNode,
+                        ),
+                    ]
+                },
+                Err(e) => {
+                    log::error!(
+                        "❌ Failed to load genesis ValidatorCommittee: {:?}. Using fallback.",
+                        e
+                    );
+                    vec![
+                        validator_management::ValidatorInfo::new(
+                            validator_management::ValidatorId::from([0u8; 32]),
+                            asf_params.min_validator_stake,
+                            validator_management::PeerType::FlareNode,
+                        ),
+                    ]
+                }
+            }
+        };
 
         // Create coordinator config
         let coordinator_config = validator_management::CoordinatorConfig {
