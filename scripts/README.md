@@ -1,5 +1,22 @@
 # Ëtrid FlareChain Validator Scripts
 
+## Directory Structure
+
+```
+scripts/
+├── deployment/          Production deployment scripts
+├── devnet/             Development network scripts
+├── archive/            Old/deprecated script versions
+├── calculate-multisig.js   Foundation multisig calculator
+├── package.json        Node.js dependencies for JS scripts
+├── package-lock.json   Locked dependency versions
+└── one-command-validator.sh  Main validator setup script
+```
+
+See subdirectory README files for details:
+- [deployment/README.md](./deployment/README.md) - Production deployment
+- DevNet scripts in [devnet/](./devnet/)
+
 ## Quick Start (For Anyone)
 
 The `one-command-validator.sh` script is designed to work for **any node operator** who clones this repository.
