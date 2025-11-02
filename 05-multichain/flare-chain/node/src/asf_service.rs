@@ -1770,14 +1770,9 @@ pub fn new_full_with_params(
                         committee.len()
                     );
 
-                    // Convert runtime API ValidatorInfo to validator_management ValidatorInfo
-                    committee.into_iter().map(|v| {
-                        validator_management::ValidatorInfo::new(
-                            v.id,
-                            v.stake,
-                            v.peer_type,
-                        )
-                    }).collect::<Vec<_>>()
+                    // Runtime API already returns Vec<ValidatorInfo> from validator-management
+                    // No conversion needed - use directly
+                    committee
                 },
                 Ok(_) => {
                     log::warn!(
