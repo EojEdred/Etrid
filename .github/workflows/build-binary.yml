@@ -36,7 +36,7 @@ jobs:
         file target/release/flarechain-node
 
     - name: Upload binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: flarechain-node-linux-x86_64
         path: target/release/flarechain-node
