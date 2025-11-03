@@ -223,29 +223,8 @@
     ]
   },
   "reserveVault": {
-    "vaultAddress": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
-    "reserveAssets": [
-      {
-        "asset": "BTC",
-        "custodian": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ"
-      },
-      {
-        "asset": "ETH",
-        "custodian": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ"
-      },
-      {
-        "asset": "Gold",
-        "custodian": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ"
-      },
-      {
-        "asset": "USDC",
-        "custodian": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ"
-      },
-      {
-        "asset": "USDT",
-        "custodian": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ"
-      }
-    ]
+    "initialHaircuts": [],
+    "initialPrices": []
   },
   "validatorCommittee": {
     "committeeSize": 21,
