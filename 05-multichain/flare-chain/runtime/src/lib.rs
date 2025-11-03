@@ -1394,6 +1394,9 @@ impl_runtime_apis! {
                     "test_2validator" => {
                         Some(include_bytes!("../presets/test_2validator.json").to_vec())
                     },
+                    "flarechain_mainnet" => {
+                        Some(include_bytes!("../presets/flarechain_mainnet.json").to_vec())
+                    },
                     _ => None,
                 }
             })
@@ -1405,6 +1408,7 @@ impl_runtime_apis! {
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
                 "ember_testnet".into(),
                 "test_2validator".into(),
+                "flarechain_mainnet".into(),
             ]
         }
     }
