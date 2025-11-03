@@ -38,9 +38,16 @@ If you ran `--chain=flarechain` before this fix, you would have gotten:
 
 ### Changes Made
 
-**1. Added `mainnet_config()` function** (`chain-spec.rs:62-82`):
+**Fixed `flarechain_config()` function** to load correct mainnet configuration (`chain-spec.rs`):
+
+Instead of creating a new `mainnet_config()` function, we updated the existing `flarechain_config()` function to:
+- Load from runtime preset `flarechain_mainnet.json`
+- Use 21 validators configured for production
+- Use correct token decimals (12 instead of 18)
+- Generate correct genesis configuration
+
 ```rust
-pub fn mainnet_config() -> Result<ChainSpec, String> {
+pub fn flarechain_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
 
     Ok(ChainSpec::builder(wasm_binary, None)
@@ -60,40 +67,16 @@ pub fn mainnet_config() -> Result<ChainSpec, String> {
 }
 ```
 
-**2. Updated CLI to support `--chain=mainnet`** (`main.rs:76-88`):
-```rust
-fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
-    Ok(match id {
-        "dev" => Box::new(chain_spec::development_config()?),
-        "" | "local" => Box::new(chain_spec::local_testnet_config()?),
-        "test_2val" | "test-2val" => Box::new(chain_spec::test_2validator_config()?),
-        "staging" | "ember" => Box::new(chain_spec::staging_testnet_config()?),
-        "mainnet" | "flarechain_mainnet" => Box::new(chain_spec::mainnet_config()?),  // ✅ NEW
-        #[allow(deprecated)]
-        "flarechain" => Box::new(chain_spec::flarechain_config()?),  // ⚠️ DEPRECATED
-        path => Box::new(chain_spec::ChainSpec::from_json_file(
-            std::path::PathBuf::from(path),
-        )?),
-    })
-}
-```
-
-**3. Deprecated old `flarechain_config()`** (`chain-spec.rs:84-89`):
-```rust
-#[deprecated(note = "Use mainnet_config() instead for the latest 21-validator configuration")]
-pub fn flarechain_config() -> Result<ChainSpec, String> {
-    ChainSpec::from_json_bytes(&include_bytes!("../res/flarechain.json")[..])
-}
-```
+**Result:** `--chain=flarechain` now loads the correct mainnet configuration with no ambiguity or additional flags needed.
 
 ---
 
 ## How to Use (Post-Fix)
 
-### ✅ RECOMMENDED: Use --chain=mainnet
+### ✅ RECOMMENDED: Use --chain=flarechain
 
 ```bash
-flarechain-node --chain=mainnet \
+flarechain-node --chain=flarechain \
   --base-path /var/lib/flarechain \
   --name "MyValidator" \
   --validator
@@ -104,6 +87,7 @@ flarechain-node --chain=mainnet \
 - ✅ 21 validators configured
 - ✅ 12 decimals
 - ✅ Correct genesis configuration
+- ✅ This is the ONLY mainnet flag you need
 
 ### ✅ ALTERNATIVE: Use chainspec file path
 
@@ -116,19 +100,7 @@ flarechain-node --chain=/path/to/chainspec-mainnet-raw-FIXED.json \
 
 **What this does:**
 - Loads from the raw chainspec JSON file directly
-- Same result as `--chain=mainnet` after conversion to raw
-
-### ⚠️ DEPRECATED: --chain=flarechain
-
-```bash
-# Don't use this anymore - it loads outdated config!
-flarechain-node --chain=flarechain  # ❌ DEPRECATED
-```
-
-**Why deprecated:**
-- Loads from `node/res/flarechain.json` (static file)
-- Has wrong decimals (18 instead of 12)
-- Has wrong validators (old dev validators)
+- Same result as `--chain=flarechain` after conversion to raw
 
 ---
 
@@ -142,9 +114,7 @@ After this fix, these are the valid chain identifiers:
 | `local` | `local_testnet_config()` | Two validators (Alice + Bob) | ✅ Local testing |
 | `test_2val` | `test_2validator_config()` | Two validators with preset | ✅ Testing |
 | `staging` | `staging_testnet_config()` | Ember public testnet | ✅ Staging |
-| `mainnet` | `mainnet_config()` | **21 validators, production** | ✅ **PRODUCTION** |
-| `flarechain_mainnet` | `mainnet_config()` | Same as `mainnet` | ✅ Alias |
-| `flarechain` | `flarechain_config()` | Outdated static config | ⚠️ **DEPRECATED** |
+| `flarechain` | `flarechain_config()` | **21 validators, production** | ✅ **PRODUCTION** |
 | `/path/to/spec.json` | Load from file | Custom chainspec | ✅ Advanced |
 
 ---
@@ -154,7 +124,7 @@ After this fix, these are the valid chain identifiers:
 ### Generate mainnet chainspec:
 
 ```bash
-flarechain-node build-spec --chain=mainnet > chainspec-mainnet-plain.json
+flarechain-node build-spec --chain=flarechain > chainspec-mainnet-plain.json
 ```
 
 ### Check the output:
@@ -186,50 +156,45 @@ flarechain-node --chain=chainspec-mainnet-raw.json --tmp 2>&1 | grep "genesis ha
 
 After this fix, these docs should be updated:
 
-1. **QUICK_START.md** - Change from `--chain=flarechain` to `--chain=mainnet`
-2. **DEPLOYMENT_SUMMARY.md** - Update chain parameter in examples
-3. **README.md** - Update usage examples
+1. **All deployment docs** - Use unified `--chain=flarechain` flag
+2. **Remove references to `--chain=mainnet`** - Not needed with simplified flag
+3. **Update usage examples** - Point to `--chain=flarechain` consistently
 
 ---
 
 ## What's Safe Now
 
-✅ **Using `--chain=mainnet`**:
+✅ **Using `--chain=flarechain`**:
 - Loads correct 21-validator configuration
 - Uses correct token decimals (12)
 - Generates correct genesis hash
 - Safe for production deployment
+- Simplified, single flag for mainnet
 
 ✅ **Using chainspec file path**:
-- `--chain=/path/to/chainspec-mainnet-raw-FIXED.json`
-- Same as using preset approach
+- `--chain=/path/to/chainspec-mainnet-raw.json`
+- Explicit file reference approach
 - Safe for production deployment
-
-❌ **Using `--chain=flarechain`**:
-- Still works (backward compatibility)
-- But loads outdated configuration
-- Compiler will show deprecation warning
-- Don't use for mainnet!
+- Good for air-gapped setups
 
 ---
 
 ## Summary
 
-**Before this fix:**
-- `--chain=mainnet` → ❌ Didn't work
-- `--chain=flarechain` → ❌ Loaded wrong config (18 decimals, old validators)
-- Only safe option was to pass full chainspec path
+**Simplified approach:**
+- `--chain=flarechain` → ✅ Single unified flag for mainnet
+- Loads correct 21-validator configuration
+- Uses correct token decimals (12)
+- Safe for production deployment
 
-**After this fix:**
-- `--chain=mainnet` → ✅ Works! Loads correct 21-validator config
-- `--chain=flarechain_mainnet` → ✅ Alias for mainnet
-- `--chain=flarechain` → ⚠️ Still works but deprecated
-- Passing chainspec path → ✅ Still works as before
+**Alternative for explicit control:**
+- `--chain=/path/to/chainspec-mainnet-raw.json` → ✅ File-based approach
 
 **Action required:**
 1. Rebuild node binary (cargo build --release)
-2. Use `--chain=mainnet` instead of `--chain=flarechain`
-3. Verify genesis hash matches expected value
+2. Use `--chain=flarechain` for all mainnet deployments
+3. Update all documentation to reference this simplified flag
+4. Verify genesis hash matches expected value
 
 ---
 
