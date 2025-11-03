@@ -59,7 +59,7 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 }
 
 /// FlareChain mainnet config (using runtime preset with 21 validators)
-pub fn mainnet_config() -> Result<ChainSpec, String> {
+pub fn flarechain_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
 
     Ok(ChainSpec::builder(
@@ -79,13 +79,6 @@ pub fn mainnet_config() -> Result<ChainSpec, String> {
     })
     .with_genesis_config_preset_name("flarechain_mainnet")
     .build())
-}
-
-/// FlareChain config (deprecated - use mainnet_config instead)
-/// Loads from static JSON file (may be outdated)
-#[deprecated(note = "Use mainnet_config() instead for the latest 21-validator configuration")]
-pub fn flarechain_config() -> Result<ChainSpec, String> {
-    ChainSpec::from_json_bytes(&include_bytes!("../res/flarechain.json")[..])
 }
 
 /// 2-validator test config (Alice & Bob) for debugging

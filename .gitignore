@@ -132,6 +132,7 @@ genesis-accounts-*/
 # Compiled binaries (should be built from source)
 **/flarechain-node
 **/flare-chain-node
+binaries/
 *.tar.gz
 !release-packages/**/*.tar.gz
 # But exclude large tarballs from release-packages
