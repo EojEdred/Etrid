@@ -1,0 +1,78 @@
+name: Build FlareChain Node Binary
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '05-multichain/flare-chain/**'
+      - '.github/workflows/build-flarechain-node.yml'
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-flarechain-node:
+    name: Build FlareChain Node
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang libclang-dev protobuf-compiler
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-flarechain-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build flarechain-node binary
+        run: |
+          cargo build --release -p flarechain-node
+          ls -lh target/release/flarechain-node
+          file target/release/flarechain-node
+          ldd target/release/flarechain-node || true
+
+      - name: Verify binary works
+        run: |
+          ./target/release/flarechain-node --version
+
+      - name: Upload flarechain-node binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: flarechain-node-ubuntu22
+          path: target/release/flarechain-node
+          retention-days: 7
+
+      - name: Build info
+        run: |
+          echo "Build completed successfully"
+          echo "Binary size: $(ls -lh target/release/flarechain-node | awk '{print $5}')"
+          echo "GLIBC version: $(ldd --version | head -1)"
