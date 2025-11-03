@@ -36,19 +36,19 @@ jobs:
           sudo apt-get install -y build-essential clang libclang-dev protobuf-compiler
 
       - name: Cache cargo registry
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache cargo index
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache cargo build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-flarechain-${{ hashFiles('**/Cargo.lock') }}
@@ -65,7 +65,7 @@ jobs:
           ./target/release/flarechain-node --version
 
       - name: Upload flarechain-node binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: flarechain-node-ubuntu22
           path: target/release/flarechain-node
