@@ -58,7 +58,32 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-/// FlareChain mainnet config
+/// FlareChain mainnet config (using runtime preset with 21 validators)
+pub fn mainnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet")
+    .with_id("flarechain_mainnet")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties
+    })
+    .with_genesis_config_preset_name("flarechain_mainnet")
+    .build())
+}
+
+/// FlareChain config (deprecated - use mainnet_config instead)
+/// Loads from static JSON file (may be outdated)
+#[deprecated(note = "Use mainnet_config() instead for the latest 21-validator configuration")]
 pub fn flarechain_config() -> Result<ChainSpec, String> {
     ChainSpec::from_json_bytes(&include_bytes!("../res/flarechain.json")[..])
 }
