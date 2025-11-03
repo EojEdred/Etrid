@@ -27,8 +27,7 @@ jobs:
     - name: Build flarechain-node
       run: |
         source $HOME/.cargo/env
-        cd 05-multichain/flare-chain/node
-        cargo build --release --bin flarechain-node
+        cargo build --release -p flarechain-node
 
     - name: Verify binary
       run: |
