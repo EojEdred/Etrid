@@ -34,6 +34,7 @@ pub mod lsp;
 pub mod rebalancing;
 pub mod streaming;
 pub mod recurring;
+pub mod gossip;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -162,6 +163,13 @@ pub use streaming::{
 pub use recurring::{
     RecurringPayment, RecurringManager, PaymentFrequency, RecurringStatus,
     PaymentExecution, RecurringStatistics, RecurringError,
+};
+
+// Re-export gossip protocol types
+pub use gossip::{
+    GossipManager, GossipMessage, NodeAnnouncement, ChannelAnnouncement,
+    ChannelUpdate as GossipChannelUpdate, ChannelDirection, SyncRequest,
+    SyncResponse, NodeFeatures, GossipStatistics, GossipError,
 };
 
 /// Channel state
