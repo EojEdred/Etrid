@@ -45,25 +45,31 @@ pub mod pallet {
     }
 
     #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
-    pub struct RecoveryConfig<AccountId, BlockNumber> {
+    pub struct RecoveryConfig<
+        AccountId: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+        BlockNumber: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+    > {
         pub guardians: BoundedVec<AccountId, ConstU32<MAX_GUARDIANS>>,
         pub threshold: u32,  // M-of-N threshold
         pub delay_period: BlockNumber,  // Blocks to wait before recovery
     }
 
     #[derive(Encode, Decode, TypeInfo, MaxEncodedLen, Clone, Eq, PartialEq, RuntimeDebug)]
-    pub struct ActiveRecovery<AccountId, BlockNumber> {
+    pub struct ActiveRecovery<
+        AccountId: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+        BlockNumber: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+    > {
         pub new_account: AccountId,
         pub approvals: BoundedVec<AccountId, ConstU32<MAX_GUARDIANS>>,
         pub created_at: BlockNumber,
         pub executable_at: BlockNumber,
     }
 
-    impl<AccountId, BlockNumber> RecoveryConfig<AccountId, BlockNumber> {
-        pub fn is_guardian(&self, who: &AccountId) -> bool
-        where
-            AccountId: PartialEq,
-        {
+    impl<
+        AccountId: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+        BlockNumber: Encode + Decode + TypeInfo + MaxEncodedLen + Clone + Eq + PartialEq + core::fmt::Debug,
+    > RecoveryConfig<AccountId, BlockNumber> {
+        pub fn is_guardian(&self, who: &AccountId) -> bool {
             self.guardians.contains(who)
         }
 
@@ -135,6 +141,7 @@ pub mod pallet {
     }
 
     #[pallet::pallet]
+    #[pallet::dev_mode]  // Allow constant weights without benchmarking
     pub struct Pallet<T>(_);
 
     #[pallet::call]
