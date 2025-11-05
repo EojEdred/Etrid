@@ -274,6 +274,28 @@ impl pallet_consensus::Config for Runtime {
     type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
     type BaseSlotDuration = ConstU64<6000>; // 6 seconds
 }
+// Lock identifier for ETR locking
+const ETR_LOCK_ID: [u8; 8] = *b"etr/lock";
+
+// ETR Lock Configuration (required by Bitcoin Bridge)
+parameter_types! {
+    pub const MinLockAmount: Balance = 1_000_000; // 0.001 ETR minimum lock
+    pub const MaxLockAmount: Balance = 1_000_000_000_000_000; // 1M ETR maximum lock
+    pub const LockPeriod: BlockNumber = 7 * DAYS; // 7 day lock period
+}
+
+parameter_types! {
+    pub const EtrLockId: [u8; 8] = ETR_LOCK_ID;
+}
+
+impl pallet_etr_lock::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxLockAmount = MaxLockAmount;
+    type BridgeOrigin = frame_system::EnsureRoot<AccountId>;
+    type LockIdentifier = EtrLockId;
+}
+
 // Bitcoin Bridge Configuration
 parameter_types! {
     pub const MinBtcConfirmations: u32 = 6;
@@ -282,13 +304,23 @@ parameter_types! {
     pub const BridgeAuthorityAccount: AccountId = AccountId::new([0u8; 32]); // Placeholder bridge authority
 }
 
+// Treasury stub for bridge fee collection
+pub struct TreasuryStub;
+impl etrid_bridge_common::treasury::TreasuryInterface<AccountId, Balance> for TreasuryStub {
+    fn receive_cross_chain_fees(_amount: Balance) -> frame_support::dispatch::DispatchResult {
+        Ok(()) // Stub implementation - fees are burned for now
+    }
+}
+
 impl pallet_bitcoin_bridge::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
+    // Currency inherited from pallet_etr_lock::Config
     type MinConfirmations = MinBtcConfirmations;
     type MinDepositAmount = MinBtcDepositAmount;
     type MaxDepositAmount = MaxBtcDepositAmount;
     type BridgeAuthority = BridgeAuthorityAccount;
+    type Treasury = TreasuryStub;
+    type ValidatorPoolAccount = BridgeAuthorityAccount;
 }
 
 // Lightning Channels Configuration
@@ -325,7 +357,8 @@ construct_runtime!(
         
         // Ëtrid Core
         Consensus: pallet_consensus,
-        
+        EtrLock: pallet_etr_lock,
+
         // Bitcoin Bridge & Lightning
         BitcoinBridge: pallet_bitcoin_bridge,
         LightningChannels: pallet_lightning_channels,
