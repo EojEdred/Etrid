@@ -1,0 +1,314 @@
+name: Build PBC Collators (Linux)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '05-multichain/partition-burst-chains/**'
+      - '.github/workflows/build-pbc-collators.yml'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      collators:
+        description: 'Collators to build (comma-separated, or "all")'
+        required: false
+        default: 'all'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build-pbc-collators:
+    name: Build PBC Collators
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        collator:
+          - btc-pbc-collator
+          - sol-pbc-collator
+          - bnb-pbc-collator
+          - edsc-pbc-collator
+          - xrp-pbc-collator
+          - matic-pbc-collator
+          - sc-usdt-pbc-collator
+          - xlm-pbc-collator
+          - trx-pbc-collator
+          - ada-pbc-collator
+          - link-pbc-collator
+          - doge-pbc-collator
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            pkg-config \
+            libssl-dev \
+            git \
+            clang \
+            libclang-dev \
+            protobuf-compiler \
+            build-essential
+
+      - name: Add WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ matrix.collator }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ matrix.collator }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Build ${{ matrix.collator }}
+        run: |
+          echo "Building ${{ matrix.collator }}..."
+          cargo build --release -p ${{ matrix.collator }}
+
+          # Verify binary was created
+          if [ -f "target/release/${{ matrix.collator }}" ]; then
+            echo "✓ ${{ matrix.collator }} built successfully"
+            ls -lh target/release/${{ matrix.collator }}
+            file target/release/${{ matrix.collator }}
+          else
+            echo "✗ Failed to build ${{ matrix.collator }}"
+            exit 1
+          fi
+
+      - name: Strip binary (reduce size)
+        run: |
+          strip target/release/${{ matrix.collator }}
+          echo "Stripped size:"
+          ls -lh target/release/${{ matrix.collator }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.collator }}-linux-x86_64
+          path: target/release/${{ matrix.collator }}
+          retention-days: 30
+          compression-level: 9
+
+  create-deployment-package:
+    name: Create Deployment Package
+    needs: build-pbc-collators
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all collator binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+
+      - name: Organize binaries
+        run: |
+          mkdir -p deployment/binaries
+          find binaries -name '*-pbc-collator' -exec cp {} deployment/binaries/ \;
+          chmod +x deployment/binaries/*
+          ls -lh deployment/binaries/
+
+      - name: Create systemd services
+        run: |
+          mkdir -p deployment/systemd
+
+          for COLLATOR in btc sol bnb edsc xrp matic sc-usdt xlm trx ada link doge; do
+            cat > "deployment/systemd/${COLLATOR}-pbc-collator.service" <<EOF
+          [Unit]
+          Description=${COLLATOR^^} PBC Collator Node
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=simple
+          User=etrid
+          Group=etrid
+          WorkingDirectory=/opt/etrid/${COLLATOR}-pbc
+          ExecStart=/opt/etrid/bin/${COLLATOR}-pbc-collator \\
+            --chain=/opt/etrid/chainspecs/${COLLATOR}-pbc-chainspec.json \\
+            --base-path=/opt/etrid/${COLLATOR}-pbc/data \\
+            --port=3033\${NODE_ID} \\
+            --rpc-port=944\${NODE_ID} \\
+            --ws-port=933\${NODE_ID} \\
+            --prometheus-port=961\${NODE_ID} \\
+            --name=${COLLATOR^^}-Validator-\${NODE_ID} \\
+            --validator \\
+            --rpc-cors=all \\
+            --rpc-methods=Safe \\
+            --rpc-external \\
+            --ws-external
+          Restart=always
+          RestartSec=10
+          LimitNOFILE=65536
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          done
+
+      - name: Create deployment scripts
+        run: |
+          mkdir -p deployment/scripts
+
+          cat > deployment/scripts/deploy.sh <<'DEPLOY_EOF'
+          #!/bin/bash
+          set -e
+
+          if [ "$EUID" -ne 0 ]; then
+              echo "Please run as root (use sudo)"
+              exit 1
+          fi
+
+          echo "=== Deploying PBC Collators ==="
+
+          # Install binaries
+          echo "Installing binaries..."
+          mkdir -p /opt/etrid/bin
+          cp binaries/*-pbc-collator /opt/etrid/bin/
+          chmod +x /opt/etrid/bin/*-pbc-collator
+
+          # Create etrid user
+          if ! id -u etrid > /dev/null 2>&1; then
+              echo "Creating etrid user..."
+              useradd -r -s /bin/bash -d /opt/etrid -m etrid
+          fi
+
+          # Create data directories
+          echo "Creating data directories..."
+          for COLLATOR in btc sol bnb edsc xrp matic sc-usdt xlm trx ada link doge; do
+              mkdir -p /opt/etrid/${COLLATOR}-pbc/data
+              chown -R etrid:etrid /opt/etrid/${COLLATOR}-pbc
+          done
+
+          # Install systemd services
+          echo "Installing systemd services..."
+          cp systemd/*.service /etc/systemd/system/
+          systemctl daemon-reload
+
+          echo ""
+          echo "✓ Deployment complete!"
+          echo ""
+          echo "Next steps:"
+          echo "1. Generate chainspecs for each collator"
+          echo "2. Start services: NODE_ID=01 systemctl start btc-pbc-collator"
+          echo "3. Enable on boot: systemctl enable btc-pbc-collator"
+          DEPLOY_EOF
+
+          chmod +x deployment/scripts/deploy.sh
+
+      - name: Create README
+        run: |
+          cat > deployment/README.md <<'README_EOF'
+          # PBC Collators Deployment Package
+
+          Built by GitHub Actions on Linux x86_64
+
+          ## Contents
+
+          - **binaries/**: All 12 PBC collator Linux binaries
+          - **systemd/**: Systemd service files
+          - **scripts/**: Deployment scripts
+
+          ## Quick Deployment
+
+          ```bash
+          # Upload to VM
+          scp -r pbc-collators-*.tar.gz opc@<vm-ip>:~/
+
+          # On VM
+          tar -xzf pbc-collators-*.tar.gz
+          cd pbc-collators-*
+          sudo ./scripts/deploy.sh
+          ```
+
+          ## Available Collators
+
+          1. btc-pbc-collator - Bitcoin Bridge
+          2. sol-pbc-collator - Solana Bridge
+          3. bnb-pbc-collator - Binance Smart Chain
+          4. edsc-pbc-collator - Etrid Designated Source Chain
+          5. xrp-pbc-collator - Ripple Bridge
+          6. matic-pbc-collator - Polygon Bridge
+          7. sc-usdt-pbc-collator - USDT Stablecoin Bridge
+          8. xlm-pbc-collator - Stellar Bridge
+          9. trx-pbc-collator - Tron Bridge
+          10. ada-pbc-collator - Cardano Bridge
+          11. link-pbc-collator - Chainlink Oracle Bridge
+          12. doge-pbc-collator - Dogecoin Bridge
+
+          ## Starting a Collator
+
+          ```bash
+          # Generate chainspec
+          /opt/etrid/bin/btc-pbc-collator build-spec --chain local > /opt/etrid/chainspecs/btc-pbc-chainspec.json
+
+          # Start service
+          NODE_ID=01 sudo systemctl start btc-pbc-collator
+          sudo systemctl enable btc-pbc-collator
+
+          # Monitor
+          sudo journalctl -u btc-pbc-collator -f
+          ```
+          README_EOF
+
+      - name: Create tarball
+        run: |
+          cd deployment
+          tar -czf ../pbc-collators-$(date +%Y%m%d-%H%M%S).tar.gz .
+          cd ..
+          ls -lh pbc-collators-*.tar.gz
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: pbc-collators-deployment-package
+          path: pbc-collators-*.tar.gz
+          retention-days: 90
+
+      - name: Build Summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All 12 PBC collators built successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Built Collators" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          ls -lh deployment/binaries/ >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Package" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          ls -lh pbc-collators-*.tar.gz >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the deployment package artifact and upload to your Oracle Cloud VMs." >> $GITHUB_STEP_SUMMARY

@@ -281,9 +281,38 @@ parameter_types! {
     pub const MaxBnbWithdrawalsPerAccount: u32 = 50;
 }
 
-impl pallet_bnb_bridge::Config for Runtime {
+// Lock identifier for ETR locking
+const ETR_LOCK_ID: [u8; 8] = *b"etr/lock";
+
+// ETR Lock Configuration (required by bridge pallets)
+parameter_types! {
+    pub const MinLockAmount: Balance = 1_000_000; // 0.001 ETR
+    pub const MaxLockAmount: Balance = 1_000_000_000_000_000; // 1M ETR
+    pub const LockPeriod: BlockNumber = 7 * DAYS;
+}
+
+parameter_types! {
+    pub const EtrLockId: [u8; 8] = ETR_LOCK_ID;
+}
+
+
+
+impl pallet_etr_lock::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
+    type MaxLockAmount = MaxLockAmount;
+    type BridgeOrigin = frame_system::EnsureRoot<AccountId>;
+    type LockIdentifier = EtrLockId;
+}
+
+
+parameter_types! {
+    pub const BridgeAuthorityAccount: AccountId = AccountId::new([0u8; 32]);
+}
+
+impl pallet_bnb_bridge::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    // Currency inherited from pallet_etr_lock::Config
     type MinConfirmations = MinBnbConfirmations;
     type BridgeFeeRate = BnbBridgeFeeRate;
     type MaxGasLimit = MaxBnbGasLimit;
@@ -291,6 +320,7 @@ impl pallet_bnb_bridge::Config for Runtime {
     type MaxDepositsPerAccount = MaxBnbDepositsPerAccount;
     type MaxWithdrawalsPerAccount = MaxBnbWithdrawalsPerAccount;
 }
+
 
 // Lightning Channels Configuration
 parameter_types! {
@@ -326,6 +356,7 @@ construct_runtime!(
         
         // Ëtrid Core
         Consensus: pallet_consensus,
+        EtrLock: pallet_etr_lock,
         
         // Bitcoin Bridge & Lightning
         BnbBridge: pallet_bnb_bridge,
