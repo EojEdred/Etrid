@@ -5,7 +5,7 @@ pub use pallet::*;
 #[cfg(test)]
 mod tests;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
@@ -141,7 +141,6 @@ pub mod pallet {
     }
 
     #[pallet::pallet]
-    #[pallet::dev_mode]  // Allow constant weights without benchmarking
     pub struct Pallet<T>(_);
 
     #[pallet::call]
