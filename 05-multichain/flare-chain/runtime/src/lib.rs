@@ -29,7 +29,7 @@ use frame_support::{
     construct_runtime, derive_impl,
     dispatch::DispatchClass,
     parameter_types,
-    traits::{ConstBool, ConstU128, ConstU16, ConstU32, ConstU64, ConstU8, ExistenceRequirement},
+    traits::{ConstU128, ConstU16, ConstU32, ConstU64, ConstU8},
     weights::{
         constants::{BlockExecutionWeight, ExtrinsicBaseWeight, WEIGHT_REF_TIME_PER_SECOND},
         IdentityFee,
@@ -42,7 +42,6 @@ pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, FungibleAdapter, Multiplier};
-use pallet_treasury_etrid as treasury;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -198,9 +197,9 @@ parameter_types! {
 /// Handler for transaction fees - splits 50/50 between treasury and burn
 pub struct DealWithFees;
 impl frame_support::traits::OnUnbalanced<frame_support::traits::fungible::Credit<AccountId, Balances>> for DealWithFees {
-    fn on_unbalanced(mut amount: frame_support::traits::fungible::Credit<AccountId, Balances>) {
-        use frame_support::traits::fungible::{Balanced, Inspect};
-        use frame_support::traits::tokens::Preservation;
+    fn on_unbalanced(amount: frame_support::traits::fungible::Credit<AccountId, Balances>) {
+        use frame_support::traits::fungible::Balanced;
+        
 
         // Split the credit into two parts: 50% to treasury, 50% burn
         // We need to resolve the credit to get its value, then handle it
