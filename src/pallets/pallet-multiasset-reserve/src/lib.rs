@@ -35,7 +35,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
@@ -117,8 +117,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_reserve_oracle::Config {
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Maximum number of assets in reserve
 		#[pallet::constant]
 		type MaxAssets: Get<u32>;

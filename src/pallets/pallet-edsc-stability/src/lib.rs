@@ -58,7 +58,7 @@ pub trait TreasuryInterface<AccountId, Balance> {
 	fn receive_stability_fees(amount: Balance) -> Result<(), sp_runtime::DispatchError>;
 }
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use codec::DecodeWithMemTracking;
 	use frame_support::{
@@ -164,8 +164,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Native currency (ËTR)
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
