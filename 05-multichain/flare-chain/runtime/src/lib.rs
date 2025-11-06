@@ -1437,7 +1437,8 @@ frame_benchmarking::define_benchmarks!(
     [frame_system, SystemBench::<Runtime>]
     [pallet_balances, Balances]
     [pallet_timestamp, Timestamp]
-    [pallet_accounts, PalletAccounts]
-    [pallet_consensus, PalletConsensus]
-    [pallet_governance, PalletGovernance]
+    [pallet_accounts, Accounts]
+    [pallet_consensus, Consensus]
+    [pallet_governance, Governance]
+    [pallet_treasury_etrid, EtridTreasury]
 );

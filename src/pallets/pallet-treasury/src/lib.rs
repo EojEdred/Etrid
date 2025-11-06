@@ -73,6 +73,9 @@
 
 pub use pallet::*;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Type Definitions (MUST be outside pallet module to avoid DecodeWithMemTracking issues)
 // ═══════════════════════════════════════════════════════════════════════════════
