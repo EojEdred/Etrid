@@ -85,7 +85,7 @@ pub struct ProposalRecord<AccountId> {
 
 // -------------------- PALLET LOGIC --------------------
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use super::*;
 
@@ -94,8 +94,6 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        /// Combined event type.
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         /// Currency used for registration deposits.
         type Currency: ReservableCurrency<Self::AccountId>;
         /// Minimum deposit required to register or submit a proposal.

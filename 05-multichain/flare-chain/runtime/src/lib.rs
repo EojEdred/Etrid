@@ -298,7 +298,6 @@ impl pallet_etrid_staking::Config for Runtime {
 
 /// Configure the pallet-etwasm-vm (smart contract execution)
 impl pallet_etwasm_vm::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxCodeSize = ConstU32<1024>;
     type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
     type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
@@ -352,7 +351,6 @@ parameter_types! {
 
 /// Configure Consensus Day Proposal System
 impl consensus_day_proposal_system::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type RegistrationDeposit = ConsensusDayRegistrationDeposit;
 }
@@ -566,7 +564,6 @@ impl stablecoin_usdt_bridge::Config for Runtime {
 
 /// Configure EDSC Token Pallet
 impl pallet_edsc_token::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxSupply = ConstU128<1_000_000_000_000_000_000_000>; // 1 billion EDSC (18 decimals)
     type MinBalance = ConstU128<1_000_000_000_000>; // 0.000001 EDSC minimum
     type WeightInfo = ();
@@ -574,7 +571,6 @@ impl pallet_edsc_token::Config for Runtime {
 
 /// Configure EDSC Receipts Pallet (SBT registry)
 impl pallet_edsc_receipts::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxReceiptsPerWallet = ConstU32<1000>; // Max 1000 receipts per wallet
     type ReceiptExpiryPeriod = ConstU32<5_256_000>; // ~1 year (at 6s blocks)
 }
@@ -620,7 +616,6 @@ parameter_types! {
 
 /// Configure EDSC Oracle Pallet
 impl pallet_edsc_oracle::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type PriceCallback = EdscRedemption;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
@@ -849,7 +844,6 @@ parameter_types! {
 }
 
 impl pallet_validator_rewards::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type EpochDuration = EpochDuration;
     type AnnualRewardPoolBps = AnnualRewardPoolBps;

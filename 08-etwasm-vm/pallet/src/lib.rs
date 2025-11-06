@@ -12,7 +12,7 @@ pub use etwasm_gas_metering as gas;
 pub use etwasm_opcodes as opcodes;
 pub use etwasm_runtime as runtime;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use frame_support::{
         pallet_prelude::*,
@@ -33,8 +33,6 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
         /// Max size of contract code in bytes
         #[pallet::constant]
         type MaxCodeSize: Get<u32>;
