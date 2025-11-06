@@ -14,6 +14,7 @@
 use alloc::{
     collections::BTreeMap as HashMap,
     string::{String, ToString},
+    vec,
     vec::Vec,
     format,
 };
