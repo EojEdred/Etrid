@@ -157,7 +157,7 @@ pub enum VoteType {
     Abstain,
 }
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use super::{BudgetCategory, Phase, ProposalCategory, VoteType};
     use codec::{Encode, Decode};
@@ -287,9 +287,6 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        /// The overarching event type
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
         /// Currency for bonds and rewards (ËTR)
         type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
