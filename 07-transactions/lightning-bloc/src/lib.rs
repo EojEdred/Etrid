@@ -26,6 +26,10 @@ pub mod multi_party;
 pub mod batching;
 pub mod optimistic_rollup;
 pub mod emergency;
+pub mod auto_discovery;
+pub mod invoice;
+pub mod multi_path_payments;
+pub mod submarine_swaps;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -105,6 +109,30 @@ pub use emergency::{
     TimeoutWatchdog, WithdrawalStatus, ClosureStatus,
     EmergencyStatistics, EmergencyError,
     COUNTERPARTY_TIMEOUT, FORCED_CLOSURE_GRACE_PERIOD,
+};
+
+// Re-export auto-discovery types
+pub use auto_discovery::{
+    PBCAutoDiscovery, PBCInfo, DiscoveryConfig, DiscoveryEvent,
+    DiscoveryError, DiscoveryStatistics,
+};
+
+// Re-export invoice types
+pub use invoice::{
+    LightningInvoice, InvoiceBuilder, InvoiceError,
+    PaymentRequest, InvoiceStatus,
+};
+
+// Re-export multi-path payment types
+pub use multi_path_payments::{
+    MultiPathPayment, PaymentPart, PartStatus, PaymentResult,
+    MPPManager, MPPError, MAX_PAYMENT_PARTS,
+};
+
+// Re-export submarine swap types
+pub use submarine_swaps::{
+    SubmarineSwap, SubmarineSwapManager, SwapDirection, SwapStatus,
+    SwapDetails, SwapStatistics, SwapError, SWAP_TIMEOUT_BLOCKS,
 };
 
 /// Channel state
