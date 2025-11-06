@@ -30,6 +30,10 @@ pub mod auto_discovery;
 pub mod invoice;
 pub mod multi_path_payments;
 pub mod submarine_swaps;
+pub mod lsp;
+pub mod rebalancing;
+pub mod streaming;
+pub mod recurring;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -133,6 +137,31 @@ pub use multi_path_payments::{
 pub use submarine_swaps::{
     SubmarineSwap, SubmarineSwapManager, SwapDirection, SwapStatus,
     SwapDetails, SwapStatistics, SwapError, SWAP_TIMEOUT_BLOCKS,
+};
+
+// Re-export LSP types
+pub use lsp::{
+    LSPManager, LSPNode, ChannelRequest, FeePolicy, LiquidityPool,
+    LSPStatistics, LSPError, MIN_LSP_LIQUIDITY, DEFAULT_CHANNEL_CAPACITY,
+};
+
+// Re-export rebalancing types
+pub use rebalancing::{
+    ChannelRebalancer, ChannelBalance, RebalanceRecommendation,
+    RebalanceDirection, Priority, RebalanceResult, RebalanceStatistics,
+    RebalanceError, DEFAULT_TARGET_RATIO,
+};
+
+// Re-export streaming payment types
+pub use streaming::{
+    StreamingPayment, StreamManager, StreamStatus, StreamPayment,
+    StreamStatistics, StreamError, MIN_RATE_PER_SECOND,
+};
+
+// Re-export recurring payment types
+pub use recurring::{
+    RecurringPayment, RecurringManager, PaymentFrequency, RecurringStatus,
+    PaymentExecution, RecurringStatistics, RecurringError,
 };
 
 /// Channel state
