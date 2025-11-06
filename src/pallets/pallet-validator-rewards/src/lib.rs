@@ -121,7 +121,7 @@ impl PerformanceMetrics {
 // TODO: Uncomment when pallet-validator-committee is added as dependency
 // pub mod migrations;
 
-#[frame_support::pallet(dev_mode)]
+#[frame_support::pallet]
 pub mod pallet {
     use super::*;
     use codec::{Encode, Decode};

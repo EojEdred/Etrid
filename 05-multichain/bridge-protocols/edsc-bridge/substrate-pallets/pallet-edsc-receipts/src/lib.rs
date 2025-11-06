@@ -14,7 +14,7 @@
 
 pub use pallet::*;
 
-#[frame_support::pallet(dev_mode)]
+#[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,

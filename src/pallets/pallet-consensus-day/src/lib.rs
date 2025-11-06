@@ -157,7 +157,7 @@ pub enum VoteType {
     Abstain,
 }
 
-#[frame_support::pallet(dev_mode)]
+#[frame_support::pallet]
 pub mod pallet {
     use super::{BudgetCategory, Phase, ProposalCategory, VoteType};
     use codec::{Encode, Decode};

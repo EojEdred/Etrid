@@ -13,8 +13,7 @@ pub mod pallet {
     use scale_info::TypeInfo;
     use sp_runtime::{RuntimeDebug, traits::AtLeast32BitUnsigned};
     use sp_std::vec::Vec;
-    use scale_info::prelude::vec;
-    use frame_support::weights::constants::RocksDbWeight;    
+    use scale_info::prelude::vec;    
     
     // Maximum guardians per account
     const MAX_GUARDIANS: u32 = 10;
@@ -79,81 +78,11 @@ pub mod pallet {
         }
     }
 
-    /// Weight functions needed for pallet_accounts.
-    pub trait WeightInfo {
-        fn transfer() -> Weight;
-        fn mint_etr() -> Weight;
-        fn mint_etd() -> Weight;
-        fn burn_etr() -> Weight;
-        fn burn_etd() -> Weight;
-        fn set_recovery_config() -> Weight;
-        fn initiate_recovery() -> Weight;
-        fn vouch_recovery() -> Weight;
-        fn execute_recovery() -> Weight;
-        fn cancel_recovery() -> Weight;
-    }
-
-    /// Default weights: Conservative estimates for production safety
-    /// TODO: Replace with benchmarked weights before mainnet launch
-    impl WeightInfo for () {
-        fn transfer() -> Weight {
-            Weight::from_parts(50_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(2))
-                .saturating_add(RocksDbWeight::get().writes(2))
-        }
-        fn mint_etr() -> Weight {
-            Weight::from_parts(40_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn mint_etd() -> Weight {
-            Weight::from_parts(40_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn burn_etr() -> Weight {
-            Weight::from_parts(40_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn burn_etd() -> Weight {
-            Weight::from_parts(40_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn set_recovery_config() -> Weight {
-            Weight::from_parts(30_000_000, 0)
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn initiate_recovery() -> Weight {
-            Weight::from_parts(40_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn vouch_recovery() -> Weight {
-            Weight::from_parts(35_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(2))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-        fn execute_recovery() -> Weight {
-            Weight::from_parts(60_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(3))
-                .saturating_add(RocksDbWeight::get().writes(3))
-        }
-        fn cancel_recovery() -> Weight {
-            Weight::from_parts(30_000_000, 0)
-                .saturating_add(RocksDbWeight::get().reads(1))
-                .saturating_add(RocksDbWeight::get().writes(1))
-        }
-    }
-
     #[pallet::config]
     pub trait Config: frame_system::Config {
+        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         type Balance: Parameter + From<u64> + Into<u64> + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
         type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-
-        /// Weight information for extrinsics in this pallet.
-        type WeightInfo: WeightInfo;
     }
 
     #[pallet::storage]
@@ -216,7 +145,7 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(T::WeightInfo::transfer())]
+        #[pallet::weight(10_000)]
         #[pallet::call_index(0)]
         pub fn transfer(
             origin: OriginFor<T>,
@@ -229,8 +158,7 @@ pub mod pallet {
             Ok(())
         }
 
-        
-        #[pallet::weight(T::WeightInfo::mint_etr())]
+        #[pallet::weight(10_000)]
         #[pallet::call_index(1)]
         pub fn mint_etr(
             origin: OriginFor<T>,
@@ -245,7 +173,7 @@ pub mod pallet {
             Ok(())
         }
 
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(2)]
         pub fn mint_etd(
             origin: OriginFor<T>,
@@ -260,7 +188,7 @@ pub mod pallet {
             Ok(())
         }
 
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(3)]
         pub fn burn(
             origin: OriginFor<T>,
@@ -286,7 +214,7 @@ pub mod pallet {
         }
 
         /// Setup recovery configuration for an account
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(4)]
         pub fn create_recovery(
             origin: OriginFor<T>,
@@ -317,7 +245,7 @@ pub mod pallet {
         }
 
         /// Initiate recovery for a lost account
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(5)]
         pub fn initiate_recovery(
             origin: OriginFor<T>,
@@ -352,7 +280,7 @@ pub mod pallet {
         }
 
         /// Approve an active recovery
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(6)]
         pub fn approve_recovery(
             origin: OriginFor<T>,
@@ -384,7 +312,7 @@ pub mod pallet {
         }
 
         /// Execute recovery after threshold and delay period
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(7)]
         pub fn execute_recovery(
             origin: OriginFor<T>,
@@ -421,7 +349,7 @@ pub mod pallet {
         }
 
         /// Cancel an active recovery (only by lost account owner)
-        
+        #[pallet::weight(10_000)]
         #[pallet::call_index(8)]
         pub fn cancel_recovery(
             origin: OriginFor<T>,
