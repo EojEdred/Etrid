@@ -185,6 +185,7 @@ pub mod pallet {
     use frame_support::traits::{Currency, ReservableCurrency, ExistenceRequirement};
     use frame_support::PalletId;
     use frame_system::pallet_prelude::*;
+    use frame_support::weights::constants::RocksDbWeight;
     use sp_runtime::traits::{Saturating, AccountIdConversion};
     use sp_std::vec::Vec;
 
@@ -217,6 +218,38 @@ pub mod pallet {
         pub is_emergency: bool,
     }
 
+    /// Weight functions for pallet_treasury.
+    pub trait WeightInfo {
+        fn fund_treasury() -> Weight;
+        fn propose_disbursement() -> Weight;
+        fn approve_disbursement() -> Weight;
+        fn emergency_withdrawal() -> Weight;
+    }
+
+    /// Conservative weight estimates for production safety.
+    impl WeightInfo for () {
+        fn fund_treasury() -> Weight {
+            Weight::from_parts(40_000_000, 0)
+                .saturating_add(RocksDbWeight::get().reads(1))
+                .saturating_add(RocksDbWeight::get().writes(1))
+        }
+        fn propose_disbursement() -> Weight {
+            Weight::from_parts(45_000_000, 0)
+                .saturating_add(RocksDbWeight::get().reads(2))
+                .saturating_add(RocksDbWeight::get().writes(1))
+        }
+        fn approve_disbursement() -> Weight {
+            Weight::from_parts(50_000_000, 0)
+                .saturating_add(RocksDbWeight::get().reads(3))
+                .saturating_add(RocksDbWeight::get().writes(2))
+        }
+        fn emergency_withdrawal() -> Weight {
+            Weight::from_parts(60_000_000, 0)
+                .saturating_add(RocksDbWeight::get().reads(3))
+                .saturating_add(RocksDbWeight::get().writes(2))
+        }
+    }
+
     #[pallet::config]
     pub trait Config: frame_system::Config {
         /// Currency for treasury (ËTR)
@@ -237,6 +270,9 @@ pub mod pallet {
         /// Proposal expiration in blocks (default: 7 days)
         #[pallet::constant]
         type ProposalExpiration: Get<frame_system::pallet_prelude::BlockNumberFor<Self>>;
+
+        /// Weight information for extrinsics.
+        type WeightInfo: WeightInfo;
     }
 
     #[pallet::pallet]
