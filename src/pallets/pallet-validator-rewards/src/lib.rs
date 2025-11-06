@@ -121,7 +121,7 @@ impl PerformanceMetrics {
 // TODO: Uncomment when pallet-validator-committee is added as dependency
 // pub mod migrations;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use super::*;
     use codec::{Encode, Decode};
@@ -135,9 +135,6 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        /// The overarching event type
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
         /// Currency for rewards (ËTR)
         type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
