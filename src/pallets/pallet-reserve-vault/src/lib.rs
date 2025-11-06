@@ -32,7 +32,7 @@ pub use pallet::*;
 #[cfg(test)]
 mod tests;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
@@ -92,9 +92,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_edsc_token::Config + pallet_edsc_redemption::Config {
-		/// The overarching event type
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Optimal reserve ratio minimum (1.10 = 110%)
 		#[pallet::constant]
 		type OptimalReserveMin: Get<FixedU128>;
