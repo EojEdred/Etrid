@@ -106,9 +106,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_edsc_token::Config + pallet_edsc_receipts::Config {
-		/// The overarching event type
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Minimum redemption fee (0.25% = 2500 basis points out of 1,000,000)
 		#[pallet::constant]
 		type MinRedemptionFee: Get<Permill>;

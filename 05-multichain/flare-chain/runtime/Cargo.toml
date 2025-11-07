@@ -151,6 +151,7 @@ runtime-benchmarks = [
     "pallet-accounts/runtime-benchmarks",
     "pallet-consensus/runtime-benchmarks",
     "pallet-governance/runtime-benchmarks",
+    "pallet-treasury-etrid/runtime-benchmarks",
 ]
 std = [
     "codec/std",

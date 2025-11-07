@@ -41,9 +41,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// The overarching event type
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Maximum receipts per wallet
 		#[pallet::constant]
 		type MaxReceiptsPerWallet: Get<u32>;

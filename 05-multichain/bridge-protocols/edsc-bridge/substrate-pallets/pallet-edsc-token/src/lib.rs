@@ -31,9 +31,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// The overarching event type
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
 		/// Maximum supply cap (prevents infinite minting)
 		#[pallet::constant]
 		type MaxSupply: Get<u128>;
