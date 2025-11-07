@@ -27,6 +27,14 @@ pub mod batching;
 pub mod optimistic_rollup;
 pub mod emergency;
 pub mod gossip;
+pub mod auto_discovery;
+pub mod invoice;
+pub mod multi_path_payments;
+pub mod submarine_swaps;
+pub mod lsp;
+pub mod rebalancing;
+pub mod streaming;
+pub mod recurring;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -113,6 +121,55 @@ pub use gossip::{
     GossipManager, GossipMessage, NodeAnnouncement, ChannelAnnouncement,
     ChannelUpdate as GossipChannelUpdate, ChannelDirection, SyncRequest,
     SyncResponse, NodeFeatures, GossipStatistics, GossipError,
+};
+
+// Re-export auto-discovery types
+pub use auto_discovery::{
+    PBCAutoDiscovery, PBCInfo, DiscoveryConfig, DiscoveryEvent,
+    DiscoveryError, DiscoveryStatistics,
+};
+
+// Re-export invoice types
+pub use invoice::{
+    LightningInvoice, InvoiceBuilder, InvoiceError,
+    PaymentRequest, InvoiceStatus,
+};
+
+// Re-export multi-path payment types
+pub use multi_path_payments::{
+    MultiPathPayment, PaymentPart, PartStatus, PaymentResult,
+    MPPManager, MPPError, MAX_PAYMENT_PARTS,
+};
+
+// Re-export submarine swap types
+pub use submarine_swaps::{
+    SubmarineSwap, SubmarineSwapManager, SwapDirection, SwapStatus,
+    SwapDetails, SwapStatistics, SwapError, SWAP_TIMEOUT_BLOCKS,
+};
+
+// Re-export LSP types
+pub use lsp::{
+    LSPManager, LSPNode, ChannelRequest, FeePolicy, LiquidityPool,
+    LSPStatistics, LSPError, MIN_LSP_LIQUIDITY, DEFAULT_CHANNEL_CAPACITY,
+};
+
+// Re-export rebalancing types
+pub use rebalancing::{
+    ChannelRebalancer, ChannelBalance, RebalanceRecommendation,
+    RebalanceDirection, Priority, RebalanceResult, RebalanceStatistics,
+    RebalanceError, DEFAULT_TARGET_RATIO,
+};
+
+// Re-export streaming payment types
+pub use streaming::{
+    StreamingPayment, StreamManager, StreamStatus, StreamPayment,
+    StreamStatistics, StreamError, MIN_RATE_PER_SECOND,
+};
+
+// Re-export recurring payment types
+pub use recurring::{
+    RecurringPayment, RecurringManager, PaymentFrequency, RecurringStatus,
+    PaymentExecution, RecurringStatistics, RecurringError,
 };
 
 /// Channel state
