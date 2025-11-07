@@ -15,8 +15,8 @@ sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-s
 sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
 # Ëtrid consensus dependencies
-validator-management = { path = "../../../../09-consensus/validator-management", default-features = false }
-asf-algorithm = { path = "../../../../09-consensus/asf-algorithm", default-features = false }
+validator-management = { path = "../../../09-consensus/validator-management", default-features = false }
+asf-algorithm = { path = "../../../09-consensus/asf-algorithm", default-features = false }
 
 [features]
 default = ["std"]
