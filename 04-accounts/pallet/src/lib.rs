@@ -147,6 +147,7 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
+        #[allow(deprecated)]
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         type Balance: Parameter + From<u64> + Into<u64> + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
         type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -215,6 +216,7 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        #[allow(deprecated)]
         #[pallet::weight(10_000)]
         #[pallet::call_index(0)]
         pub fn transfer(
