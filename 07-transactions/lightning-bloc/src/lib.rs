@@ -26,6 +26,7 @@ pub mod multi_party;
 pub mod batching;
 pub mod optimistic_rollup;
 pub mod emergency;
+pub mod gossip;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -105,6 +106,13 @@ pub use emergency::{
     TimeoutWatchdog, WithdrawalStatus, ClosureStatus,
     EmergencyStatistics, EmergencyError,
     COUNTERPARTY_TIMEOUT, FORCED_CLOSURE_GRACE_PERIOD,
+};
+
+// Re-export gossip protocol types
+pub use gossip::{
+    GossipManager, GossipMessage, NodeAnnouncement, ChannelAnnouncement,
+    ChannelUpdate as GossipChannelUpdate, ChannelDirection, SyncRequest,
+    SyncResponse, NodeFeatures, GossipStatistics, GossipError,
 };
 
 /// Channel state
