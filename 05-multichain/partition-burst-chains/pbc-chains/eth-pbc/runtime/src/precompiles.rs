@@ -18,6 +18,9 @@ mod oracle;
 mod governance;
 mod staking;
 mod lightning;
+mod native_eth_wrap;
+mod state_proof;
+mod token_registry;
 
 pub use xcm_bridge::{MockXcmBridge, XcmBridge};
 #[allow(unused_imports)]
@@ -26,6 +29,9 @@ pub use oracle::EtridOraclePrecompile;
 pub use governance::EtridGovernancePrecompile;
 pub use staking::EtridStakingPrecompile;
 pub use lightning::EtridLightningPrecompile;
+pub use native_eth_wrap::NativeETHWrapPrecompile;
+pub use state_proof::StateProofPrecompile;
+pub use token_registry::TokenRegistryPrecompile;
 
 /// Combined precompile set for ETH-PBC
 /// Includes both standard Ethereum precompiles and custom Ëtrid precompiles
@@ -41,7 +47,7 @@ where
 	}
 
 	/// All precompile addresses (standard + custom)
-	pub fn used_addresses() -> [H160; 10] {
+	pub fn used_addresses() -> [H160; 13] {
 		[
 			// Standard Ethereum precompiles
 			hash(1),    // ECRecover
@@ -54,6 +60,9 @@ where
 			hash(0x800), // Oracle
 			hash(0x801), // Governance
 			hash(0x802), // Staking
+			hash(0x803), // Native ETH Wrapping
+			hash(0x804), // State Proof Verification
+			hash(0x805), // Token Registry
 			hash(0x808), // Lightning Channels
 		]
 	}
@@ -78,6 +87,9 @@ where
 			a if a == hash(0x800) => Some(EtridOraclePrecompile::<XCM>::execute(handle)),
 			a if a == hash(0x801) => Some(EtridGovernancePrecompile::<XCM>::execute(handle)),
 			a if a == hash(0x802) => Some(EtridStakingPrecompile::<XCM>::execute(handle)),
+			a if a == hash(0x803) => Some(NativeETHWrapPrecompile::<R>::execute(handle)),
+			a if a == hash(0x804) => Some(StateProofPrecompile::<R>::execute(handle)),
+			a if a == hash(0x805) => Some(TokenRegistryPrecompile::<R>::execute(handle)),
 			a if a == hash(0x808) => Some(EtridLightningPrecompile::<R>::execute(handle)),
 
 			_ => None,
