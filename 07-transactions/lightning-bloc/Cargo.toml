@@ -21,3 +21,9 @@ std = []
 [[bench]]
 name = "routing_bench"
 harness = false
+
+hex = "0.4"
+
+tracing = "0.1"
+
+tokio = { version = "1", features = ["time","rt","macros"] }

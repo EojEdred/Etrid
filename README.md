@@ -257,6 +257,8 @@ Each PBC specializes in bridging a specific external blockchain:
 - **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Complete development guide
 - **[API Reference](docs/API_REFERENCE.md)** - API documentation
 - **[Architecture](docs/architecture.md)** - System architecture
+- **[EVM Architecture](docs/technical/EVM_ARCHITECTURE.md)** - EVM on ETH-PBC (not FlareChain)
+- **[Custom Precompiles Guide](docs/technical/CUSTOM_PRECOMPILES_GUIDE.md)** - Oracle, Governance, Staking precompiles
 - **[Ivory Paper](docs/specifications/ivory-paper.md)** - Complete protocol specification
 
 ### For Operators

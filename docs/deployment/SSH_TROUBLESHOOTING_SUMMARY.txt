@@ -1,0 +1,121 @@
+============================================================
+AZURE VM SSH CONNECTIVITY ANALYSIS - SUMMARY
+============================================================
+
+CONCLUSION: SSH TIMEOUT IS NOT CAUSED BY NSG RULES
+
+All 17 Azure VMs have correct NSG rules allowing SSH on port 22.
+No NSG rule modifications are needed.
+
+============================================================
+FILES CREATED
+============================================================
+
+1. azure_nsg_ssh_analysis.md
+   - Comprehensive analysis report
+   - All VM details, NSG configurations
+   - Root cause analysis and recommendations
+
+2. diagnose_ssh_issue.sh
+   - Diagnostic script to check SSH daemon status
+   - Checks iptables, ufw, firewalld
+   - Checks if port 22 is listening
+   - Run this first to identify the actual problem
+
+3. fix_ssh_daemon.sh
+   - Starts and enables SSH daemon on VMs
+   - Use if diagnostic shows SSH is not running
+
+4. fix_ssh_firewall.sh
+   - Configures OS firewall rules (iptables/ufw/firewalld)
+   - Opens port 22 if blocked by OS firewall
+   - Use if diagnostic shows firewall blocking SSH
+
+============================================================
+NEXT STEPS
+============================================================
+
+1. Run diagnostic script:
+   ./diagnose_ssh_issue.sh > diagnostic_results.txt
+
+2. Review diagnostic results to identify:
+   - VMs where SSH daemon is not running
+   - VMs where port 22 is not listening
+   - VMs with firewall rules blocking SSH
+
+3. Apply appropriate fix:
+   - If SSH daemon down: ./fix_ssh_daemon.sh
+   - If firewall blocking: ./fix_ssh_firewall.sh
+
+4. Test SSH connectivity:
+   ssh azureuser@<PUBLIC_IP>
+
+============================================================
+VM INVENTORY (17 VMs)
+============================================================
+
+✅ WORKING:
+- etrid-audit-dev-secondary (51.142.203.160)
+
+❓ REPORTED AS TIMING OUT (but NSG rules are correct):
+
+EU-NORTH (2):
+- etrid-compiler-dev-secondary (98.71.91.84)
+- etrid-multichain-dev-primary (68.219.230.63)
+
+EU-WEST (5):
+- etrid-compiler-dev-primary (4.180.59.25)
+- etrid-consensus-dev-secondary (20.224.104.239)
+- etrid-multichain-dev-secondary (98.71.219.106)
+- etrid-runtime-dev-primary (108.142.205.177)
+- etrid-runtime-dev-secondary (4.180.238.67)
+
+UK-SOUTH (4):
+- etrid-flarenode-15 (172.166.164.19)
+- etrid-flarenode-16 (172.166.187.180)
+- etrid-flarenode-17 (172.166.210.244)
+- etrid-oracle-dev (172.167.8.217)
+
+EU-FR (5):
+- etrid-flarenode-18 (4.251.115.186)
+- etrid-flarenode-19 (52.143.191.232)
+- etrid-flarenode-20 (4.211.206.210)
+- etrid-flarenode-21 (4.178.181.122)
+- etrid-flarenode-22 (4.233.88.42)
+
+============================================================
+NSG ANALYSIS RESULTS
+============================================================
+
+✅ All 17 VMs have SSH rules configured
+✅ All VMs have priority 100-1000 Allow rules for port 22
+✅ All VMs have public IPs properly allocated
+✅ All VMs are in "Running" state
+✅ No subnet-level NSGs blocking traffic
+✅ No route tables interfering with traffic
+✅ No Azure Firewalls detected
+✅ Effective security rules show SSH is allowed
+
+❌ NSG rules are NOT the problem
+
+============================================================
+MANUAL DIAGNOSTIC COMMANDS
+============================================================
+
+Check SSH daemon on a specific VM:
+az vm run-command invoke \
+  -g ETRID-VALIDATORS-EU-NORTH \
+  -n etrid-compiler-dev-secondary \
+  --command-id RunShellScript \
+  --scripts "systemctl status sshd && netstat -tuln | grep 22"
+
+Enable boot diagnostics:
+az vm boot-diagnostics enable \
+  -g ETRID-VALIDATORS-EU-NORTH \
+  -n etrid-compiler-dev-secondary
+
+View effective NSG rules:
+NIC_ID=$(az vm show -g ETRID-VALIDATORS-EU-NORTH -n etrid-compiler-dev-secondary --query "networkProfile.networkInterfaces[0].id" -o tsv)
+az network nic list-effective-nsg --ids "$NIC_ID"
+
+============================================================

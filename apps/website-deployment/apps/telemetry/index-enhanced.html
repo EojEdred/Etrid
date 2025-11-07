@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Network Telemetry - Complete System Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+            color: #e0e0e0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px 20px;
+            background: rgba(26, 31, 53, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #3b82f6;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            font-size: 1em;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            color: #3b82f6;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            font-weight: 700;
+        }
+
+        .section {
+            background: rgba(26, 31, 53, 0.6);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #3b82f6;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .section-description {
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        /* ================================
+           FLAME ARCHITECTURE STYLES
+           ================================ */
+
+        .flame-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .flame-container {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        .flame-layer {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .flame-core {
+            width: 140px;
+            height: 140px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, #60A5FA, #3B82F6, #1E3A8A);
+            box-shadow: 0 0 60px rgba(59, 130, 246, 0.8),
+                        0 0 100px rgba(59, 130, 246, 0.4),
+                        inset 0 0 40px rgba(96, 165, 250, 0.6);
+            animation: pulse-core 3s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        .flame-pbc {
+            width: 260px;
+            height: 260px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(from 0deg, #F97316, #EF4444, #DC2626, #EA580C, #F97316);
+            box-shadow: 0 0 50px rgba(249, 115, 22, 0.6),
+                        inset 0 0 30px rgba(239, 68, 68, 0.4);
+            animation: rotate-pbc 12s linear infinite;
+            z-index: 2;
+        }
+
+        .flame-lightning {
+            width: 380px;
+            height: 380px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(from 0deg, #FBBF24, #FCD34D, #FEF3C7, #FBBF24);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.5),
+                        inset 0 0 20px rgba(252, 211, 77, 0.3);
+            animation: rotate-lightning 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes pulse-core {
+            0%, 100% {
+                box-shadow: 0 0 60px rgba(59, 130, 246, 0.8),
+                            0 0 100px rgba(59, 130, 246, 0.4),
+                            inset 0 0 40px rgba(96, 165, 250, 0.6);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                box-shadow: 0 0 80px rgba(59, 130, 246, 1),
+                            0 0 140px rgba(59, 130, 246, 0.6),
+                            inset 0 0 60px rgba(96, 165, 250, 0.8);
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+
+        @keyframes rotate-pbc {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes rotate-lightning {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(-360deg); }
+        }
+
+        .flame-layer:hover {
+            filter: brightness(1.2);
+            transform: translate(-50%, -50%) scale(1.05) !important;
+        }
+
+        .flame-pbc:hover {
+            animation-duration: 8s;
+        }
+
+        .flame-lightning:hover {
+            animation-duration: 15s;
+        }
+
+        .flame-stats {
+            position: absolute;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .stats-core {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+        }
+
+        .stats-pbc {
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+        }
+
+        .stats-lightning {
+            top: 15%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        /* ================================
+           MODAL STYLES
+           ================================ */
+
+        .telemetry-modal {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(10, 14, 26, 0.98) 0%, rgba(20, 24, 36, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: -10px 0 60px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .telemetry-modal.active {
+            right: 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, rgba(10, 14, 26, 0.95) 0%, rgba(20, 24, 36, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            z-index: 10;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .close-modal:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: rotate(90deg);
+        }
+
+        /* ================================
+           STAT CARD STYLES
+           ================================ */
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-value.live {
+            animation: pulse-value 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-value {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ================================
+           HEALTH INDICATORS
+           ================================ */
+
+        .health-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-health 2s ease-in-out infinite;
+        }
+
+        .health-excellent { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .health-good { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        .health-warning { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+        .health-critical { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        @keyframes pulse-health {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* ================================
+           PBC GRID
+           ================================ */
+
+        .pbc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .pbc-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .pbc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            border-color: rgba(249, 115, 22, 0.5);
+        }
+
+        .pbc-card.active {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(239, 68, 68, 0.2) 100%);
+            border-color: #F97316;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+
+        /* ================================
+           NODE LIST
+           ================================ */
+
+        .node-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .node-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .node-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* ================================
+           CHART STYLES
+           ================================ */
+
+        .mini-chart {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            height: 140px;
+        }
+
+        /* ================================
+           ASF CONSENSUS SECTION STYLES
+           ================================ */
+
+        .consensus-health-bar {
+            background: rgba(26, 31, 53, 0.8);
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .consensus-status {
+            font-size: 1.3em;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+
+        .consensus-status.healthy {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .consensus-status.warning {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .consensus-status.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .health-metrics {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .health-metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .health-metric-label {
+            font-size: 0.8em;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .health-metric-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* ================================
+           TABLE STYLES
+           ================================ */
+
+        .node-table-container {
+            background: rgba(26, 31, 53, 0.8);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            color: #3b82f6;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            font-size: 0.9em;
+        }
+
+        tr {
+            transition: all 0.15s ease;
+        }
+
+        tr:hover {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .online td {
+            color: #e0e0e0;
+        }
+
+        .offline td {
+            color: #6b7280;
+            opacity: 0.65;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .role-director {
+            background: rgba(251, 146, 60, 0.2);
+            color: #fb923c;
+            border: 1px solid rgba(251, 146, 60, 0.4);
+        }
+
+        .role-flarenode {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .role-validitynode {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #a8b3cf;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px 20px;
+            color: #6b7280;
+            font-size: 0.85em;
+            background: rgba(26, 31, 53, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #60a5fa;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .consensus-health-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            table {
+                min-width: 800px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.75em;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 ËTRID Network Telemetry</h1>
+            <p class="subtitle">Complete System Monitor • ASF Consensus • Flame Architecture • Live Data</p>
+        </header>
+
+        <!-- ================================
+             FLAME ARCHITECTURE SECTION
+             ================================ -->
+        <div class="section">
+            <div class="section-title">🔥 Flame Architecture Telemetry</div>
+            <div class="section-description">
+                Click on any layer to view detailed real-time network metrics
+            </div>
+
+            <!-- Flame Visualization -->
+            <div class="flame-container">
+                <!-- Lightning Layer (Outer) -->
+                <div class="flame-layer flame-lightning" id="lightning-layer" title="Click to view Lightning-Bloc telemetry"></div>
+
+                <!-- PBC Layer (Middle) -->
+                <div class="flame-layer flame-pbc" id="pbc-layer" title="Click to view PBC telemetry"></div>
+
+                <!-- FlareChain Core (Center) -->
+                <div class="flame-layer flame-core" id="flarechain-layer" title="Click to view FlareChain telemetry"></div>
+
+                <!-- Stats Badges -->
+                <div class="flame-stats stats-lightning">
+                    Lightning: 1M+ TPS
+                </div>
+                <div class="flame-stats stats-pbc">
+                    PBCs: 171,000+ TPS
+                </div>
+                <div class="flame-stats stats-core">
+                    FlareChain Core
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             ASF CONSENSUS SECTION
+             ================================ -->
+        <div class="section">
+            <div class="section-title">⚡ ASF Consensus Monitor</div>
+            <div class="section-description">
+                PPFA Block Production • 21-Validator Committee
+            </div>
+
+            <!-- Consensus Health Bar -->
+            <div class="consensus-health-bar">
+                <div>
+                    <div style="font-size: 0.9em; color: #9ca3af; margin-bottom: 5px;">Consensus Health</div>
+                    <div id="consensus-health" class="consensus-status healthy">Initializing</div>
+                </div>
+                <div class="health-metrics">
+                    <div class="health-metric">
+                        <div class="health-metric-label">Current Proposer</div>
+                        <div class="health-metric-value" id="current-proposer">—</div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="health-metric-label">Epoch</div>
+                        <div class="health-metric-value" id="current-epoch">#0</div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="health-metric-label">ASF Finality</div>
+                        <div class="health-metric-value" id="finality-confidence">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Validators</div>
+                    <div class="stat-value" id="total-validators">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Online / Committee</div>
+                    <div class="stat-value" id="online-validators">0/21</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Committee %</div>
+                    <div class="stat-value" id="committee-participation">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Best Block</div>
+                    <div class="stat-value" id="best-block">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Finalized Block</div>
+                    <div class="stat-value" id="finalized-block">0</div>
+                </div>
+            </div>
+
+            <!-- Validator Table -->
+            <div class="node-table-container">
+                <h2>🌐 PPFA Committee Validators</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Validator Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Best Block</th>
+                            <th>Finalized</th>
+                            <th>Fin. Lag</th>
+                            <th>Peers</th>
+                            <th>Version</th>
+                            <th>Last Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="node-list">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px; color: #9ca3af;">
+                                <div style="font-size: 1.2em; margin-bottom: 10px;" class="loading">⏳ Connecting to telemetry server...</div>
+                                <div style="font-size: 0.9em;">ASF Consensus • PPFA Committee</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>ËTRID Foundation</strong> | Telemetry Server: 98.71.91.84:30334</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <strong>ASF Consensus:</strong> Ascending Scale of Finality • <strong>PPFA:</strong> Probabilistic Pre-consensus Finality Algorithm
+            </p>
+            <p style="margin-top: 10px;">
+                <span style="color: #fb923c;">●</span> Director (3) •
+                <span style="color: #3b82f6;">●</span> FlareNode (9) •
+                <span style="color: #a855f7;">●</span> ValidityNode (9)
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="http://98.71.91.84:30334" target="_blank">Direct Server</a> |
+                <a href="https://etrid.org" target="_blank">ËTRID Network</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- ================================
+         MODAL OVERLAY
+         ================================ -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+    <!-- ================================
+         FLARECHAIN MODAL
+         ================================ -->
+    <div class="telemetry-modal" id="flarechain-modal">
+        <div class="modal-header">
+            <h2 style="font-size: 1.8em; color: #60A5FA; margin-bottom: 8px;">FlareChain Core</h2>
+            <p style="color: #9ca3af;">Central coordination layer orchestrating network operations</p>
+            <button class="close-modal" onclick="closeModal()">
+                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div style="padding: 24px;">
+            <!-- Live Stats Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-label">Active Nodes</div>
+                    <div class="stat-value live" style="color: #60A5FA;" id="fc-nodes">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Network Uptime</div>
+                    <div class="stat-value" style="color: #22c55e;" id="fc-uptime">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Block Height</div>
+                    <div class="stat-value live" style="color: #a855f7;" id="fc-height">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Current TPS</div>
+                    <div class="stat-value live" style="color: #06b6d4;" id="fc-tps">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Health -->
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label">Network Health</div>
+                <div style="display: flex; align-items: center; margin-top: 8px;">
+                    <span class="health-indicator health-excellent" id="fc-health-indicator"></span>
+                    <span style="font-size: 1.2em; font-weight: 600;" id="fc-health">Loading...</span>
+                </div>
+            </div>
+
+            <!-- TPS Chart -->
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label" style="margin-bottom: 12px;">TPS History (Last 60s)</div>
+                <div class="mini-chart">
+                    <canvas id="fc-chart-canvas" width="100%" height="120"></canvas>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 0.9em;">
+                    <div>
+                        <div style="color: #9ca3af;">Average</div>
+                        <div style="color: #60A5FA; font-weight: 600;" id="fc-avg-tps">-</div>
+                    </div>
+                    <div>
+                        <div style="color: #9ca3af;">Peak</div>
+                        <div style="color: #a855f7; font-weight: 600;" id="fc-peak-tps">-</div>
+                    </div>
+                    <div>
+                        <div style="color: #9ca3af;">Min</div>
+                        <div style="color: #06b6d4; font-weight: 600;" id="fc-min-tps">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validator List -->
+            <div class="stat-card">
+                <div class="stat-label" style="margin-bottom: 12px;">Active Validators</div>
+                <div class="node-list" id="fc-validators">
+                    <div style="text-align: center; color: #9ca3af; padding: 16px;">Loading validators...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================
+         PBC MODAL
+         ================================ -->
+    <div class="telemetry-modal" id="pbc-modal">
+        <div class="modal-header">
+            <h2 style="font-size: 1.8em; color: #F97316; margin-bottom: 8px;">Partition-Burst Chains</h2>
+            <p style="color: #9ca3af;">Dynamic sharding ring for horizontal scalability</p>
+            <button class="close-modal" onclick="closeModal()">
+                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div style="padding: 24px;">
+            <!-- PBC Grid Selector -->
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label" style="margin-bottom: 12px;">Select PBC Chain</div>
+                <div class="pbc-grid" id="pbc-selector">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Selected PBC Stats -->
+            <div id="pbc-stats-container" style="display: none;">
+                <div style="margin-bottom: 16px;">
+                    <h3 style="font-size: 1.5em; font-weight: 700; color: #F97316;" id="pbc-selected-name">PBC-BTC</h3>
+                    <p style="color: #9ca3af; font-size: 0.9em;" id="pbc-selected-desc">Bitcoin bridge chain</p>
+                </div>
+
+                <!-- Live Stats Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-label">Collator Nodes</div>
+                        <div class="stat-value live" style="color: #F97316;" id="pbc-nodes">
+                            <span class="loading-spinner"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value" style="color: #22c55e;" id="pbc-uptime">
+                            <span class="loading-spinner"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Block Height</div>
+                        <div class="stat-value live" style="color: #FBBF24;" id="pbc-height">
+                            <span class="loading-spinner"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Current TPS</div>
+                        <div class="stat-value live" style="color: #EF4444;" id="pbc-tps">
+                            <span class="loading-spinner"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bridge Status -->
+                <div class="stat-card" style="margin-bottom: 16px;">
+                    <div class="stat-label">Bridge Status</div>
+                    <div style="display: flex; align-items: center; margin-top: 8px;">
+                        <span class="health-indicator health-excellent" id="pbc-bridge-indicator"></span>
+                        <span style="font-size: 1.2em; font-weight: 600;" id="pbc-bridge-status">Active</span>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.9em; color: #9ca3af;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>24h Transfers:</span>
+                            <span style="color: white; font-weight: 600;" id="pbc-transfers">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>24h Volume:</span>
+                            <span style="color: white; font-weight: 600;" id="pbc-volume">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collator List -->
+                <div class="stat-card">
+                    <div class="stat-label" style="margin-bottom: 12px;">Active Collators</div>
+                    <div class="node-list" id="pbc-collators">
+                        <div style="text-align: center; color: #9ca3af; padding: 16px;">Loading collators...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================
+         LIGHTNING-BLOC MODAL
+         ================================ -->
+    <div class="telemetry-modal" id="lightning-modal">
+        <div class="modal-header">
+            <h2 style="font-size: 1.8em; color: #FBBF24; margin-bottom: 8px;">Lightning-Bloc Layer 2</h2>
+            <p style="color: #9ca3af;">Off-chain payment channels for instant transactions</p>
+            <button class="close-modal" onclick="closeModal()">
+                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div style="padding: 24px;">
+            <!-- Live Stats Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-label">Active Channels</div>
+                    <div class="stat-value live" style="color: #FBBF24;" id="lb-channels">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Channel Nodes</div>
+                    <div class="stat-value" style="color: #F97316;" id="lb-nodes">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Network Uptime</div>
+                    <div class="stat-value" style="color: #22c55e;" id="lb-uptime">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Current TPS</div>
+                    <div class="stat-value live" style="color: #06b6d4;" id="lb-tps">
+                        <span class="loading-spinner"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Capacity -->
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label">Network Capacity</div>
+                <div style="font-size: 2em; font-weight: 700; color: #FBBF24; margin-top: 8px;">1,000,000+ TPS</div>
+                <div style="font-size: 0.85em; color: #9ca3af; margin-top: 4px;">Theoretical maximum throughput</div>
+            </div>
+
+            <!-- Volume Stats -->
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label" style="margin-bottom: 12px;">24-Hour Activity</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #9ca3af;">Total Volume:</span>
+                        <span style="font-size: 1.5em; font-weight: 700; color: #FBBF24;" id="lb-volume">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #9ca3af;">Transactions:</span>
+                        <span style="font-size: 1.2em; font-weight: 600; color: #F97316;" id="lb-txs">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #9ca3af;">Avg Fee:</span>
+                        <span style="font-size: 1.1em; font-weight: 600; color: #22c55e;" id="lb-fee">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TPS Chart -->
+            <div class="stat-card">
+                <div class="stat-label" style="margin-bottom: 12px;">TPS History (Last 60s)</div>
+                <div class="mini-chart">
+                    <canvas id="lb-chart-canvas" width="100%" height="120"></canvas>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 0.9em;">
+                    <div>
+                        <div style="color: #9ca3af;">Average</div>
+                        <div style="color: #FBBF24; font-weight: 600;" id="lb-avg-tps">-</div>
+                    </div>
+                    <div>
+                        <div style="color: #9ca3af;">Peak</div>
+                        <div style="color: #F97316; font-weight: 600;" id="lb-peak-tps">-</div>
+                    </div>
+                    <div>
+                        <div style="color: #9ca3af;">Min</div>
+                        <div style="color: #22c55e; font-weight: 600;" id="lb-min-tps">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================
+         JAVASCRIPT
+         ================================ -->
+    <script>
+        // ========================================
+        // INTERACTIVE FLAME TELEMETRY SYSTEM
+        // ========================================
+
+        // Mock telemetry data
+        const mockTelemetryData = {
+            flarechain: {
+                nodes: 21,
+                uptime: 99.8,
+                blockHeight: 8342156,
+                tps: 847,
+                avgTps: 723,
+                peakTps: 1000,
+                minTps: 512,
+                health: "excellent",
+                validators: [
+                    { name: "Validator-01", location: "US-East", uptime: 99.9, stake: "125K ETR" },
+                    { name: "Validator-02", location: "EU-West", uptime: 99.8, stake: "118K ETR" },
+                    { name: "Validator-03", location: "Asia-Pacific", uptime: 99.7, stake: "112K ETR" },
+                    { name: "Validator-04", location: "US-West", uptime: 99.9, stake: "108K ETR" },
+                    { name: "Validator-05", location: "EU-North", uptime: 99.6, stake: "95K ETR" }
+                ]
+            },
+            pbcs: {
+                "pbc-btc": { name: "PBC-BTC", desc: "Bitcoin bridge chain", nodes: 5, uptime: 99.5, blockHeight: 2341234, tps: 142, transfers: "1,234", volume: "45.2 BTC", bridge: "active" },
+                "pbc-eth": { name: "PBC-ETH", desc: "Ethereum bridge chain", nodes: 5, uptime: 99.7, blockHeight: 3245678, tps: 189, transfers: "2,456", volume: "312 ETH", bridge: "active" },
+                "pbc-bsc": { name: "PBC-BSC", desc: "Binance Smart Chain bridge", nodes: 5, uptime: 99.6, blockHeight: 4123456, tps: 201, transfers: "3,891", volume: "1,234 BNB", bridge: "active" },
+                "pbc-polygon": { name: "PBC-Polygon", desc: "Polygon bridge chain", nodes: 5, uptime: 99.8, blockHeight: 5234567, tps: 234, transfers: "4,567", volume: "8,901 MATIC", bridge: "active" },
+                "pbc-avalanche": { name: "PBC-Avalanche", desc: "Avalanche bridge chain", nodes: 5, uptime: 99.4, blockHeight: 3456789, tps: 178, transfers: "1,890", volume: "567 AVAX", bridge: "active" },
+                "pbc-solana": { name: "PBC-Solana", desc: "Solana bridge chain", nodes: 5, uptime: 99.9, blockHeight: 6345678, tps: 267, transfers: "5,678", volume: "2,345 SOL", bridge: "active" },
+                "pbc-cardano": { name: "PBC-Cardano", desc: "Cardano bridge chain", nodes: 5, uptime: 99.3, blockHeight: 2567890, tps: 156, transfers: "987", volume: "12,345 ADA", bridge: "active" },
+                "pbc-polkadot": { name: "PBC-Polkadot", desc: "Polkadot relay bridge", nodes: 5, uptime: 99.7, blockHeight: 4567890, tps: 198, transfers: "2,123", volume: "1,234 DOT", bridge: "active" },
+                "pbc-cosmos": { name: "PBC-Cosmos", desc: "Cosmos IBC bridge", nodes: 5, uptime: 99.6, blockHeight: 3678901, tps: 187, transfers: "1,765", volume: "3,456 ATOM", bridge: "active" },
+                "pbc-arbitrum": { name: "PBC-Arbitrum", desc: "Arbitrum L2 bridge", nodes: 5, uptime: 99.8, blockHeight: 5678901, tps: 223, transfers: "3,234", volume: "678 ETH", bridge: "active" },
+                "pbc-optimism": { name: "PBC-Optimism", desc: "Optimism L2 bridge", nodes: 5, uptime: 99.7, blockHeight: 4789012, tps: 209, transfers: "2,890", volume: "543 ETH", bridge: "active" },
+                "pbc-base": { name: "PBC-Base", desc: "Base L2 bridge", nodes: 5, uptime: 99.9, blockHeight: 6789012, tps: 245, transfers: "4,123", volume: "789 ETH", bridge: "active" },
+                "pbc-zksync": { name: "PBC-zkSync", desc: "zkSync L2 bridge", nodes: 5, uptime: 99.5, blockHeight: 3890123, tps: 192, transfers: "2,345", volume: "432 ETH", bridge: "active" }
+            },
+            lightning: {
+                channels: 1523,
+                nodes: 342,
+                uptime: 99.9,
+                tps: 12453,
+                avgTps: 9876,
+                peakTps: 18234,
+                minTps: 5432,
+                volume24h: "2.3M ETR",
+                txs24h: "8.7M",
+                avgFee: "0.0001 ETR"
+            }
+        };
+
+        // TPS history data for charts
+        const tpsHistory = {
+            flarechain: [],
+            lightning: []
+        };
+
+        // Initialize TPS history with random data
+        for (let i = 0; i < 60; i++) {
+            tpsHistory.flarechain.push(600 + Math.random() * 400);
+            tpsHistory.lightning.push(8000 + Math.random() * 8000);
+        }
+
+        // Current selected PBC
+        let selectedPBC = null;
+
+        // Modal management
+        let currentModal = null;
+        let telemetryInterval = null;
+
+        function openModal(modalId) {
+            closeModal();
+            currentModal = document.getElementById(modalId);
+            const overlay = document.getElementById('modal-overlay');
+
+            if (currentModal) {
+                overlay.classList.add('active');
+                currentModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                if (modalId === 'flarechain-modal') {
+                    loadFlarechainData();
+                } else if (modalId === 'pbc-modal') {
+                    loadPBCSelector();
+                } else if (modalId === 'lightning-modal') {
+                    loadLightningData();
+                }
+
+                startTelemetryUpdates();
+            }
+        }
+
+        function closeModal() {
+            if (currentModal) {
+                const overlay = document.getElementById('modal-overlay');
+                overlay.classList.remove('active');
+                currentModal.classList.remove('active');
+                document.body.style.overflow = '';
+                currentModal = null;
+            }
+            stopTelemetryUpdates();
+        }
+
+        // Click handlers for flame layers
+        document.getElementById('flarechain-layer')?.addEventListener('click', () => openModal('flarechain-modal'));
+        document.getElementById('pbc-layer')?.addEventListener('click', () => openModal('pbc-modal'));
+        document.getElementById('lightning-layer')?.addEventListener('click', () => openModal('lightning-modal'));
+
+        // Close modal on overlay click
+        document.getElementById('modal-overlay')?.addEventListener('click', closeModal);
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ========================================
+        // FLARECHAIN DATA LOADING
+        // ========================================
+
+        function loadFlarechainData() {
+            const data = mockTelemetryData.flarechain;
+
+            document.getElementById('fc-nodes').textContent = data.nodes;
+            document.getElementById('fc-uptime').textContent = data.uptime + '%';
+            document.getElementById('fc-height').textContent = data.blockHeight.toLocaleString();
+            document.getElementById('fc-tps').textContent = data.tps.toLocaleString();
+
+            document.getElementById('fc-health').textContent = data.health.charAt(0).toUpperCase() + data.health.slice(1);
+            const healthIndicator = document.getElementById('fc-health-indicator');
+            healthIndicator.className = 'health-indicator health-' + data.health;
+
+            document.getElementById('fc-avg-tps').textContent = data.avgTps.toLocaleString();
+            document.getElementById('fc-peak-tps').textContent = data.peakTps.toLocaleString();
+            document.getElementById('fc-min-tps').textContent = data.minTps.toLocaleString();
+
+            const validatorList = document.getElementById('fc-validators');
+            validatorList.innerHTML = data.validators.map(v => `
+                <div class="node-item">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: white;">${v.name}</div>
+                        <div style="font-size: 0.85em; color: #9ca3af;">${v.location}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #22c55e; font-weight: 600;">${v.uptime}%</div>
+                        <div style="font-size: 0.85em; color: #9ca3af;">${v.stake}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            drawChart('fc-chart-canvas', tpsHistory.flarechain, '#3B82F6');
+        }
+
+        // ========================================
+        // PBC DATA LOADING
+        // ========================================
+
+        function loadPBCSelector() {
+            const selector = document.getElementById('pbc-selector');
+            const pbcs = mockTelemetryData.pbcs;
+
+            selector.innerHTML = Object.keys(pbcs).map(key => {
+                const pbc = pbcs[key];
+                return `
+                    <div class="pbc-card" onclick="selectPBC('${key}')">
+                        <div style="font-size: 0.85em; font-weight: 700; color: #F97316;">${pbc.name}</div>
+                        <div style="font-size: 0.75em; color: #9ca3af; margin-top: 4px;">${pbc.nodes} nodes</div>
+                        <div style="font-size: 0.75em; color: #22c55e; margin-top: 4px;">${pbc.uptime}% up</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectPBC(pbcKey) {
+            selectedPBC = pbcKey;
+            const pbc = mockTelemetryData.pbcs[pbcKey];
+
+            document.querySelectorAll('.pbc-card').forEach(card => card.classList.remove('active'));
+            event.target.closest('.pbc-card').classList.add('active');
+
+            document.getElementById('pbc-stats-container').style.display = 'block';
+
+            document.getElementById('pbc-selected-name').textContent = pbc.name;
+            document.getElementById('pbc-selected-desc').textContent = pbc.desc;
+
+            document.getElementById('pbc-nodes').textContent = pbc.nodes;
+            document.getElementById('pbc-uptime').textContent = pbc.uptime + '%';
+            document.getElementById('pbc-height').textContent = pbc.blockHeight.toLocaleString();
+            document.getElementById('pbc-tps').textContent = pbc.tps.toLocaleString();
+
+            document.getElementById('pbc-bridge-status').textContent = pbc.bridge.charAt(0).toUpperCase() + pbc.bridge.slice(1);
+            document.getElementById('pbc-transfers').textContent = pbc.transfers;
+            document.getElementById('pbc-volume').textContent = pbc.volume;
+
+            const collatorList = document.getElementById('pbc-collators');
+            collatorList.innerHTML = Array.from({length: pbc.nodes}, (_, i) => `
+                <div class="node-item">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: white;">Collator-${i + 1}</div>
+                        <div style="font-size: 0.85em; color: #9ca3af;">${['US', 'EU', 'Asia', 'AU', 'SA'][i % 5]}</div>
+                    </div>
+                    <div style="text-align: right; display: flex; align-items: center; gap: 8px;">
+                        <span class="health-indicator health-excellent"></span>
+                        <span style="color: #22c55e; font-weight: 600;">${(99 + Math.random()).toFixed(1)}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========================================
+        // LIGHTNING-BLOC DATA LOADING
+        // ========================================
+
+        function loadLightningData() {
+            const data = mockTelemetryData.lightning;
+
+            document.getElementById('lb-channels').textContent = data.channels.toLocaleString();
+            document.getElementById('lb-nodes').textContent = data.nodes.toLocaleString();
+            document.getElementById('lb-uptime').textContent = data.uptime + '%';
+            document.getElementById('lb-tps').textContent = data.tps.toLocaleString();
+
+            document.getElementById('lb-volume').textContent = data.volume24h;
+            document.getElementById('lb-txs').textContent = data.txs24h;
+            document.getElementById('lb-fee').textContent = data.avgFee;
+
+            document.getElementById('lb-avg-tps').textContent = data.avgTps.toLocaleString();
+            document.getElementById('lb-peak-tps').textContent = data.peakTps.toLocaleString();
+            document.getElementById('lb-min-tps').textContent = data.minTps.toLocaleString();
+
+            drawChart('lb-chart-canvas', tpsHistory.lightning, '#FBBF24');
+        }
+
+        // ========================================
+        // CHART DRAWING
+        // ========================================
+
+        function drawChart(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const width = canvas.parentElement.clientWidth;
+            const height = 120;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, color + '40');
+            gradient.addColorStop(1, color + '00');
+
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+
+            data.forEach((value, i) => {
+                const x = (i / (data.length - 1)) * width;
+                const y = height - ((value - min) / range) * (height - 20);
+                ctx.lineTo(x, y);
+            });
+
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            ctx.beginPath();
+            data.forEach((value, i) => {
+                const x = (i / (data.length - 1)) * width;
+                const y = height - ((value - min) / range) * (height - 20);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // ========================================
+        // REAL-TIME TELEMETRY UPDATES
+        // ========================================
+
+        function startTelemetryUpdates() {
+            updateTelemetryData();
+            telemetryInterval = setInterval(updateTelemetryData, 5000);
+        }
+
+        function stopTelemetryUpdates() {
+            if (telemetryInterval) {
+                clearInterval(telemetryInterval);
+                telemetryInterval = null;
+            }
+        }
+
+        function updateTelemetryData() {
+            // Update FlareChain TPS
+            const fcTps = 600 + Math.random() * 400;
+            tpsHistory.flarechain.push(fcTps);
+            tpsHistory.flarechain.shift();
+
+            if (currentModal?.id === 'flarechain-modal') {
+                mockTelemetryData.flarechain.tps = Math.floor(fcTps);
+                mockTelemetryData.flarechain.blockHeight += Math.floor(Math.random() * 3);
+                document.getElementById('fc-tps').textContent = Math.floor(fcTps).toLocaleString();
+                document.getElementById('fc-height').textContent = mockTelemetryData.flarechain.blockHeight.toLocaleString();
+                drawChart('fc-chart-canvas', tpsHistory.flarechain, '#3B82F6');
+            }
+
+            // Update Lightning TPS
+            const lbTps = 8000 + Math.random() * 8000;
+            tpsHistory.lightning.push(lbTps);
+            tpsHistory.lightning.shift();
+
+            if (currentModal?.id === 'lightning-modal') {
+                mockTelemetryData.lightning.tps = Math.floor(lbTps);
+                document.getElementById('lb-tps').textContent = Math.floor(lbTps).toLocaleString();
+                drawChart('lb-chart-canvas', tpsHistory.lightning, '#FBBF24');
+            }
+
+            // Update PBC if one is selected
+            if (currentModal?.id === 'pbc-modal' && selectedPBC) {
+                const pbc = mockTelemetryData.pbcs[selectedPBC];
+                pbc.blockHeight += Math.floor(Math.random() * 2);
+                pbc.tps = Math.floor(100 + Math.random() * 200);
+                document.getElementById('pbc-height').textContent = pbc.blockHeight.toLocaleString();
+                document.getElementById('pbc-tps').textContent = pbc.tps.toLocaleString();
+            }
+        }
+
+        console.log('✅ Interactive Flame Telemetry System initialized');
+    </script>
+
+    <!-- Load ASF Consensus Telemetry Feed -->
+    <script src="app-telemetry-feed.js"></script>
+</body>
+</html>

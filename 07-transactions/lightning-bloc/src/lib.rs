@@ -35,6 +35,8 @@ pub mod lsp;
 pub mod rebalancing;
 pub mod streaming;
 pub mod recurring;
+pub mod cross_pbc_router;
+pub mod oracle_integration;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -77,6 +79,35 @@ pub use watchtower::{
     FraudResolution, WatchtowerStatistics,
     MIN_WATCHTOWER_STAKE, WATCHTOWER_BASE_REWARD,
     FRAUD_REWARD_PERCENTAGE,
+};
+
+// Re-export gossip types
+pub use gossip::{
+    GossipStore, GossipSync, GossipError, GossipStats,
+    ChannelAnnouncement, ChannelUpdate as GossipChannelUpdate, NodeAnnouncement,
+    Timestamp, Signature as GossipSignature,
+};
+
+// Re-export cross-PBC router types
+pub use cross_pbc_router::{
+    CrossPBCRouter, CrossPBCRoute, CrossPBCSegment, CrossPBCHTLC,
+    CrossPBCGraphManager, CrossPBCStats, ExchangeRate, HTLCStatus,
+    ChainId,
+};
+
+// Re-export oracle integration types
+pub use oracle_integration::{
+    OracleManager, LightningPriceOracle, MockOracle, setup_oracles_for_router,
+};
+
+// Re-export auto-discovery types
+pub use auto_discovery::{
+    PBCAutoDiscovery, PBCMetadata, PBCCapabilities, HotReloadManager,
+};
+
+// Re-export invoice types
+pub use invoice::{
+    LightningInvoice, InvoiceBuilder,
 };
 
 // Re-export fraud proof types

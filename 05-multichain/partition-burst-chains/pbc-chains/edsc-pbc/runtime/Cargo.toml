@@ -64,6 +64,7 @@ pallet-circuit-breaker = { path = "../../../../../src/pallets/pallet-circuit-bre
 pallet-xcm-bridge = { path = "../../../../../src/pallets/pallet-xcm-bridge", default-features = false }
 pallet-edsc-bridge-token-messenger = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
 pallet-edsc-bridge-attestation = { path = "../../../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
+pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -112,6 +113,7 @@ std = [
     "pallet-xcm-bridge/std",
     "pallet-edsc-bridge-token-messenger/std",
     "pallet-edsc-bridge-attestation/std",
+    "pallet-lightning-channels/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

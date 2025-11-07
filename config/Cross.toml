@@ -1,0 +1,9 @@
+[build.env]
+passthrough = ["PROTOC"]
+
+[target.x86_64-unknown-linux-gnu]
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get install --assume-yes protobuf-compiler libprotobuf-dev",
+    "rustup target add wasm32-unknown-unknown",
+]

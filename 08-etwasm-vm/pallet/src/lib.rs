@@ -11,6 +11,7 @@ pub use pallet::*;
 pub use etwasm_gas_metering as gas;
 pub use etwasm_opcodes as opcodes;
 pub use etwasm_runtime as runtime;
+pub use vmw_runtime as vmw;
 
 #[frame_support::pallet(dev_mode)]
 pub mod pallet {
@@ -30,6 +31,7 @@ pub mod pallet {
         ExecutionContext, ExecutionResult, Interpreter,
         Storage as StorageBackend, InMemoryStorage
     };
+    use vmw_runtime::{VmwMeteringRuntime, MeteringError};
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
@@ -44,6 +46,10 @@ pub mod pallet {
         /// Maximum gas limit allowed per call
         #[pallet::constant]
         type MaxGasLimit: Get<VMw>;
+
+        /// VMw operation price (Watts per operation) for metering
+        #[pallet::constant]
+        type VmwOperationPrice: Get<u32>;
     }
 
     /// Storage: Contract code hash by account
@@ -391,6 +397,24 @@ pub mod pallet {
 
             GasUsed::<T>::put(new_total);
             Ok(())
+        }
+
+        /// Create a VMw metering runtime with configured parameters
+        /// This provides advanced gas metering with opcode-level cost tracking
+        pub fn create_vmw_runtime(gas_limit: VMw) -> VmwMeteringRuntime {
+            VmwMeteringRuntime::with_op_price(
+                gas_limit,
+                T::VmwOperationPrice::get()
+            )
+        }
+
+        /// Calculate net gas usage accounting for refunds
+        /// Returns (gas_consumed, gas_refunded, net_gas)
+        pub fn calculate_net_gas(vmw: &VmwMeteringRuntime) -> (VMw, VMw, VMw) {
+            let gas_consumed = vmw.gas_consumed;
+            let gas_refunded = vmw.gas_refunded;
+            let net_gas = gas_consumed.saturating_sub(gas_refunded);
+            (gas_consumed, gas_refunded, net_gas)
         }
     }
 

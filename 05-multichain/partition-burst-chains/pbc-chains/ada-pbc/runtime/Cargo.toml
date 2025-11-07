@@ -11,6 +11,7 @@ license = "Apache-2.0"
 pbc-common = { path = "../../../pbc-common", default-features = false }
 
 pallet_cardano_bridge = { package = "pallet-cardano-bridge", path = "../../../../../05-multichain/bridge-protocols/cardano-bridge", default-features = false }
+etrid-bridge-common = { path = "../../../../bridge-protocols/common", default-features = false }
 # Substrate Core - Use workspace dependencies
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -54,6 +55,7 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 etrid-primitives = { path = "../../../../primitives", default-features = false }
 pallet-accounts = { path = "../../../../../04-accounts/pallet", default-features = false }
 pallet-consensus = { path = "../../../../../09-consensus/pallet", default-features = false }
+pallet-etr-lock = { path = "../../../../../pallets/pallet-etr-lock", default-features = false }
 pallet-bitcoin-bridge = { path = "../../../../bridge-protocols/bitcoin-bridge", default-features = false }
 pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
 
@@ -95,9 +97,11 @@ std = [
     "etrid-primitives/std",
     "pallet-accounts/std",
     "pallet-consensus/std",
+    "pallet-etr-lock/std",
     "pallet-bitcoin-bridge/std",
     "pallet-lightning-channels/std",
     "pallet_cardano_bridge/std",
+    "etrid-bridge-common/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

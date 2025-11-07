@@ -9,9 +9,11 @@ license = "Apache-2.0"
 # Local pallets
 pallet-accounts = { path = "../../../04-accounts/pallet", default-features = false }
 pallet-etwasm-vm = { path = "../../../08-etwasm-vm/pallet", default-features = false }
+vmw-runtime = { path = "../../../08-etwasm-vm/vmw-runtime", default-features = false }
 pallet-consensus = { path = "../../../09-consensus/pallet", default-features = false }
 pallet-governance = { path = "../../../10-foundation/governance/pallet", default-features = false }
 pallet-pbc-router = { path = "../../partition-burst-chains/pbc-node/pbc-router", default-features = false }
+pallet-ai-agents = { path = "../pallets/pallet-ai-agents", default-features = false }
 
 # Staking pallets (11-peer-roles)
 pallet-etrid-staking = { path = "../../../11-peer-roles/staking/pallet", default-features = false }
@@ -92,6 +94,9 @@ pallet-treasury-etrid = { path = "../../../src/pallets/pallet-treasury", default
 pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger", default-features = false }
 pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
 
+# EVM Layer moved to ETH-PBC (preserving Ëtrid's unique identity)
+# FlareChain is the pure coordination layer with ËtwasmVM for native contracts
+
 # Substrate core
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -158,9 +163,11 @@ std = [
     "scale-info/std",
     "pallet-accounts/std",
     "pallet-etwasm-vm/std",
+    "vmw-runtime/std",
     "pallet-consensus/std",
     "pallet-governance/std",
     "pallet-pbc-router/std",
+    "pallet-ai-agents/std",
 
     # Staking pallets
     "pallet-etrid-staking/std",
@@ -231,6 +238,8 @@ std = [
 
     # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
     # "etrid-post-quantum/std",
+
+    # EVM Layer moved to ETH-PBC (FlareChain remains pure)
 
     "frame-executive/std",
     "frame-support/std",

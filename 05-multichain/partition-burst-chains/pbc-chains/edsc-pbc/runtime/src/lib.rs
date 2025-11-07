@@ -414,6 +414,24 @@ impl pallet_edsc_bridge_attestation::Config for Runtime {
     type AttestationMaxAge = AttestationMaxAge;
 }
 
+// Lightning Bloc Channels Configuration
+parameter_types! {
+    // Minimum channel capacity: 100 EDSC (stablecoins = smaller amounts)
+    pub const MinChannelCapacity: Balance = 100_000_000_000_000_000_000;
+    // Maximum channel capacity: 1M EDSC
+    pub const MaxChannelCapacity: Balance = 1_000_000_000_000_000_000_000_000;
+    // Channel timeout: 14400 blocks (~24 hours at 6s blocks)
+    pub const ChannelTimeout: BlockNumber = 14400;
+}
+
+impl pallet_lightning_channels::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinChannelCapacity = MinChannelCapacity;
+    type MaxChannelCapacity = MaxChannelCapacity;
+    type ChannelTimeout = ChannelTimeout;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime
@@ -446,6 +464,9 @@ construct_runtime!(
         // Phase 3: External Bridge Protocol (CCTP-style)
         TokenMessenger: pallet_edsc_bridge_token_messenger,
         BridgeAttestation: pallet_edsc_bridge_attestation,
+
+        // Lightning Bloc Channels for instant EDSC transfers
+        LightningChannels: pallet_lightning_channels,
     }
 );
 

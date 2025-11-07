@@ -1,0 +1,91 @@
+=== PHASE 1: Extracting Validator Peer IDs ===
+
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+✗ Could not connect
+
+=== PHASE 2: Discovering Network Peers ===
+
+Querying peers from [6] Runtime-Dev...
+  No data available
+Querying peers from [7] Compiler-Dev...
+  No data available
+Querying peers from [8] Network-Dev...
+  No data available
+Querying peers from [9] SDK-Dev...
+  No data available
+Querying peers from [10] DevTools-Dev...
+  No data available
+Querying peers from [11] API-Dev...
+  No data available
+Querying peers from [12] Docs-Dev...
+  No data available
+Querying peers from [13] QA-Dev...
+  No data available
+Querying peers from [14] Perf-Dev...
+  No data available
+Querying peers from [15] Community-Dev...
+  No data available
+Querying peers from [16] Analytics-Dev...
+  No data available
+Querying peers from [17] Ethics-Dev...
+  No data available
+Querying peers from [18] FlareNode-16...
+  No data available
+Querying peers from [19] FlareNode-19...
+  No data available
+Querying peers from [20] FlareNode-20...
+  No data available
+Querying peers from [21] FlareNode-21...
+  No data available
+
+=== PHASE 3: Building Committee Map ===
+
+Validator # | Name              | IP Address       | Peer ID
+-----------|-------------------|------------------|------------------------------------------
+Val 6      | Runtime-Dev       | 20.224.104.239   | UNKNOWN
+Val 7      | Compiler-Dev      | 98.71.91.84      | UNKNOWN
+Val 8      | Network-Dev       | 20.169.114.25    | UNKNOWN
+Val 9      | SDK-Dev           | 20.75.92.203     | UNKNOWN
+Val 10     | DevTools-Dev      | 20.55.31.30      | UNKNOWN
+Val 11     | API-Dev           | 20.73.34.17      | UNKNOWN
+Val 12     | Docs-Dev          | 20.109.102.30    | UNKNOWN
+Val 13     | QA-Dev            | 52.250.61.132    | UNKNOWN
+Val 14     | Perf-Dev          | 20.218.66.251    | UNKNOWN
+Val 15     | Community-Dev     | 20.109.219.185   | UNKNOWN
+Val 16     | Analytics-Dev     | 20.83.208.17     | UNKNOWN
+Val 17     | Ethics-Dev        | 172.177.175.132  | UNKNOWN
+Val 18     | FlareNode-16      | 20.84.231.225    | UNKNOWN
+Val 19     | FlareNode-19      | 4.175.83.133     | UNKNOWN
+Val 20     | FlareNode-20      | 52.184.47.99     | UNKNOWN
+Val 21     | FlareNode-21      | 4.178.181.122    | UNKNOWN
+
+=== PHASE 4: Azure VM Comparison ===
+
+Known Azure VM Peer IDs:
+  VM1 (EojEdred):    12D3KooWDQhL88sDaMCbtWfFFnCAyTYgyRcQumNbhfi2tmiP7ckm
+  VM2 (Governance):  12D3KooWAsAUeDfBhoQpQ1oXrr1ADkFssUdVanj7ssSyrpCiNEyb
+  VM3 (Security):    12D3KooWBeXtrDrJTFA23b3GnZtQ6DWtCb4B4Kra8uqi2JFvhJf6
+
+Checking if Azure VMs are discovered in network...
+  ✗ VM1 NOT found in network peer discovery
+  ✗ VM2 NOT found in network peer discovery
+  ✗ VM3 NOT found in network peer discovery
+
+=== PHASE 5: Network Topology Analysis ===
+
+No peer discovery data collected
+

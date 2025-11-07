@@ -451,6 +451,24 @@ pub mod pallet_manual_seal {
 
 impl pallet_manual_seal::Config for Runtime {}
 
+// Lightning Bloc Channels Configuration
+parameter_types! {
+	// Minimum channel capacity: 0.1 ETH (in Wei)
+	pub const MinChannelCapacity: Balance = 100_000_000_000_000_000;
+	// Maximum channel capacity: 100 ETH (in Wei)
+	pub const MaxChannelCapacity: Balance = 100_000_000_000_000_000_000;
+	// Channel timeout: 7200 blocks (~24 hours at 12s blocks)
+	pub const ChannelTimeout: BlockNumber = 7200;
+}
+
+impl pallet_lightning_channels::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type MinChannelCapacity = MinChannelCapacity;
+	type MaxChannelCapacity = MaxChannelCapacity;
+	type ChannelTimeout = ChannelTimeout;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 #[frame_support::runtime]
 mod runtime {
@@ -503,6 +521,9 @@ mod runtime {
 
 	#[runtime::pallet_index(11)]
 	pub type ManualSeal = pallet_manual_seal;
+
+	#[runtime::pallet_index(12)]
+	pub type LightningChannels = pallet_lightning_channels;
 }
 
 #[derive(Clone)]

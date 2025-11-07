@@ -1,0 +1,47 @@
+[Unit]
+Description=Ëtrid FlareChain Validator Node
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=azureuser
+Group=azureuser
+WorkingDirectory=/home/azureuser
+
+# Node configuration
+ExecStart=/home/azureuser/etrid/target/release/flarechain-node \
+  --chain /home/azureuser/chainspec.json \
+  --base-path /home/azureuser/.etrid/validator \
+  --validator \
+  --name "{{VALIDATOR_NAME}}" \
+  --port 30333 \
+  --rpc-port 9944 \
+  --rpc-cors all \
+  --unsafe-rpc-external \
+  {{BOOTNODE_FLAG}}
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+KillSignal=SIGTERM
+TimeoutStopSec=60s
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/azureuser/.etrid
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=flarechain-validator
+
+[Install]
+WantedBy=multi-user.target

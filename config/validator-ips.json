@@ -1,0 +1,214 @@
+{
+  "validators": [
+    {
+      "number": 1,
+      "name": "Gizzi",
+      "aidev_id": "governance-dev01",
+      "ip": "20.186.91.207",
+      "ssh_user": "etrid-validator-01",
+      "region": "Azure West US",
+      "role": "Director/Bootstrap",
+      "accessible": false
+    },
+    {
+      "number": 2,
+      "name": "EojEdred",
+      "aidev_id": "security-dev01",
+      "ip": "172.177.44.73",
+      "ssh_user": "eoj-edred",
+      "region": "Azure East US",
+      "role": "Director/Bootstrap",
+      "accessible": false
+    },
+    {
+      "number": 3,
+      "name": "Governance Dev",
+      "aidev_id": "audit-dev01",
+      "ip": "20.186.91.207",
+      "ssh_user": "governance-dev01",
+      "region": "Azure West US (shares VM with #1)",
+      "role": "Director",
+      "accessible": false
+    },
+    {
+      "number": 4,
+      "name": "Security Dev",
+      "aidev_id": "consensus-dev01",
+      "ip": "52.252.142.146",
+      "ssh_user": "security-dev01",
+      "region": "Azure Central US",
+      "role": "Director",
+      "accessible": false
+    },
+    {
+      "number": 5,
+      "name": "Audit Dev",
+      "aidev_id": "audit-dev01",
+      "ip": "132.145.145.135",
+      "ssh_user": "audit-dev01",
+      "region": "Oracle Cloud",
+      "role": "Director",
+      "accessible": false
+    },
+    {
+      "number": 6,
+      "name": "Runtime Dev",
+      "aidev_id": "runtime-dev01",
+      "ip": "20.224.104.239",
+      "ssh_user": "runtime-dev01",
+      "region": "Azure West Europe",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 7,
+      "name": "Compiler Dev",
+      "aidev_id": "compiler-dev01",
+      "ip": "98.71.91.84",
+      "ssh_user": "compiler-dev01",
+      "region": "Azure North Europe",
+      "role": "Developer/MonitoringServer",
+      "accessible": true
+    },
+    {
+      "number": 8,
+      "name": "Network Dev",
+      "aidev_id": "multichain-dev01",
+      "ip": "20.169.114.25",
+      "ssh_user": "network-dev01",
+      "region": "Azure France Central",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 9,
+      "name": "SDK Dev",
+      "aidev_id": "oracle-dev01",
+      "ip": "20.75.92.203",
+      "ssh_user": "sdk-dev01",
+      "region": "Azure UK South",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 10,
+      "name": "DevTools Dev",
+      "aidev_id": "edsc-dev01",
+      "ip": "20.55.31.30",
+      "ssh_user": "devtools-dev01",
+      "region": "Azure Switzerland North",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 11,
+      "name": "API Dev",
+      "aidev_id": "economics-dev01",
+      "ip": "20.73.34.17",
+      "ssh_user": "api-dev01",
+      "region": "Azure Germany West Central",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 12,
+      "name": "Docs Dev",
+      "aidev_id": "docs-dev01",
+      "ip": "20.109.102.30",
+      "ssh_user": "docs-dev01",
+      "region": "Azure Norway East",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 13,
+      "name": "QA Dev",
+      "aidev_id": "oracle-dev01",
+      "ip": "52.250.61.132",
+      "ssh_user": "qa-dev01",
+      "region": "Azure Sweden Central",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 14,
+      "name": "Perf Dev",
+      "aidev_id": "edsc-dev01",
+      "ip": "20.218.66.251",
+      "ssh_user": "perf-dev01",
+      "region": "Azure Poland Central",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 15,
+      "name": "Community Dev",
+      "aidev_id": "economics-dev01",
+      "ip": "20.109.219.185",
+      "ssh_user": "community-dev01",
+      "region": "Azure Italy North",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 16,
+      "name": "Analytics Dev",
+      "aidev_id": "ethics-dev01",
+      "ip": "20.83.208.17",
+      "ssh_user": "analytics-dev01",
+      "region": "Azure Spain Central",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 17,
+      "name": "Ethics Dev",
+      "aidev_id": "ethics-dev01",
+      "ip": "172.177.175.132",
+      "ssh_user": "ethics-dev01",
+      "region": "Azure South Africa North",
+      "role": "Developer",
+      "accessible": true
+    },
+    {
+      "number": 18,
+      "name": "FlareNode 16",
+      "aidev_id": "docs-dev01",
+      "ip": "20.84.231.225",
+      "ssh_user": "flarenode16",
+      "region": "Azure UAE North",
+      "role": "Node",
+      "accessible": true
+    },
+    {
+      "number": 19,
+      "name": "FlareNode 19",
+      "aidev_id": "docs-dev01",
+      "ip": "4.175.83.133",
+      "ssh_user": "flarenode19",
+      "region": "Azure Qatar Central",
+      "role": "Node",
+      "accessible": true
+    },
+    {
+      "number": 20,
+      "name": "FlareNode 20",
+      "aidev_id": "docs-dev01",
+      "ip": "52.184.47.99",
+      "ssh_user": "flarenode20",
+      "region": "Azure Israel Central",
+      "role": "Node",
+      "accessible": true
+    },
+    {
+      "number": 21,
+      "name": "FlareNode 21",
+      "aidev_id": "consensus-dev01",
+      "ip": "4.178.181.122",
+      "ssh_user": "flarenode21",
+      "region": "Azure India Central",
+      "role": "Node",
+      "accessible": true
+    }
+  ]
+}

@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Validator Program - Secure the Network, Earn Rewards</title>
+    <meta name="description" content="Join the ËTRID Validator Program and receive foundation support, stake delegation, vote cost coverage, and rewards">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-cyan': '#06b6d4',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .step-card {
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+        }
+        .requirement-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-testnet { background: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .badge-mainnet { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-baseline { background: rgba(59, 130, 246, 0.1); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-bonus { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+        .collapsible-section {
+            cursor: pointer;
+            user-select: none;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapsible-content.active {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+    </style>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="index.html" class="text-gray-300 hover:text-white transition-colors">Validators</a>
+                    <a href="../whitepaper/" class="text-gray-300 hover:text-white transition-colors">Whitepaper</a>
+                    <a href="https://docs.etrid.org" target="_blank" class="px-4 py-2 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium text-sm">
+                        Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="pt-32 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-2 rounded-full bg-etrid-blue/20 text-etrid-blue border border-etrid-blue/30 text-sm font-semibold mb-6">
+                    🛡️ Validator Participation Program
+                </div>
+                <h1 class="text-5xl md:text-7xl font-display font-bold mb-6 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                    Secure the Network.<br/>Earn Rewards.
+                </h1>
+                <p class="text-xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                    Join ËTRID's ASF consensus mechanism. Become a VALIDITY Node validator, earn staking rewards, and participate in annual governance through Consensus Day.
+                </p>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-etrid-blue">~18.5%</div>
+                        <div class="text-sm text-gray-400">Est. APY</div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-etrid-purple">64 ÉTR</div>
+                        <div class="text-sm text-gray-400">Min. Stake</div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-etrid-blue">~5 min</div>
+                        <div class="text-sm text-gray-400">Finality</div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div class="text-3xl font-bold text-etrid-purple">21-100</div>
+                        <div class="text-sm text-gray-400">Validators</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Participation Types -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">Choose Your Participation Level</h2>
+            <p class="text-center text-gray-400 mb-12">Three ways to participate in ËTRID's consensus and governance</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Common Stake Peer -->
+                <div class="bg-gradient-to-br from-green-500/10 to-green-600/10 border-2 border-green-500/30 rounded-2xl p-8">
+                    <div class="text-4xl mb-4 text-center">🗳️</div>
+                    <h3 class="text-2xl font-bold mb-3 text-center">Common Stake Peer</h3>
+                    <div class="text-center mb-4">
+                        <span class="requirement-badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            MIN: 1 ÉTR
+                        </span>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-6 text-center">Governance participation and staking rewards</p>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Vote on Consensus Day proposals</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Earn staking rewards (Q% of annual mint)</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Voting power based on stake × coinage</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>No technical requirements</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-green-400 mt-1">✓</span>
+                            <span>Flexible staking/unstaking</span>
+                        </div>
+                    </div>
+
+                    <a href="#staking-guide" class="block w-full px-6 py-3 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 transition-colors font-medium text-center">
+                        Start Staking
+                    </a>
+                </div>
+
+                <!-- VALIDITY Node -->
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border-2 border-etrid-blue/50 rounded-2xl p-8 relative">
+                    <div class="absolute top-0 right-0 px-3 py-1 bg-etrid-blue rounded-bl-lg rounded-tr-xl text-xs font-semibold">
+                        MOST POPULAR
+                    </div>
+                    <div class="text-4xl mb-4 text-center">🛡️</div>
+                    <h3 class="text-2xl font-bold mb-3 text-center">VALIDITY Node</h3>
+                    <div class="text-center mb-4">
+                        <span class="requirement-badge badge-mainnet">
+                            MIN: 64 ÉTR
+                        </span>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-6 text-center">Block production, consensus, and validator rewards</p>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-etrid-blue mt-1">✓</span>
+                            <span>Participate in ASF consensus</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-etrid-blue mt-1">✓</span>
+                            <span>Produce and validate blocks</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-etrid-blue mt-1">✓</span>
+                            <span>Earn validator rewards (Z% + W%)</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-etrid-blue mt-1">✓</span>
+                            <span>All governance voting rights</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-etrid-blue mt-1">✓</span>
+                            <span>Top 100 by stake become active</span>
+                        </div>
+                    </div>
+
+                    <a href="#validator-journey" class="block w-full px-6 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium text-center">
+                        Become Validator
+                    </a>
+                </div>
+
+                <!-- Decentralized Director -->
+                <div class="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-2 border-purple-500/30 rounded-2xl p-8">
+                    <div class="text-4xl mb-4 text-center">👑</div>
+                    <h3 class="text-2xl font-bold mb-3 text-center">Decentralized Director</h3>
+                    <div class="text-center mb-4">
+                        <span class="requirement-badge" style="background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);">
+                            MIN: 128 ÉTR
+                        </span>
+                    </div>
+
+                    <p class="text-gray-400 text-sm mb-6 text-center">Foundation governance board member</p>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-purple-400 mt-1">✓</span>
+                            <span>1 of 9 elected board members</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-purple-400 mt-1">✓</span>
+                            <span>Manage Foundation operations</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-purple-400 mt-1">✓</span>
+                            <span>Earn DD compensation (V% of mint)</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-purple-400 mt-1">✓</span>
+                            <span>3-year term with limits</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="text-purple-400 mt-1">✓</span>
+                            <span>Equal voting power (non-hierarchical)</span>
+                        </div>
+                    </div>
+
+                    <a href="../whitepaper/viewer.html?doc=ivory-paper#governance" class="block w-full px-6 py-3 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30 transition-colors font-medium text-center">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Validator Journey: Step-by-Step -->
+    <section id="validator-journey" class="py-16 border-t border-white/10 bg-etrid-dark/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-display font-bold mb-4">Your Validator Journey</h2>
+                <p class="text-gray-400">10 steps from setup to earning rewards</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <!-- Step 1 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            1
+                        </div>
+                        <h3 class="font-bold text-lg">Prepare</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Acquire minimum 64 ÉTR and set up your server (4 CPU, 8GB RAM, 200GB SSD)</p>
+                    <a href="https://docs.etrid.org/validators/requirements" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        View Requirements →
+                    </a>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            2
+                        </div>
+                        <h3 class="font-bold text-lg">Generate Keys</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Create validator keys using etrid-node keygen. Secure your session keys safely.</p>
+                    <a href="https://docs.etrid.org/validators/keys" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Key Guide →
+                    </a>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            3
+                        </div>
+                        <h3 class="font-bold text-lg">Install Node</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Deploy etrid-node binary or Docker container. Configure and start syncing FlareChain.</p>
+                    <a href="https://docs.etrid.org/validators/setup" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Setup Guide →
+                    </a>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            4
+                        </div>
+                        <h3 class="font-bold text-lg">Bond ÉTR</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Bond your 64+ ÉTR stake through the staking pallet. Your stake secures your validator.</p>
+                    <span class="opacity-50 cursor-not-allowed" title="Coming Soon">
+                        Bond Now →
+                     (Coming Soon)</span>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            5
+                        </div>
+                        <h3 class="font-bold text-lg">Set Session Keys</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Register your session keys on-chain to authorize your node for block production.</p>
+                    <a href="https://docs.etrid.org/validators/session-keys" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Register Keys →
+                    </a>
+                </div>
+
+                <!-- Step 6 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            6
+                        </div>
+                        <h3 class="font-bold text-lg">Validate</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Call staking.validate() to enter the validator queue. Wait for next epoch rotation.</p>
+                    <a href="https://docs.etrid.org/validators/validate" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Start Validating →
+                    </a>
+                </div>
+
+                <!-- Step 7 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            7
+                        </div>
+                        <h3 class="font-bold text-lg">Monitor</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Track your validator performance, uptime, and block production via telemetry.</p>
+                    <a href="https://telemetry.etrid.org" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        View Telemetry →
+                    </a>
+                </div>
+
+                <!-- Step 8 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            8
+                        </div>
+                        <h3 class="font-bold text-lg">Earn Rewards</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Receive validator rewards from daily distribution. Rewards compound automatically.</p>
+                    <a href="#rewards-structure" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        View Rewards →
+                    </a>
+                </div>
+
+                <!-- Step 9 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            9
+                        </div>
+                        <h3 class="font-bold text-lg">Attract Nominators</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Lower your commission rate to attract delegators. More stake = higher rewards.</p>
+                    <a href="https://docs.etrid.org/validators/nominators" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Nomination Guide →
+                    </a>
+                </div>
+
+                <!-- Step 10 -->
+                <div class="step-card bg-etrid-dark border border-white/10 rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center font-bold text-lg">
+                            10
+                        </div>
+                        <h3 class="font-bold text-lg">Participate</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Vote on Consensus Day (Dec 1st). Shape the network's future direction.</p>
+                    <a href="../whitepaper/viewer.html?doc=vol3" class="text-etrid-blue hover:text-etrid-purple text-sm font-medium">
+                        Governance →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Requirements -->
+    <section id="requirements" class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">Performance Requirements</h2>
+            <p class="text-center text-gray-400 mb-12">Maintain these standards to remain in the active validator set</p>
+
+            <!-- Requirements Table -->
+            <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-8">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-white/10">
+                            <th class="text-left p-4 text-gray-400 font-semibold text-sm">Requirement</th>
+                            <th class="text-center p-4 text-gray-400 font-semibold text-sm">Baseline</th>
+                            <th class="text-center p-4 text-gray-400 font-semibold text-sm">Bonus Tier</th>
+                            <th class="text-left p-4 text-gray-400 font-semibold text-sm">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/10">
+                            <td class="p-4">
+                                <div class="font-semibold">Minimum Stake</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-baseline">64 ÉTR</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-bonus">10,000+ ÉTR</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Required to enter validator queue. More stake = higher priority.
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="p-4">
+                                <div class="font-semibold">Uptime</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-baseline">≥ 90%</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-bonus">≥ 99%</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Measured per epoch (256 blocks). Below 90% = no rewards.
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="p-4">
+                                <div class="font-semibold">Block Production</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-baseline">≥ 85%</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-bonus">≥ 98%</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Percentage of assigned blocks successfully produced.
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="p-4">
+                                <div class="font-semibold">Commission</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-baseline">≤ 15%</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-bonus">≤ 5%</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Lower commission attracts more nominators.
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10">
+                            <td class="p-4">
+                                <div class="font-semibold">Node Version</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-baseline">Latest</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge badge-bonus">Latest</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Update within 48 hours of new release.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-4">
+                                <div class="font-semibold">Slashing Events</div>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">0</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="requirement-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">0</span>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">
+                                Double-signing or equivocation = 1% stake slash.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Hardware Requirements -->
+            <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Hardware Specifications</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-etrid-dark/50 rounded-xl p-6">
+                        <h4 class="font-bold mb-3 text-etrid-blue">Minimum</h4>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li>• <strong class="text-white">CPU:</strong> 4 cores @ 2.5GHz</li>
+                            <li>• <strong class="text-white">RAM:</strong> 8 GB</li>
+                            <li>• <strong class="text-white">Storage:</strong> 200 GB SSD</li>
+                            <li>• <strong class="text-white">Network:</strong> 100 Mbps</li>
+                        </ul>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-xl p-6 border-2 border-etrid-blue">
+                        <h4 class="font-bold mb-3 text-etrid-blue">Recommended</h4>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li>• <strong class="text-white">CPU:</strong> 8 cores @ 3.0GHz</li>
+                            <li>• <strong class="text-white">RAM:</strong> 16 GB</li>
+                            <li>• <strong class="text-white">Storage:</strong> 500 GB NVMe SSD</li>
+                            <li>• <strong class="text-white">Network:</strong> 1 Gbps</li>
+                        </ul>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-xl p-6">
+                        <h4 class="font-bold mb-3 text-etrid-purple">Enterprise</h4>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li>• <strong class="text-white">CPU:</strong> 16 cores @ 3.5GHz</li>
+                            <li>• <strong class="text-white">RAM:</strong> 32 GB</li>
+                            <li>• <strong class="text-white">Storage:</strong> 1 TB NVMe SSD</li>
+                            <li>• <strong class="text-white">Network:</strong> 10 Gbps</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Staking Guide -->
+    <section id="staking-guide" class="py-16 border-t border-white/10 bg-etrid-dark/30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">Simple Staking Guide</h2>
+            <p class="text-center text-gray-400 mb-12">For users who want to earn rewards without running a node</p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <!-- How to Stake -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold mb-6">How to Stake</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-sm">1</div>
+                            <div>
+                                <div class="font-semibold mb-1">Connect Wallet</div>
+                                <div class="text-sm text-gray-400">Use wallet.etrid.org or Polkadot.js extension</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-sm">2</div>
+                            <div>
+                                <div class="font-semibold mb-1">Choose Validator</div>
+                                <div class="text-sm text-gray-400">Review commission rates, uptime, and performance</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-sm">3</div>
+                            <div>
+                                <div class="font-semibold mb-1">Delegate ÉTR</div>
+                                <div class="text-sm text-gray-400">Minimum 1 ÉTR. Your tokens stay in your wallet.</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-etrid-blue flex items-center justify-center font-bold text-sm">4</div>
+                            <div>
+                                <div class="font-semibold mb-1">Earn Rewards</div>
+                                <div class="text-sm text-gray-400">Rewards distributed daily and compound automatically</div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="opacity-50 cursor-not-allowed" title="Coming Soon">
+                        Start Staking Now
+                     (Coming Soon)</span>
+                </div>
+
+                <!-- Staking FAQ -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold mb-6">Staking FAQ</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="font-semibold mb-2">What's the unbonding period?</div>
+                            <div class="text-sm text-gray-400">14 days. After unstaking, wait 14 days before funds are liquid again.</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">Are my funds at risk?</div>
+                            <div class="text-sm text-gray-400">Your tokens remain in your wallet. Only validators can be slashed, not delegators.</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">How are rewards calculated?</div>
+                            <div class="text-sm text-gray-400">Voting Power = Stake × Coinage. Longer stakes earn higher multipliers.</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">What is coinage?</div>
+                            <div class="text-sm text-gray-400">Time-weighted stake. Holding 1,000 ÉTR for 180 days = ~1.5× voting power multiplier.</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">When are rewards paid?</div>
+                            <div class="text-sm text-gray-400">Daily distribution from annual mint allocation. Check wallet for balance updates.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Structure -->
+    <section id="rewards-structure" class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">Rewards Structure</h2>
+            <p class="text-center text-gray-400 mb-12">Annual mint allocated through Consensus Day voting</p>
+
+            <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-xl p-8 mb-8">
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Annual Emission</h3>
+                        <p class="text-gray-400 mb-4">The community votes on annual mint amount every Consensus Day (December 1st). Baseline: ~50M ÉTR (5% of supply).</p>
+                        <div class="bg-etrid-dark/50 rounded-lg p-4">
+                            <div class="text-sm text-gray-400 mb-1">Estimated Year 1 (2025)</div>
+                            <div class="text-3xl font-bold text-etrid-blue">50,000,000 ÉTR</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Daily Distribution</h3>
+                        <p class="text-gray-400 mb-4">Annual mint divided by 365 days. Distributed automatically to all participants.</p>
+                        <div class="bg-etrid-dark/50 rounded-lg p-4">
+                            <div class="text-sm text-gray-400 mb-1">Est. Daily Distribution</div>
+                            <div class="text-3xl font-bold text-etrid-purple">~136,986 ÉTR</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-4">Allocation Breakdown</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="bg-etrid-dark/50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-etrid-blue mb-1">P%</div>
+                        <div class="text-sm text-gray-400">Voting Peers</div>
+                        <div class="text-xs text-gray-500 mt-2">Consensus Day voters</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-etrid-purple mb-1">Z%</div>
+                        <div class="text-sm text-gray-400">FLARE Nodes</div>
+                        <div class="text-xs text-gray-500 mt-2">Main chain validators</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-etrid-blue mb-1">W%</div>
+                        <div class="text-sm text-gray-400">VALIDITY Nodes</div>
+                        <div class="text-xs text-gray-500 mt-2">PBC validators</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-etrid-purple mb-1">Q%</div>
+                        <div class="text-sm text-gray-400">Stakers</div>
+                        <div class="text-xs text-gray-500 mt-2">Common stake peers</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-etrid-blue mb-1">V%</div>
+                        <div class="text-sm text-gray-400">DD Board</div>
+                        <div class="text-xs text-gray-500 mt-2">Decentralized Directors</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estimated APY Calculator -->
+            <div class="bg-white/5 border border-white/10 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Estimated APY Calculator</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-etrid-dark/50 rounded-xl p-6 text-center">
+                        <div class="text-gray-400 text-sm mb-2">Common Stake Peer</div>
+                        <div class="text-4xl font-bold text-green-400 mb-2">~3%</div>
+                        <div class="text-xs text-gray-500">Based on Q% allocation</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-xl p-6 text-center border-2 border-etrid-blue">
+                        <div class="text-gray-400 text-sm mb-2">VALIDITY Node Validator</div>
+                        <div class="text-4xl font-bold text-etrid-blue mb-2">~18.5%</div>
+                        <div class="text-xs text-gray-500">Based on Z% + W% + Q% allocations</div>
+                    </div>
+                    <div class="bg-etrid-dark/50 rounded-xl p-6 text-center">
+                        <div class="text-gray-400 text-sm mb-2">Decentralized Director</div>
+                        <div class="text-4xl font-bold text-purple-400 mb-2">~25%+</div>
+                        <div class="text-xs text-gray-500">All rewards + V% compensation</div>
+                    </div>
+                </div>
+                <p class="text-center text-xs text-gray-500 mt-6">*Estimates based on 50M ÉTR annual mint. Actual percentages voted on annually by Consensus Day.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ASF Consensus Explained -->
+    <section id="asf-consensus" class="py-16 border-t border-white/10 bg-etrid-dark/30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">ASF Consensus Explained</h2>
+            <p class="text-center text-gray-400 mb-12">Ascending Scale of Finality: ËTRID's consensus mechanism</p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold mb-4">How It Works</h3>
+                    <div class="space-y-4 text-gray-400">
+                        <p>ASF is a Byzantine Fault Tolerant (BFT) consensus algorithm that ensures network security even if up to 33% of validators are malicious or offline.</p>
+
+                        <div class="bg-etrid-dark/50 rounded-lg p-4">
+                            <div class="font-semibold text-white mb-2">Block Production</div>
+                            <ul class="text-sm space-y-2">
+                                <li>• Validators take turns proposing blocks</li>
+                                <li>• Other validators attest to block validity</li>
+                                <li>• 66% attestations = finalized block</li>
+                                <li>• ~5 minutes to achieve finality</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-etrid-dark/50 rounded-lg p-4">
+                            <div class="font-semibold text-white mb-2">Validator Selection</div>
+                            <ul class="text-sm space-y-2">
+                                <li>• Top 100 validators by stake become active</li>
+                                <li>• Minimum 25 validators required</li>
+                                <li>• Rotation every epoch (256 blocks)</li>
+                                <li>• New validators enter queue with 64 ÉTR</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-8">
+                    <h3 class="text-2xl font-bold mb-4">Security Features</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-br from-red-500/10 to-red-600/10 border border-red-500/30 rounded-lg p-4">
+                            <div class="font-semibold text-red-400 mb-2">🔒 Slashing Protection</div>
+                            <p class="text-sm text-gray-400">Double-signing or equivocation results in 1% stake slash. Discourages malicious behavior.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-lg p-4">
+                            <div class="font-semibold text-blue-400 mb-2">🛡️ Finality Guarantees</div>
+                            <p class="text-sm text-gray-400">Once finalized, blocks cannot be reverted. Transactions are permanent and irreversible.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/30 rounded-lg p-4">
+                            <div class="font-semibold text-purple-400 mb-2">⚡ Fast Finality</div>
+                            <p class="text-sm text-gray-400">~5 minutes to finality vs 1 hour for Bitcoin, 13 minutes for Ethereum.</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/30 rounded-lg p-4">
+                            <div class="font-semibold text-green-400 mb-2">🌐 Decentralization</div>
+                            <p class="text-sm text-gray-400">Up to 100 active validators. No central authority or controller.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Specs -->
+            <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-xl p-8">
+                <h3 class="text-2xl font-bold mb-6 text-center">Network Parameters</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-etrid-blue mb-1">12s</div>
+                        <div class="text-sm text-gray-400">Block Time</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-etrid-purple mb-1">~5min</div>
+                        <div class="text-sm text-gray-400">Finality</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-etrid-blue mb-1">256</div>
+                        <div class="text-sm text-gray-400">Epoch (blocks)</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-etrid-purple mb-1">66%</div>
+                        <div class="text-sm text-gray-400">Consensus</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collapsible FAQ -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-display font-bold mb-4 text-center">Frequently Asked Questions</h2>
+            <p class="text-center text-gray-400 mb-12">Common questions about becoming a validator</p>
+
+            <div class="space-y-4">
+                <!-- FAQ 1 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="collapsible-section p-6 flex justify-between items-center" onclick="toggleCollapsible(this)">
+                        <h3 class="font-bold text-lg">What happens if my validator goes offline?</h3>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="collapsible-content px-6 pb-0">
+                        <div class="pb-6 text-gray-400">
+                            <p class="mb-3">If your validator goes offline, you'll miss block production opportunities and receive no rewards for that epoch. However, you won't be slashed unless you engage in malicious behavior (double-signing, equivocation).</p>
+                            <p><strong class="text-white">Recovery:</strong> Once your node comes back online and synchronizes, it will rejoin the active set in the next epoch rotation if it maintains sufficient stake.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="collapsible-section p-6 flex justify-between items-center" onclick="toggleCollapsible(this)">
+                        <h3 class="font-bold text-lg">How do I increase my validator's stake?</h3>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="collapsible-content px-6 pb-0">
+                        <div class="pb-6 text-gray-400">
+                            <p class="mb-3">There are two ways to increase your validator's total stake:</p>
+                            <ol class="list-decimal list-inside space-y-2 ml-4">
+                                <li><strong class="text-white">Increase your self-bond:</strong> Bond additional ÉTR from your controller account using staking.bondExtra()</li>
+                                <li><strong class="text-white">Attract nominators:</strong> Lower your commission rate and improve performance to attract delegators</li>
+                            </ol>
+                            <p class="mt-3">Higher total stake increases your priority in the active validator set and earns more block production opportunities.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="collapsible-section p-6 flex justify-between items-center" onclick="toggleCollapsible(this)">
+                        <h3 class="font-bold text-lg">What's the difference between FLARE and VALIDITY nodes?</h3>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="collapsible-content px-6 pb-0">
+                        <div class="pb-6 text-gray-400">
+                            <p class="mb-3"><strong class="text-white">FLARE Nodes:</strong> Validators on the main FlareChain. They secure the primary chain and participate in ASF consensus. Earn Z% of annual mint.</p>
+                            <p class="mb-3"><strong class="text-white">VALIDITY Nodes:</strong> Validators on Partition-Burst Chains (PBCs). They produce blocks on sidechains and checkpoint to FlareChain. Earn W% of annual mint.</p>
+                            <p>Most validators run both types simultaneously. Both require 64 ÉTR minimum stake and follow the same performance requirements.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="collapsible-section p-6 flex justify-between items-center" onclick="toggleCollapsible(this)">
+                        <h3 class="font-bold text-lg">Can I unstake my validator at any time?</h3>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="collapsible-content px-6 pb-0">
+                        <div class="pb-6 text-gray-400">
+                            <p class="mb-3">Yes, you can call staking.chill() to stop validating, then staking.unbond() to begin the unbonding process.</p>
+                            <p class="mb-3"><strong class="text-white">Unbonding Period:</strong> 14 days. During this period, your stake earns no rewards but remains locked.</p>
+                            <p>After 14 days, call staking.withdrawUnbonded() to transfer your stake back to your free balance. You can then transfer or withdraw it.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 5 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <div class="collapsible-section p-6 flex justify-between items-center" onclick="toggleCollapsible(this)">
+                        <h3 class="font-bold text-lg">What is Consensus Day and how does it affect validators?</h3>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="collapsible-content px-6 pb-0">
+                        <div class="pb-6 text-gray-400">
+                            <p class="mb-3"><strong class="text-white">Consensus Day</strong> is ËTRID's annual governance vote held on December 1st at 12:00 AM PST. All stakers vote on network parameters including:</p>
+                            <ul class="list-disc list-inside space-y-2 ml-4 mb-3">
+                                <li>Annual mint amount (determines validator rewards)</li>
+                                <li>Allocation percentages (P%, Z%, W%, Q%, V%)</li>
+                                <li>Network upgrades and protocol changes</li>
+                                <li>Decentralized Director elections (9 board members)</li>
+                            </ul>
+                            <p><strong class="text-white">Validators</strong> must participate in voting to maximize rewards. Failure to vote results in penalties and reward redistribution to active voters.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-display font-bold mb-4">Ready to Become a Validator?</h2>
+            <p class="text-xl text-gray-400 mb-8">
+                Join the active validator set and start earning rewards today
+            </p>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="https://docs.etrid.org/validators/setup" class="px-8 py-4 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium text-lg">
+                    Setup Guide →
+                </a>
+                <a href="../nodes/" class="px-8 py-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium text-lg">
+                    Deploy Node
+                </a>
+                <span class="opacity-50 cursor-not-allowed" title="Coming Soon">
+                    Stake ÉTR
+                 (Coming Soon)</span>
+            </div>
+
+            <!-- Community Links -->
+            <div class="mt-12 pt-8 border-t border-white/10">
+                <p class="text-gray-400 mb-4">Need help? Join our community</p>
+                <div class="flex gap-4 justify-center">
+                    <a href="https://discord.gg/etrid" class="text-etrid-blue hover:text-etrid-purple transition-colors">Discord</a>
+                    <span class="text-gray-600">•</span>
+                    <a href="https://t.me/etrid" class="text-etrid-blue hover:text-etrid-purple transition-colors">Telegram</a>
+                    <span class="text-gray-600">•</span>
+                    <a href="https://forum.etrid.org" class="text-etrid-blue hover:text-etrid-purple transition-colors">Forum</a>
+                    <span class="text-gray-600">•</span>
+                    <a href="https://docs.etrid.org" class="text-etrid-blue hover:text-etrid-purple transition-colors">Documentation</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+            <p class="mt-2">Founder: Eoj Edred • GPLv3 License • v2.0 Active Specification</p>
+        </div>
+    </footer>
+
+    <script>
+        // Collapsible sections
+        function toggleCollapsible(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('svg');
+
+            content.classList.toggle('active');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

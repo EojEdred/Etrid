@@ -1,0 +1,20 @@
+set -e; cd /Users/macbook/Desktop/etrid; python3 - <<'PY'
+import re
+p='07-transactions/lightning-bloc/Cargo.toml'
+s=open(p).read()
+if re.search(r'(?m)^\[dependencies\]\s*$', s) is None:
+    s += '\n[dependencies]\n'
+# capture deps block safely
+m=re.search(r'(?ms)^\[dependencies\]\s*(.*?)(?=^\[|\Z)', s)
+block = m.group(1)
+add=[]
+if re.search(r'(?m)^\s*hex\s*=\s*"', block) is None: add.append('hex = "0.4"')
+if re.search(r'(?m)^\s*tracing\s*=\s*"', block) is None: add.append('tracing = "0.1"')
+if re.search(r'(?m)^\s*tokio\s*=\s*', block) is None: add.append('tokio = { version = "1", features = ["time","rt","macros"] }')
+if add:
+    s = s.replace(m.group(0), m.group(0)+"\n"+"\n".join(add)+"\n")
+open(p,'w').write(s)
+PY
+sed -E -i '' 's/\bcrate::network_graph::/crate::routing::/g; s/\bnetwork_graph::/routing::/g' 07-transactions/lightning-bloc/src/auto_discovery.rs
+git add -A; git commit -m 'autopilot: lightning-bloc deps(tracing,tokio,hex) + routing import fix' || true
+cargo +nightly check --workspace

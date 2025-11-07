@@ -43,53 +43,34 @@ use alloc::vec::Vec;
 pub use pqcrypto_traits::kem::{PublicKey as KemPublicKey, SecretKey as KemSecretKey, Ciphertext, SharedSecret};
 pub use pqcrypto_traits::sign::{PublicKey as SignPublicKey, SecretKey as SignSecretKey, SignedMessage, DetachedSignature};
 
-// Kyber KEM
+// Kyber KEM - re-export Kyber768 (NIST Level 3, ~AES-192 security)
 pub mod kyber {
     use super::*;
+    // Re-export all Kyber768 functions and types
+    // This includes: keypair(), encapsulate(), decapsulate(), PublicKey, SecretKey, etc.
     pub use pqcrypto_kyber::kyber768::*;
-
-    /// Generate Kyber768 keypair (NIST Level 3, ~AES-192 security)
-    pub fn keypair() -> (PublicKey, SecretKey) {
-        keypair()
-    }
-
-    /// Encapsulate a shared secret using the public key
-    pub fn encapsulate(pk: &PublicKey) -> (SharedSecret, Ciphertext) {
-        encapsulate(pk)
-    }
-
-    /// Decapsulate a shared secret using the secret key
-    pub fn decapsulate(ct: &Ciphertext, sk: &SecretKey) -> SharedSecret {
-        decapsulate(ct, sk)
-    }
 }
 
-// Dilithium signatures
+// Dilithium signatures - re-export Dilithium3 (NIST Level 3, ~AES-192 security)
 pub mod dilithium {
     use super::*;
+    // Re-export all Dilithium3 functions and types
+    // This includes: keypair(), detached_sign(), verify_detached_signature(), PublicKey, SecretKey, etc.
     pub use pqcrypto_dilithium::dilithium3::*;
-
-    /// Generate Dilithium3 keypair (NIST Level 3, ~AES-192 security)
-    pub fn keypair() -> (PublicKey, SecretKey) {
-        keypair()
-    }
-
-    /// Sign a message with Dilithium3
-    pub fn sign(msg: &[u8], sk: &SecretKey) -> DetachedSignature {
-        detached_sign(msg, sk)
-    }
-
-    /// Verify a Dilithium3 signature
-    pub fn verify(msg: &[u8], sig: &DetachedSignature, pk: &PublicKey) -> Result<(), pqcrypto_traits::Error> {
-        verify_detached_signature(sig, msg, pk)
-    }
 }
 
 // Hybrid schemes
 pub mod hybrid {
-    use super::*;
     use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
     use sha2::{Sha256, Digest};
+
+    // Import concrete types from pqcrypto modules (avoiding trait name conflicts)
+    use pqcrypto_dilithium::dilithium3;
+    use pqcrypto_kyber::kyber768;
+
+    // Import traits for as_bytes() and from_bytes() methods
+    use pqcrypto_traits::kem::{Ciphertext as CiphertextTrait, SharedSecret as SharedSecretTrait, PublicKey as KemPublicKeyTrait, SecretKey as KemSecretKeyTrait};
+    use pqcrypto_traits::sign::{DetachedSignature as DetachedSignatureTrait, PublicKey as SignPublicKeyTrait, SecretKey as SignSecretKeyTrait};
 
     /// Hybrid signature combining Ed25519 and Dilithium
     #[derive(Clone, Debug)]
@@ -122,7 +103,7 @@ pub mod hybrid {
         let ed_verifying_key = ed_signing_key.verifying_key();
 
         // Generate Dilithium3 keypair
-        let (dil_pk, dil_sk) = dilithium::keypair();
+        let (dil_pk, dil_sk) = dilithium3::keypair();
 
         let public_key = HybridPublicKey {
             classical_pk: ed_verifying_key.to_bytes(),
@@ -144,9 +125,9 @@ pub mod hybrid {
         let ed_signature = ed_signing_key.sign(msg);
 
         // Sign with Dilithium3
-        let dil_sk = dilithium::SecretKey::from_bytes(&sk.pq_sk)
+        let dil_sk = dilithium3::SecretKey::from_bytes(&sk.pq_sk)
             .map_err(|_| "Invalid Dilithium secret key")?;
-        let dil_signature = dilithium::sign(msg, &dil_sk);
+        let dil_signature = dilithium3::detached_sign(msg, &dil_sk);
 
         Ok(HybridSignature {
             classical_sig: ed_signature.to_bytes(),
@@ -164,20 +145,20 @@ pub mod hybrid {
             .map_err(|_| "Ed25519 verification failed")?;
 
         // Verify Dilithium signature
-        let dil_pk = dilithium::PublicKey::from_bytes(&pk.pq_pk)
+        let dil_pk = dilithium3::PublicKey::from_bytes(&pk.pq_pk)
             .map_err(|_| "Invalid Dilithium public key")?;
-        let dil_signature = dilithium::DetachedSignature::from_bytes(&sig.pq_sig)
+        let dil_signature = dilithium3::DetachedSignature::from_bytes(&sig.pq_sig)
             .map_err(|_| "Invalid Dilithium signature")?;
-        dilithium::verify(msg, &dil_signature, &dil_pk)
+        dilithium3::verify_detached_signature(&dil_signature, msg, &dil_pk)
             .map_err(|_| "Dilithium verification failed")?;
 
         Ok(())
     }
 
     /// Hybrid KEM: Combine X25519 and Kyber768 shared secrets
-    pub fn hybrid_encapsulate(kyber_pk: &kyber::PublicKey) -> (Vec<u8>, Vec<u8>) {
+    pub fn hybrid_encapsulate(kyber_pk: &kyber768::PublicKey) -> (Vec<u8>, Vec<u8>) {
         // Encapsulate with Kyber
-        let (kyber_ss, kyber_ct) = kyber::encapsulate(kyber_pk);
+        let (kyber_ss, kyber_ct) = kyber768::encapsulate(kyber_pk);
 
         // In full implementation, would also do X25519 DH
         // For now, just use Kyber shared secret
@@ -188,11 +169,11 @@ pub mod hybrid {
     }
 
     /// Hybrid KEM decapsulation
-    pub fn hybrid_decapsulate(ciphertext: &[u8], kyber_sk: &kyber::SecretKey) -> Result<Vec<u8>, &'static str> {
+    pub fn hybrid_decapsulate(ciphertext: &[u8], kyber_sk: &kyber768::SecretKey) -> Result<Vec<u8>, &'static str> {
         // Decapsulate Kyber ciphertext
-        let kyber_ct = kyber::Ciphertext::from_bytes(ciphertext)
+        let kyber_ct = kyber768::Ciphertext::from_bytes(ciphertext)
             .map_err(|_| "Invalid Kyber ciphertext")?;
-        let kyber_ss = kyber::decapsulate(&kyber_ct, kyber_sk);
+        let kyber_ss = kyber768::decapsulate(&kyber_ct, kyber_sk);
 
         // In full implementation, would also do X25519 DH and combine
         Ok(kyber_ss.as_bytes().to_vec())

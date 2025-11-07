@@ -62,6 +62,7 @@ members = [
     # ═════════════════════════════════════════════════════════════════════════════
     "03-security/cryptography",                         # Core cryptographic primitives
     "03-security/key-management",                       # Key storage and rotation
+    "03-security/post-quantum",                         # Post-quantum cryptography (Kyber, Dilithium)
 
     # ═════════════════════════════════════════════════════════════════════════════
     # 04 - Accounts (2 modules)

@@ -1,0 +1,29 @@
+# AI Devs Requirements
+# Python dependencies for FlareChain AI agents
+
+# Core dependencies
+asyncio-extras==1.3.2
+python-dotenv==1.0.0
+
+# Blockchain interaction
+substrate-interface==1.7.5
+scalecodec==1.2.5
+
+# LLM backends
+anthropic==0.21.3          # Claude API
+openai==1.12.0             # GPT-4 API
+httpx==0.26.0              # For Ollama local calls
+
+# Utilities
+python-dateutil==2.8.2
+pyyaml==6.0.1
+
+# Optional: VectorDB for agent memory
+qdrant-client==1.7.3
+
+# Optional: Monitoring and metrics
+prometheus-client==0.19.0
+
+# Development/Testing
+pytest==8.0.0
+pytest-asyncio==0.23.3

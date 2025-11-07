@@ -5,6 +5,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+// EVM moved to ETH-PBC - FlareChain is pure coordination layer
 
 use sp_api::impl_runtime_apis;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
@@ -300,6 +301,7 @@ impl pallet_etwasm_vm::Config for Runtime {
     type MaxCodeSize = ConstU32<1024>;
     type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
     type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
+    type VmwOperationPrice = ConstU32<1>; // VMW operation price (1 unit per operation)
 }
 
 /// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)
@@ -1033,6 +1035,40 @@ impl pallet_circuit_breaker::Config for Runtime {
     type BlocksPerDay = BlocksPerDay;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI AGENTS PALLET (Component 14)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const MinAgentStake: Balance = 100 * UNITS; // 100 ETR minimum stake per agent
+    pub const MaxAgentsPerValidator: u32 = 6;
+    pub const SlashingThreshold: u32 = 100; // Slash if reputation < 100
+    pub const InitialReputation: u32 = 500; // Start with 500 reputation (out of 1000)
+}
+
+impl pallet_ai_agents::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinAgentStake = MinAgentStake;
+    type MaxAgentsPerValidator = MaxAgentsPerValidator;
+    type SlashingThreshold = SlashingThreshold;
+    type InitialReputation = InitialReputation;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVM LAYER MOVED TO ETH-PBC
+// ═══════════════════════════════════════════════════════════════════════════════
+// FlareChain is the pure coordination layer with:
+// - ËtwasmVM for native WebAssembly smart contracts
+// - Oracle Network for cross-chain price feeds
+// - Governance & Consensus Day
+// - Staking & Validator Management
+// - PBC Router for coordinating all Partition Burst Chains
+//
+// Ethereum compatibility (Solidity, MetaMask, etc.) is handled by ETH-PBC
+// This architectural separation preserves Ëtrid's unique identity
+// ═══════════════════════════════════════════════════════════════════════════════
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime {
@@ -1045,6 +1081,8 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
+
+        // EVM moved to ETH-PBC - FlareChain stays pure
 
         // Ëtrid custom pallets
         Accounts: pallet_accounts,
@@ -1108,6 +1146,9 @@ construct_runtime!(
         // OpenDID pallets (Component 02)
         DidRegistry: pallet_did_registry,
         AIDID: pallet_aidid,
+
+        // AI Agents (Component 14)
+        AiAgents: pallet_ai_agents,
 
         // Treasury/Reserve/Stability System
         EtridTreasury: pallet_treasury_etrid,
@@ -1405,6 +1446,20 @@ impl_runtime_apis! {
             ]
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EVM RUNTIME APIs MOVED TO ETH-PBC
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Ethereum JSON-RPC compatibility (MetaMask, web3.js, ethers.js) is handled by
+    // ETH-PBC, which implements all Frontier EVM runtime APIs.
+    //
+    // FlareChain focuses on:
+    // - Native Substrate extrinsics
+    // - ËtwasmVM contract calls
+    // - Oracle data feeds
+    // - Governance proposals
+    // - Cross-chain coordination via XCM
+    // ═══════════════════════════════════════════════════════════════════════════════
 
     #[cfg(feature = "try-runtime")]
     impl frame_try_runtime::TryRuntime<Block> for Runtime {

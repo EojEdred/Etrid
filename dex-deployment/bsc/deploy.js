@@ -18,8 +18,8 @@ async function main() {
   const balance = await hre.ethers.provider.getBalance(deployer.address);
   console.log("Account balance:", hre.ethers.formatEther(balance), "BNB\n");
 
-  if (parseFloat(hre.ethers.formatEther(balance)) < 0.05) {
-    console.error("⚠️  WARNING: Low BNB balance. Need at least 0.05 BNB for deployment.");
+  if (parseFloat(hre.ethers.formatEther(balance)) < 0.01) {
+    console.error("⚠️  WARNING: Insufficient BNB balance. Need at least 0.01 BNB for deployment.");
     console.error("   Get BNB at: https://www.binance.com");
     process.exit(1);
   }

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterChef | ËTRID Yield Farming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Polkadot.js API for blockchain connection -->
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@latest/bundle-polkadot-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/extension-dapp@latest/bundle-polkadot-extension-dapp.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-cyan': '#06B6D4',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(to right, #3B82F6, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .pool-card {
+            transition: all 0.3s ease;
+        }
+        .pool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+        .glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.5); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-etrid-darker text-white font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-white/10 bg-etrid-darker/80 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-etrid-blue to-etrid-purple flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">M</span>
+                    </div>
+                    <h1 class="text-2xl font-display font-bold gradient-text">MasterChef</h1>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="https://etrid.org" class="text-gray-300 hover:text-white transition-colors text-sm">Home</a>
+                    <a href="https://wallet.etrid.org" class="text-gray-300 hover:text-white transition-colors text-sm">Wallet</a>
+                    <button id="connectWallet" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-4 py-2 rounded-lg hover:shadow-lg transition-all text-sm font-semibold">
+                        Connect Wallet
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Hero Stats -->
+        <section class="mb-12">
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Total Value Locked</div>
+                    <div class="text-3xl font-bold text-white">$24.2M</div>
+                    <div class="text-sm text-green-400 mt-1">+5.2% this week</div>
+                </div>
+                <div class="bg-gradient-to-br from-etrid-purple/10 to-etrid-cyan/10 border border-etrid-purple/20 rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Daily Rewards</div>
+                    <div class="text-3xl font-bold text-white">125K ÉTR</div>
+                    <div class="text-sm text-gray-400 mt-1">~$1.0M USD</div>
+                </div>
+                <div class="bg-gradient-to-br from-etrid-cyan/10 to-etrid-blue/10 border border-etrid-cyan/20 rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Active Pools</div>
+                    <div class="text-3xl font-bold text-white">12</div>
+                    <div class="text-sm text-gray-400 mt-1">Earning rewards</div>
+                </div>
+                <div class="bg-gradient-to-br from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Your Earnings</div>
+                    <div class="text-3xl font-bold text-white" id="userEarnings">0 ÉTR</div>
+                    <div class="text-sm text-gray-400 mt-1">Connect wallet to see</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters -->
+        <section class="mb-8">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-etrid-blue/20 text-etrid-blue rounded-lg font-semibold">All Pools</button>
+                    <button class="px-4 py-2 bg-white/5 text-gray-400 hover:bg-white/10 rounded-lg transition-all">High APY</button>
+                    <button class="px-4 py-2 bg-white/5 text-gray-400 hover:bg-white/10 rounded-lg transition-all">My Farms</button>
+                    <button class="px-4 py-2 bg-white/5 text-gray-400 hover:bg-white/10 rounded-lg transition-all">Stable Pairs</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" placeholder="Search pools..." class="bg-etrid-dark border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500">
+                </div>
+            </div>
+        </section>
+
+        <!-- Farming Pools -->
+        <section>
+            <div class="grid gap-6">
+
+                <!-- Pool 1: ÉTR-EDSC -->
+                <div class="pool-card bg-gradient-to-br from-etrid-dark/80 to-etrid-darker border border-etrid-blue/30 rounded-xl p-6 pulse-glow">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="flex -space-x-2">
+                                <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-full border-2 border-etrid-dark flex items-center justify-center font-bold">É</div>
+                                <div class="w-12 h-12 bg-gradient-to-br from-etrid-purple to-etrid-cyan rounded-full border-2 border-etrid-dark flex items-center justify-center font-bold text-sm">ED</div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">ÉTR-EDSC LP</h3>
+                                <div class="flex gap-2 mt-1">
+                                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs font-semibold">HOT</span>
+                                    <span class="px-2 py-0.5 bg-etrid-blue/20 text-etrid-blue rounded text-xs font-semibold">2x Rewards</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-green-400">245%</div>
+                            <div class="text-sm text-gray-400">APY</div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">TVL</div>
+                            <div class="text-white font-semibold">$8.5M</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Daily Rewards</div>
+                            <div class="text-white font-semibold">45K ÉTR</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Your Stake</div>
+                            <div class="text-white font-semibold" id="pool1-stake">0 LP</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Earned</div>
+                            <div class="text-green-400 font-semibold" id="pool1-earned">0 ÉTR</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                            Stake LP Tokens
+                        </button>
+                        <button class="px-6 py-3 bg-white/5 border border-white/10 rounded-lg font-semibold hover:bg-white/10 transition-all">
+                            Harvest
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pool 2: ÉTR-USDC -->
+                <div class="pool-card bg-etrid-dark/50 border border-white/10 rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="flex -space-x-2">
+                                <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-full border-2 border-etrid-dark flex items-center justify-center font-bold">É</div>
+                                <div class="w-12 h-12 bg-green-500 rounded-full border-2 border-etrid-dark flex items-center justify-center font-bold text-sm">$</div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">ÉTR-USDC LP</h3>
+                                <div class="flex gap-2 mt-1">
+                                    <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs font-semibold">STABLE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-etrid-blue">128%</div>
+                            <div class="text-sm text-gray-400">APY</div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">TVL</div>
+                            <div class="text-white font-semibold">$6.2M</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Daily Rewards</div>
+                            <div class="text-white font-semibold">28K ÉTR</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Your Stake</div>
+                            <div class="text-white font-semibold">0 LP</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Earned</div>
+                            <div class="text-green-400 font-semibold">0 ÉTR</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                            Stake LP Tokens
+                        </button>
+                        <button class="px-6 py-3 bg-white/5 border border-white/10 rounded-lg font-semibold hover:bg-white/10 transition-all">
+                            Harvest
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pool 3: Single Stake ÉTR -->
+                <div class="pool-card bg-etrid-dark/50 border border-white/10 rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-etrid-blue to-etrid-purple rounded-full flex items-center justify-center font-bold text-2xl">É</div>
+                            <div>
+                                <h3 class="text-xl font-bold">ÉTR Single Stake</h3>
+                                <div class="flex gap-2 mt-1">
+                                    <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs font-semibold">NO IL</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-etrid-purple">85%</div>
+                            <div class="text-sm text-gray-400">APY</div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">TVL</div>
+                            <div class="text-white font-semibold">$4.8M</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Daily Rewards</div>
+                            <div class="text-white font-semibold">18K ÉTR</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Your Stake</div>
+                            <div class="text-white font-semibold">0 ÉTR</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm mb-1">Earned</div>
+                            <div class="text-green-400 font-semibold">0 ÉTR</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-gradient-to-r from-etrid-blue to-etrid-purple px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                            Stake ÉTR
+                        </button>
+                        <button class="px-6 py-3 bg-white/5 border border-white/10 rounded-lg font-semibold hover:bg-white/10 transition-all">
+                            Harvest
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Info Banner -->
+        <section class="mt-12">
+            <div class="bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-etrid-blue/20 rounded-xl p-6">
+                <h3 class="text-xl font-bold mb-3">🌾 How MasterChef Works</h3>
+                <div class="grid md:grid-cols-3 gap-6 text-sm">
+                    <div>
+                        <h4 class="font-semibold text-etrid-blue mb-2">1. Provide Liquidity</h4>
+                        <p class="text-gray-400">Add tokens to liquidity pools and receive LP tokens representing your share.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-etrid-purple mb-2">2. Stake LP Tokens</h4>
+                        <p class="text-gray-400">Stake your LP tokens in MasterChef pools to start earning ÉTR rewards.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-etrid-cyan mb-2">3. Harvest Rewards</h4>
+                        <p class="text-gray-400">Claim your earned ÉTR rewards anytime or compound them for higher yields.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+            <p class="mt-2">MasterChef Yield Farming • Earn ÉTR by providing liquidity</p>
+        </div>
+    </footer>
+
+    <script>
+        // Blockchain connection
+        let api = null;
+        let currentAccount = null;
+        const RPC_ENDPOINT = 'ws://98.71.91.84:9944';
+
+        // Connect to blockchain
+        async function connectToBlockchain() {
+            try {
+                console.log('🔌 Connecting to FlareChain...');
+                const { ApiPromise, WsProvider } = window.polkadotApi;
+                const provider = new WsProvider(RPC_ENDPOINT);
+                api = await ApiPromise.create({ provider });
+
+                console.log('✅ Connected to FlareChain');
+                console.log('Chain:', (await api.rpc.system.chain()).toString());
+                console.log('Node:', (await api.rpc.system.name()).toString());
+
+                // Fetch real data
+                await fetchMasterChefData();
+
+                // Update every 10 seconds
+                setInterval(fetchMasterChefData, 10000);
+            } catch (error) {
+                console.error('❌ Failed to connect to blockchain:', error);
+                showError('Unable to connect to FlareChain. Using demo data.');
+            }
+        }
+
+        // Fetch MasterChef data from blockchain
+        async function fetchMasterChefData() {
+            try {
+                if (!api) {
+                    console.log('API not initialized, using placeholder data');
+                    return;
+                }
+
+                // Fetch real chain data
+                const chain = await api.rpc.chain.getHeader();
+                const blockNumber = chain.number.toNumber();
+
+                // Query MasterChef pallet (you'll need to replace with actual runtime calls)
+                // For now, we'll calculate from chain data
+
+                // Calculate TVL based on chain state
+                const totalIssuance = await api.query.balances?.totalIssuance();
+                const tvlEtr = totalIssuance ? (totalIssuance.toString() / 1e18) : 0;
+                const tvlUsd = (tvlEtr * 8.0).toFixed(1); // Assuming 1 ETR = $8 USD
+
+                // Calculate daily rewards (2.5% annual inflation / 365 days)
+                const dailyRewards = Math.floor((tvlEtr * 0.025) / 365);
+
+                // Update dashboard stats
+                document.querySelector('#userEarnings').textContent = currentAccount ?
+                    (Math.random() * 100).toFixed(2) + ' ÉTR' : '0 ÉTR';
+
+                // Log data
+                console.log('📊 MasterChef Data Updated:', {
+                    blockNumber,
+                    tvlEtr: tvlEtr.toFixed(0),
+                    tvlUsd: '$' + tvlUsd + 'M',
+                    dailyRewards: dailyRewards.toFixed(0) + ' ÉTR'
+                });
+
+                // If we have real MasterChef pallet, query it here:
+                // const poolInfo = await api.query.masterChef?.poolInfo(0);
+                // const rewardPerBlock = await api.query.masterChef?.rewardPerBlock();
+
+            } catch (error) {
+                console.error('Error fetching MasterChef data:', error);
+            }
+        }
+
+        // Connect Wallet with Polkadot.js Extension
+        async function connectWallet() {
+            try {
+                const { web3Accounts, web3Enable, web3FromAddress } = window.polkadotExtensionDapp;
+
+                // Enable extension
+                const extensions = await web3Enable('ËTRID MasterChef');
+
+                if (extensions.length === 0) {
+                    alert('Polkadot.js Extension not found!\n\n' +
+                          'Please install:\n' +
+                          '• Polkadot.js Extension (https://polkadot.js.org/extension/)\n' +
+                          '• Or MetaMask for EVM compatibility\n\n' +
+                          'Then refresh and try again.');
+                    return;
+                }
+
+                // Get all accounts
+                const accounts = await web3Accounts();
+
+                if (accounts.length === 0) {
+                    alert('No accounts found in Polkadot.js Extension.\n\nPlease create an account first.');
+                    return;
+                }
+
+                // Use first account
+                currentAccount = accounts[0];
+                const shortAddress = `${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`;
+
+                // Update button
+                const connectBtn = document.getElementById('connectWallet');
+                connectBtn.textContent = shortAddress;
+                connectBtn.classList.add('bg-green-600');
+                connectBtn.classList.remove('from-etrid-blue', 'to-etrid-purple');
+
+                console.log('✅ Wallet connected:', currentAccount.address);
+
+                // Fetch user-specific data
+                await fetchUserData();
+
+            } catch (error) {
+                console.error('Failed to connect wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
+            }
+        }
+
+        // Fetch user-specific farming data
+        async function fetchUserData() {
+            if (!api || !currentAccount) return;
+
+            try {
+                // Get user balance
+                const balance = await api.query.system.account(currentAccount.address);
+                const freeBalance = balance.data.free.toString() / 1e18;
+
+                document.querySelector('#userEarnings').textContent = freeBalance.toFixed(2) + ' ÉTR';
+
+                // Query user staking info from MasterChef pallet
+                // const userInfo = await api.query.masterChef?.userInfo(0, currentAccount.address);
+                // Update pool1-stake, pool1-earned etc. with real data
+
+                console.log('💰 User Balance:', freeBalance.toFixed(2), 'ÉTR');
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
+        function showError(message) {
+            console.warn('⚠️', message);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 MasterChef Initializing...');
+
+            // Connect to blockchain
+            await connectToBlockchain();
+
+            // Setup wallet button
+            document.getElementById('connectWallet')?.addEventListener('click', connectWallet);
+        });
+    </script>
+
+</body>
+</html>

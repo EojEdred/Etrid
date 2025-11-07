@@ -78,6 +78,9 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Note: etrid-primitives removed to avoid version conflicts with stable2509
 # Core types are defined inline in lib.rs
 
+# Lightning Bloc Integration
+pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+
 [build-dependencies]
 # Substrate WASM builder (using stable2506 for Frontier compatibility)
 substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
@@ -132,6 +135,9 @@ std = [
     "fp-account/std",
     "ethereum/std",
     "evm/std",
+
+    # Lightning Bloc
+    "pallet-lightning-channels/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

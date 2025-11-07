@@ -27,6 +27,7 @@
 //! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(unused_attributes)]
 
 use codec::{Encode, Decode};
 use scale_info::TypeInfo;

@@ -164,3 +164,4 @@ ai-monitoring/__pycache__/
 ai-monitoring/**/__pycache__/
 *.pyc
 *.pyo
+.aider*

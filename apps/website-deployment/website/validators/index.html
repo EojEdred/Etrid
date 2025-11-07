@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Validators - Network Leaderboard & Staking</title>
+    <meta name="description" content="View ËTRID validator performance, staking statistics, and become a validator">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-etrid-darker text-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-etrid-darker/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="../index.html" class="flex items-center gap-2">
+                    <img src="../assets/logos/etrid-primary-logo.svg" alt="ËTRID" class="h-10 w-10">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-8">
+                    <a href="../index.html" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="../explorer/" class="text-gray-300 hover:text-white transition-colors">Explorer</a>
+                    <a href="https://telemetry.etrid.org" target="_blank" class="text-gray-300 hover:text-white transition-colors">Network</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="pt-32 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 text-center bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Validator Leaderboard
+            </h1>
+            <p class="text-xl text-gray-400 text-center mb-8">
+                Track validator performance, staking rewards, and network security
+            </p>
+
+            <!-- Network Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Active Validators</div>
+                    <div id="total-validators" class="text-3xl font-bold text-etrid-blue">21</div>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Total Staked</div>
+                    <div id="total-staked" class="text-3xl font-bold text-etrid-purple">42.3M ÉTR</div>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Staking Ratio</div>
+                    <div id="staking-ratio" class="text-3xl font-bold text-etrid-blue">42.3%</div>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">APY</div>
+                    <div id="staking-apy" class="text-3xl font-bold text-etrid-purple">~3%</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button class="filter-btn active px-4 py-2 rounded-lg bg-etrid-blue/20 text-etrid-blue border border-etrid-blue/30 font-medium" data-filter="all">
+                    All Validators
+                </button>
+                <button class="filter-btn px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-filter="active">
+                    Active Only
+                </button>
+                <button class="filter-btn px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors" data-filter="high-performance">
+                    Top Performers
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Validator Table -->
+    <section class="pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                <!-- Table Header -->
+                <div class="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-xs uppercase text-gray-400 font-semibold">
+                    <div class="col-span-1">Rank</div>
+                    <div class="col-span-3">Validator</div>
+                    <div class="col-span-2">Total Stake</div>
+                    <div class="col-span-2">Commission</div>
+                    <div class="col-span-2">Performance</div>
+                    <div class="col-span-2">Status</div>
+                </div>
+
+                <!-- Table Body -->
+                <div id="validators-list">
+                    <!-- Validators will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Become Validator CTA -->
+            <div class="mt-12 bg-gradient-to-r from-etrid-blue/10 to-etrid-purple/10 border border-white/10 rounded-2xl p-8 text-center">
+                <h2 class="text-3xl font-display font-bold mb-4">Become a Validator</h2>
+                <p class="text-gray-400 mb-6 max-w-2xl mx-auto">
+                    Secure the ËTRID network and earn staking rewards. Minimum stake: 64 ÉTR for VALIDITY Nodes, 1 ÉTR for staking.
+                </p>
+                <div class="flex gap-4 justify-center flex-wrap">
+                    <a href="participate.html" class="px-8 py-3 rounded-lg bg-gradient-to-r from-etrid-blue to-etrid-purple hover:opacity-90 transition-opacity font-medium">
+                        Participation Program →
+                    </a>
+                    <a href="https://docs.etrid.org/validators/setup" target="_blank" class="px-8 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-medium">
+                        Setup Guide
+                    </a>
+                    <span class="opacity-50 cursor-not-allowed" title="Coming Soon">
+                        Stake ÉTR
+                     (Coming Soon)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Staking Info -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-display font-bold mb-8 text-center">Staking Information</h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">💰</div>
+                    <h3 class="text-xl font-bold mb-2">Earn Rewards</h3>
+                    <p class="text-gray-400 text-sm mb-3">Delegate your ÉTR to validators and earn rewards from ~3% annual validator pool</p>
+                    <span class="opacity-50 cursor-not-allowed" title="Coming Soon">
+                        Start Staking →
+                     (Coming Soon)</span>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">🔒</div>
+                    <h3 class="text-xl font-bold mb-2">Secure Network</h3>
+                    <p class="text-gray-400 text-sm mb-3">Help secure ËTRID's Partition Burst Chain architecture</p>
+                    <a href="https://docs.etrid.org/staking" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        Learn More →
+                    </a>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div class="text-3xl mb-3">⚡</div>
+                    <h3 class="text-xl font-bold mb-2">Instant Unstaking</h3>
+                    <p class="text-gray-400 text-sm mb-3">Flexible unstaking with 14-day unbonding period</p>
+                    <a href="https://docs.etrid.org/staking/unstaking" target="_blank" class="text-etrid-blue hover:text-etrid-purple text-sm">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-etrid-darker border-t border-white/10 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Polkadot.js API -->
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@10/bundle-polkadot-api.js"></script>
+    <script src="validators.js"></script>
+</body>
+</html>

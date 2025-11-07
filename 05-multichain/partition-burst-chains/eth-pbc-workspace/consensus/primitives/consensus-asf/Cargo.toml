@@ -1,0 +1,39 @@
+[package]
+name = "sp-consensus-asf"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Primitives for ASF (Adaptive Stake-weighted Finality) consensus"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate primitives - conditional based on sdk2506 feature
+# Default: use workspace (stable2509), sdk2506 feature: use stable2506
+sp-api = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-inherents = { workspace = true }
+sp-consensus-slots = { workspace = true }
+sp-timestamp = { workspace = true }
+
+# Codec
+codec = { workspace = true, features = ["derive"] }
+scale-info = { workspace = true, features = ["derive"] }
+
+# Async (std only)
+async-trait = { workspace = true, optional = true }
+
+[features]
+default = ["std"]
+sdk2506 = []  # Feature flag only - signals to use with stable2506 collators
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-api/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-inherents/std",
+    "sp-consensus-slots/std",
+    "sp-timestamp/std",
+    "async-trait",
+]

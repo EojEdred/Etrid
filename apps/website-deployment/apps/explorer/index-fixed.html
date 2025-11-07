@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ËTRID Block Explorer | Blockchain Search & Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Polkadot.js API -->
+    <script src="https://cdn.jsdelivr.net/npm/@polkadot/api@10.9.1/bundle-polkadot-api.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'etrid-blue': '#3B82F6',
+                        'etrid-purple': '#8B5CF6',
+                        'etrid-dark': '#0A0E1A',
+                        'etrid-darker': '#050812',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'display': ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0A0E1A 0%, #1a1f35 100%);
+        }
+    </style>
+</head>
+<body class="bg-etrid-darker text-white font-sans gradient-bg min-h-screen">
+
+    <!-- Header -->
+    <header class="border-b border-white/10 bg-etrid-darker/80 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="https://etrid.org" class="flex items-center gap-2">
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                        ËTRID
+                    </span>
+                    <span class="text-gray-400">Explorer</span>
+                </a>
+                <nav class="flex items-center space-x-6">
+                    <a href="https://etrid.org" class="text-gray-300 hover:text-white transition-colors">Home</a>
+                    <a href="https://docs.etrid.org" class="text-gray-300 hover:text-white transition-colors">Docs</a>
+                    <a href="https://etrid.org/wallet/" class="text-gray-300 hover:text-white transition-colors">Wallet</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Connection Status Banner -->
+    <div id="statusBanner" class="bg-etrid-blue/10 border-b border-etrid-blue/30 py-2 px-4 text-center hidden">
+        <div class="max-w-7xl mx-auto">
+            <span id="statusText" class="text-sm font-semibold">Connecting to FlareChain...</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-display font-bold mb-4 bg-gradient-to-r from-etrid-blue to-etrid-purple bg-clip-text text-transparent">
+                Block Explorer
+            </h1>
+            <p class="text-xl text-gray-300">
+                Search transactions, blocks, and accounts on FlareChain mainnet
+            </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="max-w-3xl mx-auto mb-12">
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-2">
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search by Address / Block Number / Hash"
+                        class="flex-1 bg-transparent px-4 py-3 text-white placeholder-gray-500 outline-none"
+                        onkeypress="if(event.key==='Enter') performSearch()"
+                    >
+                    <button onclick="performSearch()" class="bg-gradient-to-r from-etrid-blue to-etrid-purple px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-etrid-blue/50 transition-all">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Stats -->
+        <div class="grid md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="text-gray-400 text-sm mb-2">Latest Block</div>
+                <div class="text-2xl font-bold" id="latestBlock">Loading...</div>
+            </div>
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="text-gray-400 text-sm mb-2">Total Issuance</div>
+                <div class="text-2xl font-bold" id="totalIssuance">Loading...</div>
+            </div>
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="text-gray-400 text-sm mb-2">Active Validators</div>
+                <div class="text-2xl font-bold" id="validators">Loading...</div>
+            </div>
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="text-gray-400 text-sm mb-2">Network Status</div>
+                <div class="text-2xl font-bold text-green-400" id="status">Connecting...</div>
+            </div>
+        </div>
+
+        <!-- Search Results (Hidden by default) -->
+        <div id="searchResults" class="hidden mb-12">
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Search Results</h2>
+                    <button onclick="closeSearchResults()" class="text-gray-400 hover:text-white">✕</button>
+                </div>
+                <div id="searchResultsContent"></div>
+            </div>
+        </div>
+
+        <!-- Latest Blocks & Transactions -->
+        <div class="grid md:grid-cols-2 gap-6" id="latestDataSection">
+            <!-- Latest Blocks -->
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span class="text-etrid-blue">▣</span> Latest Blocks
+                </h2>
+                <div class="space-y-3" id="latestBlocksList">
+                    <div class="text-gray-400 text-center py-8">Loading blocks...</div>
+                </div>
+            </div>
+
+            <!-- Latest Transactions -->
+            <div class="bg-etrid-dark border border-white/10 rounded-xl p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span class="text-etrid-purple">⟳</span> Latest Extrinsics
+                </h2>
+                <div class="space-y-3" id="latestTxsList">
+                    <div class="text-gray-400 text-center py-8">Loading extrinsics...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RPC Endpoints -->
+        <div class="mt-12 bg-etrid-dark border border-white/10 rounded-xl p-8">
+            <h3 class="text-xl font-bold mb-6">RPC Endpoints</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <div class="text-gray-400 mb-2">FlareChain WebSocket</div>
+                    <code class="block bg-black/50 p-3 rounded text-sm text-etrid-blue">ws://98.71.91.84:9944</code>
+                </div>
+                <div>
+                    <div class="text-gray-400 mb-2">FlareChain HTTP RPC</div>
+                    <code class="block bg-black/50 p-3 rounded text-sm text-etrid-blue">http://98.71.91.84:9933</code>
+                </div>
+                <div>
+                    <div class="text-gray-400 mb-2">Chain ID (EVM)</div>
+                    <code class="block bg-black/50 p-3 rounded text-sm text-etrid-purple">33396 (0x8274)</code>
+                </div>
+                <div>
+                    <div class="text-gray-400 mb-2">Telemetry</div>
+                    <a href="https://etrid.org/telemetry/" class="block bg-black/50 p-3 rounded text-sm text-green-400 hover:text-green-300">View Validators →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 ËTRID Foundation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const RPC_ENDPOINT = 'ws://98.71.91.84:9944';
+        let api = null;
+        let isConnected = false;
+
+        // Show status
+        function showStatus(message, type = 'info') {
+            const banner = document.getElementById('statusBanner');
+            const text = document.getElementById('statusText');
+
+            banner.className = `border-b py-2 px-4 text-center ${
+                type === 'success' ? 'bg-green-500/10 border-green-500/30' :
+                type === 'error' ? 'bg-red-500/10 border-red-500/30' :
+                'bg-etrid-blue/10 border-etrid-blue/30'
+            }`;
+
+            text.textContent = message;
+            banner.classList.remove('hidden');
+
+            if (type === 'success') {
+                setTimeout(() => banner.classList.add('hidden'), 5000);
+            }
+        }
+
+        // Initialize explorer
+        async function initExplorer() {
+            console.log('🚀 Initializing ËTRID Block Explorer...');
+            showStatus('Connecting to FlareChain mainnet...', 'info');
+
+            const connected = await connectToBlockchain();
+            if (connected) {
+                console.log('✅ Connected to FlareChain');
+                showStatus('✅ Connected to FlareChain mainnet - Showing live data', 'success');
+                await fetchBlockchainData();
+                setInterval(fetchBlockchainData, 10000); // Update every 10 seconds
+            } else {
+                console.log('⚠️ Connection failed');
+                showStatus('❌ Unable to connect to blockchain - Check RPC endpoint', 'error');
+                showOfflineState();
+            }
+        }
+
+        // Connect to blockchain
+        async function connectToBlockchain() {
+            try {
+                const { ApiPromise, WsProvider } = polkadotApi;
+                const provider = new WsProvider(RPC_ENDPOINT);
+
+                api = await Promise.race([
+                    ApiPromise.create({ provider }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 15000))
+                ]);
+
+                await api.isReady;
+                isConnected = true;
+                return true;
+            } catch (error) {
+                console.error('Connection failed:', error.message);
+                isConnected = false;
+                return false;
+            }
+        }
+
+        // Fetch blockchain data
+        async function fetchBlockchainData() {
+            if (!api || !isConnected) return;
+
+            try {
+                const [header, validators, totalIssuance] = await Promise.all([
+                    api.rpc.chain.getHeader(),
+                    api.query.session ? api.query.session.validators() : Promise.resolve([]),
+                    api.query.balances.totalIssuance()
+                ]);
+
+                const bestBlock = header.number.toNumber();
+                const issuance = (totalIssuance.toString() / 1e18).toFixed(2);
+
+                document.getElementById('latestBlock').textContent = `#${bestBlock.toLocaleString()}`;
+                document.getElementById('validators').textContent = validators.length || '21';
+                document.getElementById('totalIssuance').textContent = `${parseFloat(issuance).toLocaleString()} ÉTR`;
+                document.getElementById('status').textContent = '🟢 Online';
+
+                // Fetch latest blocks
+                await fetchLatestBlocks(bestBlock);
+
+                console.log('✅ Data updated - Block:', bestBlock);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showStatus('Error fetching blockchain data', 'error');
+            }
+        }
+
+        // Fetch latest blocks
+        async function fetchLatestBlocks(latestBlockNum) {
+            const blocksHTML = [];
+            let firstBlock = null;
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const blockNum = latestBlockNum - i;
+                    const blockHash = await api.rpc.chain.getBlockHash(blockNum);
+                    const block = await api.rpc.chain.getBlock(blockHash);
+                    const txCount = block.block.extrinsics.length;
+                    const timeAgo = i === 0 ? 'Just now' : `${i * 6}s ago`;
+
+                    if (i === 0) firstBlock = block;
+
+                    blocksHTML.push(`
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <div>
+                                <div class="text-etrid-blue font-semibold">#${blockNum.toLocaleString()}</div>
+                                <div class="text-xs text-gray-500">${timeAgo}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm">${txCount} extrinsics</div>
+                            </div>
+                        </div>
+                    `);
+                } catch (error) {
+                    console.error(`Error fetching block ${latestBlockNum - i}:`, error);
+                }
+            }
+
+            document.getElementById('latestBlocksList').innerHTML = blocksHTML.join('') || '<div class="text-gray-400 text-center py-8">No blocks available</div>';
+
+            if (firstBlock) {
+                await fetchLatestTransactions(firstBlock);
+            }
+        }
+
+        // Fetch latest transactions
+        async function fetchLatestTransactions(block) {
+            const txsHTML = [];
+            const extrinsics = block.block.extrinsics.slice(0, 5);
+
+            extrinsics.forEach((ext, i) => {
+                const hash = ext.hash.toHex();
+                const method = ext.method.section + '.' + ext.method.method;
+
+                txsHTML.push(`
+                    <div class="flex justify-between items-center py-2 border-b border-white/5">
+                        <div class="flex-1">
+                            <div class="text-etrid-purple font-mono text-sm">${hash.substring(0, 20)}...</div>
+                            <div class="text-xs text-gray-500">${method}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-400">Block #${block.block.header.number}</div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            if (txsHTML.length > 0) {
+                document.getElementById('latestTxsList').innerHTML = txsHTML.join('');
+            }
+        }
+
+        // Show offline state
+        function showOfflineState() {
+            document.getElementById('latestBlock').textContent = 'Offline';
+            document.getElementById('totalIssuance').textContent = 'Offline';
+            document.getElementById('validators').textContent = '21';
+            document.getElementById('status').textContent = '🔴 Offline';
+            document.getElementById('latestBlocksList').innerHTML = '<div class="text-gray-400 text-center py-8">Node offline - Please check RPC endpoint</div>';
+            document.getElementById('latestTxsList').innerHTML = '<div class="text-gray-400 text-center py-8">Node offline</div>';
+        }
+
+        // Search functionality
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            if (!isConnected || !api) {
+                alert('Cannot search: Not connected to blockchain.\n\nConnect via:\n• WebSocket: ws://98.71.91.84:9944\n• HTTP: http://98.71.91.84:9933');
+                return;
+            }
+
+            try {
+                showStatus('Searching...', 'info');
+
+                if (!isNaN(query)) {
+                    // Block number
+                    await searchByBlockNumber(parseInt(query));
+                } else if (query.startsWith('5')) {
+                    // Substrate address
+                    await searchByAccount(query);
+                } else if (query.startsWith('0x')) {
+                    // Hash
+                    await searchByHash(query);
+                } else {
+                    alert('Invalid search query format.\n\nSupported formats:\n• Block number (e.g., 1234)\n• Block hash (0x...)\n• Account address (5...)');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('Search failed: ' + error.message);
+                showStatus('Search failed', 'error');
+            }
+        }
+
+        async function searchByBlockNumber(blockNum) {
+            const blockHash = await api.rpc.chain.getBlockHash(blockNum);
+            await searchByHash(blockHash.toHex());
+        }
+
+        async function searchByHash(hash) {
+            try {
+                const block = await api.rpc.chain.getBlock(hash);
+                const blockNumber = block.block.header.number.toNumber();
+                const parentHash = block.block.header.parentHash.toHex();
+                const stateRoot = block.block.header.stateRoot.toHex();
+                const extrinsics = block.block.extrinsics;
+
+                let html = `
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-etrid-blue mb-4">Block #${blockNumber.toLocaleString()}</h3>
+                            <div class="grid gap-3">
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Block Hash:</span>
+                                    <span class="font-mono text-sm text-etrid-purple break-all">${hash}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Parent Hash:</span>
+                                    <span class="font-mono text-sm text-gray-400 break-all">${parentHash}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">State Root:</span>
+                                    <span class="font-mono text-sm text-gray-400 break-all">${stateRoot}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Extrinsics:</span>
+                                    <span class="font-semibold">${extrinsics.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-3">Extrinsics</h4>
+                            <div class="space-y-2">
+                                ${extrinsics.map((ext, i) => `
+                                    <div class="bg-etrid-darker/50 p-3 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <span class="text-gray-400 text-sm">#${i}</span>
+                                                <span class="text-etrid-blue ml-2">${ext.method.section}.${ext.method.method}</span>
+                                            </div>
+                                            <div class="text-xs text-gray-500 font-mono">${ext.hash.toHex().substring(0, 16)}...</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                showSearchResult(html);
+                showStatus('Block found!', 'success');
+            } catch (error) {
+                alert('Block not found: ' + error.message);
+                showStatus('Block not found', 'error');
+            }
+        }
+
+        async function searchByAccount(address) {
+            try {
+                const { data: balance } = await api.query.system.account(address);
+                const free = (balance.free.toString() / 1e18).toFixed(4);
+                const reserved = (balance.reserved.toString() / 1e18).toFixed(4);
+                const frozen = (balance.frozen.toString() / 1e18).toFixed(4);
+
+                let html = `
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-etrid-blue mb-4">Account Details</h3>
+                            <div class="grid gap-3">
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Address:</span>
+                                    <span class="font-mono text-sm break-all">${address}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Free Balance:</span>
+                                    <span class="font-semibold text-green-400">${free} ÉTR</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Reserved:</span>
+                                    <span class="font-semibold">${reserved} ÉTR</span>
+                                </div>
+                                <div class="flex justify-between border-b border-white/5 pb-2">
+                                    <span class="text-gray-400">Frozen:</span>
+                                    <span class="font-semibold">${frozen} ÉTR</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                showSearchResult(html);
+                showStatus('Account found!', 'success');
+            } catch (error) {
+                alert('Account not found: ' + error.message);
+                showStatus('Account not found', 'error');
+            }
+        }
+
+        function closeSearchResults() {
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('latestDataSection').classList.remove('hidden');
+        }
+
+        function showSearchResult(html) {
+            document.getElementById('searchResultsContent').innerHTML = html;
+            document.getElementById('searchResults').classList.remove('hidden');
+            document.getElementById('latestDataSection').classList.add('hidden');
+            document.getElementById('searchResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            setTimeout(initExplorer, 500); // Small delay to ensure Polkadot.js loads
+        });
+    </script>
+</body>
+</html>

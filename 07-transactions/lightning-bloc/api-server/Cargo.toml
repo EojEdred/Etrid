@@ -1,0 +1,47 @@
+[package]
+name = "lightning-bloc-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["ws", "macros"] }
+tokio = { version = "1.40", features = ["full"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Async runtime
+futures = "0.3"
+async-trait = "0.1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Substrate/Polkadot
+sp-core = { version = "34.0.0", default-features = false }
+sp-runtime = { version = "39.0.0", default-features = false }
+sp-io = { version = "38.0.0", default-features = false }
+
+# Local dependencies
+etrid-lightning-bloc = { path = "..", default-features = false, features = ["std"] }
+
+# UUID for IDs
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+[features]
+default = ["std"]
+std = [
+    "etrid-lightning-bloc/std",
+]

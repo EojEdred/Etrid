@@ -1,0 +1,25 @@
+{
+  "network": "mainnet-beta",
+  "tokenMint": "8XdUXcvWUYnyKg6hR5yEDFHJqhqD2CbizLURVQCXNppq",
+  "tokenAccount": "D5rcSmLqYCQrqRG11gxF83MAF6fy7JRYe13D3aFPtnWu",
+  "deployer": "2yXQ6uXTp4PwKrJWcjWN9AM6FmGTnEAhmbHJU5hbNnJM",
+  "deployedAt": "2025-11-03T20:00:00Z",
+  "name": "Etrid Coin",
+  "symbol": "ETR",
+  "decimals": 9,
+  "totalSupply": "100000000",
+  "clusterUrl": "https://api.mainnet-beta.solana.com",
+  "transactions": {
+    "createToken": "3PZ9SfmAdEvFv8d4dFWTv1XF2rM2pGHLkgXRoLSLBmumZtaf9ubZvRwDruGpKJHtRX8J9U8txW4GdmJbtDXkXK4u",
+    "createAccount": "4cdX52vV9kAxoHuvy19ijiL3tgBtpbr84jxbfYZRPgnvB2E8gVynWb7xUgcyjRXMa6wzQHXGS9hQFNeqHtWQ4E2x",
+    "mintSupply": "hFHhWFX33ikwSyhdeXLyyPHGt6BfLwcQEeNFvki7RnqmsrBQBTWHzoD2nNsWNWMtqKKMqi33HbfB4MpXF96jaPC"
+  },
+  "cost": {
+    "solSpent": "0.00499248",
+    "solRemaining": "0.19500752"
+  },
+  "explorer": {
+    "token": "https://solscan.io/token/8XdUXcvWUYnyKg6hR5yEDFHJqhqD2CbizLURVQCXNppq",
+    "deployer": "https://solscan.io/account/2yXQ6uXTp4PwKrJWcjWN9AM6FmGTnEAhmbHJU5hbNnJM"
+  }
+}

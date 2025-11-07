@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { PoolCard } from '../components/PoolCard';
 import { StatsOverview } from '../components/StatsOverview';
 import { TVLChart } from '../components/TVLChart';
+import { HowItWorksSection } from '../components/HowItWorksSection';
 import { fetchMetrics } from '../lib/api';
 import type { MetricsData } from '../types';
 
@@ -89,6 +90,11 @@ export default function Dashboard() {
         {/* TVL Chart */}
         <div className="mt-8">
           <TVLChart pools={metrics.pools} />
+        </div>
+
+        {/* How It Works Section */}
+        <div className="mt-8">
+          <HowItWorksSection />
         </div>
 
         {/* Pool Cards */}
