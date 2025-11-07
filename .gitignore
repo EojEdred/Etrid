@@ -64,6 +64,8 @@ coverage/
 # Consolidated secrets folder - NEVER COMMIT!
 secrets/
 **/secrets/
+# But track the README so users know how to use the directory
+!secrets/README.md
 infrastructure/mainnet/*.json
 infrastructure/mainnet/*.txt
 
