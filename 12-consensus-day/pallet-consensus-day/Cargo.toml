@@ -15,7 +15,7 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "
 sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
 sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
-pallet-treasury = { path = "../pallet-treasury", default-features = false }
+pallet-treasury = { path = "../../10-foundation/pallets/pallet-treasury", default-features = false }
 
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }

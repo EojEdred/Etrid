@@ -50,7 +50,7 @@ trx-bridge = { path = "../../bridge-protocols/tron-bridge", default-features = f
 stablecoin-usdt-bridge = { path = "../../bridge-protocols/stablecoin-usdt-bridge", default-features = false }
 
 # ETR Lock pallet (shared by all bridges)
-pallet-etr-lock = { path = "../../../pallets/pallet-etr-lock", default-features = false }
+pallet-etr-lock = { path = "../../../06-native-currency/pallets/pallet-etr-lock", default-features = false }
 
 # EDSC pallets (8 pallets)
 # Core EDSC pallets (for reference - mainly on PBC-EDSC)
@@ -60,32 +60,32 @@ pallet-edsc-redemption = { path = "../../bridge-protocols/edsc-bridge/substrate-
 pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
 
 # FlareChain-specific EDSC pallets
-pallet-reserve-vault = { path = "../../../src/pallets/pallet-reserve-vault", default-features = false }
-pallet-custodian-registry = { path = "../../../src/pallets/pallet-custodian-registry", default-features = false }
-pallet-reserve-oracle = { path = "../../../src/pallets/pallet-reserve-oracle", default-features = false }
-pallet-multiasset-reserve = { path = "../../../src/pallets/pallet-multiasset-reserve", default-features = false }
-pallet-reserve-backed-token = { path = "../../../src/pallets/pallet-reserve-backed-token", default-features = false }
+pallet-reserve-vault = { path = "../../../06-native-currency/pallets/pallet-reserve-vault", default-features = false }
+pallet-custodian-registry = { path = "../../../06-native-currency/pallets/pallet-custodian-registry", default-features = false }
+pallet-reserve-oracle = { path = "../../../06-native-currency/pallets/pallet-reserve-oracle", default-features = false }
+pallet-multiasset-reserve = { path = "../../../06-native-currency/pallets/pallet-multiasset-reserve", default-features = false }
+pallet-reserve-backed-token = { path = "../../../06-native-currency/pallets/pallet-reserve-backed-token", default-features = false }
 
 # Cross-chain infrastructure
-pallet-xcm-bridge = { path = "../../../src/pallets/pallet-xcm-bridge", default-features = false }
+pallet-xcm-bridge = { path = "../../pallets-shared/pallet-xcm-bridge", default-features = false }
 
 # ASF Consensus pallets
-pallet-validator-committee = { path = "../../../src/pallets/pallet-validator-committee", default-features = false }
-pallet-validator-committee-runtime-api = { path = "../../../src/pallets/pallet-validator-committee/runtime-api", default-features = false }
-pallet-validator-rewards = { path = "../../../src/pallets/pallet-validator-rewards", default-features = false }
+pallet-validator-committee = { path = "../../../11-peer-roles/pallet-validator-committee", default-features = false }
+pallet-validator-committee-runtime-api = { path = "../../../11-peer-roles/pallet-validator-committee/runtime-api", default-features = false }
+pallet-validator-rewards = { path = "../../../11-peer-roles/pallet-validator-rewards", default-features = false }
 
 # OpenDID pallets (Component 02)
-pallet-did-registry = { path = "../../../src/pallets/pallet-did-registry", default-features = false }
-pallet-aidid = { path = "../../../src/pallets/pallet-aidid", default-features = false }
+pallet-did-registry = { path = "../../../02-open-did/pallets/pallet-did-registry", default-features = false }
+pallet-aidid = { path = "../../../14-aidevs/pallets", default-features = false }
 
 # Oracle Network (newly integrated)
-pallet-oracle-network = { path = "../../../src/pallets/pallet-oracle-network", default-features = false }
+pallet-oracle-network = { path = "../../../06-native-currency/pallets/pallet-oracle-network", default-features = false }
 
 # New integrated pallets (Consensus Day system & EDSC stability)
-pallet-consensus-day = { path = "../../../src/pallets/pallet-consensus-day", default-features = false }
-pallet-edsc-stability = { path = "../../../src/pallets/pallet-edsc-stability", default-features = false }
-pallet-circuit-breaker = { path = "../../../src/pallets/pallet-circuit-breaker", default-features = false }
-pallet-treasury-etrid = { path = "../../../src/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
+pallet-consensus-day = { path = "../../../12-consensus-day/pallet-consensus-day", default-features = false }
+pallet-edsc-stability = { path = "../../../06-native-currency/pallets/pallet-edsc-stability", default-features = false }
+pallet-circuit-breaker = { path = "../../pallets-shared/pallet-circuit-breaker", default-features = false }
+pallet-treasury-etrid = { path = "../../../10-foundation/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
 
 # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
 # etrid-post-quantum = { path = "../../../03-security/post-quantum", default-features = false }

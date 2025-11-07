@@ -125,14 +125,14 @@ members = [
     "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint",                   # State checkpoint synchronization
     "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger",       # CCTP-style token messenger (Phase 3)
     "05-multichain/bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation",           # M-of-N attestation verification (Phase 3)
-    "src/pallets/pallet-circuit-breaker",               # Emergency safety controls
-    "src/pallets/pallet-reserve-vault",                 # Multi-asset collateral vault
-    "src/pallets/pallet-custodian-registry",            # Bonded custodian registry
-    "src/pallets/pallet-reserve-oracle",                # Reserve data aggregation oracle
-    "src/pallets/pallet-multiasset-reserve",            # Multi-asset reserve management with rebalancing
-    "src/pallets/pallet-reserve-backed-token",          # Reserve-backed synthetic tokens (sBTC, sETH, sUSD)
-    "src/pallets/pallet-xcm-bridge",                    # XCM/DETRP2P cross-chain messaging
-    "src/pallets/pallet-consensus-day",                 # Annual Consensus Day governance
+    "05-multichain/pallets-shared/pallet-circuit-breaker",               # Emergency safety controls
+    "06-native-currency/pallets/pallet-reserve-vault",                 # Multi-asset collateral vault
+    "06-native-currency/pallets/pallet-custodian-registry",            # Bonded custodian registry
+    "06-native-currency/pallets/pallet-reserve-oracle",                # Reserve data aggregation oracle
+    "06-native-currency/pallets/pallet-multiasset-reserve",            # Multi-asset reserve management with rebalancing
+    "06-native-currency/pallets/pallet-reserve-backed-token",          # Reserve-backed synthetic tokens (sBTC, sETH, sUSD)
+    "05-multichain/pallets-shared/pallet-xcm-bridge",                    # XCM/DETRP2P cross-chain messaging
+    "12-consensus-day/pallet-consensus-day",                 # Annual Consensus Day governance
 
     # ═════════════════════════════════════════════════════════════════════════════
     # 06 - Native Currency (4 modules)

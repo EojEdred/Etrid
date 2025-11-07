@@ -1,0 +1,264 @@
+# Ëtrid FlareChain - Complete Contabo VM Inventory
+# Date: November 7, 2025
+# Password: G1zziPwr2025 (all VMs)
+# SSH Key: ~/.ssh/contabo-validators
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  16 CONTABO VMs - ALL DEPLOYED AND RUNNING ✅                        ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+# ===================================================================
+# US WEST (SEATTLE) - 5 VMs - VPS 20 SSD
+# ===================================================================
+
+VM01 | Validator-06 | 85.239.239.194 | Seattle | VPS 20 SSD | €7.00/mo
+IPv6: 2605:a141:2289:6918::1
+VNC: 154.53.57.167:63242
+Host: 19767
+Keys: validator-6 (AURA, GRANDPA, ASF)
+Account: 5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM02 | Validator-07 | 85.239.239.193 | Seattle | VPS 20 SSD | €7.00/mo
+IPv6: 2605:a141:2289:6917::1
+VNC: 154.53.59.1:63298
+Host: 19801
+Keys: validator-7 (AURA, GRANDPA, ASF)
+Account: 5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM03 | Validator-08 | 85.239.239.190 | Seattle | VPS 20 SSD | €7.00/mo
+IPv6: 2605:a141:2289:6916::1
+VNC: 66.94.124.15:63251
+Host: 17815
+Keys: validator-8 (AURA, GRANDPA, ASF)
+Account: 5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM04 | Validator-09 | 85.239.239.189 | Seattle | VPS 20 SSD | €7.00/mo
+IPv6: 2605:a141:2289:6915::1
+VNC: 66.94.122.126:63067
+Host: 28526
+Keys: validator-9 (AURA, GRANDPA, ASF)
+Account: 5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM05 | Validator-10 | 85.239.239.188 | Seattle | VPS 20 SSD | €7.00/mo
+IPv6: 2605:a141:2289:6914::1
+VNC: 144.126.147.23:63110
+Host: 28523
+Keys: validator-10 (AURA, GRANDPA, ASF)
+Account: 5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+# ===================================================================
+# UNITED KINGDOM (PORTSMOUTH) - 6 VMs - VPS 20 NVMe
+# ===================================================================
+
+VM06 | Validator-11 | 80.190.82.186 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6911::1
+VNC: 149.102.155.169:63098
+Host: 28469
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-11 (AURA, GRANDPA, ASF)
+Account: 5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM07 | Validator-12 | 80.190.82.185 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6910::1
+VNC: 149.102.129.165:63119
+Host: 23665
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-12 (AURA, GRANDPA, ASF)
+Account: 5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM08 | Validator-13 | 80.190.82.184 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6909::1
+VNC: 149.102.155.18:63067
+Host: 22918
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-13 (AURA, GRANDPA, ASF)
+Account: 5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM09 | Validator-14 | 80.190.82.183 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6908::1
+VNC: 149.102.152.217:63156
+Host: 22917
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-14 (AURA, GRANDPA, ASF)
+Account: 5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM10 | Validator-15 | 158.220.83.146 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6907::1
+VNC: 45.141.122.21:63058
+Host: 20621
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-15 (AURA, GRANDPA, ASF)
+Account: 5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM11 | Validator-16 | 158.220.83.66 | Portsmouth | VPS 20 NVMe | €9.84/mo
+IPv6: 2a02:c204:2289:6906::1
+VNC: 45.141.122.166:63210
+Host: 21566
+Location Fee: €0.29 | NVMe Extension: €2.55
+Keys: validator-16 (AURA, GRANDPA, ASF)
+Account: 5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+# ===================================================================
+# US EAST (NEW YORK) - 5 VMs - VPS 20 NVMe
+# ===================================================================
+
+VM12 | Validator-17 | 154.12.250.18 | New York | VPS 20 NVMe | €9.55/mo
+IPv6: 2605:a142:2289:6925::1
+VNC: 66.94.97.195:63050
+Host: 17395
+NVMe Extension: €2.55
+Keys: validator-17 (AURA, GRANDPA, ASF)
+Account: 5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM13 | Validator-18 | 154.12.250.17 | New York | VPS 20 NVMe | €9.55/mo
+IPv6: 2605:a142:2289:6924::1
+VNC: 154.53.36.157:63072
+Host: 19757
+NVMe Extension: €2.55
+Keys: validator-18 (AURA, GRANDPA, ASF)
+Account: 5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM14 | Validator-19 | 154.12.250.15 | New York | VPS 20 NVMe | €9.55/mo
+IPv6: 2605:a142:2289:6923::1
+VNC: 66.94.109.221:63335
+Host: 18621
+NVMe Extension: €2.55
+Keys: validator-19 (AURA, GRANDPA, ASF)
+Account: 5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM15 | Validator-20 | 154.12.249.223 | New York | VPS 20 NVMe | €9.55/mo
+IPv6: 2605:a142:2289:6922::1
+VNC: 66.94.102.135:63103
+Host: 17835
+NVMe Extension: €2.55
+Keys: validator-20 (AURA, GRANDPA, ASF)
+Account: 5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+VM16 | Validator-21 | 154.12.249.182 | New York | VPS 20 NVMe | €9.55/mo
+IPv6: 2605:a142:2289:6921::1
+VNC: 154.12.250.76:63019
+Host: 20864
+NVMe Extension: €2.55
+Keys: validator-21 (AURA, GRANDPA, ASF)
+Account: 5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP
+Stake: 64,000 ETR
+Status: ✅ RUNNING & SYNCING
+
+# ===================================================================
+# COST SUMMARY
+# ===================================================================
+
+Seattle (5 VMs):           5 × €7.00 = €35.00
+Portsmouth (6 VMs):        6 × €7.00 = €42.00
+New York (5 VMs):          5 × €7.00 = €35.00
+NVMe Extensions:          11 × €2.55 = €28.05
+UK Location Fees:          6 × €0.29 = €1.74
+                                      ───────
+TOTAL MONTHLY COST:                   €141.79 (~$152/month)
+
+Previous Azure Cost:                  ~$400-500/month
+MONTHLY SAVINGS:                      ~$250-350/month
+ANNUAL SAVINGS:                       ~$3,000-4,200/year
+
+# ===================================================================
+# SESSION KEYS LOCATION
+# ===================================================================
+
+All session keys stored at:
+/Users/macbook/Desktop/etrid/secrets/validator-keys/
+
+Master key document:
+/Users/macbook/Desktop/etrid/secrets/validator-keys/generated-keys/COMPLETE_VALIDATOR_NETWORK_MAP.md
+
+Deployed keystore format:
+/root/.etrid/chains/flarechain_mainnet/keystore/ (on each VM)
+
+# ===================================================================
+# ACCESS INFORMATION
+# ===================================================================
+
+SSH Access:
+ssh -i ~/.ssh/contabo-validators root@<IP>
+
+Initial Password (for reference only):
+G1zziPwr2025
+
+SSH Key Location:
+~/.ssh/contabo-validators (private key)
+~/.ssh/contabo-validators.pub (public key)
+
+# ===================================================================
+# NETWORK INFORMATION
+# ===================================================================
+
+P2P Port: 30333/tcp
+RPC Port: 9944/tcp (localhost only)
+Prometheus: 9615/tcp
+
+Bootnodes:
+- /ip4/64.181.215.19/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+- /ip4/20.69.26.209/tcp/30333/p2p/12D3KooWDQhL88sDaMCbtWfFFnCAyTYgyRcQumNbhfi2tmiP7ckm
+
+Chainspec: /root/chainspec.json (2.1M)
+Chain ID: flarechain_mainnet
+
+# ===================================================================
+# SYSTEMD SERVICE
+# ===================================================================
+
+Service Name: flarechain-validator.service
+Binary: /usr/local/bin/flarechain-node
+Base Path: /root/.etrid
+Status: enabled and running on all 16 VMs
+
+View logs:
+journalctl -u flarechain-validator -f
+
+Check status:
+systemctl status flarechain-validator
+
+# ===================================================================
+# DEPLOYMENT STATUS
+# ===================================================================
+
+Date Deployed: November 7, 2025
+Deployment Method: Parallel SSH deployment
+Migration Status: ✅ COMPLETE
+Network Consensus: ✅ ACHIEVED (17/21 validators)
+Total Active Validators: 17/21 (81%)
+Required for Consensus: 15/21 (71%)
+
+All 16 Contabo validators successfully deployed and participating
+in the FlareChain mainnet consensus! 🎉
+
+# ===================================================================
