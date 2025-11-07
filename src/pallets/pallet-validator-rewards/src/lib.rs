@@ -121,17 +121,14 @@ impl PerformanceMetrics {
 // TODO: Uncomment when pallet-validator-committee is added as dependency
 // pub mod migrations;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use super::*;
-    use codec::{Encode, Decode};
-    use frame_support::pallet_prelude::*;
+
     use frame_support::traits::{Currency, ReservableCurrency, ExistenceRequirement};
-    use frame_support::PalletId;
+
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Zero, Saturating, CheckedDiv, CheckedMul, AccountIdConversion};
-    use sp_runtime::Permill;
-    use sp_std::vec::Vec;
+    use sp_runtime::traits::{Zero, Saturating, CheckedDiv, AccountIdConversion};
 
     #[pallet::config]
     pub trait Config: frame_system::Config {

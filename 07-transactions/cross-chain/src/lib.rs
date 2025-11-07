@@ -37,8 +37,6 @@ use std::{
     vec::Vec,
     string::String,
     result::Result::{self, Ok, Err},
-    option::Option::{self, Some, None},
-    default::Default,
 };
 
 /// Supported chains

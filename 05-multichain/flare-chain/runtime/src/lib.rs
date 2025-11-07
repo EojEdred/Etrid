@@ -29,7 +29,7 @@ use frame_support::{
     construct_runtime, derive_impl,
     dispatch::DispatchClass,
     parameter_types,
-    traits::{ConstBool, ConstU128, ConstU16, ConstU32, ConstU64, ConstU8, ExistenceRequirement},
+    traits::{ConstU128, ConstU16, ConstU32, ConstU64, ConstU8},
     weights::{
         constants::{BlockExecutionWeight, ExtrinsicBaseWeight, WEIGHT_REF_TIME_PER_SECOND},
         IdentityFee,
@@ -42,7 +42,6 @@ pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, FungibleAdapter, Multiplier};
-use pallet_treasury_etrid as treasury;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -198,9 +197,9 @@ parameter_types! {
 /// Handler for transaction fees - splits 50/50 between treasury and burn
 pub struct DealWithFees;
 impl frame_support::traits::OnUnbalanced<frame_support::traits::fungible::Credit<AccountId, Balances>> for DealWithFees {
-    fn on_unbalanced(mut amount: frame_support::traits::fungible::Credit<AccountId, Balances>) {
-        use frame_support::traits::fungible::{Balanced, Inspect};
-        use frame_support::traits::tokens::Preservation;
+    fn on_unbalanced(amount: frame_support::traits::fungible::Credit<AccountId, Balances>) {
+        use frame_support::traits::fungible::Balanced;
+        
 
         // Split the credit into two parts: 50% to treasury, 50% burn
         // We need to resolve the credit to get its value, then handle it
@@ -298,7 +297,6 @@ impl pallet_etrid_staking::Config for Runtime {
 
 /// Configure the pallet-etwasm-vm (smart contract execution)
 impl pallet_etwasm_vm::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxCodeSize = ConstU32<1024>;
     type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
     type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
@@ -352,7 +350,6 @@ parameter_types! {
 
 /// Configure Consensus Day Proposal System
 impl consensus_day_proposal_system::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type RegistrationDeposit = ConsensusDayRegistrationDeposit;
 }
@@ -566,7 +563,6 @@ impl stablecoin_usdt_bridge::Config for Runtime {
 
 /// Configure EDSC Token Pallet
 impl pallet_edsc_token::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxSupply = ConstU128<1_000_000_000_000_000_000_000>; // 1 billion EDSC (18 decimals)
     type MinBalance = ConstU128<1_000_000_000_000>; // 0.000001 EDSC minimum
     type WeightInfo = ();
@@ -574,7 +570,6 @@ impl pallet_edsc_token::Config for Runtime {
 
 /// Configure EDSC Receipts Pallet (SBT registry)
 impl pallet_edsc_receipts::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type MaxReceiptsPerWallet = ConstU32<1000>; // Max 1000 receipts per wallet
     type ReceiptExpiryPeriod = ConstU32<5_256_000>; // ~1 year (at 6s blocks)
 }
@@ -620,7 +615,6 @@ parameter_types! {
 
 /// Configure EDSC Oracle Pallet
 impl pallet_edsc_oracle::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type PriceCallback = EdscRedemption;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
@@ -849,7 +843,6 @@ parameter_types! {
 }
 
 impl pallet_validator_rewards::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type EpochDuration = EpochDuration;
     type AnnualRewardPoolBps = AnnualRewardPoolBps;

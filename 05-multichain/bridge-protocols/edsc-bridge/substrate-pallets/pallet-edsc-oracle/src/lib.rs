@@ -31,7 +31,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
