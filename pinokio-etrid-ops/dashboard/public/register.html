@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <h1>⚡ Etrid Operations Center</h1>
+        <p>Start monitoring your nodes in 2 minutes</p>
+      </div>
+
+      <form id="register-form" class="auth-form">
+        <h2>Create Account</h2>
+
+        <div id="register-error" class="error-message" style="display: none;"></div>
+        <div id="register-success" class="success-message" style="display: none;"></div>
+
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            placeholder="John Validator"
+            autocomplete="name"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="your@email.com"
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="organization">Organization (Optional)</label>
+          <input
+            type="text"
+            id="organization"
+            name="organization"
+            placeholder="Your Company"
+            autocomplete="organization"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="••••••••"
+            autocomplete="new-password"
+            minlength="8"
+          >
+          <small>Minimum 8 characters</small>
+        </div>
+
+        <div class="form-group">
+          <label for="password-confirm">Confirm Password</label>
+          <input
+            type="password"
+            id="password-confirm"
+            name="password-confirm"
+            required
+            placeholder="••••••••"
+            autocomplete="new-password"
+          >
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="terms" name="terms" required>
+            I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="register-btn">
+          Create Account
+        </button>
+
+        <div class="auth-links">
+          Already have an account? <a href="login.html">Sign in</a>
+        </div>
+      </form>
+
+      <div class="auth-footer">
+        <div class="tier-badge">
+          <strong>🎉 Free Tier Includes:</strong>
+          <ul>
+            <li>Monitor up to 5 nodes</li>
+            <li>Health checks every 5 minutes</li>
+            <li>Email alerts</li>
+            <li>7 days historical data</li>
+          </ul>
+          <p><small>No credit card required</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-features">
+      <h3>Trusted by Validators</h3>
+      <div class="stats">
+        <div class="stat">
+          <strong>1,000+</strong>
+          <span>Nodes Monitored</span>
+        </div>
+        <div class="stat">
+          <strong>99.9%</strong>
+          <span>Uptime</span>
+        </div>
+        <div class="stat">
+          <strong>24/7</strong>
+          <span>Monitoring</span>
+        </div>
+      </div>
+      <div class="testimonial">
+        <p>"Saved me hours of manual monitoring. Best validator tool I've used!"</p>
+        <strong>- FlareChain Validator</strong>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // Handle registration form submission
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('register-btn');
+      const errorDiv = document.getElementById('register-error');
+      const successDiv = document.getElementById('register-success');
+
+      // Clear previous messages
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+
+      // Validate passwords match
+      const password = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('password-confirm').value;
+
+      if (password !== passwordConfirm) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      // Disable button
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const organization = document.getElementById('organization').value;
+
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            organization: organization || null
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+
+        // Show success message
+        successDiv.innerHTML = `
+          <strong>Account created successfully!</strong>
+          <p>Please check your email to verify your account.</p>
+          <p>Redirecting to login...</p>
+        `;
+        successDiv.style.display = 'block';
+
+        // Hide form
+        document.getElementById('register-form').style.display = 'none';
+
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 3000);
+
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+
+    // Check if already logged in
+    if (localStorage.getItem('accessToken')) {
+      window.location.href = '/dashboard.html';
+    }
+  </script>
+</body>
+</html>

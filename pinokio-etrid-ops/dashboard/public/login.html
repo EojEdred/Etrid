@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <h1>⚡ Etrid Operations Center</h1>
+        <p>Monitor your blockchain nodes 24/7</p>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <h2>Sign In</h2>
+
+        <div id="login-error" class="error-message" style="display: none;"></div>
+        <div id="login-success" class="success-message" style="display: none;"></div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="your@email.com"
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="••••••••"
+            autocomplete="current-password"
+          >
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="remember" name="remember">
+            Remember me for 30 days
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+          Sign In
+        </button>
+
+        <div class="auth-links">
+          <a href="forgot-password.html">Forgot password?</a>
+          <span>•</span>
+          <a href="register.html">Create account</a>
+        </div>
+      </form>
+
+      <div class="auth-footer">
+        <p>New to Etrid? <a href="register.html"><strong>Sign up free</strong></a></p>
+      </div>
+    </div>
+
+    <div class="auth-features">
+      <h3>Why Etrid Operations Center?</h3>
+      <ul>
+        <li>
+          <span class="feature-icon">📊</span>
+          <div>
+            <strong>Real-time Monitoring</strong>
+            <p>Track all your nodes from one dashboard</p>
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">🔔</span>
+          <div>
+            <strong>Instant Alerts</strong>
+            <p>Get notified immediately when issues occur</p>
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">📈</span>
+          <div>
+            <strong>Historical Analytics</strong>
+            <p>Track performance trends over time</p>
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">🔐</span>
+          <div>
+            <strong>Secure & Private</strong>
+            <p>Your data is encrypted and isolated</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // Handle login form submission
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('login-btn');
+      const errorDiv = document.getElementById('login-error');
+      const successDiv = document.getElementById('login-success');
+
+      // Clear previous messages
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+
+      // Disable button
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('remember').checked;
+
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, remember })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+
+        // Store token
+        localStorage.setItem('accessToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Show success
+        successDiv.textContent = 'Login successful! Redirecting...';
+        successDiv.style.display = 'block';
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard.html';
+        }, 1000);
+
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+
+    // Check if already logged in
+    if (localStorage.getItem('accessToken')) {
+      window.location.href = '/dashboard.html';
+    }
+  </script>
+</body>
+</html>

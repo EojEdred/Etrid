@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container authenticated">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>⚡ Etrid Ops</h1>
+        <span id="user-tier" class="tier-badge-small">Free</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html" class="active">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/my-nodes.html">
+          <span>🖥️</span> My Nodes
+        </a>
+        <a href="/alerts.html">
+          <span>🔔</span> Alerts
+        </a>
+        <a href="/history.html">
+          <span>📈</span> Analytics
+        </a>
+        <a href="/settings.html">
+          <span>⚙️</span> Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">
+            <span id="user-initials">JD</span>
+          </div>
+          <div class="user-details">
+            <strong id="user-name">Loading...</strong>
+            <small id="user-email">...</small>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-logout" id="logout-btn">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Welcome back, <span id="welcome-name">validator</span>!</p>
+        </div>
+        <div class="header-actions">
+          <span id="connection-status" class="status-badge online">Connected</span>
+          <span id="last-update">Last update: Never</span>
+        </div>
+      </header>
+
+      <!-- Quick Stats -->
+      <div class="summary-cards">
+        <div class="card stat-card">
+          <div class="stat-header">
+            <h3>Total Nodes</h3>
+            <span class="stat-icon">🖥️</span>
+          </div>
+          <div class="stat-value" id="total-nodes">0</div>
+          <div class="stat-footer">
+            <span id="nodes-limit">0/5 used</span>
+            <a href="/my-nodes.html">Manage</a>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-header">
+            <h3>Online</h3>
+            <span class="stat-icon">✅</span>
+          </div>
+          <div class="stat-value status-online" id="online-nodes">0</div>
+          <div class="stat-footer">
+            <span>Healthy nodes</span>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-header">
+            <h3>Syncing</h3>
+            <span class="stat-icon">🔄</span>
+          </div>
+          <div class="stat-value status-syncing" id="syncing-nodes">0</div>
+          <div class="stat-footer">
+            <span>Catching up</span>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-header">
+            <h3>Offline</h3>
+            <span class="stat-icon">❌</span>
+          </div>
+          <div class="stat-value status-offline" id="offline-nodes">0</div>
+          <div class="stat-footer">
+            <span>Need attention</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Nodes State -->
+      <div id="no-nodes-state" class="card empty-state" style="display: none;">
+        <div class="empty-state-icon">🚀</div>
+        <h2>Add Your First Node</h2>
+        <p>Start monitoring your validator or collator nodes in minutes.</p>
+        <a href="/my-nodes.html?action=add" class="btn btn-primary btn-lg">
+          Add Node
+        </a>
+        <div class="empty-state-help">
+          <p><strong>Need help?</strong></p>
+          <a href="/docs/adding-nodes.html" target="_blank">View Setup Guide →</a>
+        </div>
+      </div>
+
+      <!-- Node Status -->
+      <div id="nodes-container" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Your Nodes</h3>
+            <a href="/my-nodes.html" class="btn btn-sm">View All</a>
+          </div>
+          <div id="nodes-list">
+            <p class="loading">Loading your nodes...</p>
+          </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Alerts</h3>
+            <a href="/alerts.html" class="btn btn-sm">View All</a>
+          </div>
+          <div id="recent-alerts">
+            <p class="info">No recent alerts</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade CTA (for free tier) -->
+      <div id="upgrade-cta" class="card upgrade-banner" style="display: none;">
+        <div class="upgrade-content">
+          <div>
+            <h3>🚀 Upgrade to Pro</h3>
+            <p>Monitor up to 20 nodes with minute-by-minute health checks and Telegram alerts</p>
+          </div>
+          <a href="/pricing.html" class="btn btn-primary">Upgrade Now</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Require authentication
+    requireAuth();
+
+    let socket;
+
+    // Load user info
+    async function loadUserInfo() {
+      const user = getUser();
+      if (!user) return;
+
+      document.getElementById('user-name').textContent = user.name;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+      document.getElementById('user-tier').textContent = user.tier.toUpperCase();
+
+      // Set initials
+      const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('user-initials').textContent = initials;
+
+      // Show upgrade CTA for free tier
+      if (user.tier === 'free') {
+        document.getElementById('upgrade-cta').style.display = 'block';
+      }
+    }
+
+    // Load nodes
+    async function loadNodes() {
+      try {
+        const response = await authenticatedFetch('/api/user/nodes');
+        const nodes = await response.json();
+
+        const user = getUser();
+        const maxNodes = user.tier === 'free' ? 5 : user.tier === 'pro' ? 20 : -1;
+
+        // Update stats
+        document.getElementById('total-nodes').textContent = nodes.length;
+        document.getElementById('nodes-limit').textContent =
+          maxNodes === -1 ? `${nodes.length} nodes` : `${nodes.length}/${maxNodes} used`;
+
+        if (nodes.length === 0) {
+          // Show empty state
+          document.getElementById('no-nodes-state').style.display = 'block';
+          document.getElementById('nodes-container').style.display = 'none';
+        } else {
+          // Show nodes
+          document.getElementById('no-nodes-state').style.display = 'none';
+          document.getElementById('nodes-container').style.display = 'block';
+
+          // Load status for each node
+          loadNodeStatus(nodes);
+        }
+      } catch (err) {
+        console.error('Error loading nodes:', err);
+        showError('Failed to load nodes: ' + err.message);
+      }
+    }
+
+    // Load node status
+    async function loadNodeStatus(nodes) {
+      // TODO: Implement status fetching for user's nodes
+      document.getElementById('nodes-list').innerHTML =
+        '<p class="info">Node monitoring coming soon...</p>';
+    }
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      logout();
+      window.location.href = '/login.html';
+    });
+
+    // Initialize
+    loadUserInfo();
+    loadNodes();
+
+    // Connect to WebSocket for real-time updates
+    socket = io();
+    socket.on('connect', () => {
+      updateConnectionStatus(true);
+    });
+    socket.on('disconnect', () => {
+      updateConnectionStatus(false);
+    });
+  </script>
+</body>
+</html>
