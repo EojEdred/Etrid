@@ -9,7 +9,7 @@ members = [
     "consensus/asf-algorithm",
     "consensus/block-production",
     "04-accounts/pallet",
-    "pallets/pallet-etr-lock",
+    "../../../06-native-currency/pallets/pallet-etr-lock",
 ]
 
 [workspace.package]
