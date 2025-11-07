@@ -64,6 +64,8 @@ coverage/
 # Consolidated secrets folder - NEVER COMMIT!
 secrets/
 **/secrets/
+infrastructure/mainnet/*.json
+infrastructure/mainnet/*.txt
 
 # Generated validator keys (contains private keys, sudo keys, payment accounts)
 validator-keys-setup/generated-keys/
@@ -75,6 +77,10 @@ validator-keys-setup/generated-keys/
 *-keys-*.json
 validator-keys*.json
 sudo-key*.json
+keypairs.json
+**/keypairs.json
+**/dids/keypairs.json
+**/dids/*-keys.json
 
 # Encrypted key files (even encrypted, don't commit to public repos)
 *.enc
@@ -98,6 +104,10 @@ validator-inventory.txt
 # Chain spec with embedded keys
 *-chainspec-*.json
 genesis-*.json
+*_genesis.json
+flarechain_mainnet_genesis.json
+**/mainnet/genesis*.json
+**/testnet/genesis*.json
 
 # API tokens and credentials
 *-token.txt
