@@ -1,0 +1,36 @@
+{
+  "title": "Install Etrid Operations Center",
+  "description": "Install dependencies for Etrid blockchain operations center",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🚀 Installing Etrid Operations Center...'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "cd {{os.homedir}}/pinokio/api/etrid && npm install"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '✅ Installation complete!'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '📝 Please configure your nodes in: ~/pinokio/api/etrid/config.json'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🔐 Make sure SSH keys are in place for your cloud providers'"
+      }
+    }
+  ]
+}

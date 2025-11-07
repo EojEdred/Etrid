@@ -1,0 +1,27 @@
+{
+  "name": "etrid-operations-api",
+  "version": "1.0.0",
+  "description": "Etrid Blockchain Operations Center - Pinokio API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "etrid",
+    "blockchain",
+    "operations",
+    "monitoring",
+    "pinokio"
+  ],
+  "author": "Etrid Team",
+  "license": "MIT",
+  "dependencies": {
+    "@polkadot/api": "^10.11.1",
+    "axios": "^1.6.0",
+    "ssh2": "^1.15.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

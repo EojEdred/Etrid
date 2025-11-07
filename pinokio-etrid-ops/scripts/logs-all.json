@@ -1,0 +1,14 @@
+{
+  "title": "Fetch Logs - All Chains",
+  "description": "Fetch recent logs from all nodes",
+  "run": [
+    {
+      "method": "etrid.logs",
+      "params": {
+        "chains": "all",
+        "since": "1h",
+        "analyze": false
+      }
+    }
+  ]
+}

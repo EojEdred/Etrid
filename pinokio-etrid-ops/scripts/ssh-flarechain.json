@@ -1,0 +1,13 @@
+{
+  "title": "SSH to FlareChain Validator",
+  "description": "Connect to FlareChain validator node",
+  "run": [
+    {
+      "method": "etrid.connect",
+      "params": {
+        "node": "flarechain-validator-1",
+        "cloud": "aws"
+      }
+    }
+  ]
+}

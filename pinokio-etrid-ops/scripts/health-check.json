@@ -1,0 +1,19 @@
+{
+  "title": "Health Check - All Chains",
+  "description": "Run comprehensive health check on all chains",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🏥 Starting comprehensive health check...'"
+      }
+    },
+    {
+      "method": "etrid.healthcheck",
+      "params": {
+        "chains": "all",
+        "fix": false
+      }
+    }
+  ]
+}

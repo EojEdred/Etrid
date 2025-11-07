@@ -1,0 +1,14 @@
+{
+  "daemon": true,
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "cd {{self.path}} && node server.js",
+        "env": {
+          "PORT": "8080"
+        }
+      }
+    }
+  ]
+}

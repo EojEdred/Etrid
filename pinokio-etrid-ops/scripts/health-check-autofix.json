@@ -1,0 +1,25 @@
+{
+  "title": "Health Check with Auto-Fix",
+  "description": "Run health check and automatically fix common issues",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🏥 Starting health check with auto-fix enabled...'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '⚠️  This will attempt to fix issues automatically'"
+      }
+    },
+    {
+      "method": "etrid.healthcheck",
+      "params": {
+        "chains": "all",
+        "fix": true
+      }
+    }
+  ]
+}

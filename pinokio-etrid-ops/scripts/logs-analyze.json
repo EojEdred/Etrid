@@ -1,0 +1,20 @@
+{
+  "title": "Fetch & Analyze Logs with AI",
+  "description": "Fetch logs and analyze with Claude Code",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '📋 Fetching logs from all nodes...'"
+      }
+    },
+    {
+      "method": "etrid.logs",
+      "params": {
+        "chains": "all",
+        "since": "1h",
+        "analyze": true
+      }
+    }
+  ]
+}

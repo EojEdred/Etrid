@@ -1,0 +1,12 @@
+{
+  "title": "List All Nodes",
+  "description": "List all configured nodes across all clouds",
+  "run": [
+    {
+      "method": "etrid.list",
+      "params": {
+        "format": "table"
+      }
+    }
+  ]
+}

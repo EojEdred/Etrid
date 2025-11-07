@@ -1,0 +1,26 @@
+{
+  "title": "Execute Command on Multiple Nodes",
+  "description": "Run a command across multiple nodes",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '⚡ This script template needs customization'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '📝 Edit this file and specify: nodes array and command'"
+      }
+    },
+    {
+      "method": "etrid.exec",
+      "params": {
+        "nodes": ["flarechain-validator-1", "eth-pbc-collator-1"],
+        "command": "systemctl status substrate",
+        "parallel": true
+      }
+    }
+  ]
+}

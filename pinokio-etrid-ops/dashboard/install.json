@@ -1,0 +1,30 @@
+{
+  "title": "Install Etrid Dashboard",
+  "description": "Install the Etrid Operations Center dashboard",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🚀 Installing Etrid Operations Center Dashboard...'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "cd {{self.path}} && npm install"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '✅ Dashboard installed successfully!'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '📝 Click Start to launch the dashboard'"
+      }
+    }
+  ]
+}

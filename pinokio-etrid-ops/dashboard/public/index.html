@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ Etrid Operations Center</h1>
+      <div class="header-info">
+        <span id="connection-status" class="status-badge offline">Connecting...</span>
+        <span id="last-update">Last update: Never</span>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="status">Status</button>
+      <button class="tab" data-tab="health">Health</button>
+      <button class="tab" data-tab="logs">Logs</button>
+      <button class="tab" data-tab="nodes">Nodes</button>
+    </nav>
+
+    <!-- Status Tab -->
+    <div id="status-tab" class="tab-content active">
+      <div class="summary-cards">
+        <div class="card">
+          <h3>FlareChain</h3>
+          <div id="flarechain-status" class="chain-status">
+            <span class="loading">Loading...</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>PBC Chains</h3>
+          <div id="pbc-status" class="chain-status">
+            <span class="loading">Loading...</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Summary</h3>
+          <div id="summary" class="summary">
+            <p>Total Nodes: <span id="total-nodes">-</span></p>
+            <p>Online: <span id="online-nodes" class="status-online">-</span></p>
+            <p>Syncing: <span id="syncing-nodes" class="status-syncing">-</span></p>
+            <p>Offline: <span id="offline-nodes" class="status-offline">-</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Detailed Status</h3>
+        <div id="detailed-status">
+          <p class="loading">Loading node status...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Tab -->
+    <div id="health-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Health Check</h3>
+          <button id="run-health-check" class="btn btn-primary">Run Health Check</button>
+        </div>
+        <div id="health-results">
+          <p class="info">Click "Run Health Check" to check all chains</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Logs</h3>
+          <div class="controls">
+            <select id="log-chain">
+              <option value="all">All Chains</option>
+              <option value="flarechain">FlareChain</option>
+              <option value="btc-pbc">BTC-PBC</option>
+              <option value="eth-pbc">ETH-PBC</option>
+            </select>
+            <select id="log-timeframe">
+              <option value="1h">Last 1 Hour</option>
+              <option value="6h">Last 6 Hours</option>
+              <option value="24h">Last 24 Hours</option>
+            </select>
+            <button id="fetch-logs" class="btn">Fetch Logs</button>
+            <button id="analyze-logs" class="btn btn-secondary">Analyze with AI</button>
+          </div>
+        </div>
+        <div id="logs-content" class="logs-container">
+          <p class="info">Select options and click "Fetch Logs"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nodes Tab -->
+    <div id="nodes-tab" class="tab-content">
+      <div class="card">
+        <h3>Node Management</h3>
+        <div id="nodes-list">
+          <p class="loading">Loading nodes...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

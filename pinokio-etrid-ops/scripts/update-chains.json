@@ -1,0 +1,31 @@
+{
+  "title": "Update All Chains",
+  "description": "Update node software across all chains",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '🔄 Creating update plan...'"
+      }
+    },
+    {
+      "method": "etrid.update",
+      "params": {
+        "chains": "all",
+        "dryRun": true
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '⚠️  This was a dry run. Review the plan above.'"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "echo '📝 To execute, set dryRun: false in the script'"
+      }
+    }
+  ]
+}

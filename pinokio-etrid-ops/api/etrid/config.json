@@ -1,0 +1,165 @@
+{
+  "chains": {
+    "flarechain": {
+      "name": "FlareChain Mainnet",
+      "type": "main",
+      "nodes": [
+        {
+          "name": "flarechain-validator-1",
+          "type": "validator",
+          "cloud": "aws",
+          "ip": "10.0.1.100",
+          "sshUser": "ubuntu",
+          "sshKey": "~/.ssh/aws-flarechain.pem",
+          "wsPort": 9945,
+          "rpcPort": 9944,
+          "p2pPort": 30333,
+          "metricsPort": 9615,
+          "serviceName": "flarechain",
+          "logPath": "/var/log/substrate/substrate.log",
+          "useJournalctl": true
+        }
+      ]
+    },
+    "pbcs": [
+      {
+        "name": "BTC-PBC",
+        "ticker": "BTC",
+        "nodes": [
+          {
+            "name": "btc-pbc-collator-1",
+            "type": "collator",
+            "cloud": "gcp",
+            "ip": "34.123.45.67",
+            "sshUser": "etrid",
+            "sshKey": "~/.ssh/gcp-etrid",
+            "wsPort": 9945,
+            "rpcPort": 9944,
+            "p2pPort": 30333,
+            "metricsPort": 9615,
+            "serviceName": "btc-pbc",
+            "useJournalctl": true
+          }
+        ]
+      },
+      {
+        "name": "ETH-PBC",
+        "ticker": "ETH",
+        "nodes": [
+          {
+            "name": "eth-pbc-collator-1",
+            "type": "collator",
+            "cloud": "aws",
+            "ip": "10.0.2.100",
+            "sshUser": "ubuntu",
+            "sshKey": "~/.ssh/aws-etrid.pem",
+            "wsPort": 9945,
+            "rpcPort": 9944,
+            "p2pPort": 30333,
+            "metricsPort": 9615,
+            "serviceName": "eth-pbc",
+            "useJournalctl": true
+          }
+        ]
+      },
+      {
+        "name": "SOL-PBC",
+        "ticker": "SOL",
+        "nodes": []
+      },
+      {
+        "name": "BNB-PBC",
+        "ticker": "BNB",
+        "nodes": []
+      },
+      {
+        "name": "ADA-PBC",
+        "ticker": "ADA",
+        "nodes": []
+      },
+      {
+        "name": "DOGE-PBC",
+        "ticker": "DOGE",
+        "nodes": []
+      },
+      {
+        "name": "LINK-PBC",
+        "ticker": "LINK",
+        "nodes": []
+      },
+      {
+        "name": "MATIC-PBC",
+        "ticker": "MATIC",
+        "nodes": []
+      },
+      {
+        "name": "SC-USDT-PBC",
+        "ticker": "USDT",
+        "nodes": []
+      },
+      {
+        "name": "TRX-PBC",
+        "ticker": "TRX",
+        "nodes": []
+      },
+      {
+        "name": "XLM-PBC",
+        "ticker": "XLM",
+        "nodes": []
+      },
+      {
+        "name": "XRP-PBC",
+        "ticker": "XRP",
+        "nodes": []
+      }
+    ]
+  },
+  "clouds": {
+    "aws": {
+      "credentials": "~/.aws/credentials",
+      "region": "us-east-1",
+      "nodes": []
+    },
+    "gcp": {
+      "keyfile": "~/.gcp/etrid-key.json",
+      "project": "etrid-mainnet",
+      "nodes": []
+    },
+    "azure": {
+      "credentials": "~/.azure/credentials",
+      "nodes": []
+    },
+    "digitalocean": {
+      "token": "~/.digitalocean/token",
+      "nodes": []
+    }
+  },
+  "alerts": {
+    "telegram": {
+      "enabled": false,
+      "botToken": "",
+      "chatId": ""
+    },
+    "discord": {
+      "enabled": false,
+      "webhookUrl": ""
+    },
+    "email": {
+      "enabled": false,
+      "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "user": "",
+        "pass": ""
+      },
+      "to": []
+    }
+  },
+  "maintenance": {
+    "autoUpdate": false,
+    "autoFix": false,
+    "healthCheckInterval": 300000,
+    "backupEnabled": true,
+    "backupPath": "~/etrid-backups"
+  }
+}

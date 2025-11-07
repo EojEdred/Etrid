@@ -1,0 +1,13 @@
+{
+  "title": "Check Status - FlareChain",
+  "description": "Check status of FlareChain mainnet nodes",
+  "run": [
+    {
+      "method": "etrid.status",
+      "params": {
+        "chains": "flarechain",
+        "verbose": true
+      }
+    }
+  ]
+}

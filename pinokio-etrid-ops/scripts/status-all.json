@@ -1,0 +1,13 @@
+{
+  "title": "Check Status - All Chains",
+  "description": "Check status of all Etrid nodes (FlareChain + 12 PBCs)",
+  "run": [
+    {
+      "method": "etrid.status",
+      "params": {
+        "chains": "all",
+        "verbose": true
+      }
+    }
+  ]
+}
