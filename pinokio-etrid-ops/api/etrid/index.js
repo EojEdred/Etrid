@@ -7,6 +7,9 @@ const { NodeMonitor } = require('./node-monitor');
 const { SSHManager } = require('./ssh-manager');
 const { ChainHealth } = require('./chain-health');
 const { ClaudeIntegration } = require('./claude-integration');
+const { AlertSystem } = require('./alert-system');
+const { Scheduler } = require('./scheduler');
+const { Database } = require('./database');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,6 +21,27 @@ class EtridAPI {
     this.ssh = new SSHManager(this.config);
     this.health = new ChainHealth(this.config);
     this.claude = new ClaudeIntegration(this.config);
+    this.alerts = new AlertSystem(this.config);
+    this.scheduler = new Scheduler(this);
+    this.database = new Database(this.config);
+
+    // Initialize database and scheduler
+    this.init();
+  }
+
+  async init() {
+    try {
+      await this.database.init();
+
+      // Start scheduler if enabled in config
+      if (this.config.scheduler?.enabled !== false) {
+        this.scheduler.start();
+      }
+
+      console.log('✅ Etrid Operations Center initialized');
+    } catch (err) {
+      console.error('Initialization error:', err);
+    }
   }
 
   loadConfig() {
@@ -306,6 +330,141 @@ class EtridAPI {
       ondata({ raw: `\n❌ Error: ${err.message}\n` });
       throw err;
     }
+  }
+
+  /**
+   * Send alert through configured channels
+   * @param {Object} request - Pinokio request object
+   * @param {Function} ondata - Callback for streaming updates
+   * @param {Object} kernel - Pinokio kernel
+   */
+  async alert(request, ondata, kernel) {
+    const alert = request.params || {};
+
+    ondata({ raw: `📢 Sending alert: ${alert.title}\n` });
+
+    try {
+      const result = await this.alerts.sendAlert(alert);
+
+      // Store in database
+      if (this.database) {
+        await this.database.storeAlert(alert, result.results?.map(r => r.channel) || []);
+      }
+
+      ondata({ raw: `✅ Alert sent to ${result.results?.length || 0} channels\n` });
+      return result;
+    } catch (err) {
+      ondata({ raw: `\n❌ Alert failed: ${err.message}\n` });
+      throw err;
+    }
+  }
+
+  /**
+   * Get scheduler status and job history
+   * @param {Object} request - Pinokio request object
+   * @param {Function} ondata - Callback for streaming updates
+   * @param {Object} kernel - Pinokio kernel
+   */
+  async scheduler(request, ondata, kernel) {
+    const { action, job } = request.params || {};
+
+    if (action === 'status') {
+      const status = this.scheduler.getJobStatus();
+      ondata({ raw: JSON.stringify(status, null, 2) });
+      return status;
+    }
+
+    if (action === 'history') {
+      const history = this.scheduler.getJobHistory(job);
+      ondata({ raw: JSON.stringify(history, null, 2) });
+      return history;
+    }
+
+    if (action === 'run' && job) {
+      ondata({ raw: `▶️  Running job: ${job}\n` });
+      const result = await this.scheduler.runJob(job);
+      ondata({ raw: `✅ Job complete\n` });
+      return result;
+    }
+
+    if (action === 'start') {
+      this.scheduler.start();
+      ondata({ raw: '✅ Scheduler started\n' });
+      return { success: true };
+    }
+
+    if (action === 'stop') {
+      this.scheduler.stop();
+      ondata({ raw: '⏹️  Scheduler stopped\n' });
+      return { success: true };
+    }
+
+    throw new Error('Invalid scheduler action. Use: status, history, run, start, stop');
+  }
+
+  /**
+   * Query database for historical data
+   * @param {Object} request - Pinokio request object
+   * @param {Function} ondata - Callback for streaming updates
+   * @param {Object} kernel - Pinokio kernel
+   */
+  async history(request, ondata, kernel) {
+    const { type, chain, node, since, limit } = request.params || {};
+
+    ondata({ raw: `📊 Fetching ${type} history...\n` });
+
+    try {
+      let data;
+
+      switch (type) {
+        case 'status':
+          data = await this.database.getNodeStatusHistory(chain, node, since, limit);
+          break;
+        case 'metrics':
+          data = await this.database.getMetricsHistory(chain, node, since, limit);
+          break;
+        case 'alerts':
+          data = await this.database.getAlertHistory(chain, limit);
+          break;
+        case 'health':
+          data = await this.database.getHealthCheckHistory(chain, since, limit);
+          break;
+        case 'events':
+          data = await this.database.getEventHistory(null, limit);
+          break;
+        case 'uptime':
+          const uptime = await this.database.getNodeUptime(chain, node, 7);
+          data = { chain, node, uptime: `${uptime.toFixed(2)}%` };
+          break;
+        default:
+          throw new Error('Invalid type. Use: status, metrics, alerts, health, events, uptime');
+      }
+
+      ondata({ raw: `\n✅ Found ${Array.isArray(data) ? data.length : 1} records\n` });
+      return data;
+    } catch (err) {
+      ondata({ raw: `\n❌ Error: ${err.message}\n` });
+      throw err;
+    }
+  }
+
+  /**
+   * Test alert system
+   * @param {Object} request - Pinokio request object
+   * @param {Function} ondata - Callback for streaming updates
+   * @param {Object} kernel - Pinokio kernel
+   */
+  async test(request, ondata, kernel) {
+    const { type = 'alert' } = request.params || {};
+
+    if (type === 'alert') {
+      ondata({ raw: '🔔 Sending test alert...\n' });
+      const result = await this.alerts.sendTestAlert();
+      ondata({ raw: '✅ Test alert sent!\n' });
+      return result;
+    }
+
+    throw new Error('Invalid test type. Use: alert');
   }
 
   // Helper methods

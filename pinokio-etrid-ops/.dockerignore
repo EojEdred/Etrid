@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Node modules (we'll install in Dockerfile)
+node_modules
+npm-debug.log
+
+# Environment
+.env
+.env.local
+
+# Data files
+*.db
+*.db-journal
+*.log
+
+# Development files
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Deployment configs
+docker-compose*.yml
+Dockerfile
+.dockerignore
+etrid-ops.service
+nginx.conf

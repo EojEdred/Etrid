@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  etrid-ops:
+    build: .
+    image: etrid/operations-center:latest
+    container_name: etrid-ops
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Config and data persistence
+      - ./config:/app/api/etrid/config.json:ro
+      - etrid-data:/data/etrid
+      # SSH keys (mount your SSH keys here)
+      - ~/.ssh:/root/.ssh:ro
+      # Logs
+      - etrid-logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_PATH=/data/etrid/etrid-data.db
+      # Alert configuration (optional, can also use config file)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+    networks:
+      - etrid-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  etrid-data:
+    driver: local
+  etrid-logs:
+    driver: local
+
+networks:
+  etrid-network:
+    driver: bridge
