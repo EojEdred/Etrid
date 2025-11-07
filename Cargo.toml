@@ -207,11 +207,11 @@ members = [
     # "sdk",                                            # etrid-sdk (temp disabled - needs workspace.dependencies for internal crates)
 
     # ═════════════════════════════════════════════════════════════════════════════
-    # Tests
+    # Tests (TODO: Create development/ directory structure)
     # ═════════════════════════════════════════════════════════════════════════════
-    "development/tests/integration",                    # Integration tests
-    "development/tests/e2e",                            # End-to-end tests
-    "development/tests/property-based",                 # Property-based tests
+    # "development/tests/integration",                    # Integration tests
+    # "development/tests/e2e",                            # End-to-end tests
+    # "development/tests/property-based",                 # Property-based tests
 ]
 
 exclude = [
