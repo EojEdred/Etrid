@@ -18,6 +18,17 @@ pub use pbc_common::*;
 // Re-export Bitcoin bridge pallet
 pub use pallet_bitcoin_bridge;
 
+// Re-export new pallets
+pub use pallet_accounts;
+pub use pallet_did_registry;
+pub use pallet_circuit_breaker;
+// pub use etrid_post_quantum; // Library only, no runtime integration needed yet
+pub use pallet_validator_committee;
+pub use pallet_validator_rewards;
+pub use pallet_treasury;
+pub use pallet_consensus_day;
+pub use pallet_etwasm_vm;
+
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
 
@@ -310,6 +321,117 @@ impl pallet_lightning_channels::Config for Runtime {
     type ChannelTimeout = ChannelTimeout;
 }
 
+// ============================================================================
+// NEW INTEGRATIONS - Critical, Highly Recommended, and Nice to Have
+// ============================================================================
+
+// 1. CRITICAL: Pallet Accounts - Proper Etrid account management
+impl pallet_accounts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Balance = Balance;
+    type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+}
+
+// 2. CRITICAL: DID Registry - Decentralized identity
+parameter_types! {
+    pub const MaxDidDocumentSize: u32 = 1024 * 10; // 10KB max DID document
+    pub const MaxControllersPerDid: u32 = 10;
+}
+
+impl pallet_did_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxDidDocumentSize = MaxDidDocumentSize;
+    type MaxControllersPerDid = MaxControllersPerDid;
+}
+
+// 3. CRITICAL: Circuit Breaker - Security stack
+parameter_types! {
+    pub const CircuitBreakerThreshold: u32 = 100; // Max failed transactions before trigger
+    pub const CircuitBreakerCooldown: BlockNumber = 10 * MINUTES;
+}
+
+impl pallet_circuit_breaker::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Threshold = CircuitBreakerThreshold;
+    type CooldownPeriod = CircuitBreakerCooldown;
+    type EmergencyOrigin = frame_system::EnsureRoot<AccountId>;
+}
+
+// 4. CRITICAL: Post-Quantum Cryptography (library integration - no Config needed)
+// Post-quantum signatures are available via etrid_post_quantum module
+
+// 5. CRITICAL: Validator Committee - On-chain governance
+parameter_types! {
+    pub const MaxCommitteeSize: u32 = 21;
+    pub const CommitteeRotationPeriod: BlockNumber = 7 * DAYS;
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = MaxCommitteeSize;
+    type RotationPeriod = CommitteeRotationPeriod;
+    type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+}
+
+// 6. HIGHLY RECOMMENDED: Validator Rewards - Staking
+parameter_types! {
+    pub const BlockReward: Balance = 1_000_000_000_000_000_000_000; // 1 ETR per block
+    pub const MinStake: Balance = 64_000_000_000_000_000_000_000; // 64 ETR minimum stake
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BlockReward = BlockReward;
+    type MinStake = MinStake;
+}
+
+// 7. HIGHLY RECOMMENDED: Treasury - Fee collection
+parameter_types! {
+    pub const TreasuryPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/trsry");
+    pub const ProposalBond: Balance = 5_000_000_000_000_000_000_000; // 5 ETR
+    pub const SpendPeriod: BlockNumber = 7 * DAYS;
+}
+
+impl pallet_treasury::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type PalletId = TreasuryPalletId;
+    type ProposalBond = ProposalBond;
+    type SpendPeriod = SpendPeriod;
+    type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+}
+
+// 8. HIGHLY RECOMMENDED: ETWasm VM - Smart contracts
+parameter_types! {
+    pub const MaxCodeSize: u32 = 1024 * 512; // 512KB max contract code
+    pub const DefaultGasLimit: u64 = 10_000_000;
+    pub const MaxGasLimit: u64 = 50_000_000;
+}
+
+impl pallet_etwasm_vm::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCodeSize = MaxCodeSize;
+    type DefaultGasLimit = ConstU64<{ DefaultGasLimit::get() }>;
+    type MaxGasLimit = ConstU64<{ MaxGasLimit::get() }>;
+}
+
+// 9. NICE TO HAVE: Consensus Day - Full governance integration
+parameter_types! {
+    pub const ConsensusDay: BlockNumber = 30 * DAYS; // Every 30 days
+    pub const ProposalDuration: BlockNumber = 7 * DAYS;
+    pub const VotingPeriod: BlockNumber = 3 * DAYS;
+}
+
+impl pallet_consensus_day::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type ConsensusDayInterval = ConsensusDay;
+    type ProposalDuration = ProposalDuration;
+    type VotingPeriod = VotingPeriod;
+    type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime
@@ -318,22 +440,38 @@ construct_runtime!(
         NodeBlock = opaque::Block,
         UncheckedExtrinsic = UncheckedExtrinsic,
     {
+        // System & Basic Pallets
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
-        
-        Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
-        
-        // Ëtrid Core
+
+        // Consensus (GRANDPA kept for compatibility, PPFA via Consensus pallet)
+        Grandpa: pallet_grandpa,
         Consensus: pallet_consensus,
+
+        // Core Ëtrid Features
+        Accounts: pallet_accounts,
         EtrLock: pallet_etr_lock,
 
         // Bitcoin Bridge & Lightning
         BitcoinBridge: pallet_bitcoin_bridge,
         LightningChannels: pallet_lightning_channels,
+
+        // CRITICAL INTEGRATIONS
+        DidRegistry: pallet_did_registry,
+        CircuitBreaker: pallet_circuit_breaker,
+        ValidatorCommittee: pallet_validator_committee,
+
+        // HIGHLY RECOMMENDED INTEGRATIONS
+        ValidatorRewards: pallet_validator_rewards,
+        Treasury: pallet_treasury,
+        EtwasmVM: pallet_etwasm_vm,
+
+        // NICE TO HAVE INTEGRATIONS
+        ConsensusDay: pallet_consensus_day,
     }
 );
 

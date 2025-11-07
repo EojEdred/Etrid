@@ -55,11 +55,36 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Ëtrid Custom Dependencies
 etrid-primitives = { path = "../../../../primitives", default-features = false }
 etrid-bridge-common = { path = "../../../../bridge-protocols/common", default-features = false }
+
+# Core Etrid Pallets
 pallet-accounts = { path = "../../../../../04-accounts/pallet", default-features = false }
 pallet-consensus = { path = "../../../../../09-consensus/pallet", default-features = false }
 pallet-etr-lock = { path = "../../../../../pallets/pallet-etr-lock", default-features = false }
+
+# Bridge & Lightning
 pallet-bitcoin-bridge = { path = "../../../../bridge-protocols/bitcoin-bridge", default-features = false }
 pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+
+# DID & Identity
+pallet-did-registry = { path = "../../../../../src/pallets/pallet-did-registry", default-features = false }
+
+# Security
+pallet-circuit-breaker = { path = "../../../../../src/pallets/pallet-circuit-breaker", default-features = false }
+# etrid-post-quantum = { path = "../../../../../03-security/post-quantum", default-features = false } # Has compilation errors, fix separately
+
+# Governance & Staking
+pallet-validator-committee = { path = "../../../../../src/pallets/pallet-validator-committee", default-features = false }
+pallet-validator-rewards = { path = "../../../../../src/pallets/pallet-validator-rewards", default-features = false }
+pallet-treasury = { path = "../../../../../src/pallets/pallet-treasury", default-features = false }
+
+# Consensus Day
+pallet-consensus-day = { path = "../../../../../src/pallets/pallet-consensus-day", default-features = false }
+
+# ETWasm VM
+pallet-etwasm-vm = { path = "../../../../../08-etwasm-vm/pallet", default-features = false }
+etwasm-gas-metering = { path = "../../../../../08-etwasm-vm/gas-metering", default-features = false }
+etwasm-opcodes = { path = "../../../../../08-etwasm-vm/opcodes", default-features = false }
+etwasm-runtime = { path = "../../../../../08-etwasm-vm/runtime", default-features = false }
 
 [build-dependencies]
 # Substrate WASM builder - NOT in workspace, so explicit
@@ -104,6 +129,16 @@ std = [
     "pallet-bitcoin-bridge/std",
     "pallet-lightning-channels/std",
     "pallet_bitcoin_bridge/std",
+    "pallet-did-registry/std",
+    "pallet-circuit-breaker/std",
+    "pallet-validator-committee/std",
+    "pallet-validator-rewards/std",
+    "pallet-treasury/std",
+    "pallet-consensus-day/std",
+    "pallet-etwasm-vm/std",
+    "etwasm-gas-metering/std",
+    "etwasm-opcodes/std",
+    "etwasm-runtime/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
