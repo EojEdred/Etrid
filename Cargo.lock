@@ -71,6 +71,7 @@ dependencies = [
 name = "ada-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -81,6 +82,7 @@ dependencies = [
  "pallet-bitcoin-bridge",
  "pallet-cardano-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -1843,6 +1845,7 @@ name = "bnb-pbc-runtime"
 version = "0.1.0"
 dependencies = [
  "bnb-bridge",
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -1852,6 +1855,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -2037,6 +2041,7 @@ dependencies = [
 name = "btc-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -2046,6 +2051,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -4876,6 +4882,7 @@ dependencies = [
 name = "doge-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -4886,6 +4893,7 @@ dependencies = [
  "pallet-bitcoin-bridge",
  "pallet-consensus",
  "pallet-doge-bridge",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -5097,6 +5105,7 @@ dependencies = [
 name = "edsc-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -5112,6 +5121,7 @@ dependencies = [
  "pallet-edsc-receipts",
  "pallet-edsc-redemption",
  "pallet-edsc-token",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-sudo 43.0.0",
@@ -9829,6 +9839,7 @@ name = "link-pbc-runtime"
 version = "0.1.0"
 dependencies = [
  "chainlink-bridge",
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -9838,6 +9849,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -10245,6 +10257,7 @@ dependencies = [
 name = "matic-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -10254,6 +10267,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -20829,6 +20843,7 @@ dependencies = [
 name = "sc-usdt-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -20838,6 +20853,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -22015,6 +22031,7 @@ dependencies = [
 name = "sol-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -22024,6 +22041,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -25791,6 +25809,7 @@ dependencies = [
 name = "trx-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -25800,6 +25819,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -27611,6 +27631,7 @@ dependencies = [
 name = "xlm-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -27620,6 +27641,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",
@@ -27744,6 +27766,7 @@ dependencies = [
 name = "xrp-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive 43.0.0",
  "frame-support 43.0.0",
@@ -27753,6 +27776,7 @@ dependencies = [
  "pallet-balances 44.0.0",
  "pallet-bitcoin-bridge",
  "pallet-consensus",
+ "pallet-etr-lock",
  "pallet-grandpa 43.0.0",
  "pallet-insecure-randomness-collective-flip 31.0.0",
  "pallet-lightning-channels",

@@ -52,6 +52,8 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Ëtrid Primitives & Pallets
 etrid-primitives = { path = "../../../../primitives", default-features = false }
 pallet-consensus = { path = "../../../../../09-consensus/pallet", default-features = false }
+pallet-etr-lock = { path = "../../../../../pallets/pallet-etr-lock", default-features = false }
+etrid-bridge-common = { path = "../../../../bridge-protocols/common", default-features = false }
 
 # EDSC pallets for PBC-EDSC (9 pallets total)
 # Note: Reserve Vault and Custodian Registry belong on FlareChain main chain
