@@ -177,3 +177,8 @@ ai-monitoring/**/__pycache__/
 *.pyc
 *.pyo
 .aider*
+
+# Bitwarden import files (personal use only)
+BITWARDEN*.md
+BITWARDEN*.txt
+**/BITWARDEN*
