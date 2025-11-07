@@ -2,176 +2,213 @@
   "validators": [
     {
       "number": 1,
-      "name": "Gizzi (AI Overseer)",
-      "aiDevId": "governance-dev01",
-      "ip": "64.181.215.19",
-      "role": "Director",
-      "region": "Oracle Cloud",
-      "bootnode": true
+      "name": "Gizzi",
+      "aidev_id": "governance-dev01",
+      "ip": "20.186.91.207",
+      "ssh_user": "etrid-validator-01",
+      "region": "Azure West US",
+      "role": "Director/Bootstrap",
+      "accessible": false
     },
     {
       "number": 2,
-      "name": "EojEdred (Founder)",
-      "aiDevId": "security-dev01",
-      "ip": "20.69.26.209",
-      "role": "Director",
-      "region": "Azure",
-      "bootnode": true
+      "name": "EojEdred",
+      "aidev_id": "security-dev01",
+      "ip": "172.177.44.73",
+      "ssh_user": "eoj-edred",
+      "region": "Azure East US",
+      "role": "Director/Bootstrap",
+      "accessible": false
     },
     {
       "number": 3,
-      "name": "Audit Dev",
-      "aiDevId": "audit-dev01",
-      "ip": "129.80.122.34",
+      "name": "Governance Dev",
+      "aidev_id": "audit-dev01",
+      "ip": "20.186.91.207",
+      "ssh_user": "governance-dev01",
+      "region": "Azure West US (shares VM with #1)",
       "role": "Director",
-      "region": "Oracle Cloud",
-      "bootnode": true
+      "accessible": false
     },
     {
       "number": 4,
-      "name": "Governance Dev",
-      "aiDevId": "governance-dev01",
-      "ip": "20.186.91.207",
-      "role": "FlareNode",
-      "region": "Azure"
+      "name": "Security Dev",
+      "aidev_id": "consensus-dev01",
+      "ip": "52.252.142.146",
+      "ssh_user": "security-dev01",
+      "region": "Azure Central US",
+      "role": "Director",
+      "accessible": false
     },
     {
       "number": 5,
-      "name": "Consensus Dev (Secondary)",
-      "aiDevId": "consensus-dev01",
-      "ip": "129.80.122.34",
-      "role": "FlareNode",
+      "name": "Audit Dev",
+      "aidev_id": "audit-dev01",
+      "ip": "132.145.145.135",
+      "ssh_user": "audit-dev01",
       "region": "Oracle Cloud",
-      "notes": "Binary & keys installed"
+      "role": "Director",
+      "accessible": false
     },
     {
       "number": 6,
-      "name": "Runtime Dev (Primary)",
-      "aiDevId": "runtime-dev01",
+      "name": "Runtime Dev",
+      "aidev_id": "runtime-dev01",
       "ip": "20.224.104.239",
-      "role": "FlareNode",
-      "region": "Azure West Europe"
+      "ssh_user": "runtime-dev01",
+      "region": "Azure West Europe",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 7,
-      "name": "Runtime Dev (Secondary)",
-      "aiDevId": "runtime-dev01",
-      "ip": "108.142.205.177",
-      "role": "FlareNode",
-      "region": "Azure West Europe"
+      "name": "Compiler Dev",
+      "aidev_id": "compiler-dev01",
+      "ip": "98.71.91.84",
+      "ssh_user": "compiler-dev01",
+      "region": "Azure North Europe",
+      "role": "Developer/MonitoringServer",
+      "accessible": true
     },
     {
       "number": 8,
-      "name": "Compiler Dev (Primary)",
-      "aiDevId": "compiler-dev01",
-      "ip": "4.180.238.67",
-      "role": "FlareNode",
-      "region": "Azure West Europe"
+      "name": "Network Dev",
+      "aidev_id": "multichain-dev01",
+      "ip": "20.169.114.25",
+      "ssh_user": "network-dev01",
+      "region": "Azure France Central",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 9,
-      "name": "Compiler Dev (Secondary)",
-      "aiDevId": "compiler-dev01",
-      "ip": "4.180.59.25",
-      "role": "FlareNode",
-      "region": "Azure West Europe"
+      "name": "SDK Dev",
+      "aidev_id": "oracle-dev01",
+      "ip": "20.75.92.203",
+      "ssh_user": "sdk-dev01",
+      "region": "Azure UK South",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 10,
-      "name": "Multichain Dev (Primary)",
-      "aiDevId": "multichain-dev01",
-      "ip": "98.71.91.84",
-      "role": "FlareNode",
-      "region": "Azure North Europe",
-      "notes": "BUILD VM"
+      "name": "DevTools Dev",
+      "aidev_id": "edsc-dev01",
+      "ip": "20.55.31.30",
+      "ssh_user": "devtools-dev01",
+      "region": "Azure Switzerland North",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 11,
-      "name": "Multichain Dev (Secondary)",
-      "aiDevId": "multichain-dev01",
-      "ip": "68.219.230.63",
-      "role": "FlareNode",
-      "region": "Azure North Europe"
+      "name": "API Dev",
+      "aidev_id": "economics-dev01",
+      "ip": "20.73.34.17",
+      "ssh_user": "api-dev01",
+      "region": "Azure Germany West Central",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 12,
-      "name": "Oracle Dev",
-      "aiDevId": "oracle-dev01",
-      "ip": "98.71.219.106",
-      "role": "FlareNode",
-      "region": "Azure West Europe"
+      "name": "Docs Dev",
+      "aidev_id": "docs-dev01",
+      "ip": "20.109.102.30",
+      "ssh_user": "docs-dev01",
+      "region": "Azure Norway East",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 13,
-      "name": "EDSC Dev (Primary)",
-      "aiDevId": "edsc-dev01",
-      "ip": "172.167.8.217",
-      "role": "ValidityNode",
-      "region": "Azure UK South"
+      "name": "QA Dev",
+      "aidev_id": "oracle-dev01",
+      "ip": "52.250.61.132",
+      "ssh_user": "qa-dev01",
+      "region": "Azure Sweden Central",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 14,
-      "name": "EDSC Dev (Secondary)",
-      "aiDevId": "edsc-dev01",
-      "ip": "51.142.203.160",
-      "role": "ValidityNode",
-      "region": "Azure UK South"
+      "name": "Perf Dev",
+      "aidev_id": "edsc-dev01",
+      "ip": "20.218.66.251",
+      "ssh_user": "perf-dev01",
+      "region": "Azure Poland Central",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 15,
-      "name": "Economics Dev (Primary)",
-      "aiDevId": "economics-dev01",
-      "ip": "172.166.164.19",
-      "role": "ValidityNode",
-      "region": "Azure UK South"
+      "name": "Community Dev",
+      "aidev_id": "economics-dev01",
+      "ip": "20.109.219.185",
+      "ssh_user": "community-dev01",
+      "region": "Azure Italy North",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 16,
-      "name": "Economics Dev (Secondary)",
-      "aiDevId": "economics-dev01",
-      "ip": "172.166.187.180",
-      "role": "ValidityNode",
-      "region": "Azure UK South"
+      "name": "Analytics Dev",
+      "aidev_id": "ethics-dev01",
+      "ip": "20.83.208.17",
+      "ssh_user": "analytics-dev01",
+      "region": "Azure Spain Central",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 17,
-      "name": "Ethics Dev (Primary)",
-      "aiDevId": "ethics-dev01",
-      "ip": "172.166.210.244",
-      "role": "ValidityNode",
-      "region": "Azure UK South"
+      "name": "Ethics Dev",
+      "aidev_id": "ethics-dev01",
+      "ip": "172.177.175.132",
+      "ssh_user": "ethics-dev01",
+      "region": "Azure South Africa North",
+      "role": "Developer",
+      "accessible": true
     },
     {
       "number": 18,
-      "name": "Ethics Dev (Secondary)",
-      "aiDevId": "ethics-dev01",
-      "ip": "4.251.115.186",
-      "role": "ValidityNode",
-      "region": "Azure France Central"
+      "name": "FlareNode 16",
+      "aidev_id": "docs-dev01",
+      "ip": "20.84.231.225",
+      "ssh_user": "flarenode16",
+      "region": "Azure UAE North",
+      "role": "Node",
+      "accessible": true
     },
     {
       "number": 19,
-      "name": "Docs Dev (Primary)",
-      "aiDevId": "docs-dev01",
-      "ip": "52.143.191.232",
-      "role": "ValidityNode",
-      "region": "Azure France Central"
+      "name": "FlareNode 19",
+      "aidev_id": "docs-dev01",
+      "ip": "4.175.83.133",
+      "ssh_user": "flarenode19",
+      "region": "Azure Qatar Central",
+      "role": "Node",
+      "accessible": true
     },
     {
       "number": 20,
-      "name": "Docs Dev (Secondary)",
-      "aiDevId": "docs-dev01",
-      "ip": "4.211.206.210",
-      "role": "ValidityNode",
-      "region": "Azure France Central"
+      "name": "FlareNode 20",
+      "aidev_id": "docs-dev01",
+      "ip": "52.184.47.99",
+      "ssh_user": "flarenode20",
+      "region": "Azure Israel Central",
+      "role": "Node",
+      "accessible": true
     },
     {
       "number": 21,
-      "name": "Docs Dev (Tertiary)",
-      "aiDevId": "docs-dev01",
+      "name": "FlareNode 21",
+      "aidev_id": "consensus-dev01",
       "ip": "4.178.181.122",
-      "role": "ValidityNode",
-      "region": "Azure France Central"
+      "ssh_user": "flarenode21",
+      "region": "Azure India Central",
+      "role": "Node",
+      "accessible": true
     }
   ]
 }
