@@ -37,10 +37,22 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: {
-      polygon: process.env.POLYGONSCAN_API_KEY || "",
-      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "",
-    },
+    // Etherscan v2 API configuration
+    apiKey: process.env.ETHERSCAN_API_KEY || process.env.POLYGONSCAN_API_KEY || "",
+    customChains: [
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://polygonscan.com"
+        }
+      }
+    ]
+  },
+  // Sourcify verification (alternative to Etherscan)
+  sourcify: {
+    enabled: true
   },
   paths: {
     sources: "./contracts",
