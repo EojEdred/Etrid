@@ -28,6 +28,7 @@ jobs:
           - sol-pbc-collator
           - bnb-pbc-collator
           - edsc-pbc-collator
+          - eth-pbc-collator
           - xrp-pbc-collator
           - matic-pbc-collator
           - sc-usdt-pbc-collator
@@ -142,7 +143,7 @@ jobs:
         run: |
           mkdir -p deployment/systemd
 
-          for COLLATOR in btc sol bnb edsc xrp matic sc-usdt xlm trx ada link doge; do
+          for COLLATOR in btc sol bnb edsc eth xrp matic sc-usdt xlm trx ada link doge; do
             cat > "deployment/systemd/${COLLATOR}-pbc-collator.service" <<EOF
           [Unit]
           Description=${COLLATOR^^} PBC Collator Node
@@ -205,7 +206,7 @@ jobs:
 
           # Create data directories
           echo "Creating data directories..."
-          for COLLATOR in btc sol bnb edsc xrp matic sc-usdt xlm trx ada link doge; do
+          for COLLATOR in btc sol bnb edsc eth xrp matic sc-usdt xlm trx ada link doge; do
               mkdir -p /opt/etrid/${COLLATOR}-pbc/data
               chown -R etrid:etrid /opt/etrid/${COLLATOR}-pbc
           done
@@ -235,7 +236,7 @@ jobs:
 
           ## Contents
 
-          - **binaries/**: All 12 PBC collator Linux binaries
+          - **binaries/**: All 13 PBC collator Linux binaries
           - **systemd/**: Systemd service files
           - **scripts/**: Deployment scripts
 
@@ -257,14 +258,15 @@ jobs:
           2. sol-pbc-collator - Solana Bridge
           3. bnb-pbc-collator - Binance Smart Chain
           4. edsc-pbc-collator - Etrid Designated Source Chain
-          5. xrp-pbc-collator - Ripple Bridge
-          6. matic-pbc-collator - Polygon Bridge
-          7. sc-usdt-pbc-collator - USDT Stablecoin Bridge
-          8. xlm-pbc-collator - Stellar Bridge
-          9. trx-pbc-collator - Tron Bridge
-          10. ada-pbc-collator - Cardano Bridge
-          11. link-pbc-collator - Chainlink Oracle Bridge
-          12. doge-pbc-collator - Dogecoin Bridge
+          5. eth-pbc-collator - Ethereum Bridge
+          6. xrp-pbc-collator - Ripple Bridge
+          7. matic-pbc-collator - Polygon Bridge
+          8. sc-usdt-pbc-collator - USDT Stablecoin Bridge
+          9. xlm-pbc-collator - Stellar Bridge
+          10. trx-pbc-collator - Tron Bridge
+          11. ada-pbc-collator - Cardano Bridge
+          12. link-pbc-collator - Chainlink Oracle Bridge
+          13. doge-pbc-collator - Dogecoin Bridge
 
           ## Starting a Collator
 
@@ -299,7 +301,7 @@ jobs:
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ All 12 PBC collators built successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All 13 PBC collators built successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Built Collators" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
