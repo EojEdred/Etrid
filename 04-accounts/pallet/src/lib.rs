@@ -215,8 +215,8 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::call]
+    #[allow(deprecated)]
     impl<T: Config> Pallet<T> {
-        #[allow(deprecated)]
         #[pallet::weight(10_000)]
         #[pallet::call_index(0)]
         pub fn transfer(
