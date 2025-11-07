@@ -10,6 +10,7 @@ const { ClaudeIntegration } = require('./claude-integration');
 const { AlertSystem } = require('./alert-system');
 const { Scheduler } = require('./scheduler');
 const { Database } = require('./database');
+const { AuthSystem } = require('./auth-system');
 const fs = require('fs');
 const path = require('path');
 
@@ -24,6 +25,10 @@ class EtridAPI {
     this.alerts = new AlertSystem(this.config);
     this.scheduler = new Scheduler(this);
     this.database = new Database(this.config);
+    this.auth = new AuthSystem(this.config);
+
+    // Link auth to database
+    this.auth.database = this.database;
 
     // Initialize database and scheduler
     this.init();

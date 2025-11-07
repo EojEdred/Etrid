@@ -52,9 +52,42 @@ class Database {
    */
   async createTables() {
     const tables = [
-      // Node status history
+      // Users table
+      `CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        organization TEXT,
+        role TEXT NOT NULL DEFAULT 'user',
+        tier TEXT NOT NULL DEFAULT 'free',
+        api_key TEXT UNIQUE,
+        created_at INTEGER NOT NULL,
+        last_login INTEGER,
+        active INTEGER NOT NULL DEFAULT 1,
+        email_verified INTEGER NOT NULL DEFAULT 0,
+        reset_token TEXT,
+        reset_expiry INTEGER,
+        verification_token TEXT,
+        settings TEXT
+      )`,
+
+      // User nodes (which nodes belong to which user)
+      `CREATE TABLE IF NOT EXISTS user_nodes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        chain TEXT NOT NULL,
+        node_name TEXT NOT NULL,
+        node_config TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        UNIQUE(user_id, chain, node_name)
+      )`,
+
+      // Node status history (with user_id)
       `CREATE TABLE IF NOT EXISTS node_status (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
         chain TEXT NOT NULL,
         node TEXT NOT NULL,
         status TEXT NOT NULL,
@@ -62,12 +95,14 @@ class Database {
         peers INTEGER,
         syncing INTEGER,
         timestamp INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
       )`,
 
-      // Metrics history
+      // Metrics history (with user_id)
       `CREATE TABLE IF NOT EXISTS metrics (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
         chain TEXT NOT NULL,
         node TEXT NOT NULL,
         cpu REAL,
@@ -76,7 +111,8 @@ class Database {
         network_in REAL,
         network_out REAL,
         timestamp INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
       )`,
 
       // Alerts history
@@ -493,6 +529,165 @@ class Database {
 
       backup.on('error', reject);
     });
+  }
+
+  /**
+   * User management methods
+   */
+
+  async saveUser(user) {
+    const existing = await this.getUserById(user.id);
+
+    if (existing) {
+      // Update
+      return await this.run(
+        `UPDATE users SET
+          email = ?,
+          password_hash = ?,
+          name = ?,
+          organization = ?,
+          role = ?,
+          tier = ?,
+          api_key = ?,
+          last_login = ?,
+          active = ?,
+          email_verified = ?,
+          reset_token = ?,
+          reset_expiry = ?,
+          verification_token = ?,
+          settings = ?
+         WHERE id = ?`,
+        [
+          user.email,
+          user.passwordHash,
+          user.name,
+          user.organization,
+          user.role,
+          user.tier,
+          user.apiKey,
+          user.lastLogin,
+          user.active ? 1 : 0,
+          user.emailVerified ? 1 : 0,
+          user.resetToken,
+          user.resetExpiry,
+          user.verificationToken,
+          JSON.stringify(user.settings),
+          user.id
+        ]
+      );
+    } else {
+      // Insert
+      return await this.run(
+        `INSERT INTO users (
+          id, email, password_hash, name, organization, role, tier,
+          api_key, created_at, last_login, active, email_verified,
+          reset_token, reset_expiry, verification_token, settings
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          user.id,
+          user.email,
+          user.passwordHash,
+          user.name,
+          user.organization,
+          user.role,
+          user.tier,
+          user.apiKey,
+          user.createdAt,
+          user.lastLogin,
+          user.active ? 1 : 0,
+          user.emailVerified ? 1 : 0,
+          user.resetToken,
+          user.resetExpiry,
+          user.verificationToken,
+          JSON.stringify(user.settings)
+        ]
+      );
+    }
+  }
+
+  async getUserById(id) {
+    const row = await this.get('SELECT * FROM users WHERE id = ?', [id]);
+    return row ? this.parseUser(row) : null;
+  }
+
+  async getUserByEmail(email) {
+    const row = await this.get('SELECT * FROM users WHERE email = ?', [email]);
+    return row ? this.parseUser(row) : null;
+  }
+
+  async getUserByApiKey(apiKey) {
+    const row = await this.get('SELECT * FROM users WHERE api_key = ?', [apiKey]);
+    return row ? this.parseUser(row) : null;
+  }
+
+  async getUserByResetToken(token) {
+    const row = await this.get('SELECT * FROM users WHERE reset_token = ?', [token]);
+    return row ? this.parseUser(row) : null;
+  }
+
+  async getUserByVerificationToken(token) {
+    const row = await this.get('SELECT * FROM users WHERE verification_token = ?', [token]);
+    return row ? this.parseUser(row) : null;
+  }
+
+  parseUser(row) {
+    return {
+      id: row.id,
+      email: row.email,
+      passwordHash: row.password_hash,
+      name: row.name,
+      organization: row.organization,
+      role: row.role,
+      tier: row.tier,
+      apiKey: row.api_key,
+      createdAt: row.created_at,
+      lastLogin: row.last_login,
+      active: row.active === 1,
+      emailVerified: row.email_verified === 1,
+      resetToken: row.reset_token,
+      resetExpiry: row.reset_expiry,
+      verificationToken: row.verification_token,
+      settings: row.settings ? JSON.parse(row.settings) : {}
+    };
+  }
+
+  /**
+   * User node management
+   */
+
+  async saveUserNode(userId, chain, nodeName, nodeConfig) {
+    return await this.run(
+      `INSERT OR REPLACE INTO user_nodes (user_id, chain, node_name, node_config)
+       VALUES (?, ?, ?, ?)`,
+      [userId, chain, nodeName, JSON.stringify(nodeConfig)]
+    );
+  }
+
+  async getUserNodes(userId, chain = null) {
+    let sql = 'SELECT * FROM user_nodes WHERE user_id = ?';
+    const params = [userId];
+
+    if (chain) {
+      sql += ' AND chain = ?';
+      params.push(chain);
+    }
+
+    const rows = await this.all(sql, params);
+    return rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      chain: row.chain,
+      nodeName: row.node_name,
+      nodeConfig: JSON.parse(row.node_config),
+      createdAt: row.created_at
+    }));
+  }
+
+  async deleteUserNode(userId, chain, nodeName) {
+    return await this.run(
+      'DELETE FROM user_nodes WHERE user_id = ? AND chain = ? AND node_name = ?',
+      [userId, chain, nodeName]
+    );
   }
 }
 
