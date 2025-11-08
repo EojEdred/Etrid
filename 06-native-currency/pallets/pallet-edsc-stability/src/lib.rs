@@ -114,7 +114,9 @@ pub mod pallet {
 
 	/// EDSC collateral position
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	pub struct EDSCPosition<Balance> {
+	#[scale_info(skip_type_params(Balance))]
+	#[codec(mel_bound())]
+	pub struct EDSCPosition<Balance: MaxEncodedLen> {
 		/// Collateral deposited (in native currency)
 		pub collateral_amount: Balance,
 		/// EDSC minted
@@ -131,7 +133,9 @@ pub mod pallet {
 
 	/// Liquidation record for EDSC positions
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-	pub struct EDSCLiquidation<AccountId, Balance> {
+	#[scale_info(skip_type_params(AccountId, Balance))]
+	#[codec(mel_bound())]
+	pub struct EDSCLiquidation<AccountId: MaxEncodedLen, Balance: MaxEncodedLen> {
 		/// Position owner
 		pub owner: AccountId,
 		/// Liquidator
