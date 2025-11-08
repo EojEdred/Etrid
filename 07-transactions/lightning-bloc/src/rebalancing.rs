@@ -18,6 +18,7 @@ extern crate alloc;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
+    vec,
     vec::Vec,
     string::{String, ToString},
     collections::BTreeMap as HashMap,

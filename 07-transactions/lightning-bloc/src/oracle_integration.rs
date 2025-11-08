@@ -10,6 +10,7 @@
 
 #[cfg(not(feature = "std"))]
 use alloc::{
+    vec,
     vec::Vec,
     string::String,
     boxed::Box,
