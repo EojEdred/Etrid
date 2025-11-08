@@ -63,7 +63,10 @@ jobs:
             build-essential
 
       - name: Add WASM target
-        run: rustup target add wasm32-unknown-unknown
+          run: rustup target add wasm32-unknown-unknown
+
+      - name: Add rust-src component
+          run: rustup component add rust-src
 
       - name: Cache cargo registry
         uses: actions/cache@v4
