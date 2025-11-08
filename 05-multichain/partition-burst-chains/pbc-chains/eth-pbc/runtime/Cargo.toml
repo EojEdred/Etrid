@@ -83,9 +83,9 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Note: etrid-primitives removed to avoid version conflicts with stable2509
 # Core types are defined inline in lib.rs
 
-# Lightning Bloc Integration - ENABLED with patched Frontier
-# Using forked Frontier with tag-based dependencies resolves duplicate sp_io lang item errors
-pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+# Lightning Bloc Integration - DISABLED for initial deployment
+# Will be re-enabled after deployment once stable2506 compatibility is resolved
+# pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager-stable2506", default-features = false, package = "pallet-lightning-channels-stable2506" }
 
 [build-dependencies]
 # Substrate WASM builder (using stable2506 for Frontier compatibility)
@@ -140,8 +140,8 @@ std = [
     "ethereum/std",
     "evm/std",
 
-    # Lightning Bloc
-    "pallet-lightning-channels/std",
+    # Lightning Bloc - DISABLED for initial deployment
+    # "pallet-lightning-channels/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
