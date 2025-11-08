@@ -1,0 +1,35 @@
+{
+  "name": "@etrid/pinokio-tools",
+  "version": "1.0.0",
+  "description": "Pinokio integration tools for ÉTRID validator management and web UIs",
+  "main": "validator-cli.js",
+  "scripts": {
+    "validator:list": "node validator-cli.js list",
+    "validator:status": "node validator-cli.js status",
+    "validator:monitor": "node ai-validator-monitor.js monitor",
+    "validator:watch": "node ai-validator-monitor.js continuous",
+    "web:build": "cd .. && ./scripts/build-all-web-uis.sh",
+    "web:start": "cd .. && ./scripts/start-all-web-uis.sh",
+    "web:stop": "cd .. && ./scripts/stop-all-web-uis.sh",
+    "web:status": "cd .. && ./scripts/status-web-uis.sh"
+  },
+  "bin": {
+    "etrid-validator": "./validator-cli.js",
+    "etrid-monitor": "./ai-validator-monitor.js"
+  },
+  "keywords": [
+    "etrid",
+    "blockchain",
+    "validator",
+    "monitoring",
+    "pinokio",
+    "web3"
+  ],
+  "author": "ÉTRID Development Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
