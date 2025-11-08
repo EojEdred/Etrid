@@ -41,8 +41,7 @@ use frame_support::{
 	traits::{ConstBool, ConstU32, ConstU64, ConstU8, FindAuthor, OnFinalize, OnTimestampSet},
 	weights::{constants::{RocksDbWeight, WEIGHT_REF_TIME_PER_MILLIS}, IdentityFee, Weight},
 };
-use pallet_transaction_payment::FungibleAdapter;
-use polkadot_runtime_common::SlowAdjustingFeeUpdate;
+use pallet_transaction_payment::{FungibleAdapter, ConstFeeMultiplier};
 use sp_genesis_builder::PresetId;
 // Frontier
 use fp_account::EthereumSignature;
@@ -109,19 +108,17 @@ pub type SignedBlock = generic::SignedBlock<Block>;
 pub type BlockId = generic::BlockId<Block>;
 
 /// The SignedExtension to the basic transaction logic.
-pub type SignedExtra = cumulus_pallet_weight_reclaim::StorageWeightReclaim<
-	Runtime,
-	(
-		frame_system::CheckNonZeroSender<Runtime>,
-		frame_system::CheckSpecVersion<Runtime>,
-		frame_system::CheckTxVersion<Runtime>,
-		frame_system::CheckGenesis<Runtime>,
-		frame_system::CheckEra<Runtime>,
-		frame_system::CheckNonce<Runtime>,
-		frame_system::CheckWeight<Runtime>,
-		pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
-	),
->;
+/// Note: StorageWeightReclaim removed to avoid version conflicts with Frontier stable2506
+pub type SignedExtra = (
+	frame_system::CheckNonZeroSender<Runtime>,
+	frame_system::CheckSpecVersion<Runtime>,
+	frame_system::CheckTxVersion<Runtime>,
+	frame_system::CheckGenesis<Runtime>,
+	frame_system::CheckEra<Runtime>,
+	frame_system::CheckNonce<Runtime>,
+	frame_system::CheckWeight<Runtime>,
+	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+);
 
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic =
@@ -264,9 +261,8 @@ impl pallet_grandpa::Config for Runtime {
 	type EquivocationReportSystem = ();
 }
 
-impl cumulus_pallet_weight_reclaim::Config for Runtime {
-	type WeightInfo = ();
-}
+// Note: cumulus_pallet_weight_reclaim removed to avoid version conflicts with Frontier stable2506
+// Weight reclaim functionality is not critical for eth-pbc operation
 
 parameter_types! {
 	pub storage EnableManualSeal: bool = false;
@@ -313,9 +309,8 @@ impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = FungibleAdapter<Balances, ()>;
 	type WeightToFee = IdentityFee<Balance>;
 	type LengthToFee = IdentityFee<Balance>;
-	/// Parameterized slow adjusting fee updated based on
-	/// <https://research.web3.foundation/Polkadot/overview/token-economics#2-slow-adjusting-mechanism>
-	type FeeMultiplierUpdate = SlowAdjustingFeeUpdate<Runtime>;
+	/// Use constant fee multiplier (simplified from SlowAdjustingFeeUpdate to avoid version conflicts)
+	type FeeMultiplierUpdate = ConstFeeMultiplier<sp_runtime::FixedU128<1>>;
 	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightInfo = pallet_transaction_payment::weights::SubstrateWeight<Runtime>;
 }
@@ -451,7 +446,10 @@ pub mod pallet_manual_seal {
 
 impl pallet_manual_seal::Config for Runtime {}
 
-// Lightning Bloc Channels Configuration
+// Lightning Bloc Channels Configuration - TEMPORARILY DISABLED
+// Will be re-enabled when Frontier stable2509 is released
+// For now, Lightning channel access is provided via XCM bridge
+/*
 parameter_types! {
 	// Minimum channel capacity: 0.1 ETH (in Wei)
 	pub const MinChannelCapacity: Balance = 100_000_000_000_000_000;
@@ -468,6 +466,7 @@ impl pallet_lightning_channels::Config for Runtime {
 	type MaxChannelCapacity = MaxChannelCapacity;
 	type ChannelTimeout = ChannelTimeout;
 }
+*/
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 #[frame_support::runtime]
@@ -522,8 +521,9 @@ mod runtime {
 	#[runtime::pallet_index(11)]
 	pub type ManualSeal = pallet_manual_seal;
 
-	#[runtime::pallet_index(12)]
-	pub type LightningChannels = pallet_lightning_channels;
+	// Lightning channels temporarily disabled - will be re-enabled when Frontier stable2509 is available
+	// #[runtime::pallet_index(12)]
+	// pub type LightningChannels = pallet_lightning_channels;
 }
 
 #[derive(Clone)]

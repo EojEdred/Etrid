@@ -6,6 +6,10 @@ authors = ["Ëtrid Foundation"]
 description = "Bitcoin Partition Burst Chain runtime for Ëtrid Multichain"
 license = "Apache-2.0"
 
+# Standalone workspace to avoid version conflicts with parent workspace (stable2509)
+# eth-pbc-runtime uses stable2506 for Frontier compatibility
+[workspace]
+
 [dependencies]
 # Note: ethereum-bridge removed temporarily to avoid version conflicts
 # It's not needed for EVM functionality - MasterChef only needs EVM runtime
@@ -28,10 +32,10 @@ fp-account = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier
 ethereum = { version = "0.18", default-features = false }
 evm = { version = "0.41", default-features = false }
 
-# Substrate Core - Use workspace dependencies
-codec = { workspace = true }
-scale-info = { workspace = true }
-serde = { workspace = true, features = ["derive", "alloc"] }
+# Substrate Core - Use explicit versions (stable2506 compatible, not workspace to avoid patch conflicts)
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0.208", default-features = false, features = ["derive", "alloc"] }
 
 # FRAME Dependencies (using stable2506 for Frontier compatibility - ETH PBC isolated component)
 frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
@@ -64,9 +68,9 @@ pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "p
 # Consensus
 sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
 
-# Polkadot/Cumulus
-polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
-cumulus-pallet-weight-reclaim = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# Polkadot/Cumulus - REMOVED to avoid branch=stable2506 transitive deps that cause duplicate sp_io lang items
+# polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# cumulus-pallet-weight-reclaim = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
 
 # Balances
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
@@ -78,8 +82,10 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Note: etrid-primitives removed to avoid version conflicts with stable2509
 # Core types are defined inline in lib.rs
 
-# Lightning Bloc Integration
-pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+# Lightning Bloc Integration - TEMPORARILY DISABLED until Frontier stable2509 available
+# pallet-lightning-channels will be re-enabled when Frontier upgrades to stable2509
+# For now, Lightning channel access is provided via XCM bridge to other PBC runtimes
+# pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
 
 [build-dependencies]
 # Substrate WASM builder (using stable2506 for Frontier compatibility)
@@ -115,8 +121,6 @@ std = [
     "pallet-insecure-randomness-collective-flip/std",
     "pallet-aura/std",
     "sp-consensus-aura/std",
-    "polkadot-runtime-common/std",
-    "cumulus-pallet-weight-reclaim/std",
     "frame-system-rpc-runtime-api/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
 
@@ -136,10 +140,13 @@ std = [
     "ethereum/std",
     "evm/std",
 
-    # Lightning Bloc
-    "pallet-lightning-channels/std",
+    # Lightning Bloc - TEMPORARILY DISABLED until Frontier stable2509
+    # "pallet-lightning-channels/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
     "frame-system/runtime-benchmarks",
 ]
+
+# NOTE: No patches needed - eth-pbc uses stable2506 consistently for Frontier compatibility
+# When Frontier stable2509 is released, pallet-lightning-channels can be re-enabled

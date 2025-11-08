@@ -1,0 +1,31 @@
+{
+  "name": "etrid-pinokio-suite",
+  "version": "1.0.0",
+  "description": "ËTRID Complete Web UI Suite and Validator Management with Pinokio",
+  "main": "index.js",
+  "scripts": {
+    "validator:list": "node validator-cli.js list",
+    "validator:status": "node validator-cli.js status-all",
+    "validator:monitor": "node ai-validator-monitor.js monitor",
+    "validator:watch": "node ai-validator-monitor.js continuous 10",
+    "web:build": "cd .. && ./scripts/build-all-web-uis.sh",
+    "web:start": "cd .. && ./scripts/start-all-web-uis.sh",
+    "web:status": "cd .. && ./scripts/status-web-uis.sh",
+    "web:stop": "cd .. && ./scripts/stop-all-web-uis.sh",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "etrid",
+    "blockchain",
+    "validator",
+    "pinokio",
+    "monitoring",
+    "web3"
+  ],
+  "author": "ËTRID Foundation",
+  "license": "MIT",
+  "dependencies": {
+    "node-ssh": "^13.1.0",
+    "axios": "^1.6.0"
+  }
+}

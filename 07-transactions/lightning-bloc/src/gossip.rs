@@ -206,7 +206,7 @@ impl ChannelUpdate {
 }
 
 /// Direction of a channel (which node is sending)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ChannelDirection {
     NodeAToB,
     NodeBToA,

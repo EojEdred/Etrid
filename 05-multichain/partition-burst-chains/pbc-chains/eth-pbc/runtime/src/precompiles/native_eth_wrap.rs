@@ -5,7 +5,7 @@
 use core::marker::PhantomData;
 use pallet_evm::{Precompile, PrecompileHandle, PrecompileResult, PrecompileFailure};
 use sp_core::{H160, U256};
-use sp_std::vec::Vec;
+use sp_std::prelude::*;
 use fp_evm::{ExitSucceed, PrecompileOutput};
 
 /// Selector for wrap() - 0x1249c58b

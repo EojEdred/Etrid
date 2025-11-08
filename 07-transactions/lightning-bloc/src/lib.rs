@@ -83,9 +83,9 @@ pub use watchtower::{
 
 // Re-export gossip types
 pub use gossip::{
-    GossipStore, GossipSync, GossipError, GossipStats,
-    ChannelAnnouncement, ChannelUpdate as GossipChannelUpdate, NodeAnnouncement,
-    Timestamp, Signature as GossipSignature,
+    GossipError, ChannelAnnouncement, ChannelUpdate as GossipChannelUpdate, NodeAnnouncement,
+    GossipManager, GossipMessage, ChannelDirection, SyncRequest,
+    SyncResponse, NodeFeatures, GossipStatistics,
 };
 
 // Re-export cross-PBC router types
@@ -102,12 +102,14 @@ pub use oracle_integration::{
 
 // Re-export auto-discovery types
 pub use auto_discovery::{
-    PBCAutoDiscovery, PBCMetadata, PBCCapabilities, HotReloadManager,
+    PBCAutoDiscovery, PBCInfo, DiscoveryConfig, DiscoveryEvent,
+    DiscoveryError, DiscoveryStatistics,
 };
 
 // Re-export invoice types
 pub use invoice::{
-    LightningInvoice, InvoiceBuilder,
+    LightningInvoice, InvoiceBuilder, InvoiceError,
+    PaymentRequest, InvoiceStatus,
 };
 
 // Re-export fraud proof types
@@ -145,25 +147,6 @@ pub use emergency::{
     TimeoutWatchdog, WithdrawalStatus, ClosureStatus,
     EmergencyStatistics, EmergencyError,
     COUNTERPARTY_TIMEOUT, FORCED_CLOSURE_GRACE_PERIOD,
-};
-
-// Re-export gossip protocol types
-pub use gossip::{
-    GossipManager, GossipMessage, NodeAnnouncement, ChannelAnnouncement,
-    ChannelUpdate as GossipChannelUpdate, ChannelDirection, SyncRequest,
-    SyncResponse, NodeFeatures, GossipStatistics, GossipError,
-};
-
-// Re-export auto-discovery types
-pub use auto_discovery::{
-    PBCAutoDiscovery, PBCInfo, DiscoveryConfig, DiscoveryEvent,
-    DiscoveryError, DiscoveryStatistics,
-};
-
-// Re-export invoice types
-pub use invoice::{
-    LightningInvoice, InvoiceBuilder, InvoiceError,
-    PaymentRequest, InvoiceStatus,
 };
 
 // Re-export multi-path payment types

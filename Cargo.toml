@@ -82,7 +82,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/channels", # Channels
     "05-multichain/partition-burst-chains/pbc-chains/btc-pbc/runtime",       # BTC PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/doge-pbc/runtime",      # DOGE PBC runtime
-    "05-multichain/partition-burst-chains/pbc-chains/eth-pbc/runtime",       # ETH PBC runtime
+    # "05-multichain/partition-burst-chains/pbc-chains/eth-pbc/runtime",     # ETH PBC runtime (excluded - uses stable2506 for Frontier)
     "05-multichain/partition-burst-chains/pbc-chains/sol-pbc/runtime",       # SOL PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/xlm-pbc/runtime",       # XLM PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/xrp-pbc/runtime",       # XRP PBC runtime
@@ -94,7 +94,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Smart Contract USDT PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/edsc-pbc/runtime",      # EDSC PBC runtime (Ëtrid Dollar Stablecoin)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/btc-pbc-collator",     # BTC PBC collator node
-    "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/eth-pbc-collator",     # ETH PBC collator node
+    # "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/eth-pbc-collator",   # ETH PBC collator node (excluded - depends on eth-pbc-runtime)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/doge-pbc-collator",    # DOGE PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator",     # SOL PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/xlm-pbc-collator",     # XLM PBC collator node

@@ -1,0 +1,25 @@
+{
+  "name": "etrid-validator-api",
+  "version": "1.0.0",
+  "description": "ËTRID Validator Status API",
+  "main": "validator-status.js",
+  "scripts": {
+    "start": "node validator-status.js",
+    "dev": "nodemon validator-status.js"
+  },
+  "keywords": [
+    "etrid",
+    "validator",
+    "api",
+    "monitoring"
+  ],
+  "author": "ËTRID Foundation",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

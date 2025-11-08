@@ -29,7 +29,7 @@ use std::{
 };
 
 use crate::routing::{NetworkGraph, Router, Route, RoutingError, NodeId, ChannelId};
-use crate::gossip::{GossipSync};
+use crate::gossip::GossipManager;
 use crate::oracle_integration::{OracleManager, setup_oracles_for_router};
 
 /// Partition Burst Chain identifier
@@ -151,7 +151,7 @@ pub struct CrossPBCGraphManager {
     /// Network graphs by chain ID
     graphs: HashMap<ChainId, NetworkGraph>,
     /// Gossip sync managers by chain ID
-    gossip_managers: HashMap<ChainId, GossipSync>,
+    gossip_managers: HashMap<ChainId, GossipManager>,
 }
 
 impl CrossPBCGraphManager {
@@ -166,7 +166,7 @@ impl CrossPBCGraphManager {
     /// Add a new PBC chain
     pub fn add_chain(&mut self, chain_id: ChainId) {
         let graph = NetworkGraph::new();
-        let gossip = GossipSync::new(graph.clone());
+        let gossip = GossipManager::new(NodeId::from("local_node"));
         self.graphs.insert(chain_id.clone(), graph);
         self.gossip_managers.insert(chain_id, gossip);
     }
