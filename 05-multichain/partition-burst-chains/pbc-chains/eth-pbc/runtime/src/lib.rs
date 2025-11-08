@@ -446,10 +446,7 @@ pub mod pallet_manual_seal {
 
 impl pallet_manual_seal::Config for Runtime {}
 
-// Lightning Bloc Channels Configuration - TEMPORARILY DISABLED
-// Will be re-enabled when Frontier stable2509 is released
-// For now, Lightning channel access is provided via XCM bridge
-/*
+// Lightning Bloc Channels Configuration - ENABLED with patched Frontier
 parameter_types! {
 	// Minimum channel capacity: 0.1 ETH (in Wei)
 	pub const MinChannelCapacity: Balance = 100_000_000_000_000_000;
@@ -466,7 +463,6 @@ impl pallet_lightning_channels::Config for Runtime {
 	type MaxChannelCapacity = MaxChannelCapacity;
 	type ChannelTimeout = ChannelTimeout;
 }
-*/
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 #[frame_support::runtime]
@@ -521,9 +517,8 @@ mod runtime {
 	#[runtime::pallet_index(11)]
 	pub type ManualSeal = pallet_manual_seal;
 
-	// Lightning channels temporarily disabled - will be re-enabled when Frontier stable2509 is available
-	// #[runtime::pallet_index(12)]
-	// pub type LightningChannels = pallet_lightning_channels;
+	#[runtime::pallet_index(12)]
+	pub type LightningChannels = pallet_lightning_channels;
 }
 
 #[derive(Clone)]

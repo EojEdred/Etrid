@@ -14,19 +14,20 @@ license = "Apache-2.0"
 # Note: ethereum-bridge removed temporarily to avoid version conflicts
 # It's not needed for EVM functionality - MasterChef only needs EVM runtime
 
-# Frontier EVM Support (using frontier-stable2506 for stable2506 compatibility)
-pallet-evm = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-ethereum = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-base-fee = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-dynamic-fee = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-evm-chain-id = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-evm-precompile-simple = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-evm-precompile-modexp = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-pallet-evm-precompile-sha3fips = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-fp-evm = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-fp-rpc = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false }
-fp-self-contained = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false, features = ["serde"] }
-fp-account = { git = "https://github.com/polkadot-evm/frontier", tag = "frontier-stable2506", default-features = false, features = ["serde"] }
+# Frontier EVM Support (using patched Frontier with tag-based dependencies)
+# Patched to use tag="polkadot-stable2506" instead of branch="stable2506" to avoid duplicate sp_io
+pallet-evm = { path = "../../frontier-etrid-patched/frame/evm", default-features = false }
+pallet-ethereum = { path = "../../frontier-etrid-patched/frame/ethereum", default-features = false }
+pallet-base-fee = { path = "../../frontier-etrid-patched/frame/base-fee", default-features = false }
+pallet-dynamic-fee = { path = "../../frontier-etrid-patched/frame/dynamic-fee", default-features = false }
+pallet-evm-chain-id = { path = "../../frontier-etrid-patched/frame/evm-chain-id", default-features = false }
+pallet-evm-precompile-simple = { path = "../../frontier-etrid-patched/frame/evm/precompile/simple", default-features = false }
+pallet-evm-precompile-modexp = { path = "../../frontier-etrid-patched/frame/evm/precompile/modexp", default-features = false }
+pallet-evm-precompile-sha3fips = { path = "../../frontier-etrid-patched/frame/evm/precompile/sha3fips", default-features = false }
+fp-evm = { path = "../../frontier-etrid-patched/primitives/evm", default-features = false }
+fp-rpc = { path = "../../frontier-etrid-patched/primitives/rpc", default-features = false }
+fp-self-contained = { path = "../../frontier-etrid-patched/primitives/self-contained", default-features = false, features = ["serde"] }
+fp-account = { path = "../../frontier-etrid-patched/primitives/account", default-features = false, features = ["serde"] }
 
 # EVM primitives (use 0.18+ for EIP-7702 support)
 ethereum = { version = "0.18", default-features = false }
@@ -82,10 +83,9 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 # Note: etrid-primitives removed to avoid version conflicts with stable2509
 # Core types are defined inline in lib.rs
 
-# Lightning Bloc Integration - TEMPORARILY DISABLED until Frontier stable2509 available
-# pallet-lightning-channels will be re-enabled when Frontier upgrades to stable2509
-# For now, Lightning channel access is provided via XCM bridge to other PBC runtimes
-# pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+# Lightning Bloc Integration - ENABLED with patched Frontier
+# Using forked Frontier with tag-based dependencies resolves duplicate sp_io lang item errors
+pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
 
 [build-dependencies]
 # Substrate WASM builder (using stable2506 for Frontier compatibility)
@@ -140,8 +140,8 @@ std = [
     "ethereum/std",
     "evm/std",
 
-    # Lightning Bloc - TEMPORARILY DISABLED until Frontier stable2509
-    # "pallet-lightning-channels/std",
+    # Lightning Bloc
+    "pallet-lightning-channels/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
