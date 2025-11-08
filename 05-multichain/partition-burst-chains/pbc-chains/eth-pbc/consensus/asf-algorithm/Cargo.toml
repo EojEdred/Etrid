@@ -1,0 +1,45 @@
+[package]
+name = "asf-algorithm"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "FODDoS ASF (Ascending Scale of Finality) core consensus algorithm"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate primitives
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-io = { workspace = true }
+
+# Codec
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+
+# Serialization
+serde = { version = "1.0.197", default-features = false, features = ["derive", "alloc"] }
+
+# Logging
+log = { version = "0.4.21", default-features = false }
+
+# Thiserror for error handling
+thiserror = { version = "1.0", optional = true }
+
+[dev-dependencies]
+sp-io = { workspace = true }
+sp-core = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-io/std",
+    "codec/std",
+    "scale-info/std",
+    "serde/std",
+    "log/std",
+    "thiserror",
+]
