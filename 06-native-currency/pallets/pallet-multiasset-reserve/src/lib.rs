@@ -117,6 +117,9 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_reserve_oracle::Config {
+		/// Because this pallet emits events, it depends on the runtime's definition of an event.
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
 		/// Maximum number of assets in reserve
 		#[pallet::constant]
 		type MaxAssets: Get<u32>;

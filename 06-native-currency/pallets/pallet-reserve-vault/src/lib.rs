@@ -92,6 +92,9 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_edsc_token::Config + pallet_edsc_redemption::Config {
+		/// Because this pallet emits events, it depends on the runtime's definition of an event.
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
 		/// Optimal reserve ratio minimum (1.10 = 110%)
 		#[pallet::constant]
 		type OptimalReserveMin: Get<FixedU128>;
