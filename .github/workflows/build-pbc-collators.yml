@@ -15,8 +15,8 @@ on:
 
  env:
     CARGO_TERM_COLOR: always
-    RUST_BACKTRACE: 1ys
-  RUST_BACKTRACE: 1
+    RUST_BACKTRACE: 1
+    RUSTFLAGS: ""
 
 jobs:
   build-pbc-collators:
