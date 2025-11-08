@@ -33,6 +33,16 @@ LP rewards management dashboard featuring:
 - Staking interfaces
 - Ethers.js integration
 
+### 5. Wallet Web (Port 3000)
+Comprehensive ÉTRID crypto wallet web application featuring:
+- Multi-chain wallet support (Polkadot & Ethereum PBC)
+- Transaction builder
+- Staking interfaces (ETH PBC MasterChef)
+- Governance voting
+- Lightning Network swap interface
+- WalletConnect integration with RainbowKit
+- Dark/light theme support
+
 ## Installation
 
 1. Open Pinokio
@@ -65,6 +75,11 @@ npm start
 cd apps/masterchef-dashboard
 npm start
 # Access at http://localhost:3001
+
+# Wallet Web
+cd apps/wallet-web/etrid-crypto-website
+npm start
+# Access at http://localhost:3000
 ```
 
 ## Configuration
@@ -85,13 +100,18 @@ Each application may require specific environment variables:
 - `NEXT_PUBLIC_RPC_URL`: Ethereum RPC endpoint
 - `NEXT_PUBLIC_MASTERCHEF_ADDRESS`: MasterChef contract address
 
+#### Wallet Web
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: WalletConnect project ID (get from https://cloud.walletconnect.com)
+- `NEXT_PUBLIC_WS_PROVIDER`: WebSocket endpoint for Polkadot node (default: `ws://localhost:9944`)
+- `NEXT_PUBLIC_CHAIN_ID`: Chain ID for ETH PBC (default: `8888`)
+
 ## Build Status
 
 ✅ Lightning Landing - Built successfully
 ✅ Validator Dashboard - Built successfully
 ✅ Watchtower Monitor - Built successfully (with font configuration fix)
 ✅ MasterChef Dashboard - Built successfully
-⚠️ Wallet Web - Requires WagmiProvider configuration (not included in Pinokio config)
+✅ Wallet Web - Built successfully (with Web3Provider layout fix)
 
 ## Technology Stack
 

@@ -1,6 +1,6 @@
 module.exports = {
   title: "ÉTRID Web UI Suite",
-  description: "Complete web interface suite for ÉTRID blockchain - includes Lightning Landing, Validator Dashboard, Watchtower Monitor, and MasterChef Dashboard",
+  description: "Complete web interface suite for ÉTRID blockchain - includes Lightning Landing, Validator Dashboard, Watchtower Monitor, MasterChef Dashboard, and Wallet Web",
   icon: "icon.png",
   menu: async (kernel) => {
     return {
@@ -167,6 +167,46 @@ module.exports = {
         message: "npm run build",
         venv: "env",
         path: "apps/masterchef-dashboard"
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        message: "Installing Wallet Web dependencies...",
+        venv: "env",
+        path: "apps/wallet-web/etrid-crypto-website",
+        on: [{
+          event: null,
+          return: true
+        }]
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        message: "npm install --legacy-peer-deps",
+        venv: "env",
+        path: "apps/wallet-web/etrid-crypto-website"
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        message: "Building Wallet Web...",
+        venv: "env",
+        path: "apps/wallet-web/etrid-crypto-website",
+        on: [{
+          event: null,
+          return: true
+        }]
+      }
+    },
+    {
+      method: "shell.run",
+      params: {
+        message: "npm run build",
+        venv: "env",
+        path: "apps/wallet-web/etrid-crypto-website"
       }
     }
   ],
