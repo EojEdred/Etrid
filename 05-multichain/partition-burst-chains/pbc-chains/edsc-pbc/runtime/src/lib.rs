@@ -251,6 +251,7 @@ impl pallet_edsc_token::Config for Runtime {
 
 // EDSC Receipts Configuration (SBT for purchase tracking)
 impl pallet_edsc_receipts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
     type MaxReceiptsPerWallet = ConstU32<1000>;
     type ReceiptExpiryPeriod = ConstU32<5_256_000>;  // ~1 year in blocks
 }
@@ -305,6 +306,7 @@ parameter_types! {
 }
 
 impl pallet_edsc_oracle::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
     type MinPriceSources = MinPriceSources;
