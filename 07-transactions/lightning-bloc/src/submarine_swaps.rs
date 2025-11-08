@@ -321,8 +321,9 @@ impl SubmarineSwapManager {
 
     /// Refund expired swap
     pub fn refund_swap(&mut self, swap_id: &str) -> Result<(), SwapError> {
+        let current_height = self.current_height;
         let swap = self.get_swap_mut(swap_id)?;
-        swap.refund(self.current_height)
+        swap.refund(current_height)
     }
 
     /// Mark swap as funded

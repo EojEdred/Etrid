@@ -247,18 +247,25 @@ impl LSPManager {
 
     /// Process channel request
     fn process_channel_request(&mut self, request_id: &str) -> Result<(), LSPError> {
+        // Extract desired capacity before mutable borrows
+        let desired_capacity = self.requests.get(request_id)
+            .ok_or(LSPError::RequestNotFound)?
+            .desired_capacity;
+
         let request = self.requests.get_mut(request_id)
             .ok_or(LSPError::RequestNotFound)?;
 
         request.status = RequestStatus::Processing;
 
         // Find and reserve liquidity
-        let lsp_id = self.find_best_lsp(request.desired_capacity)?;
+        let lsp_id = self.find_best_lsp(desired_capacity)?;
         let lsp = self.lsp_nodes.get_mut(&lsp_id)
             .ok_or(LSPError::LSPNotFound)?;
 
-        lsp.reserve_liquidity(request.desired_capacity)?;
+        lsp.reserve_liquidity(desired_capacity)?;
 
+        let request = self.requests.get_mut(request_id)
+            .ok_or(LSPError::RequestNotFound)?;
         request.status = RequestStatus::Completed;
         Ok(())
     }
