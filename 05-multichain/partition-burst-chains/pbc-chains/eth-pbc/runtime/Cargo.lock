@@ -1235,7 +1235,6 @@ dependencies = [
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-insecure-randomness-collective-flip",
- "pallet-lightning-channels-stable2506",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
@@ -3007,20 +3006,6 @@ dependencies = [
  "polkadot-sdk-frame",
  "safe-mix",
  "scale-info",
-]
-
-[[package]]
-name = "pallet-lightning-channels-stable2506"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]

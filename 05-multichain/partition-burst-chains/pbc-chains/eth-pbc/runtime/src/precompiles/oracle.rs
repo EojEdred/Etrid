@@ -76,6 +76,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -84,8 +85,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
             FlareChainResponse::OraclePrice(price) => {
                 // Convert u128 price to U256 and encode
                 let price_u256 = U256::from(price);
-                let mut output = [0u8; 32];
-                price_u256.to_big_endian(&mut output);
+                let output = price_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -96,6 +96,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Oracle error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -117,6 +118,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -125,8 +127,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
             FlareChainResponse::OracleLastUpdate(timestamp) => {
                 // Convert u64 timestamp to U256 and encode
                 let timestamp_u256 = U256::from(timestamp);
-                let mut output = [0u8; 32];
-                timestamp_u256.to_big_endian(&mut output);
+                let output = timestamp_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -137,6 +138,7 @@ impl<XCM> EtridOraclePrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Oracle error")
+                        .to_string()
                         .into(),
                 ),
             }),

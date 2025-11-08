@@ -66,6 +66,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -74,8 +75,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             FlareChainResponse::ValidatorStake(stake) => {
                 // Convert u128 stake to U256 and encode
                 let stake_u256 = U256::from(stake);
-                let mut output = [0u8; 32];
-                stake_u256.to_big_endian(&mut output);
+                let output = stake_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -86,6 +86,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Staking error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -107,6 +108,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -115,8 +117,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             FlareChainResponse::ValidatorActive(is_active) => {
                 // Convert bool to U256 (0 or 1) and encode
                 let active_u256 = if is_active { U256::one() } else { U256::zero() };
-                let mut output = [0u8; 32];
-                active_u256.to_big_endian(&mut output);
+                let output = active_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -127,6 +128,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Staking error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -148,6 +150,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -156,8 +159,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             FlareChainResponse::TotalStaked(total) => {
                 // Convert u128 total to U256 and encode
                 let total_u256 = U256::from(total);
-                let mut output = [0u8; 32];
-                total_u256.to_big_endian(&mut output);
+                let output = total_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -168,6 +170,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Staking error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -189,6 +192,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -197,8 +201,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
             FlareChainResponse::ValidatorCount(count) => {
                 // Convert u32 count to U256 and encode
                 let count_u256 = U256::from(count);
-                let mut output = [0u8; 32];
-                count_u256.to_big_endian(&mut output);
+                let output = count_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -209,6 +212,7 @@ impl<XCM> EtridStakingPrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Staking error")
+                        .to_string()
                         .into(),
                 ),
             }),

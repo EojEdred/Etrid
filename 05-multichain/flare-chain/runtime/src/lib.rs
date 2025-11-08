@@ -280,6 +280,7 @@ impl pallet_accounts::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Balance = u64;
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+    type WeightInfo = ();
 }
 
 parameter_types! {
@@ -565,6 +566,7 @@ impl stablecoin_usdt_bridge::Config for Runtime {
 
 /// Configure EDSC Token Pallet
 impl pallet_edsc_token::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
     type MaxSupply = ConstU128<1_000_000_000_000_000_000_000>; // 1 billion EDSC (18 decimals)
     type MinBalance = ConstU128<1_000_000_000_000>; // 0.000001 EDSC minimum
     type WeightInfo = ();
@@ -572,6 +574,7 @@ impl pallet_edsc_token::Config for Runtime {
 
 /// Configure EDSC Receipts Pallet (SBT registry)
 impl pallet_edsc_receipts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
     type MaxReceiptsPerWallet = ConstU32<1000>; // Max 1000 receipts per wallet
     type ReceiptExpiryPeriod = ConstU32<5_256_000>; // ~1 year (at 6s blocks)
 }
@@ -617,6 +620,7 @@ parameter_types! {
 
 /// Configure EDSC Oracle Pallet
 impl pallet_edsc_oracle::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
     type PriceCallback = EdscRedemption;
     type PrimaryTwapWindow = PrimaryTwapWindow;
     type FallbackTwapWindow = FallbackTwapWindow;
@@ -869,6 +873,7 @@ impl pallet_treasury_etrid::Config for Runtime {
     type ApprovalThreshold = TreasuryApprovalThreshold;
     type EmergencyThreshold = TreasuryEmergencyThreshold;
     type ProposalExpiration = TreasuryProposalExpiration;
+    type WeightInfo = ();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

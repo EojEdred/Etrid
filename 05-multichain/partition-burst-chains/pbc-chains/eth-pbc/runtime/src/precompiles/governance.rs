@@ -131,6 +131,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -139,8 +140,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
             FlareChainResponse::GovernanceProposalId(proposal_id) => {
                 // Return proposal ID as uint256
                 let id_u256 = U256::from(proposal_id);
-                let mut output = [0u8; 32];
-                id_u256.to_big_endian(&mut output);
+                let output = id_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -151,6 +151,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Governance error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -180,6 +181,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -196,6 +198,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Governance error")
+                        .to_string()
                         .into(),
                 ),
             }),
@@ -217,6 +220,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
             exit_status: ExitError::Other(
                 sp_std::str::from_utf8(&e)
                     .unwrap_or("XCM query failed")
+                    .to_string()
                     .into(),
             ),
         })?;
@@ -225,8 +229,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
             FlareChainResponse::GovernanceProposalStatus(status) => {
                 // Return status as uint8 (encoded as uint256)
                 let status_u256 = U256::from(status);
-                let mut output = [0u8; 32];
-                status_u256.to_big_endian(&mut output);
+                let output = status_u256.to_big_endian();
 
                 Ok(PrecompileOutput {
                     exit_status: ExitSucceed::Returned,
@@ -237,6 +240,7 @@ impl<XCM> EtridGovernancePrecompile<XCM> {
                 exit_status: ExitError::Other(
                     sp_std::str::from_utf8(&e)
                         .unwrap_or("Governance error")
+                        .to_string()
                         .into(),
                 ),
             }),

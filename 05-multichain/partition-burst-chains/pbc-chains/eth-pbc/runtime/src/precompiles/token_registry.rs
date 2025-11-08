@@ -197,8 +197,7 @@ where
 // Helper functions
 
 fn encode_uint256(value: U256) -> Vec<u8> {
-	let mut output = [0u8; 32];
-	value.to_big_endian(&mut output);
+	let output = value.to_big_endian();
 	output.to_vec()
 }
 

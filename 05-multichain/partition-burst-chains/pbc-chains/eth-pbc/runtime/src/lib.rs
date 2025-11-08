@@ -310,7 +310,7 @@ impl pallet_transaction_payment::Config for Runtime {
 	type WeightToFee = IdentityFee<Balance>;
 	type LengthToFee = IdentityFee<Balance>;
 	/// Use constant fee multiplier (simplified from SlowAdjustingFeeUpdate to avoid version conflicts)
-	type FeeMultiplierUpdate = ConstFeeMultiplier<sp_runtime::FixedU128<1>>;
+	type FeeMultiplierUpdate = ConstFeeMultiplier<sp_runtime::FixedU128>;
 	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightInfo = pallet_transaction_payment::weights::SubstrateWeight<Runtime>;
 }
