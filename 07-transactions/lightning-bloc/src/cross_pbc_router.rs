@@ -182,12 +182,12 @@ impl CrossPBCGraphManager {
     }
 
     /// Get gossip sync for a chain
-    pub fn get_gossip(&self, chain_id: &ChainId) -> Option<&GossipSync> {
+    pub fn get_gossip(&self, chain_id: &ChainId) -> Option<&GossipManager> {
         self.gossip_managers.get(chain_id)
     }
 
     /// Get mutable gossip sync for a chain
-    pub fn get_gossip_mut(&mut self, chain_id: &ChainId) -> Option<&mut GossipSync> {
+    pub fn get_gossip_mut(&mut self, chain_id: &ChainId) -> Option<&mut GossipManager> {
         self.gossip_managers.get_mut(chain_id)
     }
 
