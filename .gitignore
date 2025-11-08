@@ -182,3 +182,58 @@ ai-monitoring/**/__pycache__/
 BITWARDEN*.md
 BITWARDEN*.txt
 **/BITWARDEN*
+
+# ============================================================================
+# DEVELOPER SESSION FILES AND STATUS REPORTS - DO NOT COMMIT!
+# ============================================================================
+
+# Session summaries and status reports
+*SESSION*.md
+*STATUS*.md
+*SUMMARY*.md
+*COMPLETE*.md
+*REPORT*.md
+*FIX*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!CODE_OF_CONDUCT.md
+!SECURITY.md
+
+# Temporary deployment and setup guides (keep production docs)
+AZURE_*.md
+DEFIHUB_*.md
+PINOKIO_*.md
+DEPLOYMENT_*.md
+!docs/DEPLOYMENT_GUIDE.md
+!docs/*/DEPLOYMENT_GUIDE.md
+
+# Developer scripts (ad-hoc automation)
+check-*.sh
+cleanup-*.sh
+fix-*.sh
+deploy-*.sh
+setup-*.sh
+test-*.sh
+
+# AI dev tools
+.aider*
+.gizzi-io/
+*PROMPTS*.md
+*AI_ASSISTANT*.md
+
+# Session and build tracking
+docs/sessions/
+docs/build-status/
+docs/ai-monitoring/
+docs/deployment-archive/
+docs/**/LIGHTNING_*_COMPLETE.md
+docs/**/LIGHTNING_*_SUMMARY.md
+
+# Temporary build helpers
+Cargo.toml.*-backup
+build/
+validator-reports/
+pinokio/
+deployment/
+infrastructure/
