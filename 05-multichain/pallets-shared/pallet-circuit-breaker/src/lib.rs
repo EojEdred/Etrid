@@ -88,6 +88,9 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
+		/// Runtime event type
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
 		/// Maximum hourly redemption volume (in EDSC, with 18 decimals)
 		#[pallet::constant]
 		type MaxHourlyVolume: Get<u128>;
