@@ -179,13 +179,19 @@ parameter_types! {
 impl pallet_session::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type ValidatorId = AccountId;
-    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    // Simple identity conversion for ValidatorIdOf
+    type ValidatorIdOf = sp_runtime::traits::ConvertInto;
     type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
     type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
-    type SessionManager = ValidatorCommittee;
+    // Use () for SessionManager - no validator rotation logic needed yet
+    type SessionManager = ();
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
+    // Required fields for pallet_session
+    type DisablingStrategy = pallet_session::UpToLimitDisablingStrategy;
+    type Currency = Balances;
+    type KeyDeposit = ConstU128<1_000_000>; // 1 ETR deposit for session keys
 }
 
 /// Existential deposit - minimum balance to keep an account alive
