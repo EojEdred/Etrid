@@ -155,14 +155,8 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = ConstU32<16>;
 }
 
-// RuntimeHoldReason enum for pallet_balances
-// Phase 1: Only Session hold reason, can add more variants in Phase 2
-// Note: construct_runtime! macro auto-generates From<pallet_session::HoldReason> impl
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebug)]
-pub enum RuntimeHoldReason {
-    #[codec(index = 0)]
-    Session(pallet_session::HoldReason),
-}
+// RuntimeHoldReason disabled for phase 1 - no holds needed yet
+// Phase 2 can enable holds when needed for staking/governance
 
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -204,11 +198,11 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // Phase 1: Basic session infrastructure with zero deposits
-    // Using Balances but with zero deposit amount - no economic cost for registering session keys
-    type Currency = Balances;
-    type KeyDeposit = ConstU128<0>;  // Zero deposit for phase 1, can increase in phase 2
-    type DisablingStrategy = (); // No disabling for phase 1
+    // Phase 1: No session key deposits - simplified approach
+    // Phase 2 can add deposits when hold functionality is needed
+    type Currency = ();
+    type KeyDeposit = ();
+    type DisablingStrategy = ();
 }
 
 /// Existential deposit - minimum balance to keep an account alive
@@ -226,7 +220,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = RuntimeHoldReason;  // Defined above for pallet_session support
+    type RuntimeHoldReason = ();  // Phase 1: No holds, Phase 2: Enable for staking/governance
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
