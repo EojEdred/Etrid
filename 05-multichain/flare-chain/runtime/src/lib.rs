@@ -188,10 +188,10 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // Required fields for pallet_session
-    type DisablingStrategy = pallet_session::UpToLimitDisablingStrategy;
-    type Currency = Balances;
-    type KeyDeposit = ConstU128<1_000_000>; // 1 ETR deposit for session keys
+    // No disabling strategy or deposits for now - simple setup
+    type DisablingStrategy = ();
+    type Currency = ();
+    type KeyDeposit = ();
 }
 
 /// Existential deposit - minimum balance to keep an account alive
