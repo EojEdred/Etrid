@@ -190,10 +190,10 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // Phase 1: Basic session infrastructure without deposits
-    // Will add Currency/KeyDeposit/DisablingStrategy in phase 2 when we add RuntimeHoldReason
-    type Currency = ();          // No currency for phase 1
-    type KeyDeposit = ();        // No deposit for phase 1
+    // Phase 1: Basic session infrastructure with zero deposits
+    // Using Balances but with zero deposit amount - no economic cost for registering session keys
+    type Currency = Balances;
+    type KeyDeposit = ConstU128<0>;  // Zero deposit for phase 1, can increase in phase 2
     type DisablingStrategy = (); // No disabling for phase 1
 }
 
