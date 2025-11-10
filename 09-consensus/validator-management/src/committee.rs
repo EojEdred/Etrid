@@ -153,7 +153,8 @@ impl CommitteeManager {
             .collect();
 
         if eligible.is_empty() {
-            return Err(ValidatorError::CommitteeFull);
+            log::warn!("No eligible validators for committee. Returning empty committee.");
+            return Ok(Vec::new());
         }
 
         // Sort by stake (descending) then reputation (descending)
