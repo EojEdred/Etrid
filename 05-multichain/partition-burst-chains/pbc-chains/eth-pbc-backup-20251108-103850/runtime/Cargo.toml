@@ -1,0 +1,154 @@
+[package]
+name = "eth-pbc-runtime"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Bitcoin Partition Burst Chain runtime for Ëtrid Multichain"
+license = "Apache-2.0"
+
+# Standalone workspace to avoid version conflicts with parent workspace (stable2509)
+# eth-pbc-runtime uses stable2506 for Frontier compatibility
+[workspace]
+
+[dependencies]
+# Note: ethereum-bridge removed temporarily to avoid version conflicts
+# It's not needed for EVM functionality - MasterChef only needs EVM runtime
+
+# Frontier EVM Support (using patched Frontier with tag-based dependencies)
+# Patched to use tag="polkadot-stable2506" instead of branch="stable2506" to avoid duplicate sp_io
+pallet-evm = { path = "../../frontier-etrid-patched/frame/evm", default-features = false }
+pallet-ethereum = { path = "../../frontier-etrid-patched/frame/ethereum", default-features = false }
+pallet-base-fee = { path = "../../frontier-etrid-patched/frame/base-fee", default-features = false }
+pallet-dynamic-fee = { path = "../../frontier-etrid-patched/frame/dynamic-fee", default-features = false }
+pallet-evm-chain-id = { path = "../../frontier-etrid-patched/frame/evm-chain-id", default-features = false }
+pallet-evm-precompile-simple = { path = "../../frontier-etrid-patched/frame/evm/precompile/simple", default-features = false }
+pallet-evm-precompile-modexp = { path = "../../frontier-etrid-patched/frame/evm/precompile/modexp", default-features = false }
+pallet-evm-precompile-sha3fips = { path = "../../frontier-etrid-patched/frame/evm/precompile/sha3fips", default-features = false }
+fp-evm = { path = "../../frontier-etrid-patched/primitives/evm", default-features = false }
+fp-rpc = { path = "../../frontier-etrid-patched/primitives/rpc", default-features = false }
+fp-self-contained = { path = "../../frontier-etrid-patched/primitives/self-contained", default-features = false, features = ["serde"] }
+fp-account = { path = "../../frontier-etrid-patched/primitives/account", default-features = false, features = ["serde"] }
+
+# EVM primitives (use 0.18+ for EIP-7702 support)
+ethereum = { version = "0.18", default-features = false }
+evm = { version = "0.41", default-features = false }
+
+# Substrate Core - Use explicit versions (stable2506 compatible, not workspace to avoid patch conflicts)
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0.208", default-features = false, features = ["derive", "alloc"] }
+
+# FRAME Dependencies (using stable2506 for Frontier compatibility - ETH PBC isolated component)
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+frame-executive = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+# Substrate Primitives (using stable2506 for Frontier compatibility)
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-session = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-version = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# FRAME Pallets (using stable2506 for Frontier compatibility)
+pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+# Consensus
+sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+# Polkadot/Cumulus - REMOVED to avoid branch=stable2506 transitive deps that cause duplicate sp_io lang items
+# polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+# cumulus-pallet-weight-reclaim = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+# Balances
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# RPC Runtime APIs
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+# Note: etrid-primitives removed to avoid version conflicts with stable2509
+# Core types are defined inline in lib.rs
+
+# Lightning Bloc Integration - DISABLED for initial deployment
+# Will be re-enabled after deployment once stable2506 compatibility is resolved
+# pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager-stable2506", default-features = false, package = "pallet-lightning-channels-stable2506" }
+
+[build-dependencies]
+# Substrate WASM builder (using stable2506 for Frontier compatibility)
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "serde/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
+    "sp-api/std",
+    "sp-block-builder/std",
+    "sp-core/std",
+    "sp-inherents/std",
+    "sp-io/std",
+    "sp-offchain/std",
+    "sp-runtime/std",
+    "sp-session/std",
+    "sp-std/std",
+    "sp-transaction-pool/std",
+    "sp-version/std",
+    "sp-consensus-grandpa/std",
+    "sp-genesis-builder/std",
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "pallet-insecure-randomness-collective-flip/std",
+    "pallet-aura/std",
+    "sp-consensus-aura/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+
+    # Frontier EVM
+    "pallet-evm/std",
+    "pallet-ethereum/std",
+    "pallet-base-fee/std",
+    "pallet-dynamic-fee/std",
+    "pallet-evm-chain-id/std",
+    "pallet-evm-precompile-simple/std",
+    "pallet-evm-precompile-modexp/std",
+    "pallet-evm-precompile-sha3fips/std",
+    "fp-evm/std",
+    "fp-rpc/std",
+    "fp-self-contained/std",
+    "fp-account/std",
+    "ethereum/std",
+    "evm/std",
+
+    # Lightning Bloc - DISABLED for initial deployment
+    # "pallet-lightning-channels/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+
+# Workaround for substrate-prometheus-endpoint tokio issue in stable2506
+# Force tokio to include 'net' feature which prometheus endpoint needs
+[patch.crates-io]
+tokio = { git = "https://github.com/tokio-rs/tokio.git", tag = "tokio-1.48.0", features = ["net", "rt-multi-thread", "macros", "time", "sync", "io-util", "fs"] }

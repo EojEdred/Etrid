@@ -212,7 +212,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = HoldReason;
+    type RuntimeHoldReason = ();  // Phase 1: No holds, will add RuntimeHoldReason enum in Phase 2
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }

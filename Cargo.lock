@@ -5119,6 +5119,7 @@ dependencies = [
  "pallet-reserve-backed-token",
  "pallet-reserve-oracle",
  "pallet-reserve-vault",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction",
