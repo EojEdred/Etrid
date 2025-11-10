@@ -190,10 +190,11 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // Phase 1: Basic session infrastructure (following Polkadot's approach)
-    type Currency = Balances;  // Infrastructure ready for phase 2
-    type KeyDeposit = ();       // No deposit yet (like Polkadot mainnet)
-    type DisablingStrategy = (); // Will add proper strategy in phase 2
+    // Phase 1: Basic session infrastructure without deposits
+    // Will add Currency/KeyDeposit/DisablingStrategy in phase 2 when we add RuntimeHoldReason
+    type Currency = ();          // No currency for phase 1
+    type KeyDeposit = ();        // No deposit for phase 1
+    type DisablingStrategy = (); // No disabling for phase 1
 }
 
 /// Existential deposit - minimum balance to keep an account alive
