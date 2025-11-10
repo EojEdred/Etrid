@@ -25,6 +25,11 @@ use frame_system::EnsureRoot;
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
+// Codec and scale_info for RuntimeHoldReason
+use codec::{Encode, Decode, MaxEncodedLen};
+use scale_info::TypeInfo;
+use sp_runtime::RuntimeDebug;
+
 // Substrate and Polkadot dependencies
 use frame_support::{
     construct_runtime, derive_impl,
@@ -150,6 +155,20 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = ConstU32<16>;
 }
 
+// RuntimeHoldReason enum for pallet_balances
+// Phase 1: Only Session hold reason, can add more variants in Phase 2
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebug)]
+pub enum RuntimeHoldReason {
+    #[codec(index = 0)]
+    Session(pallet_session::HoldReason),
+}
+
+impl From<pallet_session::HoldReason> for RuntimeHoldReason {
+    fn from(reason: pallet_session::HoldReason) -> Self {
+        RuntimeHoldReason::Session(reason)
+    }
+}
+
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
@@ -212,7 +231,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();  // Phase 1: No holds, will add RuntimeHoldReason enum in Phase 2
+    type RuntimeHoldReason = RuntimeHoldReason;  // Defined above for pallet_session support
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
