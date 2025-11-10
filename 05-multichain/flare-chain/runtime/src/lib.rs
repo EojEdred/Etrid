@@ -157,16 +157,11 @@ impl frame_system::Config for Runtime {
 
 // RuntimeHoldReason enum for pallet_balances
 // Phase 1: Only Session hold reason, can add more variants in Phase 2
+// Note: construct_runtime! macro auto-generates From<pallet_session::HoldReason> impl
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo, RuntimeDebug)]
 pub enum RuntimeHoldReason {
     #[codec(index = 0)]
     Session(pallet_session::HoldReason),
-}
-
-impl From<pallet_session::HoldReason> for RuntimeHoldReason {
-    fn from(reason: pallet_session::HoldReason) -> Self {
-        RuntimeHoldReason::Session(reason)
-    }
 }
 
 impl pallet_grandpa::Config for Runtime {
