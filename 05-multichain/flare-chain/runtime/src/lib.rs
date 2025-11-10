@@ -198,11 +198,11 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // Phase 1: No session key deposits - simplified approach
-    // Phase 2 can add deposits when hold functionality is needed
-    type Currency = ();
-    type KeyDeposit = ();
     type DisablingStrategy = ();
+    // pallet_session requires Currency and KeyDeposit for validator key management
+    // Using Balances pallet satisfies trait bounds without needing RuntimeHoldReason
+    type Currency = Balances;
+    type KeyDeposit = ConstU128<0>; // No deposit required for session keys
 }
 
 /// Existential deposit - minimum balance to keep an account alive
@@ -220,7 +220,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();  // Phase 1: No holds, Phase 2: Enable for staking/governance
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
