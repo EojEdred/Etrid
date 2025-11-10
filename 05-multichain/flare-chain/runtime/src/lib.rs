@@ -155,7 +155,7 @@ impl pallet_grandpa::Config for Runtime {
     type WeightInfo = ();
     type MaxAuthorities = ConstU32<32>;
     type MaxNominators = ConstU32<0>;
-    type MaxSetIdSessionEntries = ConstU64<0>;
+    type MaxSetIdSessionEntries = ConstU64<168>; // ~1 week of sessions at 600 blocks/session
     type KeyOwnerProof = sp_core::Void;
     type EquivocationReportSystem = ();
 }
@@ -168,6 +168,23 @@ impl pallet_timestamp::Config for Runtime {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = ();
+}
+
+parameter_types! {
+    pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
+    type Keys = opaque::SessionKeys;
     type WeightInfo = ();
 }
 
@@ -1080,6 +1097,7 @@ construct_runtime!(
         System: frame_system,
         Timestamp: pallet_timestamp,
         Grandpa: pallet_grandpa,
+        Session: pallet_session,
         Balances: pallet_balances,
         Vesting: pallet_vesting,
         Multisig: pallet_multisig,
