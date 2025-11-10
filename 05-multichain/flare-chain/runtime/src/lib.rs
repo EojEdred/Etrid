@@ -155,7 +155,9 @@ impl pallet_grandpa::Config for Runtime {
     type WeightInfo = ();
     type MaxAuthorities = ConstU32<32>;
     type MaxNominators = ConstU32<0>;
-    type MaxSetIdSessionEntries = ConstU64<168>; // ~1 week of sessions at 600 blocks/session
+    // Session tracking for validator set management
+    // 168 = ~1 week of sessions at 600 blocks/session, 6s block time
+    type MaxSetIdSessionEntries = ConstU64<168>;
     type KeyOwnerProof = sp_core::Void;
     type EquivocationReportSystem = ();
 }
@@ -171,6 +173,8 @@ impl pallet_timestamp::Config for Runtime {
     type WeightInfo = ();
 }
 
+// pallet_session configuration for future validator management
+// Following Polkadot's phased approach: infrastructure now, deposits later
 parameter_types! {
     pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
     pub const Offset: u32 = 0;
@@ -179,19 +183,17 @@ parameter_types! {
 impl pallet_session::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type ValidatorId = AccountId;
-    // Simple identity conversion for ValidatorIdOf
     type ValidatorIdOf = sp_runtime::traits::ConvertInto;
     type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
     type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
-    // Use () for SessionManager - no validator rotation logic needed yet
     type SessionManager = ();
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    // No disabling strategy or deposits for now - simple setup
-    type DisablingStrategy = ();
-    type Currency = ();
-    type KeyDeposit = ();
+    // Phase 1: Basic session infrastructure (following Polkadot's approach)
+    type Currency = Balances;  // Infrastructure ready for phase 2
+    type KeyDeposit = ();       // No deposit yet (like Polkadot mainnet)
+    type DisablingStrategy = (); // Will add proper strategy in phase 2
 }
 
 /// Existential deposit - minimum balance to keep an account alive
@@ -209,7 +211,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = HoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
