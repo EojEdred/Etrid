@@ -271,6 +271,9 @@ pallet-etr-lock = { default-features = false, path = "06-native-currency/pallets
 # Cumulus (for parachain support)
 cumulus-pallet-weight-reclaim = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
+# Additional frame dependencies for eth-pbc
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Serialization & Encoding                                                    │
 # └─────────────────────────────────────────────────────────────────────────────┘
