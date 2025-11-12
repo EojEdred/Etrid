@@ -85,8 +85,12 @@ impl PeerType {
     }
 
     /// Check if this peer type can be in PPFA committee
+    /// DecentralizedDirectors can participate in both PPFA consensus and governance
     pub fn can_be_in_committee(&self) -> bool {
-        self.is_validator_type()
+        matches!(
+            self,
+            PeerType::ValidityNode | PeerType::FlareNode | PeerType::DecentralizedDirector
+        )
     }
 }
 
