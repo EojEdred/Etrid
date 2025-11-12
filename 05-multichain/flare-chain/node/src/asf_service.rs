@@ -739,10 +739,8 @@ pub fn new_full_with_params(
                     ProposerSelector, CommitteeManager, SlotTimer, HealthMonitor,
                 };
 
-                // Create committee manager
-                // TEMPORARY FIX: Force target_size to be large enough to include all validators
-                // This bypasses the filtering in select_committee() that was limiting to 16
-                let mut committee = CommitteeManager::new(100);  // Use 100 to ensure all 21 validators are selected
+                // Create committee manager with proper target size
+                let mut committee = CommitteeManager::new(ppfa_params.max_committee_size);
 
                 // ═══════════════════════════════════════════════════════════════
                 // TODO #1 IMPLEMENTATION: Load committee from runtime via API
