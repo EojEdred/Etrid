@@ -86,10 +86,7 @@ impl PeerType {
 
     /// Check if this peer type can be in PPFA committee
     pub fn can_be_in_committee(&self) -> bool {
-        matches!(
-            self,
-            PeerType::ValidityNode | PeerType::FlareNode | PeerType::DecentralizedDirector
-        )
+        self.is_validator_type()
     }
 }
 
