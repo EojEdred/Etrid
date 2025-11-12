@@ -1471,6 +1471,9 @@ impl_runtime_apis! {
                     "flarechain_mainnet" => {
                         Some(include_bytes!("../presets/flarechain_mainnet.json").to_vec())
                     },
+                    "flarechain_mainnet_restart_final" => {
+                        Some(include_bytes!("../presets/flarechain_mainnet_restart_final.json").to_vec())
+                    },
                     _ => None,
                 }
             })
@@ -1483,6 +1486,7 @@ impl_runtime_apis! {
                 "ember_testnet".into(),
                 "test_2validator".into(),
                 "flarechain_mainnet".into(),
+                "flarechain_mainnet_restart_final".into(),
             ]
         }
     }

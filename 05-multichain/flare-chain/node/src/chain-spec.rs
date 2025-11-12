@@ -103,3 +103,26 @@ pub fn test_2validator_config() -> Result<ChainSpec, String> {
     .with_genesis_config_preset_name("test_2validator")
     .build())
 }
+
+/// 9-Director mainnet config (production restart with GRANDPA fix)
+pub fn directors_9_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet (9 Directors)")
+    .with_id("flarechain_mainnet_9directors")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties
+    })
+    .with_genesis_config_preset_name("flarechain_mainnet_restart_final")
+    .build())
+}

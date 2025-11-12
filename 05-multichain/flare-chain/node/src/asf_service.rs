@@ -783,12 +783,13 @@ pub fn new_full_with_params(
                     ppfa_params.max_committee_size
                 );
 
-                // Get our validator key from keystore (using AURA keys for ASF)
-                // FIX: ASF and AURA share the same key material in session keys
+                // Get our validator key from keystore (using GRANDPA keys for ASF)
+                // FIX: Query for GRANDPA keys since session keys only contain GRANDPA
+                // GRANDPA key type is "gran" (0x6772616e)
                 use sp_core::crypto::KeyTypeId;
-                const AURA_KEY_TYPE: KeyTypeId = sp_consensus_aura::sr25519::AuthorityId::ID;
+                const GRANDPA_KEY_TYPE: KeyTypeId = KeyTypeId([0x67, 0x72, 0x61, 0x6e]);
 
-                let our_keys = ppfa_keystore.sr25519_public_keys(AURA_KEY_TYPE);
+                let our_keys = ppfa_keystore.ed25519_public_keys(GRANDPA_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
                     let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
@@ -876,24 +877,23 @@ pub fn new_full_with_params(
                         );
 
                         // Get our validator ID from keystore
-                        // FIX: Use AURA keys for ASF (they're the same key material in session keys)
-                        // ASF and AURA share the same sr25519 key, so we query for AURA keys
+                        // FIX: Use GRANDPA keys for ASF (session keys only contain GRANDPA)
+                        // GRANDPA key type is "gran" (0x6772616e)
                         use sp_core::crypto::KeyTypeId;
-                        use sp_core::sr25519::Public as Sr25519Public;
 
-                        const AURA_KEY_TYPE: KeyTypeId = sp_consensus_aura::sr25519::AuthorityId::ID;
+                        const GRANDPA_KEY_TYPE: KeyTypeId = KeyTypeId([0x67, 0x72, 0x61, 0x6e]);
 
-                        let our_validator_id = match ppfa_keystore.sr25519_public_keys(AURA_KEY_TYPE).first() {
+                        let our_validator_id = match ppfa_keystore.ed25519_public_keys(GRANDPA_KEY_TYPE).first() {
                             Some(public_key) => {
                                  log::info!(
-                                    "🔑 ASF using AURA key from keystore: {}",
+                                    "🔑 ASF using GRANDPA key from keystore: {}",
                                     hex::encode(public_key.as_ref() as &[u8])
                                 );
                                 block_production::ValidatorId::from(public_key.0)
                             }
                             None => {
                                 log::warn!(
-                                    "⚠️  No AURA validator key found in keystore for ASF. \
+                                    "⚠️  No GRANDPA validator key found in keystore for ASF. \
                                      Using placeholder. Node may not participate in block production."
                                 );
                                 block_production::ValidatorId::from([0u8; 32])
