@@ -1,0 +1,105 @@
+[package]
+name = "ai-compute-pbc-runtime"
+version = "1.0.0"
+authors = ["Ëtrid Foundation"]
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11", default-features = false, features = ["derive"] }
+
+# Substrate Core
+sp-api = { workspace = true }
+sp-runtime = { workspace = true }
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-io = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-consensus-grandpa = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-transaction-pool = { workspace = true }
+sp-inherents = { workspace = true }
+sp-offchain = { workspace = true }
+sp-session = { workspace = true }
+sp-version = { workspace = true }
+
+# Substrate Frame
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-executive = { workspace = true }
+pallet-aura = { workspace = true }
+pallet-grandpa = { workspace = true }
+pallet-sudo = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-transaction-payment = { workspace = true }
+
+# Balances
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+# RPC Runtime APIs
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+# Ëtrid Primitives & Existing Pallets
+etrid-primitives = { path = "../../../../../../05-multichain/primitives", default-features = false }
+pallet-accounts = { path = "../../../../../../04-accounts/pallet", default-features = false }
+aidid = { path = "../../../../../../02-open-did/aidid", default-features = false }
+
+# AI Compute PBC Pallets (our new pallets!)
+pallet-gpu-registry = { path = "../pallets/gpu-registry", default-features = false }
+pallet-job-marketplace = { path = "../pallets/job-marketplace", default-features = false }
+pallet-model-registry = { path = "../pallets/model-registry", default-features = false }
+pallet-confidential-compute = { path = "../pallets/confidential-compute", default-features = false }
+pallet-lightning-payment = { path = "../pallets/lightning-payment", default-features = false }
+pallet-ai-reputation = { path = "../pallets/ai-reputation", default-features = false }
+
+[build-dependencies]
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-api/std",
+    "sp-runtime/std",
+    "sp-core/std",
+    "sp-std/std",
+    "sp-io/std",
+    "sp-consensus-aura/std",
+    "sp-consensus-grandpa/std",
+    "sp-block-builder/std",
+    "sp-transaction-pool/std",
+    "sp-inherents/std",
+    "sp-offchain/std",
+    "sp-session/std",
+    "sp-version/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-executive/std",
+    "pallet-aura/std",
+    "pallet-balances/std",
+    "pallet-grandpa/std",
+    "pallet-sudo/std",
+    "pallet-timestamp/std",
+    "pallet-transaction-payment/std",
+    "frame-system-rpc-runtime-api/std",
+    "pallet-transaction-payment-rpc-runtime-api/std",
+    "etrid-primitives/std",
+    "pallet-accounts/std",
+    "aidid/std",
+    "pallet-gpu-registry/std",
+    "pallet-job-marketplace/std",
+    "pallet-model-registry/std",
+    "pallet-confidential-compute/std",
+    "pallet-lightning-payment/std",
+    "pallet-ai-reputation/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "pallet-gpu-registry/runtime-benchmarks",
+    "pallet-job-marketplace/runtime-benchmarks",
+    "pallet-model-registry/runtime-benchmarks",
+]
