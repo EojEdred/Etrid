@@ -1,9 +1,9 @@
 [package]
-name = "sp-consensus-asf"
+name = "sp-consensus-asf-pbc"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]
-description = "Primitives for ASF (Adaptive Stake-weighted Finality) consensus"
+description = "Primitives for ASF (Adaptive Stake-weighted Finality) consensus - PBC variant"
 license = "Apache-2.0"
 
 [dependencies]

@@ -1,0 +1,161 @@
+[
+  {
+    "validator": "80.190.82.186",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e",
+    "grandpa": "0x8a9a9d8a9574eb75682a3501a2df5467036c2fc03903e9d46dfab77af4189a51",
+    "asfk": "0x384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e"
+  }
+,
+  {
+    "validator": "80.190.82.185",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x6572206465636f72617465206b696e67646f6d2073756e73657420736c6f7422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "80.190.82.184",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x206c617965722068696464656e2070616c6d2073756d6d657220626c696e6422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "80.190.82.183",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x20736d6f6b65207375626a65637420776562206472616d61206d656d62657222",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "85.239.239.194",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0xf29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c",
+    "grandpa": "0x0a9442f63cd6019b8d6f0cd2dd6cc84d302d8eeb616bb12d7f439172107dbd2b",
+    "asfk": "0xf29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c"
+  }
+,
+  {
+    "validator": "85.239.239.193",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758",
+    "grandpa": "0x2975859973decf0c53296d425ade75b28ab3ab10ea3c2d1b78170c8885090a0d",
+    "asfk": "0x2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"
+  }
+,
+  {
+    "validator": "85.239.239.190",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x6c2062726f7468657220706f737369626c6520616c657274206e6f7469636522",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "85.239.239.189",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0xf44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f",
+    "grandpa": "0xdc4357a4d93f0599b616159278d8ce281e19685c8dd0d40d5960a58d8eeda3b8",
+    "asfk": "0xf44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f"
+  }
+,
+  {
+    "validator": "85.239.239.188",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0xb89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42",
+    "grandpa": "0xcc16f2cd990d95553f0b143df3ec1d1650538708a0031cafd8ecbcadd8dec69a",
+    "asfk": "0xb89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"
+  }
+,
+  {
+    "validator": "154.12.250.18",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x7cefa78d24e90d0e0823afce3cbb57f065f3bdabe8cb94c2f1168582f7a77958",
+    "grandpa": "0xee9d4f38c8b3757c9604db672ef1309fa740adf3d3c989a2baa219fc70d4f115",
+    "asfk": "0x7cefa78d24e90d0e0823afce3cbb57f065f3bdabe8cb94c2f1168582f7a77958"
+  }
+,
+  {
+    "validator": "154.12.250.17",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x7365206d69646e6967687420656e67696e6520636f61737420696e636f6d6522",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "154.12.250.15",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x652077616974207768657265206372617a792065647563617465207375697422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "154.12.249.223",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x676f20766172696f757320686f6c6420707972616d6964207365676d656e7422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "154.12.249.182",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x79206f76656e2061637475616c20776964746820616476696365207761676522",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "157.173.200.86",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x6e646c657373206c6576656c2063616e76617320676c6f7720696e73616e6522",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "157.173.200.84",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x657220676f7373697020756e6971756520736c6f67616e207365676d656e7422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "157.173.200.81",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x6e656c79206379636c6520636f6c6f72207769746e657373206f7269656e7422",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "157.173.200.80",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x222f6465762f737464696e22",
+    "grandpa": "0x6f6f20656e65726779206e6f7461626c6520747261676963206d617474657222",
+    "asfk": "0x222f6465762f737464696e22"
+  }
+,
+  {
+    "validator": "64.181.215.19",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x3239636135633765396565336363353065386635396661343931363230623538",
+    "grandpa": "0x3938616663623266636439616536363530336463616361663731343237613835",
+    "asfk": "0x3239636135633765396565336363353065386635396661343931363230623538"
+  }
+,
+  {
+    "validator": "129.80.122.34",
+    "account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "aura": "0x6464343965626537303963383164666335623035343639666366366437373262",
+    "grandpa": "0x3963643139326536636462666638333239643162303164303439663462623936",
+    "asfk": "0x6464343965626537303963383164666335623035343639666366366437373262"
+  }
+]

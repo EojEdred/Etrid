@@ -1,5 +1,5 @@
 [package]
-name = "pallet-consensus"
+name = "pallet-consensus-pbc"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]
@@ -20,7 +20,7 @@ log.workspace = true
 serde = { workspace = true, features = ["alloc", "derive"], default-features = false }
 
 # Internal Ëtrid dependencies
-pallet-accounts = { path = "../../04-accounts/pallet", default-features = false }
+pallet-accounts-pbc = { path = "../../04-accounts/pallet", default-features = false }
 
 [features]
 default = ["std"]
@@ -35,15 +35,15 @@ std = [
     "log/std",
     "serde/std",
     "serde/alloc",
-    "pallet-accounts/std",
+    "pallet-accounts-pbc/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
     "frame-system/runtime-benchmarks",
-    "pallet-accounts/runtime-benchmarks",
+    "pallet-accounts-pbc/runtime-benchmarks",
 ]
 try-runtime = [
     "frame-support/try-runtime",
     "frame-system/try-runtime",
-    "pallet-accounts/try-runtime",
+    "pallet-accounts-pbc/try-runtime",
 ]

@@ -43,9 +43,9 @@ frame-system-rpc-runtime-api = { default-features = false, git = "https://github
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Ëtrid Primitives & Existing Pallets
-etrid-primitives = { path = "../../../../../../05-multichain/primitives", default-features = false }
-pallet-accounts = { path = "../../../../../../04-accounts/pallet", default-features = false }
-aidid = { path = "../../../../../../02-open-did/aidid", default-features = false }
+etrid-primitives = { path = "../../../../primitives", default-features = false }
+pallet-accounts = { path = "../../../../../04-accounts/pallet", default-features = false }
+aidid = { path = "../../../../../02-open-did/aidid", default-features = false }
 
 # AI Compute PBC Pallets (our new pallets!)
 pallet-gpu-registry = { path = "../pallets/gpu-registry", default-features = false }

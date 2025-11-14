@@ -3,7 +3,9 @@
   "id": "flarechain_mainnet",
   "chainType": "Live",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWPyfp2DECPKTmJ1AhxB6midHnp7wYTP15vBAxbTewxaq1"
+    "/ip4/64.181.215.19/tcp/30333/p2p/12D3KooWPyfp2DECPKTmJ1AhxB6midHnp7wYTP15vBAxbTewxaq1",
+    "/ip4/129.80.122.34/tcp/30333/p2p/12D3KooWGjGCJzexrJct6nGCSDnj7vaJtMohpagFUPBhPgpZqvpd",
+    "/ip4/85.239.239.194/tcp/30333/p2p/12D3KooWSrYpSQ6SiDR3uduqbiepyfVp8xmaC8mzY6RmU29MEHGv"
   ],
   "telemetryEndpoints": null,
   "protocolId": "flarechain",

@@ -51,7 +51,7 @@ sp-version = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
 sp-genesis-builder = { workspace = true }
 sp-consensus-aura = { workspace = true }
-sp-consensus-asf = { path = "../consensus/primitives/consensus-asf", default-features = false }
+sp-consensus-asf-pbc = { path = "../consensus/primitives/consensus-asf", default-features = false }
 
 # FRAME Pallets
 pallet-grandpa = { workspace = true }
@@ -100,7 +100,7 @@ std = [
     "pallet-insecure-randomness-collective-flip/std",
     "pallet-aura/std",
     "sp-consensus-aura/std",
-    "sp-consensus-asf/std",
+    "sp-consensus-asf-pbc/std",
     "polkadot-runtime-common/std",
     "cumulus-pallet-weight-reclaim/std",
     "frame-system-rpc-runtime-api/std",
