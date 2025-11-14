@@ -255,12 +255,32 @@ impl pallet_aura::Config for Runtime {
 	type SlotDuration = pallet_aura::MinimumPeriodTimesTwo<Runtime>;
 }
 
+parameter_types! {
+	pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
+	pub const Offset: u32 = 0;
+}
+
+impl pallet_session::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ValidatorId = AccountId;
+	type ValidatorIdOf = sp_runtime::traits::ConvertInto;
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+	type SessionManager = ();
+	type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = opaque::SessionKeys;
+	type WeightInfo = ();
+	type DisablingStrategy = ();
+	type Currency = Balances;
+	type KeyDeposit = ConstU128<0>; // No deposit required for session keys
+}
+
 impl pallet_grandpa::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = ();
 	type MaxAuthorities = ConstU32<32>;
 	type MaxNominators = ConstU32<0>;
-	type MaxSetIdSessionEntries = ConstU64<0>;
+	type MaxSetIdSessionEntries = ConstU64<168>;
 	type KeyOwnerProof = sp_core::Void;
 	type EquivocationReportSystem = ();
 }
@@ -482,27 +502,30 @@ mod runtime {
 	pub type Grandpa = pallet_grandpa;
 
 	#[runtime::pallet_index(4)]
-	pub type Balances = pallet_balances;
+	pub type Session = pallet_session;
 
 	#[runtime::pallet_index(5)]
-	pub type TransactionPayment = pallet_transaction_payment;
+	pub type Balances = pallet_balances;
 
 	#[runtime::pallet_index(6)]
-	pub type Sudo = pallet_sudo;
+	pub type TransactionPayment = pallet_transaction_payment;
 
 	#[runtime::pallet_index(7)]
-	pub type Ethereum = pallet_ethereum;
+	pub type Sudo = pallet_sudo;
 
 	#[runtime::pallet_index(8)]
-	pub type EVM = pallet_evm;
+	pub type Ethereum = pallet_ethereum;
 
 	#[runtime::pallet_index(9)]
-	pub type EVMChainId = pallet_evm_chain_id;
+	pub type EVM = pallet_evm;
 
 	#[runtime::pallet_index(10)]
-	pub type BaseFee = pallet_base_fee;
+	pub type EVMChainId = pallet_evm_chain_id;
 
 	#[runtime::pallet_index(11)]
+	pub type BaseFee = pallet_base_fee;
+
+	#[runtime::pallet_index(12)]
 	pub type ManualSeal = pallet_manual_seal;
 }
 

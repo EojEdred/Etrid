@@ -16,16 +16,24 @@ use eth_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
 pub type FullClient = TFullClient<Block, RuntimeApi, sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>>;
 pub type FullBackend = TFullBackend<Block>;
 
+pub type GrandpaBlockImport = sc_consensus_grandpa::GrandpaBlockImport<
+	FullBackend,
+	Block,
+	FullClient,
+	sc_consensus::DefaultSelectChain<FullBackend, Block>,
+>;
+pub type GrandpaLinkHalf = sc_consensus_grandpa::LinkHalf<Block, FullClient, sc_consensus::DefaultSelectChain<FullBackend, Block>>;
+
 pub fn new_partial(
     config: &Configuration,
 ) -> Result<
     sc_service::PartialComponents<
         FullClient,
         FullBackend,
-        (),
+        sc_consensus::DefaultSelectChain<FullBackend, Block>,
         sc_consensus::DefaultImportQueue<Block>,
         sc_transaction_pool::TransactionPoolHandle<Block, FullClient>,
-        (Option<Telemetry>,),
+        (GrandpaBlockImport, GrandpaLinkHalf, Option<Telemetry>),
     >,
     ServiceError,
 > {
@@ -57,6 +65,16 @@ pub fn new_partial(
         telemetry
     });
 
+    let select_chain = sc_consensus::LongestChain::new(backend.clone());
+
+    let (grandpa_block_import, grandpa_link) = sc_consensus_grandpa::block_import(
+        client.clone(),
+        512,
+        &client,
+        select_chain.clone(),
+        telemetry.as_ref().map(|x| x.handle()),
+    )?;
+
     let transaction_pool = Arc::from(
         sc_transaction_pool::Builder::new(
             task_manager.spawn_essential_handle(),
@@ -69,7 +87,7 @@ pub fn new_partial(
     );
 
     let import_queue = asf_import_queue::<_, _, _, AuraId>(
-        client.clone(),
+        grandpa_block_import.clone(),
         client.clone(),
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
@@ -82,9 +100,9 @@ pub fn new_partial(
         task_manager,
         import_queue,
         keystore_container,
-        select_chain: (),
+        select_chain,
         transaction_pool,
-        other: (telemetry,),
+        other: (grandpa_block_import, grandpa_link, telemetry),
     })
 }
 
@@ -96,9 +114,9 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         mut task_manager,
         import_queue,
         keystore_container,
-        select_chain: _,
+        select_chain,
         transaction_pool,
-        other: (mut telemetry,),
+        other: (grandpa_block_import, grandpa_link, mut telemetry),
     } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::<
@@ -106,6 +124,19 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         <Block as sp_runtime::traits::Block>::Hash,
         sc_network::NetworkWorker<Block, <Block as sp_runtime::traits::Block>::Hash>,
     >::new(&config.network, config.prometheus_registry().cloned());
+
+    let grandpa_protocol_name = sc_consensus_grandpa::protocol_standard_name(
+        &client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
+        &config.chain_spec,
+    );
+
+    let (grandpa_protocol_config, grandpa_notification_service) =
+        sc_consensus_grandpa::grandpa_peers_set_config::<_, sc_network::NetworkWorker<_, _>>(
+            grandpa_protocol_name.clone(),
+            config.prometheus_registry().cloned(),
+        );
+
+    net_config.add_notification_protocol(grandpa_protocol_config);
 
     let metrics = sc_network::service::NotificationMetrics::new(config.prometheus_registry());
 
@@ -183,6 +214,51 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
             }
         }),
     );
+
+    // Start GRANDPA finality voter
+    let enable_grandpa = !config.disable_grandpa;
+    if enable_grandpa {
+        let name = config.network.node_name.clone();
+        let keystore = if config.role.is_authority() {
+            Some(keystore_container.keystore())
+        } else {
+            None
+        };
+
+        let grandpa_config = sc_consensus_grandpa::Config {
+            gossip_duration: Duration::from_millis(333),
+            justification_generation_period: 512,
+            name: Some(name),
+            observer_enabled: false,
+            keystore,
+            local_role: config.role,
+            telemetry: telemetry.as_ref().map(|x| x.handle()),
+            protocol_name: grandpa_protocol_name,
+        };
+
+        let grandpa_params = sc_consensus_grandpa::GrandpaParams {
+            config: grandpa_config,
+            link: grandpa_link,
+            network: network.clone(),
+            sync: Arc::new(sync_service.clone()),
+            notification_service: grandpa_notification_service,
+            voting_rule: sc_consensus_grandpa::VotingRulesBuilder::default().build(),
+            prometheus_registry: config.prometheus_registry().cloned(),
+            shared_voter_state: sc_consensus_grandpa::SharedVoterState::empty(),
+            telemetry: telemetry.as_ref().map(|x| x.handle()),
+            offchain_tx_pool_factory: sc_transaction_pool_api::OffchainTransactionPoolFactory::new(
+                transaction_pool.clone(),
+            ),
+        };
+
+        task_manager.spawn_essential_handle().spawn_blocking(
+            "grandpa-voter",
+            None,
+            sc_consensus_grandpa::run_grandpa_voter(grandpa_params)?,
+        );
+    } else {
+        sc_consensus_grandpa::setup_disabled_grandpa(network.clone(), sync_service.clone())?;
+    }
 
     task_manager.spawn_handle().spawn(
         "state-root-submitter",
