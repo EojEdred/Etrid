@@ -8,6 +8,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 // EVM moved to ETH-PBC - FlareChain is pure coordination layer
 
 use sp_api::impl_runtime_apis;
+use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
@@ -67,6 +68,7 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
+            pub aura: Aura,
             pub grandpa: Grandpa,
         }
     }
@@ -157,6 +159,15 @@ impl frame_system::Config for Runtime {
 
 // RuntimeHoldReason disabled for phase 1 - no holds needed yet
 // Phase 2 can enable holds when needed for staking/governance
+
+/// AURA consensus - used by ASF for slot-based block production
+impl pallet_aura::Config for Runtime {
+    type AuthorityId = AuraId;
+    type MaxAuthorities = ConstU32<32>;
+    type DisabledValidators = ();
+    type AllowMultipleBlocksPerSlot = frame_support::traits::ConstBool<false>;
+    type SlotDuration = pallet_aura::MinimumPeriodTimesTwo<Runtime>;
+}
 
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -1113,6 +1124,7 @@ construct_runtime!(
     pub struct Runtime {
         System: frame_system,
         Timestamp: pallet_timestamp,
+        Aura: pallet_aura,
         Grandpa: pallet_grandpa,
         Session: pallet_session,
         Balances: pallet_balances,
