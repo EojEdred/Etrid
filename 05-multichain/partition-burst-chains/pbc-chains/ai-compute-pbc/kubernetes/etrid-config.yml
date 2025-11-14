@@ -1,0 +1,175 @@
+---
+# Etrid AI Compute Configuration
+# Contains connection details for AI-Compute-PBC blockchain
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: etrid-ai-compute
+  labels:
+    name: etrid-ai-compute
+    app: etrid-ai
+
+---
+# ConfigMap: Non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: etrid-config
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: config
+data:
+  # AI-Compute-PBC RPC endpoints
+  rpc_url: "https://ai-compute-pbc.etrid.network:9944"
+  websocket_url: "wss://ai-compute-pbc.etrid.network:9944"
+
+  # FlareChain relay endpoints (for XCM checkpointing)
+  flarechain_rpc_url: "https://flarechain.etrid.network:9944"
+  flarechain_websocket_url: "wss://flarechain.etrid.network:9944"
+
+  # Chain configuration
+  chain_id: "ai-compute-pbc"
+  ss58_format: "42" # Substrate default (change if needed)
+
+  # Network configuration
+  network_id: "etrid-mainnet"
+  genesis_hash: "0x..." # Replace with actual genesis hash
+
+  # Pallet indices (for extrinsic construction)
+  pallet_gpu_registry_index: "50"
+  pallet_job_marketplace_index: "51"
+  pallet_model_registry_index: "52"
+  pallet_prompt_marketplace_index: "53"
+  pallet_dispute_arbitration_index: "54"
+  pallet_tokenomics_index: "55"
+  pallet_gpu_nft_index: "56"
+  pallet_compliance_index: "57"
+  pallet_sla_insurance_index: "58"
+
+  # Feature flags
+  enable_tee: "true"
+  enable_compliance: "true"
+  enable_sla: "true"
+
+  # Performance configuration
+  block_time_seconds: "6"
+  checkpoint_interval_blocks: "256"
+  max_job_duration_blocks: "600" # 1 hour at 6s blocks
+
+---
+# Secret: Sensitive provider credentials
+# IMPORTANT: Replace with actual values before deploying!
+apiVersion: v1
+kind: Secret
+metadata:
+  name: etrid-provider-credentials
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: credentials
+type: Opaque
+stringData:
+  # GPU Provider account credentials
+  # Generate via: subkey generate --scheme sr25519
+  seed_phrase: "REPLACE_WITH_YOUR_12_WORD_SEED_PHRASE"
+  account_id: "REPLACE_WITH_YOUR_SS58_ADDRESS"
+
+  # Private key (hex-encoded)
+  private_key: "REPLACE_WITH_YOUR_PRIVATE_KEY"
+
+---
+# Secret: TEE (Trusted Execution Environment) keys
+# For Intel SGX and AMD SEV secure enclaves
+apiVersion: v1
+kind: Secret
+metadata:
+  name: etrid-tee-keys
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: tee
+type: Opaque
+data:
+  # Intel SGX attestation key (base64-encoded)
+  sgx_key: "REPLACE_WITH_BASE64_SGX_KEY"
+
+  # AMD SEV attestation key (base64-encoded)
+  sev_key: "REPLACE_WITH_BASE64_SEV_KEY"
+
+  # Encryption key for confidential compute
+  encryption_key: "REPLACE_WITH_BASE64_ENCRYPTION_KEY"
+
+---
+# ConfigMap: Cloud provider credentials (for hybrid bursting)
+# Supports AWS, GCP, Azure spot instances
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-provider-config
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: cloud-config
+data:
+  # AWS configuration
+  aws_enabled: "true"
+  aws_region: "us-west-2"
+  aws_instance_type: "p4d.24xlarge" # 8x A100 80GB
+  aws_spot_max_price: "15.00" # Max $15/hour
+  aws_ami_id: "ami-xxxxx" # Ubuntu 22.04 with CUDA
+
+  # GCP configuration
+  gcp_enabled: "true"
+  gcp_region: "us-central1"
+  gcp_instance_type: "a2-ultragpu-8g" # 8x A100 80GB
+  gcp_spot_max_price: "14.00"
+  gcp_image: "projects/ml-images/global/images/c0-deeplearning-common-cu123"
+
+  # Azure configuration
+  azure_enabled: "true"
+  azure_region: "eastus"
+  azure_instance_type: "Standard_ND96amsr_A100_v4" # 8x A100 80GB
+  azure_spot_max_price: "16.00"
+  azure_image: "Canonical:0001-com-ubuntu-server-jammy:22_04-lts-gen2:latest"
+
+  # Scaling configuration
+  scale_up_threshold: "5" # Queue depth to trigger cloud burst
+  scale_down_threshold: "1" # Queue depth to scale down
+  min_cloud_instances: "0"
+  max_cloud_instances: "10"
+  cloud_instance_ttl_minutes: "60" # Auto-terminate after 1 hour idle
+
+---
+# Secret: Cloud provider API keys
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-provider-credentials
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: cloud-credentials
+type: Opaque
+stringData:
+  # AWS credentials
+  aws_access_key_id: "REPLACE_WITH_AWS_ACCESS_KEY"
+  aws_secret_access_key: "REPLACE_WITH_AWS_SECRET_KEY"
+
+  # GCP service account JSON
+  gcp_service_account_json: |
+    {
+      "type": "service_account",
+      "project_id": "your-project",
+      "private_key_id": "...",
+      "private_key": "...",
+      "client_email": "...",
+      "client_id": "..."
+    }
+
+  # Azure credentials
+  azure_client_id: "REPLACE_WITH_AZURE_CLIENT_ID"
+  azure_client_secret: "REPLACE_WITH_AZURE_CLIENT_SECRET"
+  azure_tenant_id: "REPLACE_WITH_AZURE_TENANT_ID"
+  azure_subscription_id: "REPLACE_WITH_AZURE_SUBSCRIPTION_ID"

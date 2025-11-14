@@ -2,13 +2,22 @@
 //!
 //! The runtime for Ëtrid's AI Compute Network (15th Partition Burst Chain).
 //!
-//! ## Pallets Included
+//! ## Core Pallets
 //! - GPU Registry: GPU provider registration + staking
 //! - Job Marketplace: AI job submission + matching
 //! - Model Registry: AI model catalog with AIDID
 //! - Confidential Compute: TEE attestation
 //! - Lightning Payment: Streaming micropayments
 //! - AI Reputation: ML-based scoring
+//!
+//! ## Advanced Features
+//! - Prompt Marketplace: NFT-based prompt trading
+//! - Dispute Arbitration: Staked judge system
+//! - Federated Learning: Privacy-preserving training
+//! - Tokenomics: ËTRD staking tiers (8% APY)
+//! - GPU NFT: Tradeable GPU certificates
+//! - Compliance: HIPAA/GDPR/SOC2 templates
+//! - SLA Insurance: 99.9% uptime guarantee
 //!
 //! Plus standard Substrate pallets (System, Balances, etc.)
 
@@ -265,6 +274,59 @@ impl pallet_ai_reputation::Config for Runtime {
 }
 
 // ========================================
+// ADVANCED FEATURE PALLETS
+// ========================================
+
+// Configure pallet_prompt_marketplace
+impl pallet_prompt_marketplace::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinPromptPrice = ConstU128<1_000_000_000_000_000_000>; // 1 ËDSC minimum
+}
+
+// Configure pallet_dispute_arbitration
+impl pallet_dispute_arbitration::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type ArbitratorStake = ConstU128<1000_000_000_000_000_000_000>; // 1,000 ËTRD
+    type DisputeFee = ConstU128<5_000_000_000_000_000_000>; // 5 ËDSC
+    type SlashPercentage = ConstU16<1000>; // 10% slash for dishonest arbitrators
+}
+
+// Configure pallet_federated_learning
+impl pallet_federated_learning::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+}
+
+// Configure pallet_tokenomics
+impl pallet_tokenomics::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type StakingAPYBps = ConstU16<800>; // 8% APY
+    type MinStakeDuration = ConstU32<100800>; // ~7 days in blocks
+}
+
+// Configure pallet_gpu_nft
+impl pallet_gpu_nft::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+}
+
+// Configure pallet_compliance
+impl pallet_compliance::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+}
+
+// Configure pallet_sla_insurance
+impl pallet_sla_insurance::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MinInsuranceStake = ConstU128<50_000_000_000_000_000_000>; // 50 ËDSC
+    type RefundMultiplier = ConstU8<10>; // 10x refund on SLA violation
+}
+
+// ========================================
 // CONSTRUCT RUNTIME
 // ========================================
 
@@ -282,13 +344,22 @@ construct_runtime!(
         // Ëtrid Custom Pallets
         Accounts: pallet_accounts,
 
-        // AI Compute PBC Pallets
+        // AI Compute PBC Core Pallets
         GpuRegistry: pallet_gpu_registry,
         JobMarketplace: pallet_job_marketplace,
         ModelRegistry: pallet_model_registry,
         ConfidentialCompute: pallet_confidential_compute,
         LightningPayment: pallet_lightning_payment,
         AiReputation: pallet_ai_reputation,
+
+        // AI Compute PBC Advanced Features
+        PromptMarketplace: pallet_prompt_marketplace,
+        DisputeArbitration: pallet_dispute_arbitration,
+        FederatedLearning: pallet_federated_learning,
+        Tokenomics: pallet_tokenomics,
+        GpuNft: pallet_gpu_nft,
+        Compliance: pallet_compliance,
+        SlaInsurance: pallet_sla_insurance,
     }
 );
 

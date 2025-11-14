@@ -1,0 +1,211 @@
+---
+# Etrid AI Compute - Hybrid Cloud Bursting Plugin
+# Auto-scales GPU providers based on queue depth and job load
+#
+# Features:
+# - Monitors AI-Compute-PBC job queue depth
+# - Auto-provisions cloud GPUs when local capacity saturated
+# - Supports AWS, GCP, Azure spot instances
+# - Cost-optimized: scales down when queue empty
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: etrid-ai-gpu-scaler
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: gpu-provider
+    pbc: ai-compute
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: etrid-gpu-provider
+  minReplicas: 2
+  maxReplicas: 100
+  metrics:
+    # Primary metric: Job queue depth from AI-Compute-PBC
+    - type: External
+      external:
+        metric:
+          name: etrid_job_queue_depth
+          selector:
+            matchLabels:
+              pbc: ai-compute
+        target:
+          type: AverageValue
+          averageValue: "5" # Scale up if >5 jobs per GPU
+
+    # Secondary metric: Average GPU utilization
+    - type: Pods
+      pods:
+        metric:
+          name: gpu_utilization_percent
+        target:
+          type: AverageValue
+          averageValue: "80" # Scale up if avg GPU >80%
+
+    # Tertiary metric: Job wait time
+    - type: External
+      external:
+        metric:
+          name: etrid_avg_job_wait_seconds
+          selector:
+            matchLabels:
+              pbc: ai-compute
+        target:
+          type: AverageValue
+          averageValue: "30" # Scale up if jobs wait >30s
+
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60 # Wait 60s before scaling up
+      policies:
+        - type: Percent
+          value: 50 # Scale up 50% at a time
+          periodSeconds: 60
+        - type: Pods
+          value: 4 # Or add 4 GPUs at a time (whichever is higher)
+          periodSeconds: 60
+      selectPolicy: Max
+
+    scaleDown:
+      stabilizationWindowSeconds: 300 # Wait 5min before scaling down
+      policies:
+        - type: Percent
+          value: 10 # Scale down 10% at a time (conservative)
+          periodSeconds: 60
+        - type: Pods
+          value: 1 # Or remove 1 GPU at a time
+          periodSeconds: 60
+      selectPolicy: Min
+
+---
+# Custom Metrics Server Configuration
+# Fetches real-time metrics from AI-Compute-PBC chain
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: etrid-metrics-adapter-config
+  namespace: etrid-ai-compute
+data:
+  config.yaml: |
+    rules:
+      - seriesQuery: 'etrid_job_queue_depth'
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: "^(.*)$"
+          as: "etrid_job_queue_depth"
+        metricsQuery: |
+          sum(etrid_job_queue{pbc="ai-compute",status="pending"}) by (<<.GroupBy>>)
+
+      - seriesQuery: 'etrid_avg_job_wait_seconds'
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: "^(.*)$"
+          as: "etrid_avg_job_wait_seconds"
+        metricsQuery: |
+          avg(etrid_job_wait_time{pbc="ai-compute",status="pending"}) by (<<.GroupBy>>)
+
+---
+# Prometheus Metrics Exporter
+# Scrapes AI-Compute-PBC RPC endpoint for queue metrics
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etrid-metrics-exporter
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: metrics-exporter
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: etrid-ai
+      component: metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: etrid-ai
+        component: metrics-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: exporter
+          image: etrid/ai-compute-metrics-exporter:latest
+          imagePullPolicy: Always
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: ETRID_RPC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: etrid-config
+                  key: rpc_url
+            - name: POLL_INTERVAL_SECONDS
+              value: "10"
+            - name: PBC_CHAIN_ID
+              value: "ai-compute-pbc"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+# Service for metrics exporter
+apiVersion: v1
+kind: Service
+metadata:
+  name: etrid-metrics-exporter
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: metrics-exporter
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app: etrid-ai
+    component: metrics-exporter
+
+---
+# ServiceMonitor for Prometheus Operator
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: etrid-ai-metrics
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: etrid-ai
+      component: metrics-exporter
+  endpoints:
+    - port: metrics
+      interval: 10s
+      path: /metrics

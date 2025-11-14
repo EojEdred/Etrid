@@ -54,6 +54,15 @@ pallet-confidential-compute = { path = "../pallets/confidential-compute", defaul
 pallet-lightning-payment = { path = "../pallets/lightning-payment", default-features = false }
 pallet-ai-reputation = { path = "../pallets/ai-reputation", default-features = false }
 
+# Advanced Feature Pallets
+pallet-prompt-marketplace = { path = "../pallets/prompt-marketplace", default-features = false }
+pallet-dispute-arbitration = { path = "../pallets/dispute-arbitration", default-features = false }
+pallet-federated-learning = { path = "../pallets/federated-learning", default-features = false }
+pallet-tokenomics = { path = "../pallets/tokenomics", default-features = false }
+pallet-gpu-nft = { path = "../pallets/gpu-nft", default-features = false }
+pallet-compliance = { path = "../pallets/compliance", default-features = false }
+pallet-sla-insurance = { path = "../pallets/sla-insurance", default-features = false }
+
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
@@ -95,6 +104,13 @@ std = [
     "pallet-confidential-compute/std",
     "pallet-lightning-payment/std",
     "pallet-ai-reputation/std",
+    "pallet-prompt-marketplace/std",
+    "pallet-dispute-arbitration/std",
+    "pallet-federated-learning/std",
+    "pallet-tokenomics/std",
+    "pallet-gpu-nft/std",
+    "pallet-compliance/std",
+    "pallet-sla-insurance/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",
