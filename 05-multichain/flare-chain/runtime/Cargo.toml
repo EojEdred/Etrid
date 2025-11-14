@@ -107,7 +107,7 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polk
 frame-executive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
 # Frame pallets
-# pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }  # Removed: using ASF consensus
+pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-session = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -127,7 +127,7 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk"
 sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-arithmetic = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
-# sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }  # Removed: using ASF consensus
+sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -247,7 +247,7 @@ std = [
     "frame-system/std",
     "frame-benchmarking?/std",
     "frame-system-benchmarking?/std",
-    # "pallet-aura/std",  # Removed: using ASF consensus
+    "pallet-aura/std",
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-session/std",
@@ -261,7 +261,7 @@ std = [
     "sp-api/std",
     "sp-arithmetic/std",
     "sp-block-builder/std",
-    # "sp-consensus-aura/std",  # Removed: using ASF consensus
+    "sp-consensus-aura/std",
     "sp-consensus-grandpa/std",
     "sp-core/std",
     "sp-inherents/std",
