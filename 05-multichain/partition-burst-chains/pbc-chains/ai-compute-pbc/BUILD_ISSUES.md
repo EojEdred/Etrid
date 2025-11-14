@@ -1,110 +1,85 @@
 # AI Compute PBC Build Issues
 
+## CURRENT STATUS (2025-11-13)
+
+The AI Compute PBC workspace has been successfully sandboxed with its own `Cargo.toml` and is no longer affected by root workspace issues.
+
+**Build Status**: BLOCKED by aidid builder pattern inconsistencies
+
+**FlareChain Status**: ✅ BUILDING - Root workspace eth-pbc conflicts resolved
+
+**Latest Update**:
+- ✅ Fixed MaxEncodedLen imports (ConstU32 from frame_support)
+- ✅ Added sp-io dependency for blake2_256 hashing
+- ❌ BLOCKED: attestation.rs builder methods still use Vec<u8> instead of BoundedVec
+- REMAINING WORK: Update all builder methods in aidid/src/attestation.rs to use BoundedVec
+
 ## Critical Issues Preventing Compilation
 
-### 1. Missing Randomness Implementation (dispute-arbitration)
+### 1. AIDID Pallet - Missing DecodeWithMemTracking (BLOCKING)
 
-**Error**: `pallet_dispute_arbitration::Config` requires `type Randomness`
+**Error**: Multiple types in the `aidid` pallet cannot be used in pallet extrinsics because they contain `Vec<T>` fields
 
-**Location**: `runtime/src/lib.rs:279-285`
+**Location**: `/Users/macbook/Desktop/etrid/02-open-did/aidid/src/types.rs`
 
-**Current Code**:
-```rust
-impl pallet_dispute_arbitration::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type ArbitratorStake = ConstU128<1000_000_000_000_000_000_000>;
-    type DisputeFee = ConstU128<5_000_000_000_000_000_000>;
-    type SlashPercentage = ConstU16<1000>;
-    // MISSING: type Randomness = ...
-}
+**Root Cause**:
+- Types used in pallet extrinsic parameters must implement `DecodeWithMemTracking`
+- This trait requires `MaxEncodedLen`, which `Vec<T>` cannot provide (unbounded length)
+- Substrate's pallet macro enforces this for memory safety
+
+**Affected Types**:
+- `AIProfile` (line 214)
+- `ModelAttestation` (line 186)
+- `Permission` (line 248)
+
+All three types contain `Vec<u8>` fields for dynamic-length data like training hashes, model versions, etc.
+
+**Build Errors**:
+```
+error[E0277]: the trait bound `types::AIProfile: DecodeWithMemTracking` is not satisfied
+error[E0277]: the trait bound `types::ModelAttestation: DecodeWithMemTracking` is not satisfied
+error[E0277]: the trait bound `types::Permission: DecodeWithMemTracking` is not satisfied
 ```
 
-**Fix Required**:
-```rust
-impl pallet_dispute_arbitration::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type Randomness = RandomnessCollectiveFlip; // Add randomness source
-    type ArbitratorStake = ConstU128<1000_000_000_000_000_000_000>;
-    type DisputeFee = ConstU128<5_000_000_000_000_000_000>;
-    type SlashPercentage = ConstU16<1000>;
-}
-```
+**Solution Options**:
 
-**Dependencies Needed**:
-- Add `pallet-insecure-randomness-collective-flip` to `runtime/Cargo.toml`
-- Add `RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip` to `construct_runtime!`
+1. **Use BoundedVec** (Recommended for production):
+   - Replace all `Vec<u8>` with `BoundedVec<u8, ConstU32<MAX_LEN>>`
+   - Requires defining reasonable max lengths for each field
+   - Example: `training_data_hash: BoundedVec<u8, ConstU32<64>>`
+   - This provides memory bounds while maintaining flexibility
+
+2. **Restructure Pallet Storage** (Simpler, less storage efficient):
+   - Store these complex types in separate storage maps
+   - Use simple identifiers (like `H256` hashes) in extrinsic parameters
+   - Look up full data from storage within extrinsic implementation
+
+3. **Skip MaxEncodedLen for specific types** (Quick fix, not recommended):
+   - Add `#[codec(mel_bound())]` or similar attributes
+   - May cause issues with newer Substrate versions
+   - Not a long-term solution
+
+**Impact**: Until fixed, the AI Compute PBC **cannot compile**
+
+**Files Needing Changes**:
+- `/Users/macbook/Desktop/etrid/02-open-did/aidid/src/types.rs` - Type definitions
+- Potentially `/Users/macbook/Desktop/etrid/02-open-did/aidid/src/registry.rs` - Pallet implementation
 
 ---
 
-### 2. Missing Associated Types (pallet-tokenomics)
+### 2. RESOLVED: Workspace Isolation
 
-**Error**: `pallet_tokenomics::Config` requires 5 associated types
-
-**Location**: `runtime/src/lib.rs:294-299`
-
-**Current Code**:
-```rust
-impl pallet_tokenomics::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type StakingAPYBps = ConstU16<800>; // 8% APY
-    type MinStakeDuration = ConstU32<100800>; // ~7 days
-    // MISSING: BronzeStake, SilverStake, GoldStake, PlatinumStake, StakingRewardBps
-}
-```
-
-**Required Types** (from `pallets/tokenomics/src/lib.rs:121-137`):
-```rust
-type BronzeStake: Get<BalanceOf<Self>>;
-type SilverStake: Get<BalanceOf<Self>>;
-type GoldStake: Get<BalanceOf<Self>>;
-type PlatinumStake: Get<BalanceOf<Self>>;
-type StakingRewardBps: Get<u16>;
-```
-
-**Fix Required**:
-```rust
-impl pallet_tokenomics::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type BronzeStake = ConstU128<100_000_000_000_000_000_000>; // 100 ËTRD
-    type SilverStake = ConstU128<500_000_000_000_000_000_000>; // 500 ËTRD
-    type GoldStake = ConstU128<1_000_000_000_000_000_000_000>; // 1,000 ËTRD
-    type PlatinumStake = ConstU128<10_000_000_000_000_000_000_000>; // 10,000 ËTRD
-    type StakingRewardBps = ConstU16<800>; // 8% APY
-}
-```
-
-**Note**: The current implementation has `StakingAPYBps` but the pallet expects `StakingRewardBps`. Also missing `MinStakeDuration` in pallet trait but present in runtime - need to verify pallet trait definition.
+**Previous Issue**: eth-pbc workspace conflicts
+**Resolution**: Created standalone workspace at `05-multichain/partition-burst-chains/pbc-chains/ai-compute-pbc/Cargo.toml`
+**Status**: ✅ FIXED
 
 ---
 
-### 3. Potential Missing Pallet Cargo.toml Dependencies
+### 3. RESOLVED: Path Dependencies
 
-Each pallet needs proper dependencies. Let me verify compliance pallet has all required deps:
-
-**Check Required**: All new pallets (tokenomics, gpu-nft, compliance, sla-insurance) need:
-- `frame-support`
-- `frame-system`
-- `parity-scale-codec`
-- `scale-info`
-- `sp-runtime`
-- `sp-std`
-
----
-
-### 4. Workspace Cargo.toml Issue (Blocking All Builds)
-
-**Error**:
-```
-error inheriting `sp-genesis-builder` from workspace root manifest's `workspace.dependencies.sp-genesis-builder`
-```
-
-**Location**: `/home/user/Etrid/05-multichain/partition-burst-chains/pbc-chains/eth-pbc/eth-pbc-runtime/Cargo.toml`
-
-This is a **separate issue** with the eth-pbc runtime that prevents ANY cargo commands in the workspace. Must be fixed before testing our AI Compute PBC.
+**Previous Issue**: Incorrect relative paths to etrid-primitives and pallet-accounts
+**Resolution**: Verified correct path depth (5 levels: `../../../../../`)
+**Status**: ✅ FIXED
 
 ---
 
