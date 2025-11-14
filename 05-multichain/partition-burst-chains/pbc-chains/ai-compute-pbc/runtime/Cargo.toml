@@ -33,6 +33,7 @@ pallet-grandpa = { workspace = true }
 pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
 pallet-transaction-payment = { workspace = true }
+pallet-insecure-randomness-collective-flip = { workspace = true }
 
 # Balances
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -93,6 +94,7 @@ std = [
     "pallet-sudo/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
+    "pallet-insecure-randomness-collective-flip/std",
     "frame-system-rpc-runtime-api/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
     "etrid-primitives/std",

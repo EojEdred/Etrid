@@ -213,6 +213,9 @@ impl pallet_sudo::Config for Runtime {
     type WeightInfo = ();
 }
 
+// Configure pallet_insecure_randomness_collective_flip
+impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
 // Configure pallet_transaction_payment
 impl pallet_transaction_payment::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -288,6 +291,7 @@ impl pallet_prompt_marketplace::Config for Runtime {
 impl pallet_dispute_arbitration::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
+    type Randomness = RandomnessCollectiveFlip;
     type ArbitratorStake = ConstU128<1000_000_000_000_000_000_000>; // 1,000 ËTRD
     type DisputeFee = ConstU128<5_000_000_000_000_000_000>; // 5 ËDSC
     type SlashPercentage = ConstU16<1000>; // 10% slash for dishonest arbitrators
@@ -303,8 +307,11 @@ impl pallet_federated_learning::Config for Runtime {
 impl pallet_tokenomics::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
-    type StakingAPYBps = ConstU16<800>; // 8% APY
-    type MinStakeDuration = ConstU32<100800>; // ~7 days in blocks
+    type BronzeStake = ConstU128<100_000_000_000_000_000_000>; // 100 ËTRD
+    type SilverStake = ConstU128<500_000_000_000_000_000_000>; // 500 ËTRD
+    type GoldStake = ConstU128<1_000_000_000_000_000_000_000>; // 1,000 ËTRD
+    type PlatinumStake = ConstU128<10_000_000_000_000_000_000_000>; // 10,000 ËTRD
+    type StakingRewardBps = ConstU16<800>; // 8% APY
 }
 
 // Configure pallet_gpu_nft
@@ -340,6 +347,7 @@ construct_runtime!(
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
+        RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
 
         // Ëtrid Custom Pallets
         Accounts: pallet_accounts,
