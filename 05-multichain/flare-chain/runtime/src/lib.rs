@@ -1487,6 +1487,7 @@ impl_runtime_apis! {
                 "test_2validator".into(),
                 "flarechain_mainnet".into(),
                 "flarechain_mainnet_restart_final".into(),
+                "flarechain_mainnet_session_fixed".into(),
             ]
         }
     }
