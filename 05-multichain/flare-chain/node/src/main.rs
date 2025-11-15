@@ -81,6 +81,7 @@ impl SubstrateCli for Cli {
             "staging" | "ember" => Box::new(chain_spec::staging_testnet_config()?),
             "directors9" | "9directors" | "flarechain_9directors" => Box::new(chain_spec::directors_9_config()?),
             "session_fixed" | "session-fixed" | "flarechain_session_fixed" => Box::new(chain_spec::session_fixed_mainnet_config()?),
+            "asf" | "asf_mainnet" | "flarechain_mainnet_asf" => Box::new(chain_spec::asf_mainnet_config()?),
             "flarechain" => Box::new(chain_spec::flarechain_config()?),
             path => Box::new(chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),

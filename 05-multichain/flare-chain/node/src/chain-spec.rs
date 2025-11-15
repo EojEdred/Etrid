@@ -149,3 +149,26 @@ pub fn session_fixed_mainnet_config() -> Result<ChainSpec, String> {
     .with_genesis_config_preset_name("flarechain_mainnet_session_fixed")
     .build())
 }
+
+/// ASF mainnet config (21 validators with stake-weighted GRANDPA)
+pub fn asf_mainnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet (ASF)")
+    .with_id("flarechain_mainnet_asf")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties
+    })
+    .with_genesis_config_preset_name("flarechain_mainnet_asf")
+    .build())
+}
