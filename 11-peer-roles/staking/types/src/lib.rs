@@ -25,6 +25,7 @@ pub enum StakeRequirement {
 
 /// Role identifiers recognised by the Ivory protocol.
 #[derive(Clone, Copy, Eq, PartialEq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum Role {
     FlareNode = 0,
     ValidityNode = 1,

@@ -14,4 +14,5 @@ fn main() {
     println!("cargo:rerun-if-changed=presets/local_testnet.json");
     println!("cargo:rerun-if-changed=presets/ember_testnet.json");
     println!("cargo:rerun-if-changed=presets/test_2validator.json");
+    println!("cargo:rerun-if-changed=presets/test_21val.json");
 }

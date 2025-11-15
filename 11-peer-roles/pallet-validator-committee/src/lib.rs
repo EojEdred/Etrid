@@ -403,6 +403,105 @@ pub mod pallet {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SESSION MANAGER IMPLEMENTATION FOR GRANDPA FINALITY COORDINATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// SessionManager implementation for ValidatorCommittee pallet
+///
+/// This integrates with pallet_session to coordinate GRANDPA finality:
+/// - Provides validator set for each session (every 600 blocks)
+/// - Notifies GRANDPA when validator set changes
+/// - Enables session key rotation and validator set updates
+///
+/// ËTRID-specific: Uses ValidatorId (AccountId32) from ASF consensus
+impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T>
+where
+    T::AccountId: From<ValidatorId> + Into<ValidatorId>,
+{
+    /// Called at the start of each new session to get the validator set
+    ///
+    /// Returns Some(validators) if committee is not empty, None otherwise
+    /// This list is used by GRANDPA to determine finality voters
+    fn new_session(_new_index: u32) -> Option<sp_std::vec::Vec<T::AccountId>> {
+        // Get current committee members
+        let committee = Committee::<T>::get();
+
+        if committee.is_empty() {
+            return None;
+        }
+
+        // Convert ValidatorId to T::AccountId
+        let validators: sp_std::vec::Vec<T::AccountId> = committee
+            .into_iter()
+            .map(|validator_id| validator_id.into())
+            .collect();
+
+        Some(validators)
+    }
+
+    /// Called when a session ends
+    ///
+    /// ËTRID uses this to track session transitions
+    /// Future: Can add validator performance tracking here
+    fn end_session(_end_index: u32) {
+        // Track session history for analytics
+        // Future: Record validator performance metrics
+    }
+
+    /// Called when a session starts (after new_session)
+    ///
+    /// ËTRID uses this for epoch transitions and committee rotation
+    fn start_session(start_index: u32) {
+        // Check if we need to rotate committee at epoch boundary
+        // Epoch duration is tracked separately in EpochDuration storage
+        let epoch_duration = EpochDuration::<T>::get();
+
+        if epoch_duration > 0u32.into() {
+            // Calculate if this session starts a new epoch
+            let epoch_duration_u32: u32 = epoch_duration.try_into()
+                .unwrap_or(2400); // Default to 2400 blocks if conversion fails
+
+            // Session period is 600 blocks (Period constant)
+            // Check if session index is a multiple of (epoch_duration / session_period)
+            let sessions_per_epoch = epoch_duration_u32 / 600;
+
+            if sessions_per_epoch > 0 && start_index % sessions_per_epoch == 0 {
+                let new_epoch = (start_index / sessions_per_epoch) as u64;
+
+                // Update current epoch
+                CurrentEpoch::<T>::put(new_epoch);
+
+                // Emit epoch transition event
+                Self::deposit_event(Event::CommitteeRotated {
+                    epoch: new_epoch,
+                    committee_size: Committee::<T>::get().len() as u32,
+                });
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VALIDATOR ID CONVERSION FOR SESSION MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Type alias for ValidatorIdOf trait required by pallet_session
+///
+/// This converts from T::AccountId to ValidatorId for committee lookups
+/// ËTRID uses AccountId32 for both, so this is an identity conversion
+pub struct ValidatorIdOf<T>(sp_std::marker::PhantomData<T>);
+
+impl<T: Config> sp_runtime::traits::Convert<T::AccountId, Option<T::AccountId>> for ValidatorIdOf<T>
+where
+    T::AccountId: From<ValidatorId> + Into<ValidatorId>,
+{
+    fn convert(account: T::AccountId) -> Option<T::AccountId> {
+        // Identity conversion - AccountId is already ValidatorId in ËTRID
+        Some(account)
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // RUNTIME API DEFINITION
 // ═══════════════════════════════════════════════════════════════════════════════
 

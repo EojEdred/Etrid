@@ -104,6 +104,29 @@ pub fn test_2validator_config() -> Result<ChainSpec, String> {
     .build())
 }
 
+/// 21-validator test config (9 DecentralizedDirector + 12 ValidityNode) for production testing
+pub fn test_21validator_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain 21-Validator Test")
+    .with_id("flarechain_test_21val")
+    .with_chain_type(ChainType::Local)
+    .with_protocol_id("flarechain_test_21")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 18.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties
+    })
+    .with_genesis_config_preset_name("test_21val")
+    .build())
+}
+
 /// 9-Director mainnet config (production restart with GRANDPA fix)
 pub fn directors_9_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;

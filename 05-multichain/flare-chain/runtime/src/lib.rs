@@ -10,6 +10,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use sp_api::impl_runtime_apis;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use pallet_session::disabling::UpToLimitDisablingStrategy;
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
@@ -191,14 +192,20 @@ parameter_types! {
 impl pallet_session::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type ValidatorId = AccountId;
-    type ValidatorIdOf = sp_runtime::traits::ConvertInto;
+    // Use ValidatorCommittee's ValidatorIdOf for ËTRID ASF consensus integration
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
     type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
     type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
-    type SessionManager = ();
+    // Use ValidatorCommittee as SessionManager for GRANDPA finality coordination
+    // This enables:
+    // - Validator set updates every 600 blocks (session period)
+    // - GRANDPA authority set synchronization with active committee
+    // - Session key rotation and validator management
+    type SessionManager = ValidatorCommittee;
     type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type DisablingStrategy = ();
+    type DisablingStrategy = UpToLimitDisablingStrategy;
     // pallet_session requires Currency and KeyDeposit for validator key management
     // Using Balances pallet satisfies trait bounds without needing RuntimeHoldReason
     type Currency = Balances;
@@ -1468,6 +1475,9 @@ impl_runtime_apis! {
                     "test_2validator" => {
                         Some(include_bytes!("../presets/test_2validator.json").to_vec())
                     },
+                    "test_21val" => {
+                        Some(include_bytes!("../presets/test_21val.json").to_vec())
+                    },
                     "flarechain_mainnet" => {
                         Some(include_bytes!("../presets/flarechain_mainnet.json").to_vec())
                     },
@@ -1488,6 +1498,7 @@ impl_runtime_apis! {
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
                 "ember_testnet".into(),
                 "test_2validator".into(),
+                "test_21val".into(),
                 "flarechain_mainnet".into(),
                 "flarechain_mainnet_asf".into(),
                 "flarechain_mainnet_restart_final".into(),
