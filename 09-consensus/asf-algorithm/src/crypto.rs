@@ -71,12 +71,15 @@ pub trait SignData {
     fn sign(&self, message: &[u8]) -> Signature;
 }
 
+// Test-only implementations for Pair types (which have Pair::generate())
+#[cfg(test)]
 impl SignData for sr25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
         Signature::Sr25519(PairTrait::sign(self, message))
     }
 }
 
+#[cfg(test)]
 impl SignData for ed25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
         Signature::Ed25519(PairTrait::sign(self, message))
