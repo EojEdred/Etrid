@@ -74,6 +74,7 @@ members = [
     # 05 - Multichain Layer (Substrate-based)
     # ═════════════════════════════════════════════════════════════════════════════
     "05-multichain/flare-chain/runtime",                # Flare Chain runtime
+    "05-multichain/flare-chain/runtime/pallets/pallet-asf", # ASF consensus pallet
     "05-multichain/flare-chain/node",                   # Flare Chain node
     "05-multichain/primitives",                         # Multichain primitives
     "05-multichain/partition-burst-chains/pbc-common",  # PBC common runtime code (NEW - shared)

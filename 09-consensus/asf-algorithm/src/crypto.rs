@@ -6,7 +6,7 @@
 use alloc::vec::Vec;
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
-use sp_core::{crypto::UncheckedFrom, ed25519, sr25519, Pair};
+use sp_core::{crypto::UncheckedFrom, ed25519, sr25519, Pair as PairTrait};
 use sp_runtime::traits::Verify;
 
 use crate::{AsfError, AsfResult, Hash, ValidatorId};
@@ -73,13 +73,13 @@ pub trait SignData {
 
 impl SignData for sr25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
-        Signature::Sr25519(<sr25519::Pair as Pair>::sign(self, message))
+        Signature::Sr25519(PairTrait::sign(self, message))
     }
 }
 
 impl SignData for ed25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
-        Signature::Ed25519(<ed25519::Pair as Pair>::sign(self, message))
+        Signature::Ed25519(PairTrait::sign(self, message))
     }
 }
 

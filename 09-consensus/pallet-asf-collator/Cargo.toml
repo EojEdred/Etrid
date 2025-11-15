@@ -1,0 +1,65 @@
+[package]
+name = "pallet-asf-collator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "FRAME pallet for ASF collator consensus in PBC runtimes"
+license = "Apache-2.0"
+
+[dependencies]
+# Codec
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+
+# Substrate primitives
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-io = { workspace = true }
+sp-staking = { workspace = true }
+
+# FRAME
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-benchmarking = { workspace = true, optional = true }
+
+# Logging
+log = { version = "0.4.21", default-features = false }
+
+# ASF collator
+asf-collator = { path = "../asf-collator", default-features = false }
+asf-algorithm = { path = "../asf-algorithm", default-features = false }
+
+# Cumulus (for parachain support)
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+
+[dev-dependencies]
+sp-io = { workspace = true }
+sp-core = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-core/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-io/std",
+    "sp-staking/std",
+    "frame-support/std",
+    "frame-system/std",
+    "log/std",
+    "asf-collator/std",
+    "asf-algorithm/std",
+    "cumulus-primitives-core/std",
+]
+runtime-benchmarks = [
+    "frame-benchmarking/runtime-benchmarks",
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+]

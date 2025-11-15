@@ -1,0 +1,59 @@
+[package]
+name = "asf-collator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "ASF consensus for PBC collators - adapted for parachain/collator context"
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate primitives
+sp-core = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true }
+sp-io = { workspace = true }
+
+# Codec
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+
+# Serialization
+serde = { version = "1.0.197", default-features = false, features = ["derive", "alloc"] }
+
+# Logging
+log = { version = "0.4.21", default-features = false }
+
+# Thiserror for error handling
+thiserror = { version = "1.0", optional = true }
+
+# ASF core algorithm (relay chain version)
+asf-algorithm = { path = "../asf-algorithm", default-features = false }
+
+# Cumulus primitives (for parachain/collator support)
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+
+# Polkadot primitives (for relay chain coordination)
+polkadot-primitives = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+
+[dev-dependencies]
+sp-io = { workspace = true }
+sp-core = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "sp-io/std",
+    "codec/std",
+    "scale-info/std",
+    "serde/std",
+    "log/std",
+    "thiserror",
+    "asf-algorithm/std",
+    "cumulus-primitives-core/std",
+    "cumulus-primitives-parachain-inherent/std",
+    "polkadot-primitives/std",
+]

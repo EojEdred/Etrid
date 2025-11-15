@@ -29,6 +29,8 @@ pub mod networking;
 pub mod rewards;
 pub mod health;
 pub mod state_sync;
+pub mod byzantine_handler;
+pub mod byzantine_exclusion;
 
 pub use committee::*;
 pub use coordinator::*;
@@ -36,6 +38,8 @@ pub use networking::*;
 pub use rewards::*;
 pub use health::*;
 pub use state_sync::*;
+pub use byzantine_handler::*;
+pub use byzantine_exclusion::*;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CORE TYPES

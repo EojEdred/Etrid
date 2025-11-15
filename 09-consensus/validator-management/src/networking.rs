@@ -321,6 +321,278 @@ pub enum NetworkMessage {
     StateSyncResponse { data: Vec<u8> },
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUTHENTICATED MESSAGES (PRODUCTION SECURITY)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Authenticated message wrapper with cryptographic signature
+#[derive(Debug, Clone, Encode, Decode)]
+pub struct AuthenticatedMessage {
+    /// The actual message payload
+    pub payload: NetworkMessage,
+
+    /// Sender's validator ID
+    pub sender: ValidatorId,
+
+    /// Message sequence number (for replay protection)
+    pub sequence: u64,
+
+    /// Timestamp (milliseconds since epoch)
+    pub timestamp: u64,
+
+    /// Cryptographic signature over (payload, sender, sequence, timestamp)
+    pub signature: Vec<u8>, // Encoded asf_algorithm::crypto::Signature
+}
+
+impl AuthenticatedMessage {
+    /// Create a new authenticated message
+    pub fn new(
+        payload: NetworkMessage,
+        sender: ValidatorId,
+        sequence: u64,
+        timestamp: u64,
+    ) -> Self {
+        Self {
+            payload,
+            sender,
+            sequence,
+            timestamp,
+            signature: Vec::new(), // Will be filled by sign()
+        }
+    }
+
+    /// Get the message to be signed
+    pub fn signing_message(&self) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&self.payload.encode());
+        bytes.extend_from_slice(&self.sender.encode());
+        bytes.extend_from_slice(&self.sequence.to_le_bytes());
+        bytes.extend_from_slice(&self.timestamp.to_le_bytes());
+        bytes
+    }
+
+    /// Sign the message (must be done externally with keypair)
+    pub fn attach_signature(&mut self, signature_bytes: Vec<u8>) {
+        self.signature = signature_bytes;
+    }
+
+    /// Verify message authenticity and timestamp
+    pub fn verify(&self, current_time: u64) -> ValidatorResult<()> {
+        // Check signature is present
+        if self.signature.is_empty() {
+            return Err(ValidatorError::NetworkError("Missing signature"));
+        }
+
+        // Check timestamp is not too old (prevent replay attacks)
+        const MAX_MESSAGE_AGE_MS: u64 = 30_000; // 30 seconds
+        if self.timestamp < current_time.saturating_sub(MAX_MESSAGE_AGE_MS) {
+            return Err(ValidatorError::NetworkError("Message too old"));
+        }
+
+        // Check timestamp is not from future (clock drift tolerance)
+        const MAX_CLOCK_DRIFT_MS: u64 = 5_000; // 5 seconds
+        if self.timestamp > current_time + MAX_CLOCK_DRIFT_MS {
+            return Err(ValidatorError::NetworkError("Message from future"));
+        }
+
+        // NOTE: Actual signature verification done externally with crypto module
+        Ok(())
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RATE LIMITING (DDoS PROTECTION)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Token bucket for rate limiting
+#[derive(Debug, Clone)]
+pub struct TokenBucket {
+    /// Current tokens available
+    tokens: f64,
+
+    /// Maximum tokens (capacity)
+    capacity: f64,
+
+    /// Tokens per second refill rate
+    refill_rate: f64,
+
+    /// Last refill timestamp
+    last_refill: u64,
+}
+
+impl TokenBucket {
+    /// Create a new token bucket
+    pub fn new(capacity: f64, refill_rate: f64) -> Self {
+        Self {
+            tokens: capacity,
+            capacity,
+            refill_rate,
+            last_refill: 0,
+        }
+    }
+
+    /// Refill tokens based on elapsed time
+    pub fn refill(&mut self, current_time: u64) {
+        if self.last_refill == 0 {
+            self.last_refill = current_time;
+            return;
+        }
+
+        let elapsed_ms = current_time.saturating_sub(self.last_refill);
+        let elapsed_seconds = elapsed_ms as f64 / 1000.0;
+        let new_tokens = elapsed_seconds * self.refill_rate;
+
+        self.tokens = (self.tokens + new_tokens).min(self.capacity);
+        self.last_refill = current_time;
+    }
+
+    /// Try to consume tokens
+    pub fn consume(&mut self, amount: f64, current_time: u64) -> bool {
+        self.refill(current_time);
+
+        if self.tokens >= amount {
+            self.tokens -= amount;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Get current token count
+    pub fn available(&self) -> f64 {
+        self.tokens
+    }
+}
+
+/// Rate limiter for network messages
+#[derive(Debug, Clone)]
+pub struct RateLimiter {
+    /// Per-validator token buckets
+    buckets: BTreeMap<ValidatorId, TokenBucket>,
+
+    /// Messages per second limit per validator
+    messages_per_second: f64,
+
+    /// Burst capacity (max messages in bucket)
+    burst_capacity: f64,
+}
+
+impl RateLimiter {
+    /// Create a new rate limiter
+    pub fn new(messages_per_second: f64, burst_capacity: f64) -> Self {
+        Self {
+            buckets: BTreeMap::new(),
+            messages_per_second,
+            burst_capacity,
+        }
+    }
+
+    /// Check if message is allowed (consume 1 token)
+    pub fn check_rate_limit(
+        &mut self,
+        validator: &ValidatorId,
+        current_time: u64,
+    ) -> ValidatorResult<()> {
+        let bucket = self.buckets.entry(validator.clone()).or_insert_with(|| {
+            TokenBucket::new(self.burst_capacity, self.messages_per_second)
+        });
+
+        if bucket.consume(1.0, current_time) {
+            Ok(())
+        } else {
+            Err(ValidatorError::NetworkError("Rate limit exceeded"))
+        }
+    }
+
+    /// Get current available tokens for a validator
+    pub fn available_tokens(&self, validator: &ValidatorId) -> f64 {
+        self.buckets
+            .get(validator)
+            .map(|b| b.available())
+            .unwrap_or(self.burst_capacity)
+    }
+
+    /// Clear old buckets (cleanup)
+    pub fn cleanup(&mut self) {
+        // Remove buckets with full tokens (inactive validators)
+        self.buckets
+            .retain(|_, bucket| bucket.available() < bucket.capacity);
+    }
+}
+
+impl Default for RateLimiter {
+    fn default() -> Self {
+        // Default: 10 messages/second, burst of 20
+        Self::new(10.0, 20.0)
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REPLAY ATTACK PROTECTION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Tracks seen message sequences to prevent replay attacks
+#[derive(Debug, Clone)]
+pub struct ReplayProtector {
+    /// Last seen sequence number per validator
+    last_sequences: BTreeMap<ValidatorId, u64>,
+
+    /// Maximum sequence number gap allowed
+    max_gap: u64,
+}
+
+impl ReplayProtector {
+    /// Create a new replay protector
+    pub fn new(max_gap: u64) -> Self {
+        Self {
+            last_sequences: BTreeMap::new(),
+            max_gap,
+        }
+    }
+
+    /// Check if message sequence is valid (not a replay)
+    pub fn check_sequence(
+        &mut self,
+        validator: &ValidatorId,
+        sequence: u64,
+    ) -> ValidatorResult<()> {
+        let last_seq = self.last_sequences.entry(validator.clone()).or_insert(0);
+
+        // Sequence must be strictly increasing
+        if sequence <= *last_seq {
+            return Err(ValidatorError::NetworkError("Replay attack detected"));
+        }
+
+        // Check for suspicious gaps (possible attack or network issues)
+        if sequence > *last_seq + self.max_gap {
+            return Err(ValidatorError::NetworkError(
+                "Sequence gap too large",
+            ));
+        }
+
+        // Update last seen sequence
+        *last_seq = sequence;
+        Ok(())
+    }
+
+    /// Get last sequence for a validator
+    pub fn last_sequence(&self, validator: &ValidatorId) -> Option<u64> {
+        self.last_sequences.get(validator).copied()
+    }
+
+    /// Reset sequence for a validator (e.g., after reconnection)
+    pub fn reset_sequence(&mut self, validator: &ValidatorId) {
+        self.last_sequences.remove(validator);
+    }
+}
+
+impl Default for ReplayProtector {
+    fn default() -> Self {
+        // Default: allow gaps up to 100 messages
+        Self::new(100)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

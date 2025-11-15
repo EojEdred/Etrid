@@ -49,6 +49,22 @@ pub struct RewardRecord {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// STAKING INTERFACE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Interface to staking system for executing slashing
+pub trait StakingInterface {
+    /// Get validator's current stake
+    fn get_validator_stake(&self, validator: &ValidatorId) -> Balance;
+
+    /// Actually slash validator's stake (remove it)
+    fn slash_validator(&mut self, validator: &ValidatorId, amount: Balance) -> Result<(), &'static str>;
+
+    /// Check if validator is still active
+    fn is_active(&self, validator: &ValidatorId) -> bool;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SLASHING TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -57,21 +73,24 @@ pub struct RewardRecord {
 pub enum SlashingReason {
     /// Double voting (voted for two conflicting blocks)
     DoubleVoting,
-    
+
     /// Invalid certificate
     InvalidCertificate,
-    
+
     /// Unavailability (offline too long)
     Unavailability,
-    
+
     /// Invalid block production
     InvalidBlock,
-    
+
     /// Signature verification failure
     InvalidSignature,
-    
+
     /// Malicious behavior detected
     MaliciousBehavior,
+
+    /// Byzantine behavior detected by consensus
+    Byzantine,
 }
 
 impl SlashingReason {
@@ -84,6 +103,7 @@ impl SlashingReason {
             SlashingReason::InvalidBlock => 75,         // Major slash
             SlashingReason::InvalidSignature => 25,     // Moderate slash
             SlashingReason::MaliciousBehavior => 100,   // Full slash
+            SlashingReason::Byzantine => 100,           // Full slash for Byzantine behavior
         }
     }
 
@@ -96,6 +116,7 @@ impl SlashingReason {
             SlashingReason::InvalidBlock => 50,
             SlashingReason::InvalidSignature => 20,
             SlashingReason::MaliciousBehavior => 100,
+            SlashingReason::Byzantine => 100,
         }
     }
 }
@@ -105,21 +126,18 @@ impl SlashingReason {
 pub struct SlashingRecord {
     /// Validator who was slashed
     pub validator: ValidatorId,
-    
+
     /// Reason for slashing
     pub reason: SlashingReason,
-    
+
     /// Amount slashed
     pub amount: Balance,
-    
-    /// Block number when slashed
-    pub block_number: BlockNumber,
-    
-    /// Epoch when slashed
-    pub epoch: u32,
-    
-    /// Reporter (if any)
-    pub reporter: Option<ValidatorId>,
+
+    /// Timestamp when slashed
+    pub timestamp: u64,
+
+    /// Slash percentage applied
+    pub slash_percentage: u8,
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -195,34 +213,72 @@ impl RewardsManager {
         }
     }
 
-    /// Record slashing
+    /// Record slashing (for historical tracking only - doesn't actually remove stake)
     pub fn record_slashing(
         &mut self,
         validator: ValidatorId,
         stake: Balance,
         reason: SlashingReason,
-        block_number: BlockNumber,
-        epoch: u32,
-        reporter: Option<ValidatorId>,
     ) -> Balance {
         let slash_percentage = reason.slash_percentage();
         let amount = (stake * slash_percentage as Balance) / 100;
-        
+
         let record = SlashingRecord {
             validator: validator.clone(),
             reason,
             amount,
-            block_number,
-            epoch,
-            reporter,
+            timestamp: 0, // Should be real timestamp
+            slash_percentage,
         };
-        
+
         self.slashing_history.push(record);
-        
+
         // Remove any pending rewards
         self.pending_rewards.remove(&validator);
-        
+
         amount
+    }
+
+    /// Execute slashing (PRODUCTION - actually removes stake via staking interface)
+    pub fn execute_slashing<S: StakingInterface>(
+        &mut self,
+        validator: ValidatorId,
+        slash_percentage: u8,
+        reason: SlashingReason,
+        staking: &mut S,
+    ) -> Result<Balance, &'static str> {
+        // Get current stake
+        let stake = staking.get_validator_stake(&validator);
+
+        // Calculate slash amount
+        let amount = (stake * slash_percentage as Balance) / 100;
+
+        // Record slashing in history
+        let record = SlashingRecord {
+            validator: validator.clone(),
+            amount,
+            reason,
+            timestamp: 0, // Should be real timestamp
+            slash_percentage,
+        };
+        self.slashing_history.push(record);
+
+        // Remove any pending rewards
+        self.pending_rewards.remove(&validator);
+
+        // ACTUALLY REMOVE STAKE
+        staking.slash_validator(&validator, amount)?;
+
+        #[cfg(feature = "std")]
+        log::warn!(
+            "⚔️ SLASHED validator {:?}: {} tokens ({}%) for {:?}",
+            validator,
+            amount,
+            slash_percentage,
+            reason
+        );
+
+        Ok(amount)
     }
 
     /// Claim pending rewards for a validator
@@ -440,16 +496,13 @@ mod tests {
         let mut manager = RewardsManager::new(1000);
         let validator = create_test_validator(1);
         let stake = 100_000;
-        
+
         let slashed = manager.record_slashing(
             validator.clone(),
             stake,
             SlashingReason::DoubleVoting,
-            1,
-            1,
-            None,
         );
-        
+
         assert_eq!(slashed, 100_000); // 100% slash
         assert_eq!(manager.total_slashed(&validator), 100_000);
     }
@@ -482,13 +535,13 @@ mod tests {
     fn test_performance_score() {
         let mut manager = RewardsManager::new(1000);
         let validator = create_test_validator(1);
-        
+
         // Only rewards, no slashing
         manager.record_reward(validator.clone(), RewardType::BlockProduction, 1, 1);
         assert_eq!(manager.performance_score(&validator), 100);
-        
+
         // Add slashing
-        manager.record_slashing(validator.clone(), 10_000, SlashingReason::Unavailability, 2, 1, None);
+        manager.record_slashing(validator.clone(), 10_000, SlashingReason::Unavailability);
         let score = manager.performance_score(&validator);
         assert!(score < 100); // Should be lower due to slashing
     }
@@ -497,11 +550,11 @@ mod tests {
     fn test_validator_stats() {
         let mut manager = RewardsManager::new(1000);
         let validator = create_test_validator(1);
-        
+
         manager.record_reward(validator.clone(), RewardType::BlockProduction, 1, 1);
         manager.record_reward(validator.clone(), RewardType::BlockProduction, 2, 1);
-        manager.record_slashing(validator.clone(), 10_000, SlashingReason::Unavailability, 3, 1, None);
-        
+        manager.record_slashing(validator.clone(), 10_000, SlashingReason::Unavailability);
+
         let stats = manager.get_stats(&validator);
         assert_eq!(stats.total_rewards, 2000);
         assert_eq!(stats.total_slashed, 1000); // 10% of 10_000
@@ -513,11 +566,11 @@ mod tests {
     fn test_slashing_removes_pending_rewards() {
         let mut manager = RewardsManager::new(1000);
         let validator = create_test_validator(1);
-        
+
         manager.record_reward(validator.clone(), RewardType::BlockProduction, 1, 1);
         assert_eq!(manager.get_pending_rewards(&validator), 1000);
-        
-        manager.record_slashing(validator.clone(), 10_000, SlashingReason::DoubleVoting, 2, 1, None);
+
+        manager.record_slashing(validator.clone(), 10_000, SlashingReason::DoubleVoting);
         assert_eq!(manager.get_pending_rewards(&validator), 0); // Cleared by slashing
     }
 
