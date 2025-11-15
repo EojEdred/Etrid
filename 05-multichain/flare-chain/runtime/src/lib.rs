@@ -78,6 +78,20 @@ pub mod opaque {
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GENESIS MESSAGE - EMBEDDED IN RUNTIME WASM (Bitcoin-style Easter Egg)
+// ═══════════════════════════════════════════════════════════════════════════════
+/// "The Ëtrid Network - First pure ASF blockchain - Built by Eoj - November 2025"
+///
+/// Like Bitcoin's genesis block message, this is permanently embedded in the
+/// runtime WASM code stored in System.Code at block 0.
+///
+/// Consensus Evolution: GRANDPA → ASF (Ascending Scale of Finality)
+/// HotStuff 4-phase Byzantine consensus with 5-level finality scale
+///
+/// This message will remain on-chain forever as part of the genesis runtime blob.
+// ═══════════════════════════════════════════════════════════════════════════════
+
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
 #[sp_version::runtime_version]

@@ -246,7 +246,8 @@
   },
   "reserveVault": {
     "initialHaircuts": [],
-    "initialPrices": []
+    "initialPrices": [],
+    "genesisMessage": "The Ëtrid Network - First pure ASF blockchain - Built by Eoj - November 2025 - Consensus Evolution: GRANDPA to ASF (HotStuff + PPFA + 5-level finality)"
   },
   "validatorCommittee": {
     "committeeSize": 21,

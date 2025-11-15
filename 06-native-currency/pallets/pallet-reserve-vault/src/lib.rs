@@ -142,6 +142,12 @@ pub mod pallet {
 	#[pallet::getter(fn asset_price)]
 	pub type AssetPrices<T: Config> = StorageMap<_, Blake2_128Concat, AssetType, u128, ValueQuery>;
 
+	/// Genesis message (Bitcoin-style easter egg) - Set once at genesis, never changes
+	/// "The Ëtrid Network - First pure ASF blockchain - Built by Eoj - November 2025"
+	#[pallet::storage]
+	#[pallet::getter(fn genesis_message)]
+	pub type GenesisMessage<T> = StorageValue<_, BoundedVec<u8, ConstU32<256>>, ValueQuery>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -200,6 +206,8 @@ pub mod pallet {
 	pub struct GenesisConfig<T: Config> {
 		pub initial_haircuts: Vec<(AssetType, Permill)>,
 		pub initial_prices: Vec<(AssetType, u128)>,
+		/// Genesis message (Bitcoin-style easter egg)
+		pub genesis_message: Vec<u8>,
 		#[serde(skip)]
 		pub _phantom: sp_std::marker::PhantomData<T>,
 	}
@@ -215,6 +223,13 @@ pub mod pallet {
 			// Initialize prices
 			for (asset, price) in &self.initial_prices {
 				AssetPrices::<T>::insert(asset, price);
+			}
+
+			// Initialize genesis message (Bitcoin-style easter egg)
+			if !self.genesis_message.is_empty() {
+				let bounded: BoundedVec<u8, ConstU32<256>> = self.genesis_message.clone().try_into()
+					.expect("Genesis message exceeds 256 bytes");
+				GenesisMessage::<T>::put(bounded);
 			}
 
 			// Initialize reserve ratio to 0
