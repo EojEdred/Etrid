@@ -19,7 +19,7 @@ use pallet_session::disabling::UpToLimitDisablingStrategy;
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
-        AccountIdLookup, AccountIdConversion, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify,
+        AccountIdLookup, AccountIdConversion, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify, OpaqueKeys,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, DispatchResult, FixedU128, MultiSignature, Perbill,
@@ -32,8 +32,7 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 // Codec and scale_info for RuntimeHoldReason
-use codec::{Encode, Decode, MaxEncodedLen};
-use scale_info::TypeInfo;
+use codec::Encode;
 use sp_runtime::RuntimeDebug;
 
 // Substrate and Polkadot dependencies
@@ -73,8 +72,43 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // ASF-only (no session keys needed for ASF consensus)
+            // Empty - ASF consensus manages validator rotation internally
+            // Custom EmptySessionHandler below satisfies trait bounds
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EMPTY SESSION HANDLER FOR ASF CONSENSUS
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// ASF (Ascending Scale of Finality) manages validator rotation internally via
+// the ValidatorCommittee pallet. We don't need session keys for consensus, but
+// pallet_session requires a SessionHandler implementation.
+//
+// This empty handler satisfies the trait bounds without requiring any actual
+// session key management.
+
+/// Empty session handler for ASF consensus
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ASF handles validator initialization via ValidatorCommittee
+    }
+
+    fn on_new_session<Ks: OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ASF handles validator rotation via ValidatorCommittee
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ASF handles validator disabling via ValidatorCommittee
     }
 }
 
@@ -223,9 +257,9 @@ impl pallet_session::Config for Runtime {
     // This enables:
     // - Validator set updates every 600 blocks (session period)
     // - ASF validator committee synchronization with active validators
-    // - Session key rotation and validator management
     type SessionManager = ValidatorCommittee;
-    type SessionHandler = <opaque::SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
+    // Use EmptySessionHandler since ASF manages validator keys internally
+    type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
     type DisablingStrategy = UpToLimitDisablingStrategy;
@@ -1525,7 +1559,7 @@ impl_runtime_apis! {
         fn get_committee() -> Vec<asf_algorithm::ValidatorId> {
             ValidatorCommittee::get_committee()
                 .into_iter()
-                .map(|info| info.validator_id)
+                .map(|info| info.validator_id().clone())
                 .collect()
         }
 
@@ -1554,7 +1588,7 @@ impl_runtime_apis! {
 
         fn get_validator_info(validator: asf_algorithm::ValidatorId) -> Option<(u128, bool, u32)> {
             ValidatorCommittee::get_validator(&validator).map(|info| {
-                (info.stake, info.is_active, info.reputation_score)
+                (info.stake, info.is_active(), info.reputation_score())
             })
         }
 

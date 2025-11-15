@@ -163,6 +163,26 @@ impl ValidatorInfo {
             self.reputation = self.reputation.saturating_add(delta as u64).min(100);
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // RUNTIME API COMPATIBILITY GETTERS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // These methods provide compatibility for the runtime APIs that expect different field names
+
+    /// Get validator ID (compatibility alias for `id`)
+    pub fn validator_id(&self) -> &ValidatorId {
+        &self.id
+    }
+
+    /// Check if validator is active (compatibility alias for `active`)
+    pub fn is_active(&self) -> bool {
+        self.active
+    }
+
+    /// Get reputation score as u32 (compatibility alias for `reputation`)
+    pub fn reputation_score(&self) -> u32 {
+        self.reputation as u32
+    }
 }
 
 /// Committee member information

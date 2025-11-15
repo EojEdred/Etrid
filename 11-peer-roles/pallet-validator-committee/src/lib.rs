@@ -399,6 +399,49 @@ pub mod pallet {
         pub fn get_epoch_duration() -> BlockNumberFor<T> {
             EpochDuration::<T>::get()
         }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RUNTIME API METHODS FOR ASF CONSENSUS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /// Get the proposer for a given slot using PPFA rotation
+        ///
+        /// This implements the PPFA rotation algorithm where validators take turns
+        /// proposing blocks in a round-robin fashion based on the slot number.
+        pub fn get_proposer_for_slot(slot: u64) -> Option<ValidatorId> {
+            let committee = Self::get_committee();
+            if committee.is_empty() {
+                return None;
+            }
+
+            // PPFA rotation: slot % committee_size
+            let index = (slot as usize) % committee.len();
+            Some(committee[index].id.clone())
+        }
+
+        /// Get total stake across all active validators
+        ///
+        /// This is used for calculating stake-weighted voting thresholds in ASF consensus.
+        pub fn get_total_stake() -> Balance {
+            Self::get_committee()
+                .iter()
+                .map(|validator| validator.stake)
+                .sum()
+        }
+
+        /// Get the PPFA index for a given block number
+        ///
+        /// The PPFA index determines which validator should propose at a given block height.
+        /// This is used for both block production and validation.
+        pub fn get_ppfa_index(block_number: u32) -> u32 {
+            let committee = Committee::<T>::get();
+            if committee.is_empty() {
+                return 0;
+            }
+
+            // PPFA index is block_number mod committee_size
+            (block_number % committee.len() as u32)
+        }
     }
 }
 
