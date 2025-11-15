@@ -1,5 +1,5 @@
 [package]
-name = "validator-management"
+name = "validator-management-pbc"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]
@@ -25,7 +25,7 @@ serde = { version = "1.0.197", default-features = false, features = ["derive", "
 log = { version = "0.4.21", default-features = false }
 
 # Internal dependencies
-asf-algorithm = { path = "../asf-algorithm", default-features = false }
+asf-algorithm-pbc = { path = "../asf-algorithm", default-features = false }
 
 # Async runtime (std only)
 futures = { version = "0.3.30", optional = true }
@@ -54,7 +54,7 @@ std = [
     "scale-info/std",
     "serde/std",
     "log/std",
-    "asf-algorithm/std",
+    "asf-algorithm-pbc/std",
     "futures",
     "tokio",
     "libp2p",

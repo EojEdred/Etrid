@@ -76,6 +76,7 @@ impl SubstrateCli for Cli {
             "test_2val" | "test-2val" => Box::new(crate::chain_spec::test_2validator_config()?),
             "staging" | "ember" => Box::new(crate::chain_spec::staging_testnet_config()?),
             "directors9" | "9directors" | "flarechain_9directors" => Box::new(crate::chain_spec::directors_9_config()?),
+            "session_fixed" | "session-fixed" | "flarechain_session_fixed" => Box::new(crate::chain_spec::session_fixed_mainnet_config()?),
             "" | "flarechain" | "mainnet" | "flarechain_mainnet" => Box::new(crate::chain_spec::flarechain_config()?),
             path => Box::new(crate::chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),

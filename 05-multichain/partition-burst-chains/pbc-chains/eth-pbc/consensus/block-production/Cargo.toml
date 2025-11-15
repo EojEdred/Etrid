@@ -1,5 +1,5 @@
 [package]
-name = "block-production"
+name = "block-production-pbc"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]
@@ -24,8 +24,8 @@ serde = { workspace = true }
 log = { workspace = true }
 
 # Internal dependencies
-asf-algorithm = { path = "../asf-algorithm", default-features = false }
-validator-management = { path = "../validator-management", default-features = false }
+asf-algorithm-pbc = { path = "../asf-algorithm", default-features = false }
+validator-management-pbc = { path = "../validator-management", default-features = false }
 
 # Async runtime (std only)
 futures = { version = "0.3.30", optional = true }
@@ -53,8 +53,8 @@ std = [
     "scale-info/std",
     "serde/std",
     "log/std",
-    "asf-algorithm/std",
-    "validator-management/std",
+    "asf-algorithm-pbc/std",
+    "validator-management-pbc/std",
     "futures",
     "tokio",
     "thiserror",

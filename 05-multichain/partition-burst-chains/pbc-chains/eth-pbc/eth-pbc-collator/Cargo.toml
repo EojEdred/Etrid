@@ -75,8 +75,8 @@ cumulus-primitives-core = { workspace = true }
 cumulus-relay-chain-interface = { workspace = true }
 
 # ASF Consensus (Ëtrid custom consensus)
-sc-consensus-asf = { path = "../consensus/client/consensus-asf" }
-sp-consensus-asf = { path = "../consensus/primitives/consensus-asf" }
+sc-consensus-asf-pbc = { path = "../consensus/client/consensus-asf" }
+sp-consensus-asf-pbc = { path = "../consensus/primitives/consensus-asf" }
 
 # ETH-PBC Runtime
 eth-pbc-runtime = { path = "../eth-pbc-runtime" }

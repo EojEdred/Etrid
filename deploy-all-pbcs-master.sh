@@ -34,8 +34,8 @@ log_section() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Architecture groups
-ARM_VMS=("d1" "d5")
-PRIMARY_CONTABO="${PRIMARY_BUILD_VM:-etrid-mainnet}"
+ARM_VMS=("gizzi" "auditdev")
+PRIMARY_CONTABO="${PRIMARY_BUILD_VM:-eojedred-validator}"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN ORCHESTRATION
@@ -51,12 +51,12 @@ ${CYAN}
 ├───────────────────────────────────────────────────────────────────┤
 │                                                                    │
 │  Architecture Group 1: ARM (Oracle Cloud)                         │
-│  ├─ d1 (Gizzi)   → Build locally                                  │
-│  └─ d5 (Audit)   → Build locally                                  │
+│  ├─ gizzi (Gizzi)      → Build locally                            │
+│  └─ auditdev (Audit)   → Build locally                            │
 │                                                                    │
-│  Architecture Group 2: x86_64 (Contabo/Azure)                     │
+│  Architecture Group 2: x86_64 (Azure/Contabo)                     │
 │  ├─ ${PRIMARY_CONTABO} → Build once (primary)                     │
-│  └─ 12+ other VMs → Rsync from primary                            │
+│  └─ 6+ other VMs → Rsync from primary                             │
 │                                                                    │
 │  PBC Collators: 12 total (ETH excluded - uses Frontier)           │
 │  ├─ btc-pbc-collator    ├─ sol-pbc-collator    ├─ ada-pbc-collator│

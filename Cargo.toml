@@ -82,7 +82,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-runtime/src/pallets/channels", # Channels
     "05-multichain/partition-burst-chains/pbc-chains/btc-pbc/runtime",       # BTC PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/doge-pbc/runtime",      # DOGE PBC runtime
-    # eth-pbc members excluded - has independent workspace (stable2506)
+    # eth-pbc excluded - has independent workspace (stable2506)
     "05-multichain/partition-burst-chains/pbc-chains/sol-pbc/runtime",       # SOL PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/xlm-pbc/runtime",       # XLM PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/xrp-pbc/runtime",       # XRP PBC runtime
@@ -94,6 +94,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Smart Contract USDT PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/edsc-pbc/runtime",      # EDSC PBC runtime (Ëtrid Dollar Stablecoin)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/btc-pbc-collator",     # BTC PBC collator node
+    # eth-pbc-collator excluded - has independent workspace (stable2506)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/doge-pbc-collator",    # DOGE PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sol-pbc-collator",     # SOL PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/xlm-pbc-collator",     # XLM PBC collator node
@@ -220,8 +221,6 @@ exclude = [
     "apps",
     "docs",
     "scripts",
-    # Exclude eth-pbc subworkspace (uses stable2506, independent from root's stable2509)
-    "05-multichain/partition-burst-chains/pbc-chains/eth-pbc",
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -262,48 +261,6 @@ sp-staking = { default-features = false, git = "https://github.com/paritytech/po
 sp-keystore = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-application-crypto = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sp-keyring = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# CUMULUS DEPENDENCIES (for PBC Collators)
-# ═══════════════════════════════════════════════════════════════════════════════
-cumulus-client-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-client-collator = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-client-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-client-consensus-common = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-client-service = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-primitives-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-cumulus-relay-chain-interface = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-consensus-slots = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-network-sync = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-offchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-rpc-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-executor = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-service = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-telemetry = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-transaction-pool-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-network = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-rpc = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# SUBSTRATE RPC DEPENDENCIES
-# ═══════════════════════════════════════════════════════════════════════════════
-substrate-frame-rpc-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-substrate-prometheus-endpoint = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# BUILD DEPENDENCIES
-# ═══════════════════════════════════════════════════════════════════════════════
-substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 pallet-aura = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -321,12 +278,11 @@ frame-system-rpc-runtime-api = { default-features = false, git = "https://github
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 polkadot-runtime-common = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ Serialization & Encoding                                                    │
 # └─────────────────────────────────────────────────────────────────────────────┘
-
-jsonrpsee = { version = "0.23", features = ["server"] }
 
 codec = { package = "parity-scale-codec", version = "3.7.0", default-features = false, features = ["derive", "max-encoded-len"] }
 parity-scale-codec = { version = "3.7.0", default-features = false, features = ["derive", "max-encoded-len"] }
@@ -360,6 +316,7 @@ libp2p = { version = "0.52", default-features = false }
 tokio = { version = "1.22.0", features = ["full"] }
 futures = { version = "0.3.28", default-features = false }
 async-trait = "0.1.73"
+jsonrpsee = { version = "0.24.3", features = ["server", "client", "ws-client", "macros"] }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ WASM Runtime                                                                 │

@@ -1,0 +1,229 @@
+---
+# Etrid AI GPU Provider Deployment
+# Runs GPU worker pods that execute AI jobs from the marketplace
+#
+# Supports:
+# - NVIDIA GPUs (A100, H100, RTX 4090, etc.)
+# - AMD GPUs (MI250X, MI300X)
+# - Cloud provider spot instances for cost optimization
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etrid-gpu-provider
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: gpu-provider
+    pbc: ai-compute
+spec:
+  replicas: 2 # Minimum replicas (HPA will scale this)
+  selector:
+    matchLabels:
+      app: etrid-ai
+      component: gpu-provider
+  template:
+    metadata:
+      labels:
+        app: etrid-ai
+        component: gpu-provider
+        pbc: ai-compute
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      # Node affinity: Schedule on GPU nodes only
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: accelerator
+                    operator: In
+                    values:
+                      - nvidia-gpu
+                      - amd-gpu
+                  - key: gpu-type
+                    operator: Exists
+
+      # Tolerate GPU node taints
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        - key: amd.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      containers:
+        - name: gpu-worker
+          image: etrid/ai-gpu-worker:latest
+          imagePullPolicy: Always
+
+          # Request 1 GPU per pod
+          resources:
+            requests:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: 1 # Change to amd.com/gpu for AMD
+            limits:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: 1
+
+          # Environment configuration
+          env:
+            # Etrid blockchain connection
+            - name: ETRID_RPC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: etrid-config
+                  key: rpc_url
+            - name: ETRID_WEBSOCKET_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: etrid-config
+                  key: websocket_url
+
+            # Provider credentials (from Kubernetes secret)
+            - name: PROVIDER_SEED_PHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: etrid-provider-credentials
+                  key: seed_phrase
+            - name: PROVIDER_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: etrid-provider-credentials
+                  key: account_id
+
+            # GPU configuration
+            - name: GPU_TYPE
+              value: "nvidia" # or "amd"
+            - name: GPU_MODEL
+              value: "A100" # Auto-detected at runtime
+            - name: GPU_MEMORY_GB
+              value: "80"
+            - name: CUDA_VERSION
+              value: "12.3"
+
+            # Performance tuning
+            - name: MAX_CONCURRENT_JOBS
+              value: "1" # 1 job per GPU
+            - name: JOB_TIMEOUT_SECONDS
+              value: "3600" # 1 hour max per job
+            - name: HEARTBEAT_INTERVAL_SECONDS
+              value: "30"
+
+            # Pricing (in ËDSC per second)
+            - name: PRICE_PER_SECOND
+              value: "100000000000000" # 0.0001 ËDSC/sec = $0.36/hour
+
+            # Feature flags
+            - name: ENABLE_TEE
+              value: "true" # Enable Intel SGX/AMD SEV
+            - name: ENABLE_COMPLIANCE
+              value: "true" # Auto-enable compliance templates
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Volume mounts
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+            - name: job-storage
+              mountPath: /jobs
+            - name: tee-keys
+              mountPath: /tee
+              readOnly: true
+
+          # Security context
+          securityContext:
+            privileged: true # Required for GPU access
+            capabilities:
+              add:
+                - SYS_ADMIN # Required for TEE
+
+      # Volumes
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: etrid-model-cache
+        - name: job-storage
+          emptyDir:
+            sizeLimit: 100Gi
+        - name: tee-keys
+          secret:
+            secretName: etrid-tee-keys
+
+---
+# PersistentVolumeClaim for model cache
+# Shared across all GPU pods to avoid redundant downloads
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: etrid-model-cache
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: storage
+spec:
+  accessModes:
+    - ReadOnlyMany # Multiple pods can read
+  resources:
+    requests:
+      storage: 500Gi # Cache for popular models (GPT-4, LLaMA, etc.)
+  storageClassName: fast-ssd # Use SSD for fast model loading
+
+---
+# Service for GPU provider pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: etrid-gpu-provider
+  namespace: etrid-ai-compute
+  labels:
+    app: etrid-ai
+    component: gpu-provider
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: etrid-ai
+    component: gpu-provider
+
+---
+# PodDisruptionBudget to ensure availability during scaling
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: etrid-gpu-provider-pdb
+  namespace: etrid-ai-compute
+spec:
+  minAvailable: 1 # Always keep at least 1 GPU online
+  selector:
+    matchLabels:
+      app: etrid-ai
+      component: gpu-provider

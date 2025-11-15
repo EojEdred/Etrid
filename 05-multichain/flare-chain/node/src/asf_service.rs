@@ -1325,13 +1325,49 @@ pub fn new_full_with_params(
 
         // Extract validator identity from keystore
         let validator_id = {
-            // In production, load from keystore
-            // For now, derive from node role
             if role.is_authority() {
-                // Use first authority key (Alice for dev)
-                finality_gadget::ValidatorId(0)
+                // Load GRANDPA key from keystore (same as PPFA does)
+                use sp_core::crypto::KeyTypeId;
+                const GRANDPA_KEY_TYPE: KeyTypeId = KeyTypeId([0x67, 0x72, 0x61, 0x6e]);
+
+                let keystore = keystore_container.keystore();
+                let grandpa_keys = keystore.ed25519_public_keys(GRANDPA_KEY_TYPE);
+
+                match grandpa_keys.first() {
+                    Some(public_key) => {
+                        // Convert Ed25519 public key (32 bytes) to u32 validator ID
+                        // Use first 4 bytes of the public key as the validator ID
+                        let key_bytes = public_key.as_ref() as &[u8];
+                        let validator_id_u32 = u32::from_le_bytes([
+                            key_bytes[0],
+                            key_bytes[1],
+                            key_bytes[2],
+                            key_bytes[3],
+                        ]);
+
+                        log::info!(
+                            "🔑 ASF Finality Gadget using GRANDPA key from keystore: {}",
+                            hex::encode(key_bytes)
+                        );
+                        log::info!(
+                            "🆔 Derived ASF validator ID: {} (from first 4 bytes: {:02x}{:02x}{:02x}{:02x})",
+                            validator_id_u32,
+                            key_bytes[0], key_bytes[1], key_bytes[2], key_bytes[3]
+                        );
+
+                        finality_gadget::ValidatorId(validator_id_u32)
+                    }
+                    None => {
+                        log::warn!(
+                            "⚠️  No GRANDPA key found in keystore for ASF Finality Gadget. \
+                             Using observer mode (non-validator)."
+                        );
+                        finality_gadget::ValidatorId(u32::MAX) // Non-validator observer
+                    }
+                }
             } else {
-                finality_gadget::ValidatorId(u32::MAX) // Non-validator observer
+                // Non-authority nodes are observers
+                finality_gadget::ValidatorId(u32::MAX)
             }
         };
 

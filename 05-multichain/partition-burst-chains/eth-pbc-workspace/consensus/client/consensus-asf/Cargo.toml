@@ -1,5 +1,5 @@
 [package]
-name = "sc-consensus-asf"
+name = "sc-consensus-asf-pbc-workspace"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]

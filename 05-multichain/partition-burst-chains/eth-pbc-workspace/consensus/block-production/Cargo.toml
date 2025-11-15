@@ -1,5 +1,5 @@
 [package]
-name = "block-production"
+name = "block-production-pbc-workspace"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]

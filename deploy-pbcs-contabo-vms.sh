@@ -27,11 +27,11 @@ log_section() {
     echo ""
 }
 
-# Contabo VMs - adjust these to match your actual SSH host aliases
-# Based on your VM reference doc, you have 13+ Contabo/Azure x86_64 VMs
-PRIMARY_BUILD_VM="${PRIMARY_BUILD_VM:-etrid-mainnet}"  # The VM to build on
+# x86_64 VMs - adjust these to match your actual SSH host aliases
+# Based on your actual SSH config
+PRIMARY_BUILD_VM="${PRIMARY_BUILD_VM:-eojedred-validator}"  # The VM to build on
 
-# List all Contabo VMs to distribute to (excluding the build VM)
+# List all x86_64 VMs to distribute to (excluding the build VM)
 # You can customize this list based on your actual SSH host aliases
 CONTABO_VMS=(
     "etrid-val-01"
@@ -40,7 +40,7 @@ CONTABO_VMS=(
     "etrid-azure-val-02"
     "eojedred-validator"
     "securitydev"
-    "auditdev"
+    "vm1"
     # Add more VMs as needed based on your deployment
 )
 

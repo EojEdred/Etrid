@@ -23,7 +23,7 @@ log_section() {
     echo ""
 }
 
-ARM_VMS=("d1" "d5")
+ARM_VMS=("gizzi" "auditdev")
 
 deploy_to_arm_vm() {
     local vm="$1"

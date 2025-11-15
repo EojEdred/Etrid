@@ -1,19 +1,19 @@
 [package]
-name = "sc-consensus-asf"
+name = "sc-consensus-asf-pbc"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ëtrid Foundation"]
-description = "ASF consensus service for Substrate client"
+description = "ASF consensus service for Substrate client - PBC variant"
 license = "Apache-2.0"
 
 [dependencies]
 # Ëtrid primitives
-sp-consensus-asf = { path = "../../primitives/consensus-asf", default-features = false }
+sp-consensus-asf-pbc = { path = "../../primitives/consensus-asf", default-features = false }
 
 # Ëtrid consensus
-pallet-consensus = { path = "../../pallet", default-features = false }
-asf-algorithm = { path = "../../asf-algorithm", default-features = false }
-block-production = { path = "../../block-production", default-features = false }
+pallet-consensus-pbc = { path = "../../pallet", default-features = false }
+asf-algorithm-pbc = { path = "../../asf-algorithm", default-features = false }
+block-production-pbc = { path = "../../block-production", default-features = false }
 
 # Substrate primitives
 sp-api = { workspace = true }
@@ -54,10 +54,10 @@ derive_more = { version = "1.0", features = ["full"] }
 [features]
 default = ["std"]
 std = [
-    "sp-consensus-asf/std",
-    "pallet-consensus/std",
-    "asf-algorithm/std",
-    "block-production/std",
+    "sp-consensus-asf-pbc/std",
+    "pallet-consensus-pbc/std",
+    "asf-algorithm-pbc/std",
+    "block-production-pbc/std",
     "sp-api/std",
     "sp-runtime/std",
     "sp-core/std",

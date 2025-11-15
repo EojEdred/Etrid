@@ -2,7 +2,8 @@
 //!
 //! Core types for AI Decentralized Identity
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::{BoundedVec, pallet_prelude::ConstU32};
 use scale_info::TypeInfo;
 use sp_std::prelude::*;
 
@@ -10,18 +11,26 @@ use sp_std::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// AI DID identifier
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct AIDid {
     pub ai_type: AIType,
-    pub identifier: Vec<u8>,
+    pub identifier: BoundedVec<u8, ConstU32<128>>,
 }
 
 impl AIDid {
     pub fn new(ai_type: AIType, identifier: String) -> Self {
+        let bytes = identifier.into_bytes();
+        let bounded_identifier = BoundedVec::try_from(bytes.clone())
+            .unwrap_or_else(|_| {
+                // Truncate if too long
+                BoundedVec::try_from(bytes.into_iter().take(128).collect::<Vec<u8>>())
+                    .expect("128 bytes should fit in BoundedVec<u8, ConstU32<128>>")
+            });
+
         Self {
             ai_type,
-            identifier: identifier.into_bytes(),
+            identifier: bounded_identifier,
         }
     }
 
@@ -54,7 +63,7 @@ impl AIDid {
 }
 
 /// AI Type Classification
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum AIType {
     /// Large Language Model
@@ -97,7 +106,7 @@ impl AIType {
 }
 
 /// AI Task Categories
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Task {
     TextGeneration,
@@ -119,17 +128,17 @@ pub enum Task {
 }
 
 /// AI Capabilities
-#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Capabilities {
     /// Tasks this AI can perform
-    pub tasks: Vec<Task>,
+    pub tasks: BoundedVec<Task, ConstU32<16>>,
     /// Supported input modalities
-    pub input_modalities: Vec<Modality>,
+    pub input_modalities: BoundedVec<Modality, ConstU32<6>>,
     /// Supported output modalities
-    pub output_modalities: Vec<Modality>,
+    pub output_modalities: BoundedVec<Modality, ConstU32<6>>,
     /// Supported languages (ISO 639-1 codes)
-    pub languages: Vec<Vec<u8>>,
+    pub languages: BoundedVec<BoundedVec<u8, ConstU32<8>>, ConstU32<32>>,
     /// Maximum context window (tokens)
     pub max_context: Option<u64>,
     /// Maximum output tokens
@@ -151,7 +160,7 @@ impl Capabilities {
 }
 
 /// Input/Output Modality
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Modality {
     Text,
@@ -163,11 +172,11 @@ pub enum Modality {
 }
 
 /// AI Restrictions
-#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Restrictions {
     /// Tasks this AI cannot perform
-    pub prohibited_tasks: Vec<Task>,
+    pub prohibited_tasks: BoundedVec<Task, ConstU32<16>>,
     /// Content filtering enabled
     pub content_filtering: bool,
     /// Requires human oversight
@@ -181,45 +190,45 @@ pub struct Restrictions {
 }
 
 /// Model Attestation
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ModelAttestation {
     /// Model hash (SHA-256 of weights)
     pub model_hash: [u8; 32],
     /// Training data hash (IPFS CID)
-    pub training_data_hash: Vec<u8>,
+    pub training_data_hash: BoundedVec<u8, ConstU32<128>>,
     /// Model version
-    pub version: Vec<u8>,
+    pub version: BoundedVec<u8, ConstU32<32>>,
     /// Training timestamp (UNIX)
     pub training_date: u64,
     /// Reproducible build
     pub reproducible: bool,
     /// Benchmark scores
-    pub benchmarks: Vec<Benchmark>,
+    pub benchmarks: BoundedVec<Benchmark, ConstU32<16>>,
 }
 
 /// Benchmark Result
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Benchmark {
     /// Benchmark name (e.g., "MMLU", "HumanEval")
-    pub name: Vec<u8>,
+    pub name: BoundedVec<u8, ConstU32<64>>,
     /// Score (0-10000 representing 0.00% - 100.00%)
     pub score: u32,
 }
 
 /// AI Profile - Complete metadata for an AI entity
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct AIProfile {
     /// AI type
     pub ai_type: AIType,
     /// Model version
-    pub version: Vec<u8>,
+    pub version: BoundedVec<u8, ConstU32<32>>,
     /// Model architecture description
-    pub architecture: Vec<u8>,
+    pub architecture: BoundedVec<u8, ConstU32<256>>,
     /// Number of parameters (as string for very large numbers)
-    pub parameters: Vec<u8>,
+    pub parameters: BoundedVec<u8, ConstU32<32>>,
     /// Capabilities
     pub capabilities: Capabilities,
     /// Restrictions
@@ -229,11 +238,11 @@ pub struct AIProfile {
 }
 
 /// Safety Profile
-#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SafetyProfile {
     /// Alignment method (e.g., "RLHF", "Constitutional AI")
-    pub alignment_method: Vec<u8>,
+    pub alignment_method: BoundedVec<u8, ConstU32<64>>,
     /// Content filtering enabled
     pub content_filtering: bool,
     /// Bias evaluation performed
@@ -243,19 +252,19 @@ pub struct SafetyProfile {
 }
 
 /// Authorization Permission
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Permission {
     /// Action this AI is allowed to perform
-    pub action: Vec<u8>,
+    pub action: BoundedVec<u8, ConstU32<64>>,
     /// Resource this applies to
-    pub resource: Vec<u8>,
+    pub resource: BoundedVec<u8, ConstU32<128>>,
     /// Conditions that must be met
-    pub conditions: Vec<Vec<u8>>,
+    pub conditions: BoundedVec<BoundedVec<u8, ConstU32<128>>, ConstU32<8>>,
 }
 
 /// Reputation Score
-#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Reputation {
     /// Overall score (0-10000 representing 0.00 - 100.00)
@@ -313,7 +322,7 @@ impl Reputation {
 }
 
 /// Pricing Model
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct PricingModel {
     /// Cost per input token (in smallest unit of EDSC)
@@ -326,7 +335,7 @@ pub struct PricingModel {
     pub billing_method: BillingMethod,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum BillingMethod {
     PerToken,

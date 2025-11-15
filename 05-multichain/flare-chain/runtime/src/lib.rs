@@ -79,7 +79,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("etrid"),
     impl_name: create_runtime_str!("etrid"),
     authoring_version: 1,
-    spec_version: 104,
+    spec_version: 105,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -1474,6 +1474,9 @@ impl_runtime_apis! {
                     "flarechain_mainnet_restart_final" => {
                         Some(include_bytes!("../presets/flarechain_mainnet_restart_final.json").to_vec())
                     },
+                    "flarechain_mainnet_asf" => {
+                        Some(include_bytes!("../presets/flarechain_mainnet_asf.json").to_vec())
+                    },
                     _ => None,
                 }
             })
@@ -1486,7 +1489,9 @@ impl_runtime_apis! {
                 "ember_testnet".into(),
                 "test_2validator".into(),
                 "flarechain_mainnet".into(),
+                "flarechain_mainnet_asf".into(),
                 "flarechain_mainnet_restart_final".into(),
+                "flarechain_mainnet_session_fixed".into(),
             ]
         }
     }
