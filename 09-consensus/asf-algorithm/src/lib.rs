@@ -16,7 +16,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
@@ -27,6 +27,9 @@ pub mod votes;
 pub mod finality;
 pub mod safety;
 pub mod ppfa;
+pub mod crypto;
+pub mod slashing;
+pub mod network;
 
 pub use hotstuff::*;
 pub use certificates::*;
@@ -34,6 +37,9 @@ pub use votes::*;
 pub use finality::*;
 pub use safety::*;
 pub use ppfa::*;
+pub use crypto::*;
+pub use slashing::*;
+pub use network::*;
 
 /// Re-export core types
 pub use sp_core::crypto::AccountId32;
@@ -55,6 +61,7 @@ pub type Certificate = ValidityCertificate;
     Encode,
     Decode,
     TypeInfo,
+    MaxEncodedLen,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -112,6 +119,7 @@ impl ConsensusPhase {
     Encode,
     Decode,
     TypeInfo,
+    MaxEncodedLen,
     serde::Serialize,
     serde::Deserialize,
 )]
