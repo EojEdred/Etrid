@@ -1,4 +1,13 @@
 {
+  "name": "Ëtrid FlareChain Mainnet",
+  "id": "flarechain_mainnet",
+  "chainType": "Live",
+  "properties": {
+    "tokenSymbol": "ETR",
+    "tokenDecimals": 18,
+    "ss58Format": 42
+  },
+  "protocolId": "flarechain",
   "balances": {
     "balances": [
       [
