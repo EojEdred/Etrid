@@ -33,6 +33,7 @@ use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
 use crate::{
+    crypto::{sign_seal, verify_seal_signature, SignData, Signature},
     AsfError, AsfResult, Balance, BlockNumber, Hash, ValidatorId,
 };
 
@@ -64,13 +65,42 @@ pub struct PpfaSeal {
     /// Block hash being sealed
     pub block_hash: Hash,
 
-    /// Validator signature over seal data
-    pub signature: [u8; 64],
+    /// Cryptographic signature by the PPFA leader proving authority
+    /// SECURITY: This MUST be a valid signature over the seal data
+    pub signature: Signature,
 }
 
 impl PpfaSeal {
-    /// Create a new PPFA seal
+    /// Create a new PPFA seal with signature
+    ///
+    /// SECURITY: Signature MUST be cryptographically valid for the seal data
     pub fn new(
+        slot: u64,
+        ppfa_index: u32,
+        validator: ValidatorId,
+        stake_weight: Balance,
+        epoch: u32,
+        block_number: BlockNumber,
+        block_hash: Hash,
+        signature: Signature,
+    ) -> Self {
+        Self {
+            slot,
+            ppfa_index,
+            validator,
+            stake_weight,
+            epoch,
+            block_number,
+            block_hash,
+            signature,
+        }
+    }
+
+    /// Create a new PPFA seal with a dummy signature for testing
+    ///
+    /// WARNING: FOR TESTING ONLY - DO NOT USE IN PRODUCTION
+    
+    pub fn new_unsigned(
         slot: u64,
         ppfa_index: u32,
         validator: ValidatorId,
@@ -87,41 +117,30 @@ impl PpfaSeal {
             epoch,
             block_number,
             block_hash,
-            signature: [0u8; 64], // Placeholder - should be real signature
+            signature: Signature::default(),
         }
     }
 
-    /// Sign this seal with validator key
-    pub fn sign(&mut self, _signature: [u8; 64]) {
-        // In production, this would sign the seal data
-        // For now, we use a placeholder
-        self.signature = _signature;
+    /// Update signature (use sparingly - normally sign during creation)
+    pub fn set_signature(&mut self, signature: Signature) {
+        self.signature = signature;
     }
 
-    /// Get the seal data to be signed
-    pub fn seal_data(&self) -> Vec<u8> {
-        let mut data = Vec::new();
-        data.extend_from_slice(&self.slot.to_le_bytes());
-        data.extend_from_slice(&self.ppfa_index.to_le_bytes());
-        data.extend_from_slice(self.validator.as_ref());
-        data.extend_from_slice(&self.stake_weight.to_le_bytes());
-        data.extend_from_slice(&self.epoch.to_le_bytes());
-        data.extend_from_slice(&self.block_number.to_le_bytes());
-        data.extend_from_slice(self.block_hash.as_ref());
-        data
-    }
-
-    /// Verify the seal signature
+    /// Verify the cryptographic signature on this seal
+    ///
+    /// SECURITY: This performs full cryptographic verification of the seal signature.
+    /// Rejects seals with invalid or missing signatures.
     pub fn verify_signature(&self) -> AsfResult<()> {
-        // In production, this would verify the signature using the validator's public key
-        // For now, we do a basic check
-        if self.signature == [0u8; 64] {
-            // Allow zero signatures for testing
-            return Ok(());
-        }
-
-        // TODO: Implement real signature verification
-        Ok(())
+        // PRODUCTION: Real cryptographic verification
+        verify_seal_signature(
+            &self.signature,
+            self.slot,
+            self.ppfa_index,
+            self.block_number,
+            self.block_hash,
+            self.epoch,
+            &self.validator,
+        )
     }
 
     /// Calculate voting weight for this validator
@@ -354,7 +373,58 @@ impl PpfaSealingEngine {
     }
 
     /// Create a seal for the current validator
+    ///
+    /// SECURITY: Requires a valid keypair to sign the seal.
+    /// In production, this should come from the validator's keystore.
     pub fn create_seal(
+        &self,
+        validator: ValidatorId,
+        block_number: BlockNumber,
+        block_hash: Hash,
+        keypair: &impl SignData,
+    ) -> AsfResult<PpfaSeal> {
+        // Get validator's committee info
+        let member = self
+            .verifier
+            .committee()
+            .get_member(&validator)
+            .ok_or(AsfError::InvalidVote("Validator not in committee"))?;
+
+        // Verify validator should propose in current slot
+        if !self.verifier.should_propose(&validator, self.current_slot) {
+            return Err(AsfError::InvalidVote("Not validator's turn to propose"));
+        }
+
+        // Sign the seal data
+        let signature = sign_seal(
+            keypair,
+            self.current_slot,
+            member.index,
+            block_number,
+            block_hash,
+            self.verifier.committee().epoch(),
+        );
+
+        // Create seal with real signature
+        let seal = PpfaSeal::new(
+            self.current_slot,
+            member.index,
+            validator,
+            member.stake,
+            self.verifier.committee().epoch(),
+            block_number,
+            block_hash,
+            signature,
+        );
+
+        Ok(seal)
+    }
+
+    /// Create a seal with a dummy signature for testing
+    ///
+    /// WARNING: FOR TESTING ONLY - DO NOT USE IN PRODUCTION
+    
+    pub fn create_seal_unsigned(
         &self,
         validator: ValidatorId,
         block_number: BlockNumber,
@@ -372,8 +442,8 @@ impl PpfaSealingEngine {
             return Err(AsfError::InvalidVote("Not validator's turn to propose"));
         }
 
-        // Create seal
-        let seal = PpfaSeal::new(
+        // Create seal with dummy signature
+        let seal = PpfaSeal::new_unsigned(
             self.current_slot,
             member.index,
             validator,
@@ -498,10 +568,10 @@ impl FinalizedBlock {
     }
 }
 
-#[cfg(test)]
+
 mod tests {
     use super::*;
-    use sp_core::crypto::AccountId32;
+    use sp_core::{crypto::AccountId32, Pair as _};
 
     fn create_test_validator(id: u8) -> ValidatorId {
         let mut account_bytes = [0u8; 32];
@@ -517,36 +587,80 @@ mod tests {
         PpfaCommittee::new(members, 1)
     }
 
+    /// Create a test seal with real cryptographic signature
+    fn create_test_seal(
+        slot: u64,
+        ppfa_index: u32,
+        stake_weight: Balance,
+        epoch: u32,
+        block_number: BlockNumber,
+        block_hash: Hash,
+    ) -> (PpfaSeal, sp_core::sr25519::Pair) {
+        use sp_core::sr25519;
+
+        // Generate a keypair for this validator
+        let (pair, _) = sr25519::Pair::generate();
+        let validator = ValidatorId::from(pair.public().0);
+
+        // Sign the seal
+        let signature = sign_seal(
+            &pair,
+            slot,
+            ppfa_index,
+            block_number,
+            block_hash,
+            epoch,
+        );
+
+        let seal = PpfaSeal::new(
+            slot,
+            ppfa_index,
+            validator,
+            stake_weight,
+            epoch,
+            block_number,
+            block_hash,
+            signature,
+        );
+
+        (seal, pair)
+    }
+
+    /// Create a test committee with real keypairs
+    fn create_test_committee_with_keys(
+        size: u32,
+        stake_per_validator: Balance,
+    ) -> (PpfaCommittee, Vec<sp_core::sr25519::Pair>) {
+        use sp_core::sr25519;
+
+        let mut members = Vec::new();
+        let mut pairs = Vec::new();
+
+        for i in 0..size {
+            let (pair, _) = sr25519::Pair::generate();
+            let validator = ValidatorId::from(pair.public().0);
+            members.push(PpfaMember::new(validator, stake_per_validator, i));
+            pairs.push(pair);
+        }
+
+        (PpfaCommittee::new(members, 1), pairs)
+    }
+
     #[test]
     fn test_ppfa_seal_creation() {
-        let validator = create_test_validator(1);
-        let seal = PpfaSeal::new(
-            100,
-            5,
-            validator,
-            10_000,
-            1,
-            50,
-            Hash::default(),
-        );
+        let (seal, _pair) = create_test_seal(100, 5, 10_000, 1, 50, Hash::default());
 
         assert_eq!(seal.slot, 100);
         assert_eq!(seal.ppfa_index, 5);
         assert_eq!(seal.stake_weight, 10_000);
+
+        // Verify the signature is valid
+        assert!(seal.verify_signature().is_ok());
     }
 
     #[test]
     fn test_voting_weight_calculation() {
-        let validator = create_test_validator(1);
-        let seal = PpfaSeal::new(
-            100,
-            0,
-            validator,
-            10_000,
-            1,
-            50,
-            Hash::default(),
-        );
+        let (seal, _pair) = create_test_seal(100, 0, 10_000, 1, 50, Hash::default());
 
         // Validator has 10k out of 100k total stake = 10%
         // Weight = (10_000 / 100_000) * 1_000_000 = 100_000
@@ -586,20 +700,17 @@ mod tests {
 
     #[test]
     fn test_seal_verification() {
-        let committee = create_test_committee(21, 1000);
-        let verifier = PpfaSealVerifier::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let verifier = PpfaSealVerifier::new(committee.clone());
 
-        // Create seal for validator at index 0, slot 0
-        let validator = create_test_validator(0);
-        let seal = PpfaSeal::new(
-            0,
-            0,
-            validator,
-            1000,
-            1,
-            1,
-            Hash::default(),
-        );
+        // Get validator at index 0
+        let member = committee.get_member_by_index(0).unwrap();
+        let validator = member.validator.clone();
+        let pair = &pairs[0];
+
+        // Create seal with real signature
+        let signature = sign_seal(pair, 0, 0, 1, Hash::default(), 1);
+        let seal = PpfaSeal::new(0, 0, validator, 1000, 1, 1, Hash::default(), signature);
 
         // Should verify successfully
         assert!(verifier.verify_seal(&seal).is_ok());
@@ -607,31 +718,34 @@ mod tests {
 
     #[test]
     fn test_seal_verification_wrong_slot() {
-        let committee = create_test_committee(21, 1000);
-        let verifier = PpfaSealVerifier::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let verifier = PpfaSealVerifier::new(committee.clone());
 
-        // Create seal for validator 0 but at slot 5 (wrong validator)
-        let validator = create_test_validator(0);
-        let seal = PpfaSeal::new(
-            5, // Slot 5 should be validator 5
-            0,
-            validator,
-            1000,
-            1,
-            1,
-            Hash::default(),
-        );
+        // Get validator at index 0
+        let member = committee.get_member_by_index(0).unwrap();
+        let validator = member.validator.clone();
+        let pair = &pairs[0];
 
-        // Should fail verification
+        // Create seal for validator 0 but at slot 5 (wrong validator - slot 5 should be validator 5)
+        let signature = sign_seal(pair, 5, 0, 1, Hash::default(), 1);
+        let seal = PpfaSeal::new(5, 0, validator, 1000, 1, 1, Hash::default(), signature);
+
+        // Should fail verification (wrong validator for slot)
         assert!(verifier.verify_seal(&seal).is_err());
     }
 
     #[test]
     fn test_seal_verification_wrong_stake() {
-        let committee = create_test_committee(21, 1000);
-        let verifier = PpfaSealVerifier::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let verifier = PpfaSealVerifier::new(committee.clone());
 
-        let validator = create_test_validator(0);
+        // Get validator at index 0
+        let member = committee.get_member_by_index(0).unwrap();
+        let validator = member.validator.clone();
+        let pair = &pairs[0];
+
+        // Create seal with wrong stake weight
+        let signature = sign_seal(pair, 0, 0, 1, Hash::default(), 1);
         let seal = PpfaSeal::new(
             0,
             0,
@@ -640,6 +754,7 @@ mod tests {
             1,
             1,
             Hash::default(),
+            signature,
         );
 
         assert!(verifier.verify_seal(&seal).is_err());
@@ -647,11 +762,14 @@ mod tests {
 
     #[test]
     fn test_should_propose() {
-        let committee = create_test_committee(21, 1000);
-        let verifier = PpfaSealVerifier::new(committee);
+        let (committee, _pairs) = create_test_committee_with_keys(21, 1000);
+        let verifier = PpfaSealVerifier::new(committee.clone());
 
-        let validator0 = create_test_validator(0);
-        let validator5 = create_test_validator(5);
+        let member0 = committee.get_member_by_index(0).unwrap();
+        let validator0 = member0.validator.clone();
+
+        let member5 = committee.get_member_by_index(5).unwrap();
+        let validator5 = member5.validator.clone();
 
         // Validator 0 should propose at slot 0
         assert!(verifier.should_propose(&validator0, 0));
@@ -664,38 +782,50 @@ mod tests {
 
     #[test]
     fn test_sealing_engine_create_seal() {
-        let committee = create_test_committee(21, 1000);
-        let engine = PpfaSealingEngine::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let engine = PpfaSealingEngine::new(committee.clone());
 
-        let validator0 = create_test_validator(0);
-        let seal = engine.create_seal(validator0, 1, Hash::default());
+        let member0 = committee.get_member_by_index(0).unwrap();
+        let validator0 = member0.validator.clone();
+        let pair0 = &pairs[0];
+
+        let seal = engine.create_seal(validator0, 1, Hash::default(), pair0);
 
         assert!(seal.is_ok());
         let seal = seal.unwrap();
         assert_eq!(seal.ppfa_index, 0);
         assert_eq!(seal.slot, 0);
+
+        // Verify signature is valid
+        assert!(seal.verify_signature().is_ok());
     }
 
     #[test]
     fn test_sealing_engine_wrong_validator() {
-        let committee = create_test_committee(21, 1000);
-        let engine = PpfaSealingEngine::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let engine = PpfaSealingEngine::new(committee.clone());
 
         // Validator 5 shouldn't propose at slot 0
-        let validator5 = create_test_validator(5);
-        let seal = engine.create_seal(validator5, 1, Hash::default());
+        let member5 = committee.get_member_by_index(5).unwrap();
+        let validator5 = member5.validator.clone();
+        let pair5 = &pairs[5];
+
+        let seal = engine.create_seal(validator5, 1, Hash::default(), pair5);
 
         assert!(seal.is_err());
     }
 
     #[test]
     fn test_finalize_block() {
-        let committee = create_test_committee(21, 1000);
-        let mut engine = PpfaSealingEngine::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let mut engine = PpfaSealingEngine::new(committee.clone());
 
-        let validator0 = create_test_validator(0);
+        let member0 = committee.get_member_by_index(0).unwrap();
+        let validator0 = member0.validator.clone();
+        let pair0 = &pairs[0];
+
         let block_hash = Hash::default();
-        let seal = engine.create_seal(validator0.clone(), 1, block_hash).unwrap();
+        let seal = engine.create_seal(validator0.clone(), 1, block_hash, pair0).unwrap();
 
         let finalized = engine.finalize_block(seal, block_hash, 1);
 
@@ -707,12 +837,15 @@ mod tests {
 
     #[test]
     fn test_finalize_block_hash_mismatch() {
-        let committee = create_test_committee(21, 1000);
-        let mut engine = PpfaSealingEngine::new(committee);
+        let (committee, pairs) = create_test_committee_with_keys(21, 1000);
+        let mut engine = PpfaSealingEngine::new(committee.clone());
 
-        let validator0 = create_test_validator(0);
+        let member0 = committee.get_member_by_index(0).unwrap();
+        let validator0 = member0.validator.clone();
+        let pair0 = &pairs[0];
+
         let block_hash = Hash::default();
-        let seal = engine.create_seal(validator0, 1, block_hash).unwrap();
+        let seal = engine.create_seal(validator0, 1, block_hash, pair0).unwrap();
 
         // Try to finalize with different hash
         let mut wrong_hash_bytes = [0u8; 32];
@@ -739,9 +872,11 @@ mod tests {
 
     #[test]
     fn test_block_production_tracking() {
-        let mut committee = create_test_committee(21, 1000);
+        let (mut committee, _pairs) = create_test_committee_with_keys(21, 1000);
 
-        let validator0 = create_test_validator(0);
+        let member0 = committee.get_member_by_index(0).unwrap();
+        let validator0 = member0.validator.clone();
+
         let member = committee.get_member(&validator0).unwrap();
         assert_eq!(member.blocks_produced, 0);
 
@@ -752,28 +887,71 @@ mod tests {
 
     #[test]
     fn test_committee_with_varying_stakes() {
+        use sp_core::sr25519;
+
+        let (pair0, _) = sr25519::Pair::generate();
+        let (pair1, _) = sr25519::Pair::generate();
+        let (pair2, _) = sr25519::Pair::generate();
+
+        let validator0 = ValidatorId::from(pair0.public().0);
+        let validator1 = ValidatorId::from(pair1.public().0);
+        let validator2 = ValidatorId::from(pair2.public().0);
+
         let members = vec![
-            PpfaMember::new(create_test_validator(0), 10_000, 0),
-            PpfaMember::new(create_test_validator(1), 20_000, 1),
-            PpfaMember::new(create_test_validator(2), 5_000, 2),
+            PpfaMember::new(validator0, 10_000, 0),
+            PpfaMember::new(validator1.clone(), 20_000, 1),
+            PpfaMember::new(validator2, 5_000, 2),
         ];
 
         let committee = PpfaCommittee::new(members, 1);
         assert_eq!(committee.total_stake(), 35_000);
 
         // Validator 1 has highest stake, should have proportional weight
-        let seal1 = PpfaSeal::new(
-            1,
-            1,
-            create_test_validator(1),
-            20_000,
-            1,
-            1,
-            Hash::default(),
-        );
+        let signature = sign_seal(&pair1, 1, 1, 1, Hash::default(), 1);
+        let seal1 = PpfaSeal::new(1, 1, validator1, 20_000, 1, 1, Hash::default(), signature);
 
         let weight = seal1.voting_weight(35_000);
         // (20_000 / 35_000) * 1_000_000 ≈ 571_428
         assert!(weight > 571_000 && weight < 572_000);
+
+        // Verify signature is valid
+        assert!(seal1.verify_signature().is_ok());
+    }
+
+    #[test]
+    fn test_seal_rejects_invalid_signature() {
+        use sp_core::sr25519;
+
+        let (pair1, _) = sr25519::Pair::generate();
+        let (pair2, _) = sr25519::Pair::generate();
+
+        let _validator1 = ValidatorId::from(pair1.public().0);
+
+        // Sign with pair1 but claim it's from validator derived from pair2
+        let wrong_validator = ValidatorId::from(pair2.public().0);
+        let signature = sign_seal(&pair1, 1, 1, 1, Hash::default(), 1);
+
+        // Create seal with mismatched signature
+        let seal = PpfaSeal::new(1, 1, wrong_validator, 20_000, 1, 1, Hash::default(), signature);
+
+        // Should fail signature verification
+        assert!(seal.verify_signature().is_err());
+    }
+
+    #[test]
+    fn test_seal_rejects_tampered_data() {
+        use sp_core::sr25519;
+
+        let (pair, _) = sr25519::Pair::generate();
+        let validator = ValidatorId::from(pair.public().0);
+
+        // Sign with slot 1
+        let signature = sign_seal(&pair, 1, 1, 1, Hash::default(), 1);
+
+        // Create seal with slot 2 (tampered) but signature for slot 1
+        let seal = PpfaSeal::new(2, 1, validator, 20_000, 1, 1, Hash::default(), signature);
+
+        // Should fail signature verification (data was tampered)
+        assert!(seal.verify_signature().is_err());
     }
 }

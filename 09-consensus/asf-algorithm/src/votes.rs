@@ -8,6 +8,7 @@ use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
 use crate::{
+    crypto::{verify_vote_signature, Signature},
     AsfError, AsfResult, Balance, BlockNumber, ConsensusPhase, Hash, ValidatorId,
 };
 
@@ -38,13 +39,16 @@ pub struct Vote {
     
     /// Timestamp (Unix milliseconds)
     pub timestamp: u64,
-    
-    /// Signature (placeholder - in production this would be a real signature)
-    pub signature: [u8; 64],
+
+    /// Cryptographic signature from the validator (REQUIRED for security)
+    pub signature: Signature,
 }
 
 impl Vote {
-    /// Create a new vote
+    /// Create a new vote with cryptographic signature (PRODUCTION)
+    ///
+    /// # Security
+    /// This is the ONLY way to create a valid vote. All votes MUST be signed.
     pub fn new(
         block_hash: Hash,
         block_number: BlockNumber,
@@ -53,6 +57,7 @@ impl Vote {
         stake_weight: Balance,
         epoch: u32,
         timestamp: u64,
+        signature: Signature,
     ) -> Self {
         Self {
             block_hash,
@@ -62,11 +67,48 @@ impl Vote {
             stake_weight,
             epoch,
             timestamp,
-            signature: [0u8; 64], // Placeholder
+            signature,
         }
     }
 
-    /// Validate this vote
+    /// Create an unsigned vote for testing purposes ONLY
+    ///
+    /// # Warning
+    /// This function is only available in test builds and creates an INVALID vote
+    /// that will FAIL validation. Only use this for unit testing infrastructure.
+    #[cfg(test)]
+    pub fn new_unsigned(
+        block_hash: Hash,
+        block_number: BlockNumber,
+        phase: ConsensusPhase,
+        validator: ValidatorId,
+        stake_weight: Balance,
+        epoch: u32,
+        timestamp: u64,
+    ) -> Self {
+        use crate::crypto::Signature;
+        // Create a dummy signature for testing
+        Self {
+            block_hash,
+            block_number,
+            phase,
+            validator,
+            stake_weight,
+            epoch,
+            timestamp,
+            signature: Signature::from_sr25519_bytes([0u8; 64]),
+        }
+    }
+
+    /// Validate this vote with FULL cryptographic signature verification
+    ///
+    /// # Security
+    /// This function performs THREE critical security checks:
+    /// 1. Epoch validation (prevents future votes)
+    /// 2. Stake validation (prevents zero-stake attacks)
+    /// 3. Cryptographic signature verification (prevents forgery)
+    ///
+    /// ALL three checks MUST pass for a vote to be valid.
     pub fn validate(&self, current_epoch: u32) -> AsfResult<()> {
         // Check epoch is not in the future
         if self.epoch > current_epoch {
@@ -78,9 +120,34 @@ impl Vote {
             return Err(AsfError::InvalidVote("Zero stake weight"));
         }
 
-        // In production, verify signature here
-        // For now, we skip signature verification
+        // CRITICAL SECURITY: Verify cryptographic signature
+        // This ensures the vote actually came from the claimed validator
+        verify_vote_signature(
+            &self.signature,
+            self.block_hash,
+            self.block_number,
+            self.phase as u8,
+            self.epoch,
+            self.timestamp,
+            &self.validator,
+        )?;
 
+        Ok(())
+    }
+
+    /// Validate vote WITHOUT signature check (TESTING ONLY)
+    ///
+    /// # Warning
+    /// This function SKIPS cryptographic verification and should NEVER be used
+    /// in production code. It exists solely for unit testing infrastructure.
+    #[cfg(test)]
+    pub fn validate_unsigned(&self, current_epoch: u32) -> AsfResult<()> {
+        if self.epoch > current_epoch {
+            return Err(AsfError::InvalidVote("Vote from future epoch"));
+        }
+        if self.stake_weight == 0 {
+            return Err(AsfError::InvalidVote("Zero stake weight"));
+        }
         Ok(())
     }
 
@@ -235,12 +302,51 @@ impl VoteAggregate {
 mod tests {
     use super::*;
     use sp_core::crypto::AccountId32;
+    use sp_core::Pair as _;
+    use crate::crypto::{sign_vote, SignData};
 
+    /// Helper to create a properly signed test vote
     fn create_test_vote(validator_id: u8, stake: Balance) -> Vote {
+        use sp_core::sr25519;
+
+        // Generate a deterministic keypair for testing
+        let seed = [validator_id; 32];
+        let pair = sr25519::Pair::from_seed(&seed);
+
+        let block_hash = Hash::default();
+        let block_number = 1;
+        let phase = ConsensusPhase::Prepare;
+        let epoch = 1;
+        let timestamp = 1000;
+
+        // Sign the vote
+        let signature = sign_vote(
+            &pair,
+            block_hash,
+            block_number,
+            phase as u8,
+            epoch,
+            timestamp,
+        );
+
+        Vote::new(
+            block_hash,
+            block_number,
+            phase,
+            ValidatorId::from(pair.public().0),
+            stake,
+            epoch,
+            timestamp,
+            signature,
+        )
+    }
+
+    /// Helper to create an unsigned test vote (will fail validation)
+    fn create_test_vote_unsigned(validator_id: u8, stake: Balance) -> Vote {
         let mut account_bytes = [0u8; 32];
         account_bytes[0] = validator_id;
-        
-        Vote::new(
+
+        Vote::new_unsigned(
             Hash::default(),
             1,
             ConsensusPhase::Prepare,
@@ -260,10 +366,53 @@ mod tests {
     }
 
     #[test]
-    fn test_vote_validation() {
+    fn test_vote_validation_with_signature() {
         let vote = create_test_vote(1, 1000);
+        // Should pass full validation with correct signature
         assert!(vote.validate(1).is_ok());
-        assert!(vote.validate(0).is_err()); // Future epoch
+        // Should fail with future epoch
+        assert!(vote.validate(0).is_err());
+    }
+
+    #[test]
+    fn test_vote_validation_unsigned() {
+        let vote = create_test_vote_unsigned(1, 1000);
+        // Unsigned validation should work
+        assert!(vote.validate_unsigned(1).is_ok());
+        assert!(vote.validate_unsigned(0).is_err()); // Future epoch
+    }
+
+    #[test]
+    fn test_vote_signature_verification() {
+        use sp_core::sr25519;
+
+        // Create vote with valid signature
+        let valid_vote = create_test_vote(1, 1000);
+        assert!(valid_vote.validate(1).is_ok());
+
+        // Create vote with WRONG signature (from different validator)
+        let seed1 = [1u8; 32];
+        let seed2 = [2u8; 32];
+        let pair1 = sr25519::Pair::from_seed(&seed1);
+        let pair2 = sr25519::Pair::from_seed(&seed2);
+
+        let block_hash = Hash::default();
+        let signature_from_validator1 = sign_vote(&pair1, block_hash, 1, 0, 1, 1000);
+
+        // Try to use validator1's signature with validator2's ID
+        let invalid_vote = Vote::new(
+            block_hash,
+            1,
+            ConsensusPhase::Prepare,
+            ValidatorId::from(pair2.public().0), // Wrong validator!
+            1000,
+            1,
+            1000,
+            signature_from_validator1,
+        );
+
+        // This should FAIL validation because signature doesn't match validator
+        assert!(invalid_vote.validate(1).is_err());
     }
 
     #[test]
@@ -292,9 +441,10 @@ mod tests {
             let vote = create_test_vote(i, 1000);
             collection.add_vote(vote).unwrap();
         }
-        
+
         assert!(collection.meets_threshold(21));
-        assert!(!collection.meets_threshold(22)); // Would need 16 votes
+        assert!(collection.meets_threshold(22)); // 22 * 2/3 + 1 = 15, so 15 votes meets threshold
+        assert!(!collection.meets_threshold(23)); // 23 * 2/3 + 1 = 16, so would need 16 votes
     }
 
     #[test]

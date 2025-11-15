@@ -10,8 +10,9 @@ use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use crate::{
+    safety::{ByzantineDetector, SafetyChecker, SuspicionReason},
     AsfError, AsfResult, Balance, BlockNumber, CertificateCollection, CertificateGenerator,
-    ConsensusPhase, FinalityLevel, Hash, ValidityCertificate, Vote,
+    ConsensusPhase, FinalityLevel, Hash, ValidatorId, ValidityCertificate, Vote,
     VoteCollection,
 };
 
@@ -62,13 +63,23 @@ impl HotStuffState {
         }
     }
 
-    /// Get votes for the current phase
+    /// Get votes for the current phase (mutable)
     pub fn current_votes(&mut self) -> &mut VoteCollection {
         match self.current_phase {
             ConsensusPhase::Prepare => &mut self.prepare_votes,
             ConsensusPhase::PreCommit => &mut self.precommit_votes,
             ConsensusPhase::Commit => &mut self.commit_votes,
             ConsensusPhase::Decide => &mut self.commit_votes, // Decide doesn't collect votes
+        }
+    }
+
+    /// Get votes for the current phase (immutable)
+    pub fn current_votes_ref(&self) -> &VoteCollection {
+        match self.current_phase {
+            ConsensusPhase::Prepare => &self.prepare_votes,
+            ConsensusPhase::PreCommit => &self.precommit_votes,
+            ConsensusPhase::Commit => &self.commit_votes,
+            ConsensusPhase::Decide => &self.commit_votes, // Decide doesn't collect votes
         }
     }
 
@@ -107,18 +118,24 @@ impl HotStuffState {
 pub struct HotStuffEngine {
     /// States for all blocks currently in consensus
     block_states: BTreeMap<Hash, HotStuffState>,
-    
+
     /// Certificate generator
     cert_generator: CertificateGenerator,
-    
+
     /// Total validators in committee
     total_validators: u32,
-    
+
     /// Total stake in committee
     total_stake: Balance,
-    
+
     /// Current epoch
     current_epoch: u32,
+
+    /// Byzantine behavior detector
+    byzantine_detector: ByzantineDetector,
+
+    /// Safety checker for consensus rules
+    safety_checker: SafetyChecker,
 }
 
 impl HotStuffEngine {
@@ -130,6 +147,8 @@ impl HotStuffEngine {
             total_validators,
             total_stake,
             current_epoch: epoch,
+            byzantine_detector: ByzantineDetector::default(),
+            safety_checker: SafetyChecker::new(total_validators, total_stake),
         }
     }
 
@@ -151,8 +170,53 @@ impl HotStuffEngine {
 
     /// Process a vote for a block
     pub fn process_vote(&mut self, vote: Vote) -> AsfResult<Option<ValidityCertificate>> {
-        // Validate vote
+        // Validate vote (includes signature verification)
         vote.validate(self.current_epoch)?;
+
+        self.process_vote_internal(vote)
+    }
+
+    /// Process a vote without signature verification (TESTING ONLY)
+    #[cfg(test)]
+    pub fn process_vote_unsigned(&mut self, vote: Vote) -> AsfResult<Option<ValidityCertificate>> {
+        // Validate vote WITHOUT signature verification
+        vote.validate_unsigned(self.current_epoch)?;
+
+        self.process_vote_internal(vote)
+    }
+
+    /// Internal vote processing logic (shared between signed and unsigned processing)
+    fn process_vote_internal(&mut self, vote: Vote) -> AsfResult<Option<ValidityCertificate>> {
+
+        // BYZANTINE DETECTION: Check for duplicate votes (same validator voting for same block multiple times)
+        if let Some(state) = self.block_states.get(&vote.block_hash) {
+            let existing_votes = state.current_votes_ref().votes();
+            if existing_votes.iter().any(|v| v.validator == vote.validator) {
+                self.byzantine_detector.report_suspicious(
+                    vote.validator.clone(),
+                    SuspicionReason::DuplicateVote,
+                    vote.epoch,
+                    vote.timestamp,
+                );
+                return Err(AsfError::DuplicateVote);
+            }
+        }
+
+        // BYZANTINE DETECTION: Check for conflicting votes (voting for different blocks at same height)
+        for (block_hash, state) in self.block_states.iter() {
+            if *block_hash != vote.block_hash && state.block_number == vote.block_number {
+                // Check if this validator already voted for a different block at this height
+                if state.current_votes_ref().votes().iter().any(|v| v.validator == vote.validator) {
+                    self.byzantine_detector.report_suspicious(
+                        vote.validator.clone(),
+                        SuspicionReason::ConflictingVotes,
+                        vote.epoch,
+                        vote.timestamp,
+                    );
+                    return Err(AsfError::InvalidVote("Conflicting votes detected"));
+                }
+            }
+        }
 
         // Get or create state for this block
         let state = self
@@ -162,6 +226,12 @@ impl HotStuffEngine {
 
         // Ensure vote is for current phase
         if vote.phase != state.current_phase {
+            self.byzantine_detector.report_suspicious(
+                vote.validator.clone(),
+                SuspicionReason::InvalidPhase,
+                vote.epoch,
+                vote.timestamp,
+            );
             return Err(AsfError::InvalidPhaseTransition {
                 from: state.current_phase,
                 to: vote.phase,
@@ -178,6 +248,10 @@ impl HotStuffEngine {
         {
             // Generate certificate
             let all_votes = votes.votes().to_vec();
+
+            // Note: Aggregate signature is now built automatically in ValidityCertificate::from_votes
+            // via try_generate(), so we don't need to build it manually here
+
             let cert = self.cert_generator.try_generate(
                 &all_votes,
                 all_votes[0].validator.clone(), // Use first voter as issuer (simplified)
@@ -287,6 +361,31 @@ impl HotStuffEngine {
     pub fn active_count(&self) -> usize {
         self.block_states.len()
     }
+
+    /// Get list of validators suspected of Byzantine behavior
+    pub fn get_byzantine_validators(&self) -> Vec<ValidatorId> {
+        self.byzantine_detector.get_suspected()
+    }
+
+    /// Get Byzantine detector reference
+    pub fn byzantine_detector(&self) -> &ByzantineDetector {
+        &self.byzantine_detector
+    }
+
+    /// Get mutable Byzantine detector reference
+    pub fn byzantine_detector_mut(&mut self) -> &mut ByzantineDetector {
+        &mut self.byzantine_detector
+    }
+
+    /// Get safety checker reference
+    pub fn safety_checker(&self) -> &SafetyChecker {
+        &self.safety_checker
+    }
+
+    /// Get mutable safety checker reference
+    pub fn safety_checker_mut(&mut self) -> &mut SafetyChecker {
+        &mut self.safety_checker
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -326,8 +425,8 @@ mod tests {
     ) -> Vote {
         let mut account_bytes = [0u8; 32];
         account_bytes[0] = validator_id;
-        
-        Vote::new(
+
+        Vote::new_unsigned(
             block_hash,
             1,
             phase,
@@ -380,22 +479,23 @@ mod tests {
     fn test_process_votes() {
         let mut engine = HotStuffEngine::new(3, 3_000, 1);
         let block_hash = Hash::default();
-        
+
         engine.start_consensus(block_hash, 1).unwrap();
-        
+
         // Add 3 votes (meets threshold for 3 validators)
         let vote1 = create_test_vote(1, 1000, block_hash, ConsensusPhase::Prepare);
         let vote2 = create_test_vote(2, 1000, block_hash, ConsensusPhase::Prepare);
         let vote3 = create_test_vote(3, 1000, block_hash, ConsensusPhase::Prepare);
-        
-        assert!(engine.process_vote(vote1).is_ok());
-        assert!(engine.process_vote(vote2).is_ok());
-        
+
+        // Use unsigned processing for tests
+        assert!(engine.process_vote_unsigned(vote1).is_ok());
+        assert!(engine.process_vote_unsigned(vote2).is_ok());
+
         // Third vote should generate certificate
-        let result = engine.process_vote(vote3);
+        let result = engine.process_vote_unsigned(vote3);
         assert!(result.is_ok());
         assert!(result.unwrap().is_some());
-        
+
         // Should have advanced to PreCommit
         let state = engine.get_state(&block_hash).unwrap();
         assert_eq!(state.current_phase, ConsensusPhase::PreCommit);

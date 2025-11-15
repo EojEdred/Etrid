@@ -406,9 +406,10 @@ mod tests {
         let stats = tracker.stats();
         assert_eq!(stats.total, 5);
         assert_eq!(stats.none, 1); // 0 certificates
-        assert_eq!(stats.moderate, 2); // 30 and 60 certificates
-        assert_eq!(stats.strong, 1); // 90 certificates
-        assert_eq!(stats.irreversible, 1); // 120 certificates
+        assert_eq!(stats.weak, 0); // No blocks with 10-19 certificates
+        assert_eq!(stats.moderate, 1); // 30 certificates (20-49)
+        assert_eq!(stats.strong, 2); // 60 and 90 certificates (50-99)
+        assert_eq!(stats.irreversible, 1); // 120 certificates (100+)
     }
 
     #[test]

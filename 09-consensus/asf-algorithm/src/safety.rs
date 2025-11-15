@@ -10,8 +10,11 @@
 
 use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::vec::Vec;
+use codec::{Decode, Encode};
+use scale_info::TypeInfo;
 
 use crate::{
+    slashing::{ByzantineHandler, SlashingEvent},
     AsfError, AsfResult, Balance, BlockNumber, Hash, ValidatorId,
     ValidityCertificate,
 };
@@ -250,32 +253,67 @@ impl LivenessChecker {
 pub struct ByzantineDetector {
     /// Validators under suspicion
     suspicious_validators: BTreeMap<ValidatorId, SuspicionRecord>,
-    
+
     /// Threshold for marking as Byzantine
     suspicion_threshold: u32,
+
+    /// Slashing handler (optional - allows detection without slashing for testing)
+    slashing_handler: Option<ByzantineHandler>,
 }
 
 impl ByzantineDetector {
-    /// Create a new Byzantine detector
+    /// Create a new Byzantine detector without slashing (testing/monitoring only)
     pub fn new(suspicion_threshold: u32) -> Self {
         Self {
             suspicious_validators: BTreeMap::new(),
             suspicion_threshold,
+            slashing_handler: None,
         }
     }
 
-    /// Report suspicious behavior
+    /// Create a new Byzantine detector with slashing enforcement (PRODUCTION)
+    pub fn with_slashing(suspicion_threshold: u32, minimum_stake: Balance) -> Self {
+        Self {
+            suspicious_validators: BTreeMap::new(),
+            suspicion_threshold,
+            slashing_handler: Some(ByzantineHandler::new(minimum_stake)),
+        }
+    }
+
+    /// Report suspicious behavior and automatically slash if threshold reached
+    ///
+    /// # Security
+    /// When slashing is enabled, this will AUTOMATICALLY execute stake penalties
+    /// if the validator crosses the Byzantine threshold.
     pub fn report_suspicious(
         &mut self,
         validator: ValidatorId,
         reason: SuspicionReason,
-    ) {
+        epoch: u32,
+        timestamp: u64,
+    ) -> Option<SlashingEvent> {
         let record = self
             .suspicious_validators
             .entry(validator.clone())
-            .or_insert_with(|| SuspicionRecord::new(validator));
+            .or_insert_with(|| SuspicionRecord::new(validator.clone()));
 
         record.add_incident(reason);
+
+        // If threshold reached and slashing is enabled, execute punishment
+        if record.incident_count >= self.suspicion_threshold {
+            if let Some(ref mut handler) = self.slashing_handler {
+                // Execute slashing
+                match handler.handle_byzantine_detection(validator, record, epoch, timestamp) {
+                    Ok(event) => return Some(event),
+                    Err(_) => {
+                        // Slashing failed (e.g., validator already excluded)
+                        return None;
+                    }
+                }
+            }
+        }
+
+        None
     }
 
     /// Check if a validator is likely Byzantine
@@ -303,6 +341,48 @@ impl ByzantineDetector {
     /// Get suspicion record
     pub fn get_record(&self, validator: &ValidatorId) -> Option<&SuspicionRecord> {
         self.suspicious_validators.get(validator)
+    }
+
+    /// Check if validator is excluded from consensus (requires slashing to be enabled)
+    pub fn is_excluded(&self, validator: &ValidatorId) -> bool {
+        self.slashing_handler
+            .as_ref()
+            .map(|h| h.should_exclude(validator))
+            .unwrap_or(false)
+    }
+
+    /// Get list of all excluded validators (requires slashing to be enabled)
+    pub fn get_excluded_validators(&self) -> Vec<ValidatorId> {
+        self.slashing_handler
+            .as_ref()
+            .map(|h| h.enforcer.get_excluded_validators())
+            .unwrap_or_default()
+    }
+
+    /// Get list of eligible validators for consensus (non-excluded)
+    pub fn get_eligible_validators(&self) -> Vec<ValidatorId> {
+        self.slashing_handler
+            .as_ref()
+            .map(|h| h.get_eligible_validators())
+            .unwrap_or_default()
+    }
+
+    /// Register a validator with their stake (requires slashing to be enabled)
+    pub fn register_validator(&mut self, validator: ValidatorId, stake: Balance) -> AsfResult<()> {
+        if let Some(ref mut handler) = self.slashing_handler {
+            handler.register_validator(validator, stake)?;
+        }
+        Ok(())
+    }
+
+    /// Get slashing handler reference (for advanced use)
+    pub fn slashing_handler(&self) -> Option<&ByzantineHandler> {
+        self.slashing_handler.as_ref()
+    }
+
+    /// Get mutable slashing handler reference (for advanced use)
+    pub fn slashing_handler_mut(&mut self) -> Option<&mut ByzantineHandler> {
+        self.slashing_handler.as_mut()
     }
 }
 
@@ -360,7 +440,7 @@ impl SuspicionRecord {
 }
 
 /// Reasons for suspecting Byzantine behavior
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub enum SuspicionReason {
     /// Voted for conflicting blocks
     ConflictingVotes,
@@ -459,7 +539,7 @@ mod tests {
     fn create_test_cert(validator_id: u8, stake: Balance, phase: ConsensusPhase) -> ValidityCertificate {
         let mut account_bytes = [0u8; 32];
         account_bytes[0] = validator_id;
-        
+
         ValidityCertificate {
             block_hash: Hash::default(),
             block_number: 1,
@@ -476,6 +556,7 @@ mod tests {
                 total_stake: stake,
                 validators: vec![AccountId32::from(account_bytes)],
             },
+            aggregate_signature: crate::crypto::AggregateSignature::new(), // Empty for testing
         }
     }
 
@@ -526,18 +607,18 @@ mod tests {
     #[test]
     fn test_byzantine_detector() {
         let mut detector = ByzantineDetector::new(3);
-        
+
         let mut validator_bytes = [0u8; 32];
         validator_bytes[0] = 1;
         let validator = AccountId32::from(validator_bytes);
-        
+
         assert!(!detector.is_byzantine(&validator));
-        
-        // Report 3 incidents
-        detector.report_suspicious(validator.clone(), SuspicionReason::ConflictingVotes);
-        detector.report_suspicious(validator.clone(), SuspicionReason::InvalidSignature);
-        detector.report_suspicious(validator.clone(), SuspicionReason::DuplicateVote);
-        
+
+        // Report 3 incidents (no slashing because handler not enabled)
+        detector.report_suspicious(validator.clone(), SuspicionReason::ConflictingVotes, 1, 1000);
+        detector.report_suspicious(validator.clone(), SuspicionReason::InvalidSignature, 1, 2000);
+        detector.report_suspicious(validator.clone(), SuspicionReason::DuplicateVote, 1, 3000);
+
         assert!(detector.is_byzantine(&validator));
     }
 
