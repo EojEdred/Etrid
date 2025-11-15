@@ -568,7 +568,7 @@ impl FinalizedBlock {
     }
 }
 
-
+#[cfg(test)]
 mod tests {
     use super::*;
     use sp_core::{crypto::AccountId32, Pair as _};

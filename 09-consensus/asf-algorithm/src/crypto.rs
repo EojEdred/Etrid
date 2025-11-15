@@ -73,13 +73,13 @@ pub trait SignData {
 
 impl SignData for sr25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
-        Signature::Sr25519(sp_core::Pair::sign(self, message))
+        Signature::Sr25519(<sr25519::Pair as Pair>::sign(self, message))
     }
 }
 
 impl SignData for ed25519::Pair {
     fn sign(&self, message: &[u8]) -> Signature {
-        Signature::Ed25519(sp_core::Pair::sign(self, message))
+        Signature::Ed25519(<ed25519::Pair as Pair>::sign(self, message))
     }
 }
 
