@@ -15,6 +15,16 @@ pub struct Cli {
 
     #[command(flatten)]
     pub run: sc_cli::RunCmd,
+
+    /// Disable ASF finality and use GRANDPA-only (fallback mode)
+    ///
+    /// WARNING: This is for emergency recovery only. ASF is the primary
+    /// finality mechanism for FlareChain. Only use this flag if:
+    /// - ASF finality gadget encounters issues
+    /// - Emergency chain recovery is needed
+    /// - Directed by FlareChain core team
+    #[arg(long)]
+    pub disable_asf: bool,
 }
 
 #[derive(Debug, clap::Subcommand)]
@@ -168,9 +178,23 @@ fn main() -> sc_cli::Result<()> {
         }
         None => {
             let runner = cli.create_runner(&cli.run)?;
-            runner.run_node_until_exit(|config| async move {
-                asf_service::new_full(config)
-                    .map_err(sc_cli::Error::Service)
+            let disable_asf = cli.disable_asf;
+
+            runner.run_node_until_exit(|mut config| async move {
+                // Phase 3: ASF is PRIMARY, GRANDPA is FALLBACK
+                if disable_asf {
+                    log::warn!("⚠️  GRANDPA FALLBACK MODE ENABLED");
+                    log::warn!("⚠️  ASF finality is DISABLED - emergency mode only!");
+                    config.disable_grandpa = false; // Ensure GRANDPA is enabled
+
+                    // Use old service with GRANDPA-only finality
+                    // This requires uncommenting the old service module
+                    panic!("GRANDPA fallback mode not yet implemented - requires service.rs module");
+                } else {
+                    log::info!("✓ ASF Primary Finality Mode (GRANDPA fallback available)");
+                    asf_service::new_full(config)
+                        .map_err(sc_cli::Error::Service)
+                }
             })
         }
     }

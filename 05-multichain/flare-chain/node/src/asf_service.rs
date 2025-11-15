@@ -654,6 +654,7 @@ pub fn new_full_with_params(
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
+                enable_asf: true, // Enable ASF RPC endpoints
             };
 
             crate::rpc::create_full(deps).map_err(Into::into)

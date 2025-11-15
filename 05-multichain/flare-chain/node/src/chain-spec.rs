@@ -195,3 +195,56 @@ pub fn asf_mainnet_config() -> Result<ChainSpec, String> {
     .with_genesis_config_preset_name("flarechain_mainnet_asf")
     .build())
 }
+
+/// Hybrid mainnet config (Phase 2: GRANDPA + ASF dual finality) - DEPRECATED in v108
+pub fn hybrid_mainnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet (Hybrid)")
+    .with_id("flarechain_mainnet_hybrid")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties.insert("consensusMode".into(), "hybrid".into());
+        properties.insert("blockProduction".into(), "PPFA".into());
+        properties.insert("finality".into(), "GRANDPA+ASF".into());
+        properties
+    })
+    .with_genesis_config_preset_name("mainnet_hybrid")
+    .build())
+}
+
+/// Pure ASF mainnet config (Phase 4: v108 - GRANDPA removed, ASF-only)
+pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet v108 (Pure ASF)")
+    .with_id("flarechain_mainnet_v108")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties.insert("runtimeVersion".into(), 108.into());
+        properties.insert("consensusMode".into(), "pure_asf".into());
+        properties.insert("blockProduction".into(), "PPFA".into());
+        properties.insert("finality".into(), "ASF".into());
+        properties
+    })
+    .with_genesis_config_preset_name("mainnet_v108_pure_asf")
+    .build())
+}

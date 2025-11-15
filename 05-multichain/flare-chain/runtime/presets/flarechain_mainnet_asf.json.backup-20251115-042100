@@ -1,4 +1,13 @@
 {
+  "name": "Ëtrid FlareChain Mainnet",
+  "id": "flarechain_mainnet",
+  "chainType": "Live",
+  "properties": {
+    "tokenSymbol": "ETR",
+    "tokenDecimals": 18,
+    "ss58Format": 42
+  },
+  "protocolId": "flarechain",
   "balances": {
     "balances": [
       [
@@ -138,51 +147,51 @@
     "authorities": [
       [
         "0x00ee75f5f1fdf647006e7408c5e9c7ca98afcb2fcd9ae66503dcacaf71427a85",
-        1
+        3
       ],
       [
         "0x0a9442f63cd6019b8d6f0cd2dd6cc84d302d8eeb616bb12d7f439172107dbd2b",
-        1
+        3
       ],
       [
         "0x8a9a9d8a9574eb75682a3501a2df5467036c2fc03903e9d46dfab77af4189a51",
-        1
+        3
       ],
       [
         "0xf0b569725433cdeac5017dcaf9591a3d9f2fa74e40347bc8f0365a9658acfb82",
-        1
+        2
       ],
       [
         "0xb09a291c0303bd66b523e44203d582f69cd192e6cdbff8329d1b01d049f4bb96",
-        1
+        2
       ],
       [
         "0xdc4357a4d93f0599b616159278d8ce281e19685c8dd0d40d5960a58d8eeda3b8",
-        1
+        2
       ],
       [
         "0x2975859973decf0c53296d425ade75b28ab3ab10ea3c2d1b78170c8885090a0d",
-        1
+        2
       ],
       [
         "0xcc16f2cd990d95553f0b143df3ec1d1650538708a0031cafd8ecbcadd8dec69a",
-        1
+        2
       ],
       [
         "0xee9d4f38c8b3757c9604db672ef1309fa740adf3d3c989a2baa219fc70d4f115",
-        1
+        2
       ],
       [
         "0xe7e51036e205de3cb69a46a6c55cded6f162fc1392d05b70ef00d18813b905ed",
-        1
+        2
       ],
       [
         "0x445da264d4029002800bf78b58d160877c26696d3f8a83fc19aa64f843d31672",
-        1
+        2
       ],
       [
         "0x80565d70b6d75fa25e243dbfb6206eb6eb4e6e56ee82b403db9758bd6890eae4",
-        1
+        2
       ],
       [
         "0x1b4a0249c16be966d76778364affe12c24e449c78448d6c783a4e8f746c81e09",
@@ -221,6 +230,122 @@
         1
       ]
     ]
+  },
+  "consensus": {
+    "validators": [
+      [
+        "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
+        128000000000000000000000,
+        "Gizzi (AI Overseer)"
+      ],
+      [
+        "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
+        128000000000000000000000,
+        "EojEdred (Founder)"
+      ],
+      [
+        "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
+        128000000000000000000000,
+        "validator-3"
+      ],
+      [
+        "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
+        128000000000000000000000,
+        "validator-4"
+      ],
+      [
+        "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
+        128000000000000000000000,
+        "validator-5"
+      ],
+      [
+        "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
+        128000000000000000000000,
+        "validator-6"
+      ],
+      [
+        "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
+        128000000000000000000000,
+        "validator-7"
+      ],
+      [
+        "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
+        128000000000000000000000,
+        "validator-8"
+      ],
+      [
+        "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
+        128000000000000000000000,
+        "validator-9"
+      ],
+      [
+        "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
+        128000000000000000000000,
+        "validator-10"
+      ],
+      [
+        "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
+        128000000000000000000000,
+        "validator-11"
+      ],
+      [
+        "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
+        128000000000000000000000,
+        "validator-12"
+      ],
+      [
+        "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
+        128000000000000000000000,
+        "validator-13"
+      ],
+      [
+        "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
+        128000000000000000000000,
+        "validator-14"
+      ],
+      [
+        "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
+        128000000000000000000000,
+        "validator-15"
+      ],
+      [
+        "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
+        128000000000000000000000,
+        "validator-16"
+      ],
+      [
+        "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
+        128000000000000000000000,
+        "validator-17"
+      ],
+      [
+        "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
+        128000000000000000000000,
+        "validator-18"
+      ],
+      [
+        "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
+        128000000000000000000000,
+        "validator-19"
+      ],
+      [
+        "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
+        128000000000000000000000,
+        "validator-20"
+      ],
+      [
+        "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
+        128000000000000000000000,
+        "validator-21"
+      ]
+    ],
+    "slotDuration": 6000
+  },
+  "edscToken": {
+    "oracleAuthority": "$ORACLE_AUTH",
+    "custodianManager": "$CUSTODIAN_MGR",
+    "minterAuthority": "$MINTER_AUTH",
+    "emergencyPauseAuthority": "$EMERGENCY_PAUSE"
   },
   "reserveVault": {
     "vaultAddress": "$RESERVE_VAULT",
@@ -354,116 +479,6 @@
         "0x00400f479b47d741752f1d01344ef7149e3bde1bf6bc262af07c4f5411b8d241",
         128000000000000000000000,
         0
-      ]
-    ]
-  },
-  "consensus": {
-    "slotDuration": 6000,
-    "validators": [
-      [
-        "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
-        128000000000000000000000,
-        "DecentralizedDirector"
-      ],
-      [
-        "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
-        128000000000000000000000,
-        "DecentralizedDirector"
-      ],
-      [
-        "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
-        128000000000000000000000,
-        "DecentralizedDirector"
-      ],
-      [
-        "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
-        128000000000000000000000,
-        "DecentralizedDirector"
-      ],
-      [
-        "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
-        128000000000000000000000,
-        "DecentralizedDirector"
-      ],
-      [
-        "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
-        128000000000000000000000,
-        "ValidityNode"
       ]
     ]
   }

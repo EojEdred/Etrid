@@ -445,5 +445,148 @@
         0
       ]
     ]
+  },
+  "asfCommittee": {
+    "enabled": true,
+    "hybridMode": true,
+    "initialCommittee": [
+      {
+        "validatorId": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 2,
+        "asfPublicKey": "0x44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58"
+      },
+      {
+        "validatorId": "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 2,
+        "asfPublicKey": "0xf29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c"
+      },
+      {
+        "validatorId": "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 2,
+        "asfPublicKey": "0x384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e"
+      },
+      {
+        "validatorId": "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0xecec5b1247d1276260758b159add80c79359e879d09356eb5bb30b446323952e"
+      },
+      {
+        "validatorId": "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0x36edba289334c21d8c78b81d56dba974dd49ebe709c81dfc5b05469fcf6d772b"
+      },
+      {
+        "validatorId": "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0xf44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f"
+      },
+      {
+        "validatorId": "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0x2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"
+      },
+      {
+        "validatorId": "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0xb89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"
+      },
+      {
+        "validatorId": "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0x7cefa78d24e90d0e0823afce3cbb57f065f3bdabe8cb94c2f1168582f7a77958"
+      },
+      {
+        "validatorId": "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0xbe9fdd4416eff9375461618f1e2bd244bd0a3ee69b9d2b4949e046796bbe752f"
+      },
+      {
+        "validatorId": "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0x9e270842ee6d0cc5d4634760717fb2fea85596491c89fc72189a994dbf421d4c"
+      },
+      {
+        "validatorId": "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 1,
+        "asfPublicKey": "0xfe14bf4fd7b9cb683697114b9b60dc5a101adee961aa79e374ddb9d17c42ed4d"
+      },
+      {
+        "validatorId": "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x2c339e81f2a1fc80ae67c3bda3ecade01b7b0074979901795ceab6f35a304451"
+      },
+      {
+        "validatorId": "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x58716581b09066395ef75cead565526f412c1e9618a9e8401b5862d32b089c42"
+      },
+      {
+        "validatorId": "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0xd27ae8bc2d7b32cfd6e1a301a4d9931ef2b8c752745a9a86840e376f7bfc9969"
+      },
+      {
+        "validatorId": "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0xdc2e6eabc3d02e01f26bbf2bf8810c56aa05fd8a9489e80a8d64394e4892265b"
+      },
+      {
+        "validatorId": "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x9e33e587928d3f3fd9bed5d407350889e6afb1e7732b494d383e5d7326d93e14"
+      },
+      {
+        "validatorId": "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x7eb293d7da884a6d359abce6756326b60ce54aa03e169c4d3905e4be14061815"
+      },
+      {
+        "validatorId": "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x325362702873fdeaf94eb07f8f2a96590b577f4e02e5015c7cf75cce98121c65"
+      },
+      {
+        "validatorId": "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x4a2320a52c89db6e72fa445bf1f774a2c34d5cdb9c6b1d798b969cc497343566"
+      },
+      {
+        "validatorId": "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
+        "stake": 128000000000000000000000,
+        "ppfaWeight": 0,
+        "asfPublicKey": "0x00400f479b47d741752f1d01344ef7149e3bde1bf6bc262af07c4f5411b8d241"
+      }
+    ],
+    "consensusConfig": {
+      "ppfaRotationPeriod": 10,
+      "finalityThreshold": 0.67,
+      "maxProposerFailures": 3,
+      "slotDuration": 6000,
+      "epochLength": 600
+    }
+  },
+  "reserveVault": {
+    "initialHaircuts": [],
+    "initialPrices": []
   }
 }

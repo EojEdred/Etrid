@@ -9,6 +9,18 @@ pub struct Cli {
 
     #[command(flatten)]
     pub run: RunCmd,
+
+    /// Enable ASF (Ascending Scale of Finality) hybrid consensus mode
+    ///
+    /// When enabled:
+    /// - Block Production: PPFA (Proposer Priority & Fairness Algorithm)
+    /// - Finality: GRANDPA + ASF Finality Gadget (dual finality)
+    ///
+    /// When disabled (default):
+    /// - Block Production: AURA
+    /// - Finality: GRANDPA only
+    #[arg(long, default_value = "false")]
+    pub enable_asf: bool,
 }
 
 /// Possible subcommands
@@ -77,6 +89,7 @@ impl SubstrateCli for Cli {
             "staging" | "ember" => Box::new(crate::chain_spec::staging_testnet_config()?),
             "directors9" | "9directors" | "flarechain_9directors" => Box::new(crate::chain_spec::directors_9_config()?),
             "session_fixed" | "session-fixed" | "flarechain_session_fixed" => Box::new(crate::chain_spec::session_fixed_mainnet_config()?),
+            "hybrid" | "mainnet_hybrid" | "flarechain_hybrid" => Box::new(crate::chain_spec::hybrid_mainnet_config()?),
             "" | "flarechain" | "mainnet" | "flarechain_mainnet" => Box::new(crate::chain_spec::flarechain_config()?),
             path => Box::new(crate::chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),

@@ -114,7 +114,7 @@ frame-executive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "p
 # Removed: using ASF consensus
 # pallet-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
-# pallet-grandpa removed in v108 - Pure ASF consensus
+pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-session = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-sudo = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -134,7 +134,7 @@ sp-arithmetic = { git = "https://github.com/paritytech/polkadot-sdk", tag = "pol
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 # Removed: using ASF consensus
 # sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
-# sp-consensus-grandpa removed in v108 - Pure ASF consensus
+sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -259,7 +259,7 @@ std = [
     "frame-system-benchmarking?/std",
     # "pallet-aura/std",
     "pallet-balances/std",
-    # "pallet-grandpa/std", # removed in v108
+    "pallet-grandpa/std",
     "pallet-session/std",
     "pallet-sudo/std",
     "pallet-timestamp/std",
@@ -272,7 +272,7 @@ std = [
     "sp-arithmetic/std",
     "sp-block-builder/std",
     # "sp-consensus-aura/std",
-    # "sp-consensus-grandpa/std", # removed in v108
+    "sp-consensus-grandpa/std",
     "sp-core/std",
     "sp-inherents/std",
     "sp-offchain/std",

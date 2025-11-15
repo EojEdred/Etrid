@@ -225,6 +225,7 @@ pub fn new_full<N: sc_network::NetworkBackend<Block, <Block as sp_runtime::trait
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
+                enable_asf: false, // Legacy mode - no ASF RPC
             };
 
             crate::rpc::create_full(deps).map_err(Into::into)
