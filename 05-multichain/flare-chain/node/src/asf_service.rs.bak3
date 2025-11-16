@@ -73,7 +73,7 @@ pub type FullClient = sc_service::TFullClient<
 type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
 /// ASF-enabled block import type (pure ASF, no GRANDPA)
-type AsfBlockImport = Arc<FullClient>;
+type AsfBlockImport = FullClient;
 
 /// Full node partial components with ASF integration
 pub type AsfFullParts = sc_service::PartialComponents<

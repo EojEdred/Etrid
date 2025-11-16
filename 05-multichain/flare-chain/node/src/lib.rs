@@ -6,7 +6,6 @@
 #[path = "chain-spec.rs"]
 pub mod chain_spec;
 pub mod rpc;
-// pub mod service;  // Old Aura-based service - replaced by asf_service
 
 /// ASF consensus service integration
 /// Exports new_full() and new_partial() for the unified binary
@@ -18,85 +17,29 @@ pub mod asf_rpc;
 /// ASF telemetry integration for consensus metrics
 pub mod asf_telemetry;
 
-/// Legacy GRANDPA service (for hybrid mode fallback)
-pub mod service;
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // HYBRID CONSENSUS MODE SELECTION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Create a new full node with hybrid consensus mode selection
+/// Create a new full node with pure ASF consensus
 ///
-/// Routes to either:
-/// - ASF service (if --enable-asf flag is set)
-/// - GRANDPA service (legacy mode, default fallback)
-pub fn new_full<N: sc_network::NetworkBackend<
-    flare_chain_runtime::opaque::Block,
-    <flare_chain_runtime::opaque::Block as sp_runtime::traits::Block>::Hash,
->>(
+/// v108: Always uses ASF consensus (no GRANDPA fallback)
+/// - Block Production: PPFA (ASF)
+/// - Finality: ASF Finality Gadget (pure)
+pub fn new_full(
     config: sc_service::Configuration,
-    enable_asf: bool,
 ) -> Result<sc_service::TaskManager, sc_service::error::Error> {
-    if config.role.is_authority() && enable_asf {
-        log::info!("🔥 Starting FlareChain node in ASF HYBRID mode");
-        log::info!("   Block Production: PPFA (ASF)");
-        log::info!("   Finality: GRANDPA + ASF Finality Gadget (dual)");
-        asf_service::new_full(config)
-    } else {
-        log::info!("🔗 Starting FlareChain node in GRANDPA LEGACY mode");
-        log::info!("   Block Production: AURA");
-        log::info!("   Finality: GRANDPA only");
-        service::new_full::<N>(config)
-    }
+    log::info!("🔥 Starting FlareChain node in PURE ASF mode (v108)");
+    log::info!("   Block Production: PPFA (ASF)");
+    log::info!("   Finality: ASF Finality Gadget (pure)");
+    asf_service::new_full(config)
 }
 
-/// Create partial node components (used by both modes)
+/// Create partial node components (pure ASF)
 pub fn new_partial(
     config: &sc_service::Configuration,
-    enable_asf: bool,
-) -> Result<
-    sc_service::PartialComponents<
-        asf_service::FullClient,
-        sc_service::TFullBackend<flare_chain_runtime::opaque::Block>,
-        impl sp_consensus::SelectChain<flare_chain_runtime::opaque::Block>,
-        sc_consensus::DefaultImportQueue<flare_chain_runtime::opaque::Block>,
-        sc_transaction_pool::TransactionPoolHandle<
-            flare_chain_runtime::opaque::Block,
-            asf_service::FullClient,
-        >,
-        impl Send,
-    >,
-    sc_service::error::Error,
-> {
-    if enable_asf {
-        asf_service::new_partial(config).map(|parts| {
-            // Map ASF partial components to generic type
-            sc_service::PartialComponents {
-                client: parts.client,
-                backend: parts.backend,
-                task_manager: parts.task_manager,
-                import_queue: parts.import_queue,
-                keystore_container: parts.keystore_container,
-                select_chain: parts.select_chain,
-                transaction_pool: parts.transaction_pool,
-                other: Box::new(parts.other) as Box<dyn Send>,
-            }
-        })
-    } else {
-        service::new_partial(config).map(|parts| {
-            // Map GRANDPA partial components to generic type
-            sc_service::PartialComponents {
-                client: parts.client,
-                backend: parts.backend,
-                task_manager: parts.task_manager,
-                import_queue: parts.import_queue,
-                keystore_container: parts.keystore_container,
-                select_chain: parts.select_chain,
-                transaction_pool: parts.transaction_pool,
-                other: Box::new(parts.other) as Box<dyn Send>,
-            }
-        })
-    }
+) -> Result<asf_service::AsfFullParts, sc_service::error::Error> {
+    asf_service::new_partial(config)
 }
 
 // Re-export CLI types if needed by the unified binary

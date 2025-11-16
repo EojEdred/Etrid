@@ -215,7 +215,7 @@ pub fn hybrid_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("ss58Format".into(), 42.into());
         properties.insert("consensusMode".into(), "hybrid".into());
         properties.insert("blockProduction".into(), "PPFA".into());
-        properties.insert("finality".into(), "Pure ASF".into());
+        properties.insert("finality".into(), "GRANDPA+ASF".into());
         properties
     })
     .with_genesis_config_preset_name("mainnet_hybrid")
