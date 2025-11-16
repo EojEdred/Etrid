@@ -132,9 +132,9 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk"
 sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-arithmetic = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
-# Removed: using ASF consensus
-# sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
-# sp-consensus-grandpa removed in v108 - Pure ASF consensus
+# Re-added for node service compatibility (stub implementations)
+sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -271,8 +271,8 @@ std = [
     "sp-api/std",
     "sp-arithmetic/std",
     "sp-block-builder/std",
-    # "sp-consensus-aura/std",
-    # "sp-consensus-grandpa/std", # removed in v108
+    "sp-consensus-aura/std",
+    "sp-consensus-grandpa/std",
     "sp-core/std",
     "sp-inherents/std",
     "sp-offchain/std",

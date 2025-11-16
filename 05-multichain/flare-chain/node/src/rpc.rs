@@ -45,8 +45,9 @@ where
 
     // ASF Consensus RPC (if enabled)
     if enable_asf {
-        log::info!("🔌 Enabling ASF RPC endpoints");
-        module.merge(crate::asf_rpc::create_asf_rpc(client.clone()))?;
+        log::info!("🔌 ASF RPC endpoints (temporarily disabled for compilation)");
+        // TODO: Re-enable once module path issue is resolved
+        // module.merge(crate::asf_rpc::create_asf_rpc(client.clone()))?;
     }
 
     Ok(module)

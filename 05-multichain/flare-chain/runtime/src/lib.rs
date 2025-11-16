@@ -1415,8 +1415,49 @@ impl_runtime_apis! {
         }
     }
 
-    // GRANDPA API removed in v108 - Pure ASF consensus
-    // Aura API removed in v108 - Pure ASF consensus
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // STUB GRANDPA/AURA APIs FOR NODE SERVICE COMPATIBILITY
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // v108 uses pure ASF consensus, but the node service still expects these APIs.
+    // These stubs satisfy the trait bounds without affecting ASF consensus operation.
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+            Vec::new()
+        }
+
+        fn current_set_id() -> sp_consensus_grandpa::SetId {
+            0
+        }
+
+        fn submit_report_equivocation_unsigned_extrinsic(
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
+                <Block as BlockT>::Hash,
+                NumberFor<Block>,
+            >,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
+        ) -> Option<()> {
+            None
+        }
+
+        fn generate_key_ownership_proof(
+            _set_id: sp_consensus_grandpa::SetId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
+        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
+            None
+        }
+    }
+
+    impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
+        fn slot_duration() -> sp_consensus_aura::SlotDuration {
+            sp_consensus_aura::SlotDuration::from_millis(6000)
+        }
+
+        fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
+            Vec::new()
+        }
+    }
 
     impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
         fn account_nonce(account: AccountId) -> Nonce {

@@ -41,7 +41,7 @@ pub fn new_full<N: sc_network::NetworkBackend<
         log::info!("🔥 Starting FlareChain node in ASF HYBRID mode");
         log::info!("   Block Production: PPFA (ASF)");
         log::info!("   Finality: GRANDPA + ASF Finality Gadget (dual)");
-        asf_service::new_full::<N>(config)
+        asf_service::new_full(config)
     } else {
         log::info!("🔗 Starting FlareChain node in GRANDPA LEGACY mode");
         log::info!("   Block Production: AURA");

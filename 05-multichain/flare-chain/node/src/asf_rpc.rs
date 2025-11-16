@@ -34,6 +34,9 @@ use asf_algorithm::{
     Vote,
 };
 
+// Runtime API trait (must be in scope to call methods)
+use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // RPC TRAIT DEFINITION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -275,9 +278,9 @@ where
         let validator_infos: Vec<ValidatorInfo> = validators
             .iter()
             .map(|v| ValidatorInfo {
-                validator_id: hex::encode(&v.validator_id.encode()),
+                validator_id: hex::encode(&v.validator_id().encode()),
                 stake: v.stake,
-                is_active: v.is_active,
+                is_active: v.is_active(),
                 is_excluded: false, // TODO: Query from slashing module
                 role: None, // TODO: Determine role (Leader, Director, etc.)
             })
