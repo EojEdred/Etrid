@@ -207,6 +207,7 @@ pub mod pallet {
 		pub initial_haircuts: Vec<(AssetType, Permill)>,
 		pub initial_prices: Vec<(AssetType, u128)>,
 		/// Genesis message (Bitcoin-style easter egg)
+		#[serde(skip)]
 		pub genesis_message: Vec<u8>,
 		#[serde(skip)]
 		pub _phantom: sp_std::marker::PhantomData<T>,
