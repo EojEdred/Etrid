@@ -12,7 +12,7 @@
 use sc_telemetry::{telemetry, TelemetryHandle, CONSENSUS_INFO, CONSENSUS_DEBUG, CONSENSUS_WARN};
 use asf_algorithm::{
     FinalityLevel, ValidatorId, Hash, BlockNumber,
-    Vote, Certificate, ConsensusPhase,
+    Vote, Certificate,
 };
 use codec::Encode;
 

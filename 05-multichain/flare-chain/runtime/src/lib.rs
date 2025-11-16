@@ -1416,6 +1416,7 @@ impl_runtime_apis! {
     }
 
     // GRANDPA API removed in v108 - Pure ASF consensus
+    // Aura API removed in v108 - Pure ASF consensus
 
     impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
         fn account_nonce(account: AccountId) -> Nonce {

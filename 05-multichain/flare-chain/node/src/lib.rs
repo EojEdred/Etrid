@@ -58,7 +58,7 @@ pub fn new_partial(
     sc_service::PartialComponents<
         asf_service::FullClient,
         sc_service::TFullBackend<flare_chain_runtime::opaque::Block>,
-        impl sc_consensus::SelectChain<flare_chain_runtime::opaque::Block>,
+        impl sp_consensus::SelectChain<flare_chain_runtime::opaque::Block>,
         sc_consensus::DefaultImportQueue<flare_chain_runtime::opaque::Block>,
         sc_transaction_pool::TransactionPoolHandle<
             flare_chain_runtime::opaque::Block,

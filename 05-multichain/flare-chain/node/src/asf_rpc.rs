@@ -30,8 +30,8 @@ use codec::{Encode, Decode};
 
 // ASF algorithm types
 use asf_algorithm::{
-    FinalityLevel, ValidatorId, Hash, BlockNumber,
-    Vote, Certificate, ConsensusPhase,
+    FinalityLevel, Hash, BlockNumber,
+    Vote,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
