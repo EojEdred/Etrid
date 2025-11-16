@@ -222,7 +222,7 @@ pub fn hybrid_mainnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-/// Pure ASF mainnet config (Phase 4: v108 - GRANDPA removed, ASF-only)
+/// Pure ASF mainnet config (v1 - Pure ASF, no GRANDPA)
 pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
 
@@ -230,8 +230,8 @@ pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain Mainnet v108 (Pure ASF)")
-    .with_id("flarechain_mainnet_v108")
+    .with_name("Ëtrid FlareChain Mainnet (Pure ASF)")
+    .with_id("flarechain_mainnet_v1")
     .with_chain_type(ChainType::Live)
     .with_protocol_id("flarechain")
     .with_properties({
@@ -245,6 +245,21 @@ pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("finality".into(), "ASF".into());
         properties
     })
-    .with_genesis_config_preset_name("mainnet_v108_pure_asf")
+    .with_genesis_config_preset_name("flarechain_mainnet_v1_pure_asf")
+    .build())
+}
+
+/// Development config for Pure ASF (single validator - Alice, NO GRANDPA)
+pub fn development_asf_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Development (Pure ASF)")
+    .with_id("flarechain_dev_asf")
+    .with_chain_type(ChainType::Development)
+    .with_genesis_config_preset_name("dev_pure_asf")
     .build())
 }

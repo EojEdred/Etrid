@@ -1524,6 +1524,12 @@ impl_runtime_apis! {
                     "mainnet_v108_pure_asf" => {
                         Some(include_bytes!("../presets/mainnet_v108_pure_asf.json").to_vec())
                     },
+                    "flarechain_mainnet_v1_pure_asf" => {
+                        Some(include_bytes!("../presets/flarechain_mainnet_v1_pure_asf.json").to_vec())
+                    },
+                    "dev_pure_asf" => {
+                        Some(include_bytes!("../presets/flarechain_mainnet_v1_pure_asf.json").to_vec())
+                    },
                     "mainnet_hybrid" => {
                         Some(include_bytes!("../presets/mainnet_hybrid.json").to_vec())
                     },
@@ -1545,6 +1551,8 @@ impl_runtime_apis! {
                 "flarechain_mainnet_session_fixed".into(),
                 "mainnet_asf_only".into(),
                 "mainnet_v108_pure_asf".into(),
+                "flarechain_mainnet_v1_pure_asf".into(),
+                "dev_pure_asf".into(),
                 "mainnet_hybrid".into(),
             ]
         }

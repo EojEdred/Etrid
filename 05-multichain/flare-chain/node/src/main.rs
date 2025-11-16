@@ -75,15 +75,22 @@ impl SubstrateCli for Cli {
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
         Ok(match id {
-            "dev" => Box::new(chain_spec::development_config()?),
-            "" | "local" => Box::new(chain_spec::local_testnet_config()?),
+            // Pure ASF development (NO GRANDPA)
+            "dev" | "dev_asf" => Box::new(chain_spec::development_asf_config()?),
+            // Local testnet (2 validators)
+            "local" => Box::new(chain_spec::local_testnet_config()?),
+            // Test configs
             "test_2val" | "test-2val" => Box::new(chain_spec::test_2validator_config()?),
             "test_21val" | "test-21val" => Box::new(chain_spec::test_21validator_config()?),
             "staging" | "ember" => Box::new(chain_spec::staging_testnet_config()?),
+            // Legacy mainnet configs (DEPRECATED - included GRANDPA)
             "directors9" | "9directors" | "flarechain_9directors" => Box::new(chain_spec::directors_9_config()?),
             "session_fixed" | "session-fixed" | "flarechain_session_fixed" => Box::new(chain_spec::session_fixed_mainnet_config()?),
             "asf" | "asf_mainnet" | "flarechain_mainnet_asf" => Box::new(chain_spec::asf_mainnet_config()?),
             "flarechain" => Box::new(chain_spec::flarechain_config()?),
+            // Pure ASF mainnet (PRODUCTION, NO GRANDPA)
+            "" | "mainnet" => Box::new(chain_spec::pure_asf_mainnet_config()?),
+            // Path to custom chainspec JSON
             path => Box::new(chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),
             )?),
