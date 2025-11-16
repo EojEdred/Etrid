@@ -215,10 +215,15 @@ impl SubstrateCli for Cli {
                 // Load FlareChain spec
                 log::info!("Loading FlareChain specification: {}", id);
                 Ok(match id {
-                    "dev" => Box::new(flare_chain_node::chain_spec::development_config()?),
+                    // Development config (single validator - Alice)
+                    "dev" | "development" => Box::new(flare_chain_node::chain_spec::development_config()?),
+                    // Local testnet config (Alice & Bob)
                     "local" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?),
-                    "staging" | "ember" => Box::new(flare_chain_node::chain_spec::staging_testnet_config()?),
-                    "" | "flarechain" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?), // Use local testnet for testing
+                    // Ember staging testnet (public testnet)
+                    "staging" | "ember" | "testnet" => Box::new(flare_chain_node::chain_spec::staging_testnet_config()?),
+                    // FlareChain mainnet (Pure ASF v108 - NO GRANDPA)
+                    "" | "mainnet" | "flarechain" => Box::new(flare_chain_node::chain_spec::pure_asf_mainnet_config()?),
+                    // Path to custom chainspec JSON
                     path => Box::new(flare_chain_node::chain_spec::ChainSpec::from_json_file(
                         std::path::PathBuf::from(path),
                     )?),
