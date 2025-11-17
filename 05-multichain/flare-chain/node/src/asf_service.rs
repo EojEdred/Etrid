@@ -691,6 +691,7 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
+        let ppfa_finality_gadget = finality_gadget.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
