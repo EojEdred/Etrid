@@ -137,107 +137,112 @@
   "consensus": {
     "validators": [
       [
-        "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
+        "0x36edba289334c21d8c78b81d56dba974dd49ebe709c81dfc5b05469fcf6d772b",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
+        "0x941afdfa66338714710e8f1b2b829162a1ac132efe56d665aad81e9b5f12c617",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
+        "0x6a15f2f70d19046b1c13eb61fa64f473c38294d43aa6a399962a94c67bcb9272",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
+        "0xa2fb2b030b1b4cf9984e7755b4d828f41158d120087dbf7f28c5722ba2358600",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
+        "0xa42a1bfc7e9baf5bed45e5363b3d0a1e4ed26e9034d69b701c2be571db709a68",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
+        "0x64c7c52bd7dbf2b41e1ebe2f608a6e8d2db60c813a5f1aa5b77a89786167e658",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
+        "0x0c09522384290ee11ab1cbc520100902859eafed683f7b8efb1959d69104d348",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
+        "0x48e99e1406036a1a1f914bae7512c89c7d0500572f7b01568154a2ac6a8baa59",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
+        "0xf4020d26fb3062efa9964c48da1b6ccbb2a89a5bfea9631800fe389d32b4d014",
         128000000000000000000000,
         "DecentralizedDirector"
       ],
       [
-        "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
+        "0xd2867b993988c533bb0c920ee314c7ea715e987861d3644cb1c9720f2882903a",
+        128000000000000000000000,
+        "DecentralizedDirector"
+      ],
+      [
+        "0xe86f6f6a2b11e51daebe856f66e324e6f155178686a9d865364c26acb8fb9b3e",
+        128000000000000000000000,
+        "DecentralizedDirector"
+      ],
+      [
+        "0x084b9c663309503874fcd7370365bcc1e5154a186beb43ad7e4da761200c6209",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
+        "0x7e46e1e6a70cad911da865921e9f1b0d1c24cd4135661f0176ab916cd6a6372a",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
+        "0x8a2e45c85d5ca6488bf983d5f7ab1babc33f4748335cf95b8ddbb05e28f68664",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
+        "0x18b82e4b3f6c0971ebaa6b8ba5c1397c551ebaa872749411fa49718b51188241",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
+        "0x32f084b23c41246103cd9164442e976701c9b41bc34bd6f2b9aab64ad438346a",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
+        "0xd84b7d5e75ca46712492d1293c15ddeef6a3ca92f3f6bcd8e6314cecea2aaa43",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
+        "0xc4e2e74bf658aea912538932982f66ef5aa0104a3a099ca5097249a943464a71",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
+        "0x8cf7dc3cdc82ec92a51dc15e6177312bc5ea832b869a6e481a66717d5d81c21f",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
+        "0xee9eb32281843f77137276416619e25449d921f66415a1b45d74eee789780d0b",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
+        "0x8230ef2ffd67b375f0cf3658c44e67650b2cde9c51a7525810586637edd8201d",
         128000000000000000000000,
         "ValidityNode"
       ],
       [
-        "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
-        128000000000000000000000,
-        "ValidityNode"
-      ],
-      [
-        "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
+        "0xc4f9e488c7f3cc487bf0e8619dc94d05ab0f12488745659a560af9d03bf1dd64",
         128000000000000000000000,
         "ValidityNode"
       ]
@@ -249,110 +254,115 @@
     "initialPrices": []
   },
   "validatorCommittee": {
-    "committeeSize": 21,
+    "committeeSize": 22,
     "validators": [
       [
-        "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
+        "0x36edba289334c21d8c78b81d56dba974dd49ebe709c81dfc5b05469fcf6d772b",
         128000000000000000000000,
         2
       ],
       [
-        "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
+        "0x941afdfa66338714710e8f1b2b829162a1ac132efe56d665aad81e9b5f12c617",
         128000000000000000000000,
         2
       ],
       [
-        "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
+        "0x6a15f2f70d19046b1c13eb61fa64f473c38294d43aa6a399962a94c67bcb9272",
         128000000000000000000000,
         2
       ],
       [
-        "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
+        "0xa2fb2b030b1b4cf9984e7755b4d828f41158d120087dbf7f28c5722ba2358600",
+        128000000000000000000000,
+        2
+      ],
+      [
+        "0xa42a1bfc7e9baf5bed45e5363b3d0a1e4ed26e9034d69b701c2be571db709a68",
+        128000000000000000000000,
+        2
+      ],
+      [
+        "0x64c7c52bd7dbf2b41e1ebe2f608a6e8d2db60c813a5f1aa5b77a89786167e658",
         128000000000000000000000,
         1
       ],
       [
-        "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
+        "0x0c09522384290ee11ab1cbc520100902859eafed683f7b8efb1959d69104d348",
         128000000000000000000000,
         1
       ],
       [
-        "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
+        "0x48e99e1406036a1a1f914bae7512c89c7d0500572f7b01568154a2ac6a8baa59",
         128000000000000000000000,
         1
       ],
       [
-        "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
+        "0xf4020d26fb3062efa9964c48da1b6ccbb2a89a5bfea9631800fe389d32b4d014",
         128000000000000000000000,
         1
       ],
       [
-        "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
+        "0xd2867b993988c533bb0c920ee314c7ea715e987861d3644cb1c9720f2882903a",
         128000000000000000000000,
         1
       ],
       [
-        "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
+        "0xe86f6f6a2b11e51daebe856f66e324e6f155178686a9d865364c26acb8fb9b3e",
         128000000000000000000000,
         1
       ],
       [
-        "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
+        "0x084b9c663309503874fcd7370365bcc1e5154a186beb43ad7e4da761200c6209",
         128000000000000000000000,
         1
       ],
       [
-        "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
+        "0x7e46e1e6a70cad911da865921e9f1b0d1c24cd4135661f0176ab916cd6a6372a",
         128000000000000000000000,
         1
       ],
       [
-        "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
-        128000000000000000000000,
-        1
-      ],
-      [
-        "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
+        "0x8a2e45c85d5ca6488bf983d5f7ab1babc33f4748335cf95b8ddbb05e28f68664",
         128000000000000000000000,
         0
       ],
       [
-        "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
+        "0x18b82e4b3f6c0971ebaa6b8ba5c1397c551ebaa872749411fa49718b51188241",
         128000000000000000000000,
         0
       ],
       [
-        "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
+        "0x32f084b23c41246103cd9164442e976701c9b41bc34bd6f2b9aab64ad438346a",
         128000000000000000000000,
         0
       ],
       [
-        "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
+        "0xd84b7d5e75ca46712492d1293c15ddeef6a3ca92f3f6bcd8e6314cecea2aaa43",
         128000000000000000000000,
         0
       ],
       [
-        "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
+        "0xc4e2e74bf658aea912538932982f66ef5aa0104a3a099ca5097249a943464a71",
         128000000000000000000000,
         0
       ],
       [
-        "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
+        "0x8cf7dc3cdc82ec92a51dc15e6177312bc5ea832b869a6e481a66717d5d81c21f",
         128000000000000000000000,
         0
       ],
       [
-        "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
+        "0xee9eb32281843f77137276416619e25449d921f66415a1b45d74eee789780d0b",
         128000000000000000000000,
         0
       ],
       [
-        "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
+        "0x8230ef2ffd67b375f0cf3658c44e67650b2cde9c51a7525810586637edd8201d",
         128000000000000000000000,
         0
       ],
       [
-        "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
+        "0xc4f9e488c7f3cc487bf0e8619dc94d05ab0f12488745659a560af9d03bf1dd64",
         128000000000000000000000,
         0
       ]
