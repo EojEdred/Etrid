@@ -1,0 +1,22 @@
+"""Reserve Vault Wrapper - Collateralized Lending"""
+
+from typing import Dict, Any
+from substrateinterface import SubstrateInterface, Keypair
+from ..errors import NotConnectedError, VaultError
+
+
+class ReserveVaultWrapper:
+    """Wrapper for Reserve Vault pallet - DeFi lending."""
+    
+    def __init__(self, api: SubstrateInterface):
+        self.api = api
+        
+    def _ensure_connected(self):
+        if not self.api.websocket or not self.api.websocket.connected:
+            raise NotConnectedError()
+            
+    async def create_vault(self, keypair: Keypair, collateral: int) -> Dict[str, Any]:
+        """Create collateral vault."""
+        self._ensure_connected()
+        # Implementation here
+        pass
