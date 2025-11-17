@@ -720,7 +720,7 @@ pub fn new_full_with_params(
 
                 // Query runtime for active committee members
                 let runtime_committee = match ppfa_client.runtime_api()
-                    .validator_committee(best_hash)
+                    .validator_committee()
                 {
                     Ok(members) => {
                         log::info!(
@@ -863,7 +863,7 @@ pub fn new_full_with_params(
                             }
                         };
 
-                        log::debug!(
+                        log::info!(
                             "Slot #{} (PPFA index: {}) - Proposer: {:?}",
                             slot_number,
                             ppfa_index,
@@ -925,7 +925,7 @@ pub fn new_full_with_params(
                             let parent_hash = chain_info.best_hash;
                             let parent_number = chain_info.best_number;
 
-                            log::debug!(
+                            log::info!(
                                 "   Creating block on parent: #{} ({:?})",
                                 parent_number,
                                 parent_hash
@@ -995,7 +995,7 @@ pub fn new_full_with_params(
                                 ppfa_seal.encode(),
                             ));
 
-                            log::debug!(
+                            log::info!(
                                 "🔏 Creating block with PPFA seal: index={}, proposer={:?}",
                                 ppfa_index,
                                 hex::encode(&our_validator_id.encode()[..8])
@@ -1078,7 +1078,7 @@ pub fn new_full_with_params(
                                 }
                             }
                         } else {
-                            log::trace!(
+                            log::info!(
                                 "Not our slot (proposer: {:?})",
                                 hex::encode(&current_proposer.encode()[..8])
                             );
@@ -1118,7 +1118,7 @@ pub fn new_full_with_params(
                             // ═══════════════════════════════════════════════════════════════
 
                             // Query runtime for new committee at epoch boundary
-                            match ppfa_client.runtime_api().validator_committee(at_hash) {
+                            match ppfa_client.runtime_api().validator_committee() {
                                 Ok(new_committee_members) => {
                                     log::info!(
                                         "✅ Loaded {} new committee members for epoch #{}",
@@ -1860,7 +1860,7 @@ pub fn new_full_with_params(
             // Query genesis committee from runtime at genesis block
             let genesis_hash = client.info().genesis_hash;
 
-            match client.runtime_api().validator_committee(genesis_hash) {
+            match client.runtime_api().validator_committee() {
                 Ok(committee) if !committee.is_empty() => {
                     log::info!(
                         "✅ Loaded {} validators from genesis ValidatorCommittee",
