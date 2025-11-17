@@ -164,6 +164,28 @@ class ProposalNotFoundError(GovernanceError):
     pass
 
 
+# GPU Registry Errors
+class GPURegistryError(TransactionError):
+    """Raised when GPU registry operation fails."""
+    pass
+
+
+class GPUNotFoundError(GPURegistryError):
+    """Raised when GPU is not found."""
+    pass
+
+
+class InsufficientStakeError(GPURegistryError):
+    """Raised when stake is below minimum required."""
+    pass
+
+
+# GPU NFT Errors
+class GPUNFTError(TransactionError):
+    """Raised when GPU NFT operation fails."""
+    pass
+
+
 __all__ = [
     "EtridError",
     "NotConnectedError",
@@ -194,4 +216,8 @@ __all__ = [
     "StakingError",
     "GovernanceError",
     "ProposalNotFoundError",
+    "GPURegistryError",
+    "GPUNotFoundError",
+    "InsufficientStakeError",
+    "GPUNFTError",
 ]

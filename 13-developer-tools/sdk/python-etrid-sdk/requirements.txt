@@ -9,6 +9,14 @@ scalecodec>=0.11.0
 websocket-client>=1.5.0
 requests>=2.31.0
 
+# Ledger Hardware Wallet
+ledgerblue>=0.1.45
+ledger-agent-client>=1.0.0
+
+# Hyperledger Fabric
+hfc>=1.0.0
+grpcio>=1.50.0
+
 # Development Dependencies
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
