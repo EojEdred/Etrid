@@ -40,7 +40,9 @@ use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
 use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
-use sp_runtime::traits::Header;
+use sp_runtime::traits::{Header, IdentifyAccount};
+use sp_runtime::MultiSigner;
+use sp_core::crypto::AccountId32;
 use sp_timestamp;
 use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 
@@ -759,7 +761,16 @@ pub fn new_full_with_params(
                 let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
-                    let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
+                    // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
+                    let multi_signer = MultiSigner::Sr25519(our_keys[0].clone());
+                    let account_id: AccountId32 = multi_signer.into_account();
+                    let our_validator_id = block_production::ValidatorId::from(account_id);
+
+                    log::info!(
+                        "🔑 Converted sr25519 key to ValidatorId: {}",
+                        hex::encode(our_validator_id.as_ref() as &[u8])
+                    );
+
                     let our_validator_info = validator_management::ValidatorInfo::new(
                         our_validator_id.clone(),
                         ppfa_params.min_validator_stake,
@@ -852,11 +863,19 @@ pub fn new_full_with_params(
 
                         let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
-                                 log::info!(
-                                    "🔑 ASF using validator key from keystore: {}",
+                                log::info!(
+                                    "🔑 ASF using validator key from keystore (raw sr25519): {}",
                                     hex::encode(public_key.as_ref() as &[u8])
                                 );
-                                block_production::ValidatorId::from(public_key.0)
+                                // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
+                                let multi_signer = MultiSigner::Sr25519(public_key.clone());
+                                let account_id: AccountId32 = multi_signer.into_account();
+                                let validator_id = block_production::ValidatorId::from(account_id);
+                                log::info!(
+                                    "🔑 Converted to ValidatorId (AccountId32): {}",
+                                    hex::encode(validator_id.as_ref() as &[u8])
+                                );
+                                validator_id
                             }
                             None => {
                                 log::warn!(
