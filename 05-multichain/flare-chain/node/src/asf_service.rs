@@ -693,7 +693,7 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
-        let ppfa_finality_gadget = finality_gadget.clone();
+        // let ppfa_finality_gadget = finality_gadget.clone(); // TODO: finality_gadget not created until line 1607
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -1028,24 +1028,25 @@ pub fn new_full_with_params(
                                             // ═══════════════════════════════════════════════════
                                             // FINALITY INTEGRATION: Propose block to ASF finality
                                             // ═══════════════════════════════════════════════════
-                                            let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
-                                            let mut gadget = ppfa_finality_gadget.lock().await;
-                                            match gadget.propose_block(finality_block_hash).await {
-                                                Ok(vote) => {
-                                                    log::info!(
-                                                        "🗳️  Created finality vote for block #{} at view {:?}",
-                                                        block.header.number(),
-                                                        vote.view
-                                                    );
-                                                }
-                                                Err(e) => {
-                                                    log::error!(
-                                                        "❌ Failed to create finality vote for block #{}: {}",
-                                                        block.header.number(),
-                                                        e
-                                                    );
-                                                }
-                                            }
+                                            // TODO: Re-enable when finality_gadget is created before PPFA task
+                                            // let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
+                                            // let mut gadget = ppfa_finality_gadget.lock().await;
+                                            // match gadget.propose_block(finality_block_hash).await {
+                                            //     Ok(vote) => {
+                                            //         log::info!(
+                                            //             "🗳️  Created finality vote for block #{} at view {:?}",
+                                            //             block.header.number(),
+                                            //             vote.view
+                                            //         );
+                                            //     }
+                                            //     Err(e) => {
+                                            //         log::error!(
+                                            //             "❌ Failed to create finality vote for block #{}: {}",
+                                            //             block.header.number(),
+                                            //             e
+                                            //         );
+                                            //     }
+                                            // }
                                         },
                                         Err(e) => {
                                             log::error!(
