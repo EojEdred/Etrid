@@ -31,8 +31,7 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents};
-use futures::StreamExt;
+use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend};
 use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
@@ -40,9 +39,7 @@ use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
 use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
-use sp_runtime::traits::{Header, IdentifyAccount};
-use sp_runtime::MultiSigner;
-use sp_core::crypto::AccountId32;
+use sp_runtime::traits::Header;
 use sp_timestamp;
 use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 
@@ -693,7 +690,6 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
-        // let ppfa_finality_gadget = finality_gadget.clone(); // TODO: finality_gadget not created until line 1607
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -740,27 +736,11 @@ pub fn new_full_with_params(
                 };
 
                 // Initialize committee with runtime validators
-                let mut added_count = 0;
-                for validator_info in runtime_committee.iter() {
-                    log::info!(
-                        "🔧 Attempting to add validator to committee: {:?}",
-                        validator_info.validator_id()
-                    );
-                    match committee.add_validator(validator_info.clone()) {
-                        Ok(_) => {
-                            added_count += 1;
-                            log::info!("✅ Successfully added validator {} to committee", added_count);
-                        }
-                        Err(e) => {
-                            log::error!("❌ Failed to add validator to committee: {:?}", e);
-                        }
+                for validator_info in runtime_committee {
+                    if let Err(e) = committee.add_validator(validator_info) {
+                        log::warn!("Failed to add validator to committee: {:?}", e);
                     }
                 }
-                log::info!(
-                    "📊 Committee population: {}/{} validators added from runtime",
-                    added_count,
-                    runtime_committee.len()
-                );
 
                 log::info!(
                     "🔗 PPFA committee initialized (size: {}/{}, mode: production)",
@@ -777,16 +757,7 @@ pub fn new_full_with_params(
                 let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
-                    // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
-                    let multi_signer = MultiSigner::Sr25519(our_keys[0].clone());
-                    let account_id: AccountId32 = multi_signer.into_account();
-                    let our_validator_id = block_production::ValidatorId::from(account_id);
-
-                    log::info!(
-                        "🔑 Converted sr25519 key to ValidatorId: {}",
-                        hex::encode(our_validator_id.as_ref() as &[u8])
-                    );
-
+                    let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
                     let our_validator_info = validator_management::ValidatorInfo::new(
                         our_validator_id.clone(),
                         ppfa_params.min_validator_stake,
@@ -879,19 +850,11 @@ pub fn new_full_with_params(
 
                         let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
-                                log::info!(
-                                    "🔑 ASF using validator key from keystore (raw sr25519): {}",
+                                 log::info!(
+                                    "🔑 ASF using validator key from keystore: {}",
                                     hex::encode(public_key.as_ref() as &[u8])
                                 );
-                                // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
-                                let multi_signer = MultiSigner::Sr25519(public_key.clone());
-                                let account_id: AccountId32 = multi_signer.into_account();
-                                let validator_id = block_production::ValidatorId::from(account_id);
-                                log::info!(
-                                    "🔑 Converted to ValidatorId (AccountId32): {}",
-                                    hex::encode(validator_id.as_ref() as &[u8])
-                                );
-                                validator_id
+                                block_production::ValidatorId::from(public_key.0)
                             }
                             None => {
                                 log::warn!(
@@ -901,15 +864,6 @@ pub fn new_full_with_params(
                                 block_production::ValidatorId::from([0u8; 32])
                             }
                         };
-
-                        // DEBUG: Log proposer comparison for troubleshooting
-                        log::info!(
-                            "🔍 Slot #{}: Current proposer = {}, Our ID = {}, Match = {}",
-                            slot_number,
-                            hex::encode(&current_proposer.encode()[..16]),
-                            hex::encode(&our_validator_id.encode()[..16]),
-                            proposer_selector.is_proposer(&our_validator_id)
-                        );
 
                         // Check if we are the proposer
                         if proposer_selector.is_proposer(&our_validator_id) {
@@ -1040,29 +994,6 @@ pub fn new_full_with_params(
                                                 block.header.number(),
                                                 result
                                             );
-
-                                            // ═══════════════════════════════════════════════════
-                                            // FINALITY INTEGRATION: Propose block to ASF finality
-                                            // ═══════════════════════════════════════════════════
-                                            // TODO: Re-enable when finality_gadget is created before PPFA task
-                                            // let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
-                                            // let mut gadget = ppfa_finality_gadget.lock().await;
-                                            // match gadget.propose_block(finality_block_hash).await {
-                                            //     Ok(vote) => {
-                                            //         log::info!(
-                                            //             "🗳️  Created finality vote for block #{} at view {:?}",
-                                            //             block.header.number(),
-                                            //             vote.view
-                                            //         );
-                                            //     }
-                                            //     Err(e) => {
-                                            //         log::error!(
-                                            //             "❌ Failed to create finality vote for block #{}: {}",
-                                            //             block.header.number(),
-                                            //             e
-                                            //         );
-                                            //     }
-                                            // }
                                         },
                                         Err(e) => {
                                             log::error!(
@@ -1657,68 +1588,6 @@ pub fn new_full_with_params(
 
                 let mut gadget = finality_gadget_clone.lock().await;
                 gadget.run_worker().await;
-            },
-        );
-
-        // ========== SPAWN BLOCK IMPORT NOTIFICATION TASK ==========
-        //
-        // This is the CRITICAL integration that connects block imports to finality.
-        // When a block is imported, we need to:
-        // 1. Notify the finality gadget via propose_block()
-        // 2. Gadget creates and broadcasts a vote
-        // 3. Votes accumulate to form certificates
-        // 4. Certificates drive finality progression
-        //
-        // WITHOUT this task, blocks are produced but finality never advances!
-
-        let block_import_finality_gadget = finality_gadget.clone();
-        let import_notifications = client.import_notification_stream();
-
-        task_manager.spawn_essential_handle().spawn(
-            "asf-block-import-finality",
-            Some("finality"),
-            async move {
-                log::info!("🔗 Starting ASF block import → finality integration");
-
-                use futures::StreamExt;
-                let mut stream = import_notifications;
-
-                while let Some(notification) = stream.next().await {
-                    let substrate_hash = notification.hash;
-                    let block_number = *notification.header.number();
-
-                    // Convert Substrate H256 to finality_gadget::BlockHash
-                    let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
-
-                    log::info!(
-                        "📦 Block imported #{} ({:?}), proposing to finality gadget",
-                        block_number,
-                        substrate_hash
-                    );
-
-                    // Propose this block to the finality gadget
-                    // This creates a vote and broadcasts it to the network
-                    let mut gadget = block_import_finality_gadget.lock().await;
-                    match gadget.propose_block(block_hash).await {
-                        Ok(vote) => {
-                            log::info!(
-                                "✅ Created finality vote for block #{} ({:?}) at view {:?}",
-                                block_number,
-                                substrate_hash,
-                                vote.view
-                            );
-                        }
-                        Err(e) => {
-                            log::error!(
-                                "❌ Failed to propose block #{} to finality gadget: {}",
-                                block_number,
-                                e
-                            );
-                        }
-                    }
-                }
-
-                log::warn!("⚠️  Block import notification stream ended");
             },
         );
 
