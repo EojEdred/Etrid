@@ -371,4 +371,402 @@ export class GovernanceWrapper {
       approved,
     };
   }
+
+  /**
+   * Get proposal history with filters
+   */
+  async getProposalHistory(options?: {
+    proposer?: string;
+    status?: 'active' | 'passed' | 'rejected' | 'executed' | 'cancelled';
+    fromBlock?: number;
+    toBlock?: number;
+    limit?: number;
+  }): Promise<Proposal[]> {
+    this.ensureConnected();
+
+    try {
+      const allProposals = await this.getActiveProposals();
+      let filtered = allProposals;
+
+      // Filter by proposer
+      if (options?.proposer) {
+        filtered = filtered.filter(p => p.proposer === options.proposer);
+      }
+
+      // Filter by status
+      if (options?.status) {
+        filtered = filtered.filter(p => p.status === options.status);
+      }
+
+      // Filter by time range
+      if (options?.fromBlock) {
+        filtered = filtered.filter(p => p.createdAt >= options.fromBlock!);
+      }
+      if (options?.toBlock) {
+        filtered = filtered.filter(p => p.createdAt <= options.toBlock!);
+      }
+
+      // Apply limit
+      if (options?.limit) {
+        filtered = filtered.slice(0, options.limit);
+      }
+
+      return filtered;
+    } catch (error) {
+      throw new GovernanceError('Failed to get proposal history', { options, error });
+    }
+  }
+
+  /**
+   * Get voting delegations for an address
+   */
+  async getDelegations(address: string): Promise<Array<{
+    delegate: string;
+    weight: bigint;
+    expiresAt?: number;
+  }>> {
+    this.ensureConnected();
+
+    try {
+      const delegations = await this.api.query.governance.delegations(address);
+
+      if (delegations.isNone) {
+        return [];
+      }
+
+      const unwrapped = delegations.unwrap();
+      return unwrapped.map((delegation: any) => ({
+        delegate: delegation.delegate.toString(),
+        weight: delegation.weight.toBigInt(),
+        expiresAt: delegation.expiresAt?.toNumber(),
+      }));
+    } catch (error) {
+      throw new GovernanceError('Failed to get delegations', { address, error });
+    }
+  }
+
+  /**
+   * Get voting statistics for an address
+   */
+  async getVotingStatistics(address: string): Promise<{
+    totalVotes: number;
+    votesFor: number;
+    votesAgainst: number;
+    participationRate: number;
+    lastVoteAt?: number;
+    activeStreak: number;
+  }> {
+    this.ensureConnected();
+
+    try {
+      // Query all votes by this address
+      const allVotes = await this.api.query.governance.voterHistory(address);
+
+      if (allVotes.isNone) {
+        return {
+          totalVotes: 0,
+          votesFor: 0,
+          votesAgainst: 0,
+          participationRate: 0,
+          activeStreak: 0,
+        };
+      }
+
+      const votes = allVotes.unwrap();
+      const totalVotes = votes.length;
+      const votesFor = votes.filter((v: any) => v.approve.isTrue).length;
+      const votesAgainst = totalVotes - votesFor;
+
+      // Calculate participation rate
+      const totalProposals = await this.getProposalCount();
+      const participationRate = totalProposals > 0
+        ? (totalVotes / totalProposals) * 100
+        : 0;
+
+      // Get last vote timestamp
+      const lastVote = votes[votes.length - 1];
+      const lastVoteAt = lastVote?.timestamp.toNumber();
+
+      // Calculate active streak (consecutive proposals voted on)
+      let activeStreak = 0;
+      for (let i = votes.length - 1; i >= 0; i--) {
+        const expectedProposalId = await this.getProposalCount() - (votes.length - 1 - i);
+        if (votes[i].proposalId.toNumber() === expectedProposalId) {
+          activeStreak++;
+        } else {
+          break;
+        }
+      }
+
+      return {
+        totalVotes,
+        votesFor,
+        votesAgainst,
+        participationRate,
+        lastVoteAt,
+        activeStreak,
+      };
+    } catch (error) {
+      throw new GovernanceError('Failed to get voting statistics', { address, error });
+    }
+  }
+
+  /**
+   * Get proposal lifecycle timeline
+   */
+  async getProposalTimeline(proposalId: number): Promise<Array<{
+    event: 'created' | 'voted' | 'passed' | 'rejected' | 'executed' | 'cancelled';
+    timestamp: number;
+    blockNumber: number;
+    actor?: string;
+    details?: any;
+  }>> {
+    this.ensureConnected();
+
+    try {
+      const proposal = await this.getProposal(proposalId);
+      if (!proposal) {
+        throw new GovernanceError('Proposal not found', { proposalId });
+      }
+
+      const timeline: Array<{
+        event: 'created' | 'voted' | 'passed' | 'rejected' | 'executed' | 'cancelled';
+        timestamp: number;
+        blockNumber: number;
+        actor?: string;
+        details?: any;
+      }> = [];
+
+      // Add creation event
+      timeline.push({
+        event: 'created',
+        timestamp: proposal.createdAt,
+        blockNumber: proposal.createdAt,
+        actor: proposal.proposer,
+      });
+
+      // Get all votes
+      const votes = await this.getProposalVotes(proposalId);
+      votes.forEach(vote => {
+        timeline.push({
+          event: 'voted',
+          timestamp: vote.timestamp,
+          blockNumber: vote.timestamp,
+          actor: vote.voter,
+          details: {
+            approve: vote.approve,
+            weight: vote.weight.toString(),
+          },
+        });
+      });
+
+      // Add status change events
+      if (proposal.status === 'passed') {
+        timeline.push({
+          event: 'passed',
+          timestamp: proposal.endsAt,
+          blockNumber: proposal.endsAt,
+        });
+      } else if (proposal.status === 'rejected') {
+        timeline.push({
+          event: 'rejected',
+          timestamp: proposal.endsAt,
+          blockNumber: proposal.endsAt,
+        });
+      } else if (proposal.status === 'executed') {
+        timeline.push({
+          event: 'executed',
+          timestamp: proposal.endsAt,
+          blockNumber: proposal.endsAt,
+        });
+      } else if (proposal.status === 'cancelled') {
+        timeline.push({
+          event: 'cancelled',
+          timestamp: proposal.endsAt,
+          blockNumber: proposal.endsAt,
+          actor: proposal.proposer,
+        });
+      }
+
+      // Sort by timestamp
+      timeline.sort((a, b) => a.timestamp - b.timestamp);
+
+      return timeline;
+    } catch (error) {
+      throw new GovernanceError('Failed to get proposal timeline', { proposalId, error });
+    }
+  }
+
+  /**
+   * Estimate proposal outcome based on current votes
+   */
+  async estimateProposalOutcome(proposalId: number): Promise<{
+    currentResult: 'passing' | 'failing' | 'tied';
+    confidence: number;
+    projectedVotesFor: bigint;
+    projectedVotesAgainst: bigint;
+    estimatedEndVotes: bigint;
+    timeRemaining: number;
+    requiredVotesToPass?: bigint;
+    requiredVotesToFail?: bigint;
+  }> {
+    this.ensureConnected();
+
+    try {
+      const proposal = await this.getProposal(proposalId);
+      if (!proposal) {
+        throw new GovernanceError('Proposal not found', { proposalId });
+      }
+
+      const results = await this.getProposalResults(proposalId);
+      const currentTime = Date.now();
+      const timeRemaining = Math.max(0, proposal.endsAt - currentTime);
+
+      // Determine current result
+      let currentResult: 'passing' | 'failing' | 'tied';
+      if (results.votesFor > results.votesAgainst) {
+        currentResult = 'passing';
+      } else if (results.votesFor < results.votesAgainst) {
+        currentResult = 'failing';
+      } else {
+        currentResult = 'tied';
+      }
+
+      // Calculate confidence based on vote margin and time remaining
+      const voteDifference = results.votesFor > results.votesAgainst
+        ? results.votesFor - results.votesAgainst
+        : results.votesAgainst - results.votesFor;
+
+      const totalIssuance = await this.api.query.balances.totalIssuance();
+      const voteMargin = Number((voteDifference * 10000n) / totalIssuance.toBigInt()) / 100;
+      const timeProgress = (proposal.endsAt - proposal.createdAt - timeRemaining) /
+                          (proposal.endsAt - proposal.createdAt);
+
+      // Confidence increases with vote margin and time progress
+      const confidence = Math.min(100, (voteMargin * 50) + (timeProgress * 50));
+
+      // Project votes assuming linear growth
+      const timePassed = (proposal.endsAt - proposal.createdAt) - timeRemaining;
+      const voteRate = timePassed > 0 ? Number(results.totalVotes) / timePassed : 0;
+      const estimatedAdditionalVotes = BigInt(Math.floor(voteRate * timeRemaining));
+
+      const forRatio = results.totalVotes > 0n
+        ? Number(results.votesFor) / Number(results.totalVotes)
+        : 0.5;
+
+      const projectedVotesFor = results.votesFor + BigInt(Math.floor(Number(estimatedAdditionalVotes) * forRatio));
+      const projectedVotesAgainst = results.votesAgainst + (estimatedAdditionalVotes - BigInt(Math.floor(Number(estimatedAdditionalVotes) * forRatio)));
+
+      // Calculate votes required to change outcome
+      const requiredVotesToPass = currentResult === 'failing'
+        ? (results.votesAgainst - results.votesFor) + 1n
+        : undefined;
+
+      const requiredVotesToFail = currentResult === 'passing'
+        ? (results.votesFor - results.votesAgainst) + 1n
+        : undefined;
+
+      return {
+        currentResult,
+        confidence,
+        projectedVotesFor,
+        projectedVotesAgainst,
+        estimatedEndVotes: projectedVotesFor + projectedVotesAgainst,
+        timeRemaining,
+        requiredVotesToPass,
+        requiredVotesToFail,
+      };
+    } catch (error) {
+      throw new GovernanceError('Failed to estimate proposal outcome', { proposalId, error });
+    }
+  }
+
+  /**
+   * Delegate voting power to another address
+   */
+  async delegateVotes(
+    from: KeyringPair,
+    delegate: string,
+    weight: bigint,
+    expiresAt?: number
+  ): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const tx = this.api.tx.governance.delegate(delegate, weight, expiresAt);
+    const builder = new TransactionBuilder(this.api);
+    (builder as any).extrinsic = tx;
+
+    return builder.submit(from);
+  }
+
+  /**
+   * Undelegate voting power
+   */
+  async undelegateVotes(
+    from: KeyringPair,
+    delegate: string
+  ): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const tx = this.api.tx.governance.undelegate(delegate);
+    const builder = new TransactionBuilder(this.api);
+    (builder as any).extrinsic = tx;
+
+    return builder.submit(from);
+  }
+
+  /**
+   * Get governance network statistics
+   */
+  async getGovernanceStats(): Promise<{
+    totalProposals: number;
+    activeProposals: number;
+    passedProposals: number;
+    rejectedProposals: number;
+    executedProposals: number;
+    averageParticipation: number;
+    totalVoters: number;
+  }> {
+    this.ensureConnected();
+
+    try {
+      const allProposals = await this.getActiveProposals();
+      const totalProposals = allProposals.length;
+
+      const activeProposals = allProposals.filter(p => p.status === 'active').length;
+      const passedProposals = allProposals.filter(p => p.status === 'passed').length;
+      const rejectedProposals = allProposals.filter(p => p.status === 'rejected').length;
+      const executedProposals = allProposals.filter(p => p.status === 'executed').length;
+
+      // Calculate average participation
+      let totalParticipation = 0;
+      for (const proposal of allProposals) {
+        const results = await this.getProposalResults(proposal.id);
+        totalParticipation += results.participationRate;
+      }
+      const averageParticipation = totalProposals > 0
+        ? totalParticipation / totalProposals
+        : 0;
+
+      // Get unique voters count
+      const votersSet = new Set<string>();
+      for (const proposal of allProposals) {
+        const votes = await this.getProposalVotes(proposal.id);
+        votes.forEach(vote => votersSet.add(vote.voter));
+      }
+      const totalVoters = votersSet.size;
+
+      return {
+        totalProposals,
+        activeProposals,
+        passedProposals,
+        rejectedProposals,
+        executedProposals,
+        averageParticipation,
+        totalVoters,
+      };
+    } catch (error) {
+      throw new GovernanceError('Failed to get governance stats', { error });
+    }
+  }
 }

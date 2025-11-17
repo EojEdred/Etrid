@@ -335,4 +335,119 @@ export class StakingWrapper {
       throw new StakingError('Failed to estimate rewards', { amount, error });
     }
   }
+
+  /**
+   * Get all nominators for a validator
+   */
+  async getNominators(validatorAddress: string): Promise<Array<{
+    address: string;
+    stake: bigint;
+  }>> {
+    this.ensureConnected();
+    this.validateAddress(validatorAddress);
+
+    try {
+      const currentEra = await this.getCurrentEra();
+      const exposure = await this.api.query.staking.erasStakers(currentEra, validatorAddress);
+
+      return exposure.others.map((nominator: any) => ({
+        address: nominator.who.toString(),
+        stake: nominator.value.toBigInt(),
+      }));
+    } catch (error) {
+      throw new StakingError('Failed to get nominators', { validatorAddress, error });
+    }
+  }
+
+  /**
+   * Get validator commission history
+   */
+  async getCommissionHistory(
+    validatorAddress: string,
+    eras: number = 10
+  ): Promise<Array<{ era: number; commission: number }>> {
+    this.ensureConnected();
+    this.validateAddress(validatorAddress);
+
+    try {
+      const currentEra = await this.getCurrentEra();
+      const history: Array<{ era: number; commission: number }> = [];
+
+      for (let i = 0; i < eras; i++) {
+        const era = currentEra - i;
+        if (era < 0) break;
+
+        const prefs = await this.api.query.staking.erasValidatorPrefs(era, validatorAddress);
+        history.push({
+          era,
+          commission: prefs.commission.toNumber() / 10000000,
+        });
+      }
+
+      return history;
+    } catch (error) {
+      throw new StakingError('Failed to get commission history', { validatorAddress, error });
+    }
+  }
+
+  /**
+   * Set validator commission
+   */
+  async setCommission(
+    from: KeyringPair,
+    commission: number
+  ): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    if (commission < 0 || commission > 100) {
+      throw new StakingError('Commission must be between 0 and 100');
+    }
+
+    const commissionInPerbill = Math.floor(commission * 10000000); // Convert to per-billion
+    const tx = this.api.tx.staking.validate({ commission: commissionInPerbill });
+    const builder = new TransactionBuilder(this.api);
+    (builder as any).extrinsic = tx;
+
+    return builder.submit(from);
+  }
+
+  /**
+   * Get total network staking stats
+   */
+  async getNetworkStats(): Promise<{
+    totalStaked: bigint;
+    totalIssuance: bigint;
+    stakingRate: number;
+    activeValidators: number;
+    waitingValidators: number;
+  }> {
+    this.ensureConnected();
+
+    try {
+      const totalIssuance = await this.api.query.balances.totalIssuance();
+      const activeEra = await this.api.query.staking.activeEra();
+      const currentEra = activeEra.unwrap().index.toNumber();
+
+      // Get total staked
+      const erasTotalStake = await this.api.query.staking.erasTotalStake(currentEra);
+      const totalStaked = erasTotalStake.toBigInt();
+
+      // Get validator counts
+      const validators = await this.api.query.session.validators();
+      const activeValidators = validators.length;
+
+      // Calculate staking rate
+      const stakingRate = Number((totalStaked * 10000n) / totalIssuance.toBigInt()) / 100;
+
+      return {
+        totalStaked,
+        totalIssuance: totalIssuance.toBigInt(),
+        stakingRate,
+        activeValidators,
+        waitingValidators: 0, // Would need additional queries
+      };
+    } catch (error) {
+      throw new StakingError('Failed to get network stats', { error });
+    }
+  }
 }
