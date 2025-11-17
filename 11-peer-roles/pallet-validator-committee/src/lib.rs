@@ -65,12 +65,12 @@ pub mod pallet {
         /// Convert to ValidatorInfo for use with consensus modules
         pub fn to_validator_info(&self) -> ValidatorInfo {
             let peer_type = match self.peer_type {
-                0 => PeerType::ValidityNode,
-                1 => PeerType::FlareNode,
-                2 => PeerType::DecentralizedDirector,
-                3 => PeerType::StakingCommon,
-                4 => PeerType::Common,
-                _ => PeerType::ValidityNode, // Default
+                0 => PeerType::Common,
+                1 => PeerType::StakingCommon,
+                2 => PeerType::ValidityNode,
+                3 => PeerType::FlareNode,
+                4 => PeerType::DecentralizedDirector,
+                _ => PeerType::Common, // Default to Common
             };
             ValidatorInfo::new(self.validator_id.clone(), self.stake, peer_type)
         }

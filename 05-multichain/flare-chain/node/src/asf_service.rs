@@ -31,7 +31,8 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend};
+use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents};
+use futures::StreamExt;
 use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
@@ -1588,6 +1589,68 @@ pub fn new_full_with_params(
 
                 let mut gadget = finality_gadget_clone.lock().await;
                 gadget.run_worker().await;
+            },
+        );
+
+        // ========== SPAWN BLOCK IMPORT NOTIFICATION TASK ==========
+        //
+        // This is the CRITICAL integration that connects block imports to finality.
+        // When a block is imported, we need to:
+        // 1. Notify the finality gadget via propose_block()
+        // 2. Gadget creates and broadcasts a vote
+        // 3. Votes accumulate to form certificates
+        // 4. Certificates drive finality progression
+        //
+        // WITHOUT this task, blocks are produced but finality never advances!
+
+        let block_import_finality_gadget = finality_gadget.clone();
+        let import_notifications = client.import_notification_stream();
+
+        task_manager.spawn_essential_handle().spawn_blocking(
+            "asf-block-import-finality",
+            Some("finality"),
+            async move {
+                log::info!("🔗 Starting ASF block import → finality integration");
+
+                use futures::StreamExt;
+                let mut stream = import_notifications;
+
+                while let Some(notification) = stream.next().await {
+                    let substrate_hash = notification.hash;
+                    let block_number = *notification.header.number();
+
+                    // Convert Substrate H256 to finality_gadget::BlockHash
+                    let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
+
+                    log::debug!(
+                        "📦 Block imported #{} ({:?}), proposing to finality gadget",
+                        block_number,
+                        substrate_hash
+                    );
+
+                    // Propose this block to the finality gadget
+                    // This creates a vote and broadcasts it to the network
+                    let mut gadget = block_import_finality_gadget.lock().await;
+                    match gadget.propose_block(block_hash).await {
+                        Ok(vote) => {
+                            log::debug!(
+                                "✅ Created finality vote for block #{} ({:?}) at view {:?}",
+                                block_number,
+                                substrate_hash,
+                                vote.view
+                            );
+                        }
+                        Err(e) => {
+                            log::error!(
+                                "❌ Failed to propose block #{} to finality gadget: {}",
+                                block_number,
+                                e
+                            );
+                        }
+                    }
+                }
+
+                log::warn!("⚠️  Block import notification stream ended");
             },
         );
 

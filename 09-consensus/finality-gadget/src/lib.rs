@@ -20,6 +20,13 @@ pub struct ValidatorId(pub u32);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
 pub struct BlockHash([u8; 32]);
 
+impl BlockHash {
+    /// Create a new BlockHash from a 32-byte array
+    pub fn from_bytes(bytes: [u8; 32]) -> Self {
+        BlockHash(bytes)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Encode, Decode)]
 pub struct View(pub u64);
 
