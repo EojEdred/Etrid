@@ -1,267 +1,163 @@
-# Ëtrid SDK - Smart Contract Examples
+# Ëtrid SDK Examples
 
-This directory contains complete examples for interacting with Ëtrid smart contracts using the JavaScript/TypeScript SDK.
-
----
+Comprehensive examples demonstrating all major features of the Ëtrid Protocol JavaScript/TypeScript SDK.
 
 ## 📚 Examples Overview
 
-### 1. **ERC20 Token** (`erc20-token.ts`)
-- Deploy ERC20 token contract
-- Transfer tokens
-- Approve spending
-- Check balances
-- Mint and burn tokens
+### 1. **Lightning-Bloc Payments** (`lightning-bloc-payment.ts`)
+- Open and manage payment channels
+- Route multi-hop payments
+- Update channel state off-chain
+- Estimate routing fees
+- Close channels cooperatively or via dispute
 
-### 2. **NFT (ERC721)** (`nft-erc721.ts`)
-- Deploy NFT collection
-- Mint NFTs with metadata
-- Transfer NFTs
-- Approve transfers
-- Query ownership
+### 2. **Distribution Rewards** (`claim-rewards.ts`)
+- Check eligibility for daily rewards (27,397 ÉTR/day)
+- Query pending rewards across 5 categories
+- Claim rewards from Voters, Stakers, Validators, etc.
+- View claim history
+- Estimate future distributions
 
-### 3. **Simple DAO** (`simple-dao.ts`)
-- Create DAO
-- Add members
-- Create proposals
-- Vote on proposals
-- Execute proposals
+### 3. **Smart Contract Deployment** (`deploy-contract.ts`)
+- Upload WebAssembly contract code
+- Instantiate and deploy contracts
+- Call contract methods
+- Query contract state (free)
+- Estimate gas costs in VMw units
 
-### 4. **Escrow** (`escrow.ts`)
-- Create escrow agreement
-- Deposit funds
-- Confirm delivery
-- Handle disputes
-- Request refunds
+### 4. **AI Identity Registration** (`ai-registration.ts`)
+- Register AI agents with AIDID (world's first AI DID)
+- Update AI profiles and capabilities
+- Build and manage reputation scores
+- Grant/revoke permissions
+- Search AIs by capability
 
-### 5. **Complete DApp** (`complete-dapp.ts`)
-- Full application example
-- Multiple contract interactions
-- Error handling
-- Event listening
+### 5. **Cross-Chain Bridge** (`cross-chain-bridge.ts`)
+- Bridge tokens across 13 blockchains
+- Monitor bridge transaction status
+- Estimate cross-chain fees
+- Check bridge limits
+- View bridge history
+
+### 6. **Price Oracles** (`price-oracle.ts`)
+- Get current prices from decentralized oracles
+- Calculate TWAP (Time-Weighted Average Price)
+- Subscribe to real-time price updates
+- Query historical price data
+- Monitor oracle source health
+
+### 7. **DeFi Vault Lending** (`vault-lending.ts`)
+- Deposit multi-asset collateral
+- Borrow against collateral
+- Monitor vault health and ratios
+- Repay loans
+- Withdraw collateral safely
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
 ```bash
 # Install dependencies
 npm install
 
-# Or with yarn
-yarn install
-```
-
-### Running Examples
-
-```bash
-# Run individual example
-npx ts-node examples/erc20-token.ts
-
-# Or compile and run
+# Compile TypeScript
 npm run build
-node dist/examples/erc20-token.js
+
+# Run any example
+npx ts-node examples/lightning-bloc-payment.ts
+npx ts-node examples/claim-rewards.ts
+npx ts-node examples/deploy-contract.ts
 ```
 
----
+## 🏃 Running Individual Examples
 
-## 📖 Example Structure
-
-Each example follows this pattern:
-
-```typescript
-import { EtridClient } from '../src';
-
-async function main() {
-    // 1. Connect to blockchain
-    const client = new EtridClient('ws://localhost:9944');
-    await client.connect();
-
-    // 2. Setup account
-    const alice = client.createAccount('//Alice');
-
-    // 3. Interact with contract
-    // ... example code ...
-
-    // 4. Cleanup
-    await client.disconnect();
-}
-
-main().catch(console.error);
-```
-
----
-
-## 🔑 Contract ABIs
-
-ABIs for each contract are located in:
-```
-examples/abis/
-├── erc20.json
-├── nft.json
-├── dao.json
-└── escrow.json
-```
-
-To generate ABIs from your contracts:
 ```bash
-cd /path/to/contract
-cargo contract build --release
-# ABI will be in target/ink/contract.json
+# Lightning-Bloc instant payments (500K+ TPS)
+npx ts-node examples/lightning-bloc-payment.ts
+
+# Claim daily rewards (10M ÉTR/year)
+npx ts-node examples/claim-rewards.ts
+
+# Deploy WebAssembly smart contracts
+npx ts-node examples/deploy-contract.ts
+
+# Register AI identities (world's first AI DID)
+npx ts-node examples/ai-registration.ts
+
+# Bridge across 13 blockchains
+npx ts-node examples/cross-chain-bridge.ts
+
+# Decentralized price oracles
+npx ts-node examples/price-oracle.ts
+
+# DeFi lending with collateral vaults
+npx ts-node examples/vault-lending.ts
 ```
 
----
+## 📋 Prerequisites
 
-##  Common Patterns
+### Software Requirements
+- **Node.js** v16+ or v18+ (LTS recommended)
+- **TypeScript** v4.9+
+- **Polkadot.js API** v10+ (auto-installed)
 
-### Deploying a Contract
+### Network Options
 
+**Option 1: Local Development Node**
+```bash
+# Run local FlareChain node
+./flarechain --dev --ws-port 9944
+```
+
+**Option 2: Testnet**
 ```typescript
-const contract = await client.deployContract({
-    abi: erc20Abi,
-    wasm: erc20Wasm,
-    constructor: 'new',
-    args: [1000000, 'My Token', 'MTK', 18],
-    gasLimit: 100000000000,
-});
-
-console.log('Contract deployed at:', contract.address);
+const provider = new WsProvider('wss://testnet.etrid.io');
 ```
 
-### Calling Contract Methods
-
+**Option 3: Mainnet**
 ```typescript
-// Read-only call (query)
-const balance = await contract.query('balanceOf', [alice.address]);
-console.log('Balance:', balance.output);
-
-// State-changing call (transaction)
-const tx = await contract.tx('transfer', [bob.address, 100], {
-    gasLimit: 10000000000,
-});
-
-await tx.wait();
-console.log('Transaction hash:', tx.hash);
+const provider = new WsProvider('wss://rpc.etrid.io');
 ```
-
-### Listening to Events
-
-```typescript
-contract.on('Transfer', (event) => {
-    console.log('Transfer event:', {
-        from: event.from,
-        to: event.to,
-        value: event.value,
-    });
-});
-```
-
----
-
-## 🛠️ Advanced Usage
-
-### Batch Transactions
-
-```typescript
-const txs = await client.batchTx([
-    contract.tx('transfer', [bob.address, 100]),
-    contract.tx('transfer', [charlie.address, 50]),
-]);
-
-await Promise.all(txs.map(tx => tx.wait()));
-```
-
-### Error Handling
-
-```typescript
-try {
-    await contract.tx('transfer', [bob.address, 1000000]);
-} catch (error) {
-    if (error.message.includes('InsufficientBalance')) {
-        console.error('Not enough tokens!');
-    }
-}
-```
-
-### Gas Estimation
-
-```typescript
-const gasEstimate = await contract.estimateGas('transfer', [bob.address, 100]);
-console.log('Estimated gas:', gasEstimate);
-```
-
----
-
-## 📊 Example Outputs
-
-### ERC20 Token Example
-```
-✅ Connected to Ëtrid node
-✅ Deployed ERC20 at: 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM
-✅ Initial balance: 1000000
-✅ Transferred 100 tokens
-✅ New balance: 999900
-```
-
-### NFT Example
-```
-✅ Connected to Ëtrid node
-✅ Deployed NFT collection: "Crypto Apes"
-✅ Minted NFT #1 to Alice
-✅ Token URI: ipfs://Qm.../1.json
-✅ Transferred NFT #1 to Bob
-```
-
----
 
 ## 🔗 Resources
 
-- **Ëtrid Docs**: https://docs.etrid.com
-- **SDK Reference**: ../README.md
-- **Contract Examples**: /contracts/etwasm-examples/
-- **Discord**: https://discord.gg/etrid
-
----
-
-## 💡 Tips
-
-1. **Always estimate gas** before transactions
-2. **Use dry-run** for testing without spending gas
-3. **Listen to events** for real-time updates
-4. **Handle errors** gracefully with try-catch
-5. **Test on local node** before deploying to testnet
-
----
+- **Documentation**: https://docs.etrid.io
+- **API Reference**: https://docs.etrid.io/api
+- **Discord Community**: https://discord.gg/etrid
+- **GitHub Repository**: https://github.com/etrid/etrid
+- **Website**: https://etrid.io
 
 ## 🐛 Troubleshooting
 
-### Connection Issues
+**Connection Errors**
 ```typescript
-// Use localhost for local node
-const client = new EtridClient('ws://localhost:9944');
-
-// Use testnet endpoint for Ember
-const client = new EtridClient('wss://ember-rpc.etrid.io');
+// Ensure node is running on correct port
+const provider = new WsProvider('ws://localhost:9944');
 ```
 
-### Gas Limit Too Low
-```typescript
-// Increase gas limit
-const tx = await contract.tx('transfer', [bob.address, 100], {
-    gasLimit: 100000000000, // Higher limit
-});
+**Insufficient Balance**
+```bash
+# Fund test accounts from faucet or transfer
+# Alice, Bob test accounts need ÉTR for gas
 ```
 
-### Contract Not Found
-```typescript
-// Make sure contract is deployed
-if (!contract.address) {
-    throw new Error('Contract not deployed');
-}
+**Module Not Found**
+```bash
+# Link SDK locally before NPM publication
+npm run build && npm link
 ```
+
+## 💡 Best Practices
+
+1. Always wrap SDK calls in try-catch blocks
+2. Estimate gas before expensive operations
+3. Clean up subscriptions when done
+4. Use queries (free) for read operations
+5. Test on local node before production
 
 ---
 
-**Happy Coding! 🚀**
+**Built with ❤️ by the Ëtrid Team**
+
+For questions, join our [Discord](https://discord.gg/etrid) or open an issue on [GitHub](https://github.com/etrid/etrid/issues).
