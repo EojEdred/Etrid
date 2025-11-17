@@ -691,6 +691,7 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
+        let ppfa_finality_gadget = finality_gadget.clone();  // Clone for PPFA proposer
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -866,6 +867,15 @@ pub fn new_full_with_params(
                             }
                         };
 
+                        // DEBUG: Log proposer comparison for troubleshooting
+                        log::info!(
+                            "🔍 Slot #{}: Current proposer = {}, Our ID = {}, Match = {}",
+                            slot_number,
+                            hex::encode(&current_proposer.encode()[..16]),
+                            hex::encode(&our_validator_id.encode()[..16]),
+                            proposer_selector.is_proposer(&our_validator_id)
+                        );
+
                         // Check if we are the proposer
                         if proposer_selector.is_proposer(&our_validator_id) {
                             log::info!(
@@ -995,6 +1005,28 @@ pub fn new_full_with_params(
                                                 block.header.number(),
                                                 result
                                             );
+
+                                            // ═══════════════════════════════════════════════════
+                                            // FINALITY INTEGRATION: Propose block to ASF finality
+                                            // ═══════════════════════════════════════════════════
+                                            let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
+                                            let mut gadget = ppfa_finality_gadget.lock().await;
+                                            match gadget.propose_block(finality_block_hash).await {
+                                                Ok(vote) => {
+                                                    log::info!(
+                                                        "🗳️  Created finality vote for block #{} at view {:?}",
+                                                        block.header.number(),
+                                                        vote.view
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    log::error!(
+                                                        "❌ Failed to create finality vote for block #{}: {}",
+                                                        block.header.number(),
+                                                        e
+                                                    );
+                                                }
+                                            }
                                         },
                                         Err(e) => {
                                             log::error!(
@@ -1606,7 +1638,7 @@ pub fn new_full_with_params(
         let block_import_finality_gadget = finality_gadget.clone();
         let import_notifications = client.import_notification_stream();
 
-        task_manager.spawn_essential_handle().spawn_blocking(
+        task_manager.spawn_essential_handle().spawn(
             "asf-block-import-finality",
             Some("finality"),
             async move {
@@ -1622,7 +1654,7 @@ pub fn new_full_with_params(
                     // Convert Substrate H256 to finality_gadget::BlockHash
                     let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
 
-                    log::debug!(
+                    log::info!(
                         "📦 Block imported #{} ({:?}), proposing to finality gadget",
                         block_number,
                         substrate_hash
@@ -1633,7 +1665,7 @@ pub fn new_full_with_params(
                     let mut gadget = block_import_finality_gadget.lock().await;
                     match gadget.propose_block(block_hash).await {
                         Ok(vote) => {
-                            log::debug!(
+                            log::info!(
                                 "✅ Created finality vote for block #{} ({:?}) at view {:?}",
                                 block_number,
                                 substrate_hash,
