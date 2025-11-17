@@ -7,7 +7,14 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "lint": "eslint src"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:verbose": "jest --verbose",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": ["etrid", "blockchain", "substrate", "sdk"],
   "author": "Ëtrid Foundation",
