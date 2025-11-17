@@ -21,9 +21,14 @@ pub struct ValidatorId(pub u32);
 pub struct BlockHash([u8; 32]);
 
 impl BlockHash {
-    /// Create a new BlockHash from a 32-byte array
+    /// Create a new BlockHash from bytes
     pub fn from_bytes(bytes: [u8; 32]) -> Self {
         BlockHash(bytes)
+    }
+
+    /// Get the underlying bytes
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
     }
 }
 
