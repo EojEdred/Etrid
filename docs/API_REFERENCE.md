@@ -1,7 +1,7 @@
 # Etrid Blockchain API Reference
 
-**Version:** 1.0.0
-**Last Updated:** 2025-10-30
+**Version:** 2.0.0
+**Last Updated:** 2025-11-16
 
 ## Table of Contents
 
@@ -15,6 +15,9 @@
    - [pallet-validator-committee](#pallet-validator-committee)
    - [pallet-did-registry](#pallet-did-registry)
    - [pallet-aidid](#pallet-aidid)
+   - [pallet-distribution-pay](#pallet-distribution-pay)
+   - [pallet-lightning-bloc](#pallet-lightning-bloc)
+   - [pallet-etwasm-vm](#pallet-etwasm-vm)
 3. [RPC Endpoints](#rpc-endpoints)
 4. [TypeScript Type Definitions](#typescript-type-definitions)
 5. [Code Examples](#code-examples)
@@ -2728,9 +2731,528 @@ async function submitOraclePrice() {
 
 ---
 
+### pallet-distribution-pay
+
+**Purpose:** Automated daily distribution system for rewarding validators, directors, stakers, and voters.
+
+**Location**: `/Users/macbook/Desktop/etrid/12-consensus-day/distribution/src/lib.rs`
+
+#### Extrinsics
+
+##### `set_distribution_schedule`
+
+Configure daily distribution amounts and times (governance only)
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Must be root
+- `total_daily`: `u128` - Total daily distribution (default: 27,397 ÉTR)
+- `voters_pct`: `u32` - Voters percentage in basis points (default: 1000 = 10%)
+- `flare_nodes_pct`: `u32` - Flare nodes percentage (default: 1500 = 15%)
+- `validity_nodes_pct`: `u32` - Validity nodes percentage (default: 1500 = 15%)
+- `stakers_pct`: `u32` - Stakers percentage (default: 4000 = 40%)
+- `directors_pct`: `u32` - Directors percentage (default: 2000 = 20%)
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `DistributionScheduleUpdated { total_daily, allocations }`
+
+**Example:**
+```rust
+DistributionPay::set_distribution_schedule(
+    Origin::root(),
+    27_397_000_000_000_000_000_000u128, // 27,397 ÉTR
+    1000, // 10% voters
+    1500, // 15% flare nodes
+    1500, // 15% validity nodes
+    4000, // 40% stakers
+    2000, // 20% directors
+)?;
+```
+
+---
+
+##### `claim_reward`
+
+Claim pending distribution reward
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Claimant account (signed)
+- `category`: `DistributionCategory` - Category to claim from
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `RewardClaimed { account, category, amount }`
+
+**Errors:**
+- `NoRewardAvailable` - No pending reward
+- `NotEligible` - Account not eligible for category
+
+**Example:**
+```rust
+// Claim validator reward
+DistributionPay::claim_reward(
+    Origin::signed(validator),
+    DistributionCategory::FlareNodes
+)?;
+
+// Claim voter reward
+DistributionPay::claim_reward(
+    Origin::signed(voter),
+    DistributionCategory::Voters
+)?;
+```
+
+---
+
+#### Storage Queries
+
+##### `distribution_schedule() -> DistributionSchedule`
+
+Get current distribution schedule
+
+**Returns:**
+```rust
+DistributionSchedule {
+    total_daily: u128,
+    voters_pct: u32,
+    flare_nodes_pct: u32,
+    validity_nodes_pct: u32,
+    stakers_pct: u32,
+    directors_pct: u32,
+}
+```
+
+---
+
+##### `pending_rewards(account, category) -> u128`
+
+Get pending reward for account in category
+
+---
+
+##### `last_distribution(category) -> Option<BlockNumber>`
+
+Get block number of last distribution for category
+
+---
+
+#### Helper Functions
+
+```rust
+// Calculate coinage multiplier based on stake duration
+pub fn calculate_coinage_multiplier(stake_duration_days: u64) -> u32
+
+// Calculate reward with coinage
+pub fn calculate_reward_with_coinage(base_reward: u128, stake_duration_days: u64) -> u128
+
+// Apply penalty to reward
+pub fn apply_penalty(base_reward: u128, penalty_type: PenaltyType) -> u128
+```
+
+---
+
+### pallet-lightning-bloc
+
+**Purpose:** Layer 2 payment channel network for instant, zero-fee transactions.
+
+**Location**: `/Users/macbook/Desktop/etrid/07-transactions/lightning-bloc/`
+
+#### Extrinsics
+
+##### `open_channel`
+
+Open a new payment channel
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Channel initiator (signed)
+- `counterparty`: `T::AccountId` - Other party in channel
+- `initial_balance_self`: `BalanceOf<T>` - Initial balance for self
+- `initial_balance_counterparty`: `BalanceOf<T>` - Initial balance for counterparty
+- `duration`: `BlockNumberFor<T>` - Channel duration in blocks
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ChannelOpened { channel_id, party_a, party_b, capacity }`
+
+**Errors:**
+- `InsufficientBalance` - Not enough balance to lock
+- `ChannelAlreadyExists` - Channel already open between parties
+
+**Example:**
+```rust
+// Open channel with 100 ÉTR from each party
+LightningBloc::open_channel(
+    Origin::signed(alice),
+    bob,
+    100_000_000_000_000_000_000, // 100 ÉTR
+    100_000_000_000_000_000_000, // 100 ÉTR
+    144_000, // ~1 month duration (6s blocks)
+)?;
+```
+
+---
+
+##### `update_channel`
+
+Update channel state (off-chain payment)
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Either party (signed)
+- `channel_id`: `H256` - Channel identifier
+- `amount`: `BalanceOf<T>` - Payment amount
+- `from_a_to_b`: `bool` - Payment direction
+- `nonce`: `u64` - State nonce (anti-replay)
+- `signature_a`: `Vec<u8>` - Signature from party A
+- `signature_b`: `Vec<u8>` - Signature from party B
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ChannelUpdated { channel_id, new_balance_a, new_balance_b, nonce }`
+
+**Errors:**
+- `ChannelNotFound` - Channel doesn't exist
+- `ChannelNotOpen` - Channel not in open state
+- `InvalidSignature` - Invalid signature
+- `InvalidNonce` - Nonce not greater than current
+- `InsufficientChannelBalance` - Payment exceeds balance
+
+**Example:**
+```rust
+// Alice pays Bob 10 ÉTR
+LightningBloc::update_channel(
+    Origin::signed(alice),
+    channel_id,
+    10_000_000_000_000_000_000, // 10 ÉTR
+    true, // from_a_to_b
+    42, // nonce
+    alice_signature,
+    bob_signature,
+)?;
+```
+
+---
+
+##### `close_channel_cooperative`
+
+Close channel cooperatively (both parties agree)
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Either party (signed)
+- `channel_id`: `H256` - Channel identifier
+- `final_balance_a`: `BalanceOf<T>` - Final balance for party A
+- `final_balance_b`: `BalanceOf<T>` - Final balance for party B
+- `signature_a`: `Vec<u8>` - Signature from party A
+- `signature_b`: `Vec<u8>` - Signature from party B
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ChannelClosed { channel_id, final_balance_a, final_balance_b }`
+
+**Example:**
+```rust
+LightningBloc::close_channel_cooperative(
+    Origin::signed(alice),
+    channel_id,
+    90_000_000_000_000_000_000, // Alice: 90 ÉTR
+    110_000_000_000_000_000_000, // Bob: 110 ÉTR
+    alice_signature,
+    bob_signature,
+)?;
+```
+
+---
+
+##### `close_channel_unilateral`
+
+Close channel unilaterally (dispute period enforced)
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Initiating party (signed)
+- `channel_id`: `H256` - Channel identifier
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ChannelClosureInitiated { channel_id, initiated_by, close_height }`
+
+**Example:**
+```rust
+LightningBloc::close_channel_unilateral(
+    Origin::signed(alice),
+    channel_id,
+)?;
+```
+
+---
+
+##### `dispute_channel`
+
+Dispute fraudulent channel state
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Either party or watchtower (signed)
+- `channel_id`: `H256` - Channel identifier
+- `fraudulent_nonce`: `u64` - Fraudulent state nonce
+- `correct_nonce`: `u64` - Correct state nonce
+- `evidence`: `Vec<u8>` - Cryptographic evidence
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `FraudDetected { channel_id, fraudster, detector }`
+- `ChannelDisputed { channel_id, disputed_by, evidence }`
+
+**Errors:**
+- `ChannelNotFound` - Channel doesn't exist
+- `InvalidEvidence` - Evidence doesn't prove fraud
+
+**Example:**
+```rust
+LightningBloc::dispute_channel(
+    Origin::signed(watchtower),
+    channel_id,
+    30, // fraudulent nonce
+    50, // correct nonce
+    signatures_evidence,
+)?;
+```
+
+---
+
+#### Storage Queries
+
+##### `channels(channel_id) -> Option<PaymentChannel>`
+
+Get channel details
+
+**Returns:**
+```rust
+PaymentChannel {
+    id: H256,
+    party_a: AccountId,
+    party_b: AccountId,
+    current_balance_a: Balance,
+    current_balance_b: Balance,
+    nonce: u64,
+    state: ChannelState, // Open, PendingClose, Closing, Closed, Disputed
+    created_at: BlockNumber,
+    expires_at: BlockNumber,
+    capacity: Balance,
+}
+```
+
+---
+
+##### `watchtowers(watchtower_id) -> Option<Watchtower>`
+
+Get watchtower information
+
+---
+
+##### `total_channels() -> u64`
+
+Get total number of channels created
+
+---
+
+##### `total_volume() -> u128`
+
+Get total transaction volume processed
+
+---
+
+#### Helper Functions
+
+```rust
+// Generate channel ID
+pub fn generate_channel_id(party_a: &AccountId, party_b: &AccountId, nonce: u64) -> H256
+
+// Verify channel signatures
+pub fn verify_signatures(channel: &PaymentChannel, sig_a: &[u8], sig_b: &[u8]) -> bool
+
+// Calculate routing fee
+pub fn calculate_fee(amount: u128, fee_rate: u32, fee_base: u128) -> u128
+```
+
+---
+
+### pallet-etwasm-vm
+
+**Purpose:** EVM-compatible smart contract runtime with reentrancy protection.
+
+**Location**: `/Users/macbook/Desktop/etrid/08-etwasm-vm/pallet/src/lib.rs`
+
+#### Extrinsics
+
+##### `deploy_contract`
+
+Deploy a new smart contract
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Deployer account (signed)
+- `code`: `Vec<u8>` - Contract bytecode (WASM or EVM)
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ContractDeployed { deployer, contract_address, code_hash }`
+
+**Errors:**
+- `CodeTooLarge` - Bytecode exceeds maximum size (1 MB)
+- `InvalidBytecode` - Bytecode is malformed
+
+**Example:**
+```rust
+EtwasmVM::deploy_contract(
+    Origin::signed(alice),
+    contract_bytecode,
+)?;
+```
+
+---
+
+##### `call_contract`
+
+Call a deployed contract
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Caller account (signed)
+- `contract_addr`: `T::AccountId` - Contract address
+- `input_data`: `Vec<u8>` - Call data (function selector + args)
+- `gas_limit`: `Option<VMw>` - Gas limit (default: 1M VMw)
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ContractCalled { caller, contract, gas_used }`
+- `ContractExecuted { contract, gas_used, success }`
+
+**Errors:**
+- `ContractNotFound` - Contract doesn't exist
+- `GasLimitExceeded` - Gas limit too high
+- `OutOfGas` - Ran out of gas during execution
+- `ExecutionFailed` - Contract reverted or errored
+- `ReentrancyDetected` - Reentrancy attempt blocked
+- `MaxCallDepthExceeded` - Too many nested calls
+
+**Example:**
+```rust
+// Call transfer function on ERC-20 contract
+let call_data = encode_erc20_transfer(recipient, amount);
+EtwasmVM::call_contract(
+    Origin::signed(alice),
+    erc20_contract,
+    call_data,
+    Some(50_000), // 50K gas
+)?;
+```
+
+---
+
+##### `execute_bytecode`
+
+Execute bytecode directly (for testing)
+
+**Parameters:**
+- `origin`: `OriginFor<T>` - Caller account (signed)
+- `bytecode`: `Vec<u8>` - Bytecode to execute
+- `gas_limit`: `VMw` - Gas limit
+
+**Returns:** `DispatchResult`
+
+**Events:**
+- `ContractExecuted { contract, gas_used, success }`
+
+**Errors:**
+- `GasLimitExceeded` - Gas limit too high
+- `OutOfGas` - Ran out of gas
+- `ExecutionFailed` - Execution error
+
+**Example:**
+```rust
+// Execute simple bytecode
+EtwasmVM::execute_bytecode(
+    Origin::signed(alice),
+    simple_bytecode,
+    10_000, // 10K gas
+)?;
+```
+
+---
+
+#### Storage Queries
+
+##### `contract_code_hash(contract) -> Option<Hash>`
+
+Get code hash for contract
+
+---
+
+##### `contract_owner(contract) -> Option<AccountId>`
+
+Get contract owner
+
+---
+
+##### `contract_storage_value(contract, key) -> Option<H256>`
+
+Get storage value at key for contract
+
+---
+
+##### `code_storage(code_hash) -> Option<Vec<u8>>`
+
+Get bytecode for code hash
+
+---
+
+##### `gas_used() -> VMw`
+
+Get total gas used in current block
+
+---
+
+#### Helper Functions
+
+```rust
+// Create VMw metering runtime
+pub fn create_vmw_runtime(gas_limit: VMw) -> VmwMeteringRuntime
+
+// Calculate net gas usage
+pub fn calculate_net_gas(vmw: &VmwMeteringRuntime) -> (VMw, VMw, VMw)
+
+// Convert account to bytes32
+pub fn account_to_bytes32(account: &AccountId) -> [u8; 32]
+
+// Charge gas for execution
+pub fn charge_gas(amount: VMw) -> DispatchResult
+```
+
+**Gas Constants**:
+```rust
+const VMW_BLOCK_LIMIT: VMw = 10_000_000;  // 10M VMw per block
+const VMW_TX_LIMIT: VMw = 1_000_000;      // 1M VMw per transaction
+const VMW_PER_ETR: u128 = 1_000_000;      // 1 ÉTR = 1M VMw
+```
+
+**Opcode Gas Costs** (sample):
+- ADD, SUB, NOT, LT, GT, EQ: 3 VMw
+- MUL, DIV, MOD: 5 VMw
+- SLOAD (warm): 200 VMw
+- SSTORE (new): 20,000 VMw
+- CALL: 100-9,000 VMw (depends on value transfer)
+- CREATE: 32,000 VMw
+
+---
+
 ## Summary
 
-This API reference covers **8 pallets** with:
+This API reference covers **11 pallets** with:
 - **61 extrinsics** total across all pallets
 - **50+ storage queries**
 - **Runtime APIs** for validator committee management
