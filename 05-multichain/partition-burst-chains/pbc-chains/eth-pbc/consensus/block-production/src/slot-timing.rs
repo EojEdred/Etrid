@@ -124,7 +124,7 @@ impl SlotTimer {
     /// Reset slot timer
     pub fn reset(&mut self, start_time: u64) {
         self.current_slot = 0;
-        self.last_slot_time = 0;  // Allow first slot to trigger immediately
+        self.last_slot_time = start_time;
         self.update_duration();
     }
 }
@@ -395,14 +395,13 @@ mod tests {
     #[test]
     fn test_reset_timer() {
         let mut timer = SlotTimer::default();
-
+        
         timer.advance_slot(1000);
         timer.advance_slot(7000);
         assert_eq!(timer.current_slot(), 2);
-
+        
         timer.reset(10000);
         assert_eq!(timer.current_slot(), 0);
-        assert_eq!(timer.last_slot_time, 0);  // First slot should trigger immediately
-        assert!(timer.is_next_slot(10000));  // Verify first slot is ready
+        assert_eq!(timer.last_slot_time, 10000);
     }
 }
