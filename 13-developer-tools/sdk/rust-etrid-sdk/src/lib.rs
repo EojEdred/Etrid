@@ -34,6 +34,7 @@ pub mod client;
 pub mod account;
 pub mod types;
 pub mod error;
+pub mod wrappers;
 
 pub use client::Client;
 pub use account::Account;
