@@ -762,6 +762,14 @@ pub fn new_full_with_params(
                     runtime_committee.len()
                 );
 
+                // CRITICAL: Call rotate_committee() to move validators from pool into active committee
+                log::info!("🔄 Rotating committee to populate active members from validator pool...");
+                if let Err(e) = committee.rotate_committee(0) {
+                    log::error!("❌ Failed to rotate committee: {:?}", e);
+                } else {
+                    log::info!("✅ Committee rotated successfully");
+                }
+
                 log::info!(
                     "🔗 PPFA committee initialized (size: {}/{}, mode: production)",
                     committee.committee_size(),
