@@ -890,7 +890,7 @@ pub mod pallet {
             let mut all_validators: Vec<_> = Validators::<T>::iter()
                 .filter(|(_, info)| info.active && matches!(
                     info.peer_type,
-                    PeerType::ValidityNode | PeerType::FlareNode
+                    PeerType::ValidityNode | PeerType::FlareNode | PeerType::DecentralizedDirector
                 ))
                 .collect();
 

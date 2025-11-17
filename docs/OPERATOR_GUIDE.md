@@ -397,7 +397,12 @@ Group=etrid-validator
 WorkingDirectory=/var/lib/etrid-validator
 
 # Command to start validator
-ExecStart=/usr/local/bin/etrid-flare-node \
+# IMPORTANT: Generate and store a node-key securely before starting
+# The node-key ensures consistent network identity across restarts
+# Generate: openssl rand -hex 32 > /etc/etrid/node-key.secret
+# Then add: --node-key $(cat /etc/etrid/node-key.secret)
+
+ExecStart=/usr/local/bin/etrid \
   --config /var/lib/etrid-validator/config/config.toml \
   --validator \
   --name "MyValidator-01" \
@@ -407,7 +412,8 @@ ExecStart=/usr/local/bin/etrid-flare-node \
   --rpc-port 9944 \
   --ws-port 9945 \
   --prometheus-port 9615 \
-  --prometheus-external
+  --prometheus-external \
+  --node-key 0000000000000000000000000000000000000000000000000000000000000000
 
 # Restart policy
 Restart=always

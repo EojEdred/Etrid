@@ -81,6 +81,7 @@ impl SubstrateCli for Cli {
             "local" => Box::new(chain_spec::local_testnet_config()?),
             // Test configs
             "test_2val" | "test-2val" => Box::new(chain_spec::test_2validator_config()?),
+            "test_11val" | "test-11val" => Box::new(chain_spec::test_11validator_config()?),
             "test_21val" | "test-21val" => Box::new(chain_spec::test_21validator_config()?),
             "staging" | "ember" => Box::new(chain_spec::staging_testnet_config()?),
             // Legacy mainnet configs (DEPRECATED - included GRANDPA)

@@ -10,7 +10,6 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 // ═══════════════════════════════════════════════════════════════════════════════
 // ASF CONSENSUS MODULES (Phase 1-2: Runtime Integration)
 // ═══════════════════════════════════════════════════════════════════════════════
-mod asf_apis;
 mod asf_config;
 
 use sp_api::impl_runtime_apis;
@@ -1506,6 +1505,9 @@ impl_runtime_apis! {
                     "test_2validator" => {
                         Some(include_bytes!("../presets/test_2validator.json").to_vec())
                     },
+                    "test_11val" => {
+                        Some(include_bytes!("../presets/test_11val.json").to_vec())
+                    },
                     "test_21val" => {
                         Some(include_bytes!("../presets/test_21val.json").to_vec())
                     },
@@ -1544,6 +1546,7 @@ impl_runtime_apis! {
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
                 "ember_testnet".into(),
                 "test_2validator".into(),
+                "test_11val".into(),
                 "test_21val".into(),
                 "flarechain_mainnet".into(),
                 "flarechain_mainnet_asf".into(),
@@ -1562,58 +1565,54 @@ impl_runtime_apis! {
     // ASF CONSENSUS RUNTIME APIs (Phase 1-2: Runtime Integration)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    impl asf_apis::AsfApi<Block> for Runtime {
-        fn get_committee() -> Vec<asf_algorithm::ValidatorId> {
-            ValidatorCommittee::get_committee()
+    impl sp_consensus_asf::AsfApi<Block, AccountId> for Runtime {
+        fn committee() -> Vec<AccountId> {
+            // Get committee members from ValidatorCommittee pallet
+            ValidatorCommittee::committee()
                 .into_iter()
-                .map(|info| info.validator_id().clone())
                 .collect()
         }
 
-        fn get_proposer(slot: u64) -> Option<asf_algorithm::ValidatorId> {
-            ValidatorCommittee::get_proposer_for_slot(slot)
+        fn ppfa_index() -> u32 {
+            // Get current PPFA rotation index
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            ValidatorCommittee::get_ppfa_index(current_block)
         }
 
-        fn get_finality_level(block_hash: asf_algorithm::Hash) -> asf_algorithm::FinalityLevel {
-            // v108: Pure ASF consensus - no GRANDPA
-            // Finality is determined by ASF certificate accumulation
-            // For now, return None until certificate tracking is fully implemented
-            asf_algorithm::FinalityLevel::None
+        fn slot_duration() -> sp_consensus_asf::SlotDuration {
+            // Fixed slot duration for ASF (6 seconds = 6000ms)
+            sp_consensus_asf::SlotDuration::from_millis(6000)
         }
 
-        fn is_validator_excluded(validator: asf_algorithm::ValidatorId) -> bool {
-            !ValidatorCommittee::is_validator_active(&validator)
+        fn should_propose(validator: AccountId) -> bool {
+            // Check if validator is active and in committee
+            if !ValidatorCommittee::is_validator_active(&validator) {
+                return false;
+            }
+
+            let committee = ValidatorCommittee::committee();
+            if committee.is_empty() {
+                return false;
+            }
+
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            let ppfa_idx = ValidatorCommittee::get_ppfa_index(current_block);
+            let expected_idx = (ppfa_idx as usize) % committee.len();
+
+            committee.get(expected_idx)
+                .map(|expected| expected == &validator)
+                .unwrap_or(false)
         }
 
-        fn get_current_epoch() -> u64 {
-            ValidatorCommittee::get_current_epoch()
+        fn current_epoch() -> u32 {
+            ValidatorCommittee::get_current_epoch() as u32
         }
 
-        fn get_total_stake() -> u128 {
-            ValidatorCommittee::get_total_stake()
-        }
-
-        fn get_validator_info(validator: asf_algorithm::ValidatorId) -> Option<(u128, bool, u32)> {
-            ValidatorCommittee::get_validator(&validator).map(|info| {
-                (info.stake, info.is_active(), info.reputation_score())
-            })
-        }
-
-        fn get_ppfa_index(block_number: asf_algorithm::BlockNumber) -> u32 {
-            ValidatorCommittee::get_ppfa_index(block_number as u32)
-        }
-
-        fn get_certificate_count(block_hash: asf_algorithm::Hash) -> u32 {
-            // For Phase 2, return 0 (certificate accumulation not yet active)
-            // In Phase 3+, this will query certificate storage
-            0
-        }
-
-        fn has_bft_finality(block_hash: asf_algorithm::Hash) -> bool {
-            // v108: Pure ASF consensus - no GRANDPA
-            // BFT finality is determined by ASF certificate accumulation
-            // For now, return false until certificate tracking is fully implemented
-            false
+        fn active_validators() -> Vec<AccountId> {
+            // Return all validators in the active set
+            ValidatorCommittee::committee()
+                .into_iter()
+                .collect()
         }
     }
 

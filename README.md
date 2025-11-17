@@ -341,6 +341,26 @@ make dev
 ./scripts/start-testnet.sh
 ```
 
+**Important:** For mainnet deployments, you must provide a network key using the `--node-key` parameter:
+
+```bash
+# Generate a random node key
+NODE_KEY=$(openssl rand -hex 32)
+
+# Run mainnet validator with explicit node key
+./target/release/etrid --chain mainnet --validator \
+  --base-path /var/lib/etrid \
+  --node-key "$NODE_KEY" \
+  --name "YourValidatorName"
+
+# Run with custom chainspec
+./target/release/etrid build-spec --chain mainnet --raw > mainnet_raw.json
+./target/release/etrid --chain mainnet_raw.json --validator \
+  --node-key "$NODE_KEY"
+```
+
+The `--node-key` parameter is required for production nodes to ensure consistent network identity across restarts. Store this key securely - losing it will change your node's peer ID.
+
 ---
 
 ## 🤝 Contributing

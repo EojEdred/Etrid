@@ -109,5 +109,65 @@
       ]
     ],
     "slotDuration": 6000
+  },
+  "validatorCommittee": {
+    "committeeSize": 21,
+    "validators": [
+      [
+        "5G96aSkp8hsPzvBQCMQZtV3kvtuV6dToetKjuqois9spLzRH",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5Fue7F21NtH3K2RYYvRFz34DEA8muqPhetjdMnkb4Gnmqqn2",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5HC6DNCURXkxaQ71eYWAQRaY93zcvnZWMM9XYxXCtrkDooQr",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5HR2jhJuagaEa2tMFnhhJ1wzxHPLTP7zT4Ehee1dKw88E9Ur",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5D4YfNNrJSyt5z4KdFPj9nAS5LwvCuso6EH1pn2tGxSBA7MP",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5E7cgyUUTmpKQeqBNLP7EgLJSX3vJrAsGnbmpekH4dVvFeV4",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5GNH4dLH6juXASeeCDeUs8cQbeVhw4e4pRPXJxM7JtBWHf5F",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5DZrCe3ZK7Y8Xeob1LJjzFG8b1wRC2zevS6aB5uZ41833Zch",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5FAFHVdbTkGPoagwEWxs9XBn4WfkFTmfjiGAgiEHkNsxWXtm",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5EvqhRZiDmP1RDCUi1LJ7ZQV82NwLXRWLCTacghFKG6dSPmW",
+        100000000000000000000000,
+        2
+      ],
+      [
+        "5CV7vDv81nr51zWYUgHKyRZXBFy1amahPGiczYxbovm1EGeT",
+        100000000000000000000000,
+        2
+      ]
+    ]
   }
 }
