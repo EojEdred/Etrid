@@ -153,8 +153,15 @@ impl CommitteeManager {
             .collect();
 
         if eligible.is_empty() {
-            log::warn!("No eligible validators for committee. Returning empty committee.");
-            return Ok(Vec::new());
+            log::warn!("⚠️  No eligible validators after filtering (reputation/peer_type/stake). Using ALL validators from pool.");
+            // FALLBACK: When no validators pass strict filtering, use ALL validators in pool
+            // This ensures block production can continue even with newly added validators
+            eligible = self.validator_pool.values().collect();
+
+            if eligible.is_empty() {
+                log::error!("❌ FATAL: No validators in pool at all. Cannot form committee.");
+                return Ok(Vec::new());
+            }
         }
 
         // Sort by stake (descending) then reputation (descending)
