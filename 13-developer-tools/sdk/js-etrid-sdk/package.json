@@ -14,7 +14,10 @@
     "test:verbose": "jest --verbose",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "prepublishOnly": "npm run build && npm test"
+    "docs": "typedoc",
+    "docs:serve": "typedoc && npx serve docs/api",
+    "docs:json": "typedoc --json docs/api-docs.json",
+    "prepublishOnly": "npm run build && npm test && npm run docs"
   },
   "keywords": ["etrid", "blockchain", "substrate", "sdk"],
   "author": "Ëtrid Foundation",
@@ -37,6 +40,8 @@
     "typescript": "^5.1.6",
     "jest": "^29.6.1",
     "ts-jest": "^29.1.1",
-    "eslint": "^8.45.0"
+    "eslint": "^8.45.0",
+    "typedoc": "^0.25.0",
+    "typedoc-plugin-markdown": "^3.16.0"
   }
 }
