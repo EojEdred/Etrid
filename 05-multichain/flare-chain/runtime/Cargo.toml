@@ -143,6 +143,9 @@ sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk", tag 
 sp-version = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 sp-genesis-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
+# ASF Consensus primitives
+sp-consensus-asf = { path = "../../../09-consensus/primitives/consensus-asf", default-features = false }
+
 # RPC
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
@@ -230,6 +233,7 @@ std = [
     # ASF Algorithm
     "asf-algorithm/std",
     "validator-management/std",
+    "sp-consensus-asf/std",
 
     # OpenDID pallets
     "pallet-did-registry/std",

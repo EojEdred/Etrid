@@ -754,7 +754,7 @@ pub fn new_full_with_params(
                 use sp_core::crypto::KeyTypeId;
                 const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
-                let our_keys = ppfa_keystore.ed25519_public_keys(ASF_KEY_TYPE);
+                let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
                     let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
@@ -848,7 +848,7 @@ pub fn new_full_with_params(
 
                         const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
-                        let our_validator_id = match ppfa_keystore.ed25519_public_keys(ASF_KEY_TYPE).first() {
+                        let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
                                  log::info!(
                                     "🔑 ASF using validator key from keystore: {}",
@@ -1294,11 +1294,11 @@ pub fn new_full_with_params(
                 const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
                 let keystore = keystore_container.keystore();
-                let asf_keys = keystore.ed25519_public_keys(ASF_KEY_TYPE);
+                let asf_keys = keystore.sr25519_public_keys(ASF_KEY_TYPE);
 
                 match asf_keys.first() {
                     Some(public_key) => {
-                        // Convert Ed25519 public key (32 bytes) to u32 validator ID
+                        // Convert Sr25519 public key (32 bytes) to u32 validator ID
                         // Use first 4 bytes of the public key as the validator ID
                         let key_bytes = public_key.as_ref() as &[u8];
                         let validator_id_u32 = u32::from_le_bytes([
