@@ -173,8 +173,35 @@ impl VoteCollector {
 
         block_votes.push((vote.validator_id, vote.signature));
 
+        // V8 DIAGNOSTIC: Log vote distribution to diagnose quorum issues
+        let vote_count = block_votes.len() as u32;
+        let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
+            vote.block_hash.0[0], vote.block_hash.0[1],
+            vote.block_hash.0[30], vote.block_hash.0[31]);
+
+        log::info!(
+            "📊 Vote added: view={:?}, block={}, validator={}, votes={}/{} (quorum={})",
+            vote.view,
+            block_hash_short,
+            vote.validator_id,
+            vote_count,
+            self.max_validators,
+            self.quorum_threshold
+        );
+
         // Check if we reached quorum (2f+1)
-        let reached_quorum = block_votes.len() as u32 >= self.quorum_threshold;
+        let reached_quorum = vote_count >= self.quorum_threshold;
+
+        if reached_quorum {
+            log::info!(
+                "🎯 QUORUM REACHED! view={:?}, block={}, votes={}/{}",
+                vote.view,
+                block_hash_short,
+                vote_count,
+                self.quorum_threshold
+            );
+        }
+
         Ok(reached_quorum)
     }
 
@@ -515,12 +542,23 @@ impl FinalityGadget {
                 let cert = Certificate {
                     view: vote.view,
                     block_hash: vote.block_hash,
-                    signatures,
+                    signatures: signatures.clone(),
                     timestamp: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
                         .as_secs(),
                 };
+
+                // V8 DIAGNOSTIC: Log certificate creation
+                let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
+                    vote.block_hash.0[0], vote.block_hash.0[1],
+                    vote.block_hash.0[30], vote.block_hash.0[31]);
+                log::info!(
+                    "📜 CERTIFICATE CREATED! view={:?}, block={}, signatures={}",
+                    vote.view,
+                    block_hash_short,
+                    signatures.len()
+                );
 
                 self.pending_certificates.push_back(cert.clone());
                 self.gossip_scheduler.schedule_certificate(cert);
