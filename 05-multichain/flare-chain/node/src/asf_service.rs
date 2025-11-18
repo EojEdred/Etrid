@@ -1852,11 +1852,15 @@ pub fn new_full_with_params(
                                 // Deserialize vote data
                                 match bincode::deserialize::<VoteData>(&data) {
                                     Ok(vote_data) => {
+                                        // Extract values for logging before moving
+                                        let validator_id = vote_data.validator_id;
+                                        let view = vote_data.view;
+
                                         log::debug!(
                                             "📥 Received vote from peer {:?} (validator: {}, view: {})",
                                             peer_id,
-                                            vote_data.validator_id,
-                                            vote_data.view
+                                            validator_id,
+                                            view
                                         );
 
                                         // Forward to bridge for processing
@@ -1875,8 +1879,8 @@ pub fn new_full_with_params(
                                                 Ok(_) => {
                                                     log::info!(
                                                         "✅ Vote ACCEPTED by finality gadget (validator: {}, view: {}, block: {:?})",
-                                                        vote_data.validator_id,
-                                                        vote_data.view,
+                                                        validator_id,
+                                                        view,
                                                         finality_vote.block_hash
                                                     );
                                                 }
@@ -1884,8 +1888,8 @@ pub fn new_full_with_params(
                                                     log::warn!(
                                                         "❌ Vote REJECTED by finality gadget: {:?} (validator: {}, view: {})",
                                                         e,
-                                                        vote_data.validator_id,
-                                                        vote_data.view
+                                                        validator_id,
+                                                        view
                                                     );
                                                 }
                                             }
@@ -1900,11 +1904,15 @@ pub fn new_full_with_params(
                                 // Deserialize certificate data
                                 match bincode::deserialize::<CertificateData>(&data) {
                                     Ok(cert_data) => {
+                                        // Extract values for logging before moving
+                                        let view = cert_data.view;
+                                        let sig_count = cert_data.signatures.len();
+
                                         log::debug!(
                                             "📥 Received certificate from peer {:?} (view: {}, {} voters)",
                                             peer_id,
-                                            cert_data.view,
-                                            cert_data.signatures.len()
+                                            view,
+                                            sig_count
                                         );
 
                                         // Forward to bridge
@@ -1923,15 +1931,15 @@ pub fn new_full_with_params(
                                                 Ok(_) => {
                                                     log::info!(
                                                         "✅ Certificate ACCEPTED by finality gadget (view: {}, {} signatures)",
-                                                        cert_data.view,
-                                                        cert_data.signatures.len()
+                                                        view,
+                                                        sig_count
                                                     );
                                                 }
                                                 Err(e) => {
                                                     log::warn!(
                                                         "❌ Certificate REJECTED by finality gadget: {:?} (view: {})",
                                                         e,
-                                                        cert_data.view
+                                                        view
                                                     );
                                                 }
                                             }
