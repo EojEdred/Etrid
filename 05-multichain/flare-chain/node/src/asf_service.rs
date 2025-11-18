@@ -1366,6 +1366,42 @@ pub fn new_full_with_params(
                 Ok(())
             }
 
+            async fn broadcast_new_view(&self, new_view: FinalityNewView) -> Result<(), String> {
+                log::trace!(
+                    "Broadcasting ASF new view message (view: {:?}, sender: {})",
+                    new_view.new_view,
+                    new_view.sender.0
+                );
+
+                // Simple struct for serialization
+                #[derive(serde::Serialize, serde::Deserialize)]
+                struct NewViewData {
+                    new_view: u64,
+                    sender: u32,
+                    timestamp: u64,
+                }
+
+                let new_view_data = NewViewData {
+                    new_view: new_view.new_view.0,
+                    sender: new_view.sender.0,
+                    timestamp: new_view.timestamp,
+                };
+
+                // Serialize
+                let payload = bincode::serialize(&new_view_data)
+                    .map_err(|e| format!("Failed to serialize new view: {:?}", e))?;
+
+                // Create P2P message
+                let p2p_msg = P2PMessage::NewView { data: payload };
+
+                // Broadcast
+                self.p2p_network.broadcast(p2p_msg).await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+
+                log::debug!("✅ NewView broadcast via detrp2p (view: {:?})", new_view.new_view);
+                Ok(())
+            }
+
             async fn get_connected_peers(&self) -> Vec<String> {
                 // Get connected peers from P2P network
                 let peers = self.p2p_network.get_connected_peers().await;
@@ -2003,6 +2039,54 @@ pub fn new_full_with_params(
                                     }
                                     Err(e) => {
                                         log::error!("Failed to deserialize certificate from {:?}: {:?}", peer_id, e);
+                                    }
+                                }
+                            }
+                            P2PMessage::NewView { data } => {
+                                log::info!("🔄 Processing NEWVIEW message from {:?}", peer_id);
+                                // Deserialize new view data
+                                #[derive(serde::Serialize, serde::Deserialize)]
+                                struct NewViewData {
+                                    new_view: u64,
+                                    sender: u32,
+                                    timestamp: u64,
+                                }
+
+                                match bincode::deserialize::<NewViewData>(&data) {
+                                    Ok(new_view_data) => {
+                                        log::debug!(
+                                            "📥 Received NewView from peer {:?} (view: {}, sender: {})",
+                                            peer_id,
+                                            new_view_data.new_view,
+                                            new_view_data.sender
+                                        );
+
+                                        // Convert to finality-gadget format
+                                        let new_view_msg = finality_gadget::NewViewMessage {
+                                            new_view: finality_gadget::View(new_view_data.new_view),
+                                            sender: finality_gadget::ValidatorId(new_view_data.sender),
+                                            timestamp: new_view_data.timestamp,
+                                        };
+
+                                        // Forward to finality gadget
+                                        let mut gadget = bridge_finality_gadget.lock().await;
+                                        match gadget.handle_new_view(new_view_msg.clone()).await {
+                                            Ok(_) => {
+                                                log::info!(
+                                                    "✅ NewView ACCEPTED by finality gadget (view: {})",
+                                                    new_view_data.new_view
+                                                );
+                                            }
+                                            Err(e) => {
+                                                log::warn!(
+                                                    "❌ NewView REJECTED by finality gadget: {:?}",
+                                                    e
+                                                );
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to deserialize NewView from {:?}: {:?}", peer_id, e);
                                     }
                                 }
                             }

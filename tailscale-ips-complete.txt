@@ -1,0 +1,80 @@
+Ëtrid FlareChain - Complete Tailscale Network Map
+Generated: Tue Nov 18 2025
+========================================
+
+ALL 22 VALIDATORS - 100% DEPLOYED ✓
+
+Mac Tailscale IP: 100.70.117.105
+
+========================================
+ORACLE CLOUD DIRECTORS (6 total)
+========================================
+
+Gizzi-Director-1          64.181.215.19      -> 100.96.84.69       (ubuntu)
+AuditDev-Director-2       129.80.122.34      -> 100.70.242.106     (ubuntu)
+Director-3                157.173.200.86     -> 100.102.128.51     (root)
+Director-4                157.173.200.84     -> 100.71.242.104     (root)
+Director-5                157.173.200.81     -> 100.74.84.28       (root)
+Director-6                157.173.200.80     -> 100.89.102.75      (root)
+
+========================================
+CONTABO VALIDATORS (16 total)
+========================================
+
+Validator-6               85.239.239.194     -> 100.95.0.72        (root)
+Validator-7               85.239.239.193     -> 100.86.111.37      (root)
+Validator-8               85.239.239.190     -> 100.125.147.88     (root)
+Validator-9               85.239.239.189     -> 100.80.84.82       (root)
+Validator-10              85.239.239.188     -> 100.109.252.56     (root)
+Validator-11              80.190.82.186      -> 100.117.43.53      (root)
+Validator-12              80.190.82.185      -> 100.88.104.58      (root)
+Validator-13              80.190.82.184      -> 100.70.73.10       (root)
+Validator-14              80.190.82.183      -> 100.68.185.50      (root)
+Validator-15              158.220.83.146     -> 100.71.127.127     (root)
+Validator-16              158.220.83.66      -> 100.93.43.18       (root)
+Validator-17              154.12.250.18      -> 100.124.117.73     (root)
+Validator-18              154.12.250.17      -> 100.74.204.23      (root)
+Validator-19              154.12.250.15      -> 100.125.251.60     (root)
+Validator-20              154.12.249.223     -> 100.114.244.62     (root)
+Validator-21              154.12.249.182     -> 100.113.226.111    (root)
+
+========================================
+QUICK SSH ACCESS COMMANDS
+========================================
+
+# Oracle Directors (use ubuntu or root as noted)
+ssh ubuntu@100.96.84.69   # Gizzi-Director-1
+ssh ubuntu@100.70.242.106 # AuditDev-Director-2
+ssh root@100.102.128.51   # Director-3
+ssh root@100.71.242.104   # Director-4
+ssh root@100.74.84.28     # Director-5
+ssh root@100.89.102.75    # Director-6
+
+# Contabo Validators (all use root)
+ssh root@100.95.0.72      # Validator-6
+ssh root@100.86.111.37    # Validator-7
+# ... (all other validators use root)
+
+========================================
+DEPLOYMENT SUMMARY
+========================================
+
+Total Validators: 22
+Successfully Deployed: 22 (100%)
+Failed: 0
+
+Initial Deployment: 18/22 (82%)
+Fixed in Second Pass: 4/4 (100%)
+
+Issue Resolved: Directors 3-6 required 'root' user instead of 'ubuntu'
+
+========================================
+NOTES
+========================================
+
+- All Tailscale IPs are stable (100.x.x.x range)
+- Accessible from any network via encrypted WireGuard tunnel
+- No firewall configuration needed
+- Perfect for mobile/remote administration
+
+========================================
