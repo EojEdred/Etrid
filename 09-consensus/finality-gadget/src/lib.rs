@@ -179,7 +179,7 @@ impl VoteCollector {
             vote.block_hash.0[0], vote.block_hash.0[1],
             vote.block_hash.0[30], vote.block_hash.0[31]);
 
-        log::info!(
+        tracing::info!(
             "📊 Vote added: view={:?}, block={}, validator={}, votes={}/{} (quorum={})",
             vote.view,
             block_hash_short,
@@ -193,7 +193,7 @@ impl VoteCollector {
         let reached_quorum = vote_count >= self.quorum_threshold;
 
         if reached_quorum {
-            log::info!(
+            tracing::info!(
                 "🎯 QUORUM REACHED! view={:?}, block={}, votes={}/{}",
                 vote.view,
                 block_hash_short,
@@ -553,7 +553,7 @@ impl FinalityGadget {
                 let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
                     vote.block_hash.0[0], vote.block_hash.0[1],
                     vote.block_hash.0[30], vote.block_hash.0[31]);
-                log::info!(
+                tracing::info!(
                     "📜 CERTIFICATE CREATED! view={:?}, block={}, signatures={}",
                     vote.view,
                     block_hash_short,
