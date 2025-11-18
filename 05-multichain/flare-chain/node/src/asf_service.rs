@@ -1677,7 +1677,7 @@ pub fn new_full_with_params(
                             // Acquire lock only for getting ready messages
                             let (votes, certs) = {
                                 let mut gadget = finality_gadget_clone.lock().await;
-                                gadget.gossip_scheduler.get_ready_messages()
+                                gadget.get_ready_gossip_messages()
                             };  // Lock released here
 
                             // Network I/O happens WITHOUT holding the gadget lock

@@ -557,6 +557,11 @@ impl FinalityGadget {
         self.network_bridge.broadcast_certificate(cert).await
     }
 
+    // Get ready messages from gossip scheduler (public accessor)
+    pub fn get_ready_gossip_messages(&mut self) -> (Vec<Vote>, Vec<Certificate>) {
+        self.gossip_scheduler.get_ready_messages()
+    }
+
     // ========== CONSENSUS OPERATIONS ==========
 
     pub async fn propose_block(&mut self, block_hash: BlockHash) -> Result<Vote, String> {
