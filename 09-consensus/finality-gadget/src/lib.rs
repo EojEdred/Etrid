@@ -133,6 +133,84 @@ impl PeerReputation {
 }
 
 // ============================================================================
+// NEW VIEW COLLECTION & CONSENSUS (HotStuff Protocol)
+// ============================================================================
+
+pub struct NewViewCollector {
+    /// NewView messages by view: View -> Set of validators who sent NewView
+    new_views: HashMap<View, HashSet<ValidatorId>>,
+    /// Quorum threshold (2f+1 for BFT)
+    quorum_threshold: u32,
+    /// Maximum validators in the network
+    max_validators: u32,
+    /// The highest view that has achieved consensus (2/3 agreement)
+    consensus_view: View,
+}
+
+impl NewViewCollector {
+    pub fn new(max_validators: u32) -> Self {
+        let quorum_threshold = (2 * max_validators / 3) + 1;
+        Self {
+            new_views: HashMap::new(),
+            quorum_threshold,
+            max_validators,
+            consensus_view: View(0),
+        }
+    }
+
+    /// Add a NewView message from a validator
+    /// Returns true if this causes the view to reach consensus
+    pub fn add_new_view(&mut self, msg: &NewViewMessage) -> bool {
+        // Don't process NewView for views we've already passed
+        if msg.new_view.0 <= self.consensus_view.0 {
+            return false;
+        }
+
+        let validators = self.new_views.entry(msg.new_view).or_insert_with(HashSet::new);
+        validators.insert(msg.sender);
+
+        let vote_count = validators.len() as u32;
+
+        // Log the NewView collection
+        tracing::debug!(
+            "📨 NewView collected: view={}, from={}, count={}/{}",
+            msg.new_view.0, msg.sender.0, vote_count, self.quorum_threshold
+        );
+
+        // Check if we've reached consensus on this view
+        if vote_count >= self.quorum_threshold && msg.new_view.0 > self.consensus_view.0 {
+            tracing::info!(
+                "🔄 VIEW CONSENSUS REACHED! Advancing to view {} ({}/{} validators)",
+                msg.new_view.0, vote_count, self.max_validators
+            );
+            self.consensus_view = msg.new_view;
+
+            // Clean up old views to prevent memory leak
+            self.new_views.retain(|view, _| view.0 >= self.consensus_view.0);
+
+            return true;
+        }
+
+        false
+    }
+
+    /// Get the current consensus view (highest view with 2/3 agreement)
+    pub fn get_consensus_view(&self) -> View {
+        self.consensus_view
+    }
+
+    /// Get vote count for a specific view
+    pub fn get_vote_count(&self, view: View) -> u32 {
+        self.new_views.get(&view).map(|v| v.len() as u32).unwrap_or(0)
+    }
+
+    /// Check if we have enough NewView messages for a view
+    pub fn has_quorum_for_view(&self, view: View) -> bool {
+        self.get_vote_count(view) >= self.quorum_threshold
+    }
+}
+
+// ============================================================================
 // VOTE COLLECTION & AGGREGATION
 // ============================================================================
 
@@ -277,7 +355,7 @@ impl CertificateGossip {
     }
 
     pub fn check_finality(&self) -> Option<BlockHash> {
-        // Finality: 3 consecutive certificates for same block
+        // Finality: 3 consecutive certificates for the SAME block (HotStuff 3-chain rule)
         if self.certificates.len() < 3 {
             return None;
         }
@@ -288,10 +366,19 @@ impl CertificateGossip {
         let cert1 = &self.certificates[len - 2];
         let cert2 = &self.certificates[len - 1];
 
-        // Check if all 3 are consecutive views
-        if cert0.view.0 + 1 == cert1.view.0 && cert1.view.0 + 1 == cert2.view.0 {
-            // Return block that achieved finality
-            Some(cert2.block_hash)
+        // Check if all 3 are consecutive views AND for the SAME block
+        let consecutive_views = cert0.view.0 + 1 == cert1.view.0 && cert1.view.0 + 1 == cert2.view.0;
+        let same_block = cert0.block_hash == cert1.block_hash && cert1.block_hash == cert2.block_hash;
+
+        if consecutive_views && same_block {
+            tracing::info!(
+                "🎉 FINALITY ACHIEVED! Block {:02x}{:02x}..{:02x}{:02x} finalized at view {}",
+                cert0.block_hash.0[0], cert0.block_hash.0[1],
+                cert0.block_hash.0[30], cert0.block_hash.0[31],
+                cert2.view.0
+            );
+            // Return the finalized block (first certificate's block)
+            Some(cert0.block_hash)
         } else {
             None
         }
@@ -354,6 +441,15 @@ impl ViewChangeTimer {
 
     pub fn get_current_view(&self) -> View {
         self.current_view
+    }
+
+    /// Set the view directly (used when consensus is reached)
+    pub fn set_view(&mut self, view: View) {
+        if view.0 > self.current_view.0 {
+            self.current_view = view;
+            self.last_block_time = Instant::now();
+            self.view_change_pending = false;
+        }
     }
 }
 
@@ -475,6 +571,7 @@ impl GossipScheduler {
 pub trait NetworkBridge: Send + Sync {
     async fn broadcast_vote(&self, vote: Vote) -> Result<(), String>;
     async fn broadcast_certificate(&self, cert: Certificate) -> Result<(), String>;
+    async fn broadcast_new_view(&self, msg: NewViewMessage) -> Result<(), String>;
     async fn get_connected_peers(&self) -> Vec<String>;
 }
 
@@ -486,6 +583,7 @@ pub struct FinalityGadget {
     validator_id: ValidatorId,
     max_validators: u32,
     vote_collector: VoteCollector,
+    new_view_collector: NewViewCollector,
     certificate_gossip: CertificateGossip,
     view_timer: ViewChangeTimer,
     gossip_scheduler: GossipScheduler,
@@ -495,6 +593,7 @@ pub struct FinalityGadget {
     network_bridge: Arc<dyn NetworkBridge>,
     pending_votes: VecDeque<Vote>,
     pending_certificates: VecDeque<Certificate>,
+    pending_new_views: VecDeque<NewViewMessage>,
 }
 
 impl FinalityGadget {
@@ -507,6 +606,7 @@ impl FinalityGadget {
             validator_id,
             max_validators,
             vote_collector: VoteCollector::new(max_validators),
+            new_view_collector: NewViewCollector::new(max_validators),
             certificate_gossip: CertificateGossip::new(100),
             view_timer: ViewChangeTimer::new(Duration::from_secs(6)),
             gossip_scheduler: GossipScheduler::new(),
@@ -516,17 +616,48 @@ impl FinalityGadget {
             network_bridge,
             pending_votes: VecDeque::new(),
             pending_certificates: VecDeque::new(),
+            pending_new_views: VecDeque::new(),
         }
     }
 
     // ========== INBOUND MESSAGE HANDLING ==========
 
+    /// Handle incoming NewView message (HotStuff view synchronization)
+    pub async fn handle_new_view(&mut self, msg: NewViewMessage) -> Result<(), String> {
+        // Add our own NewView for the same view (we agree to advance)
+        let consensus_reached = self.new_view_collector.add_new_view(&msg);
+
+        // Update reputation
+        let rep = self.peer_reputation.entry(msg.sender).or_insert_with(PeerReputation::new);
+        rep.record_valid();
+
+        if consensus_reached {
+            // Update local view timer to match consensus
+            self.view_timer.set_view(msg.new_view);
+
+            tracing::info!(
+                "✅ View synchronized to {} via consensus",
+                msg.new_view.0
+            );
+        }
+
+        Ok(())
+    }
+
     pub async fn handle_vote(&mut self, vote: Vote) -> Result<(), String> {
-        // Validate vote
-        if vote.view != self.view_timer.get_current_view() {
+        // Validate vote against CONSENSUS view (not local view)
+        // This is the key HotStuff principle: accept votes for the agreed-upon view
+        let consensus_view = self.new_view_collector.get_consensus_view();
+
+        // Accept votes for current consensus view OR the next view (pipelining)
+        // This allows the protocol to make progress while views are being synchronized
+        if vote.view.0 < consensus_view.0 || vote.view.0 > consensus_view.0 + 1 {
             let rep = self.peer_reputation.entry(vote.validator_id).or_insert_with(PeerReputation::new);
             rep.record_invalid();
-            return Err(format!("Vote from wrong view: {:?}", vote.view));
+            return Err(format!(
+                "Vote from invalid view: {:?} (consensus: {:?})",
+                vote.view, consensus_view
+            ));
         }
 
         // Add to collector
@@ -593,6 +724,75 @@ impl FinalityGadget {
         self.pending_certificates.push_back(cert.clone());
         self.gossip_scheduler.schedule_certificate(cert.clone());
         self.network_bridge.broadcast_certificate(cert).await
+    }
+
+    /// Broadcast a NewView message to initiate view change consensus
+    pub async fn broadcast_new_view(&mut self, new_view: View) -> Result<(), String> {
+        let msg = NewViewMessage {
+            new_view,
+            sender: self.validator_id,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        };
+
+        // Add our own NewView to the collector
+        self.new_view_collector.add_new_view(&msg);
+
+        // Queue for gossip
+        self.pending_new_views.push_back(msg.clone());
+
+        tracing::info!(
+            "📤 Broadcasting NewView for view {} (initiating consensus)",
+            new_view.0
+        );
+
+        self.network_bridge.broadcast_new_view(msg).await
+    }
+
+    /// Check for view timeout and initiate view change if needed
+    /// Returns Some(NewViewMessage) if a view change was triggered
+    pub async fn check_view_timeout(&mut self) -> Option<NewViewMessage> {
+        if self.view_timer.should_trigger_view_change() {
+            let current = self.view_timer.get_current_view();
+            let new_view = View(current.0 + 1);
+
+            tracing::info!(
+                "⏰ View timeout! Initiating view change: {} -> {}",
+                current.0, new_view.0
+            );
+
+            // Broadcast NewView to initiate consensus
+            if let Err(e) = self.broadcast_new_view(new_view).await {
+                tracing::warn!("Failed to broadcast NewView: {:?}", e);
+                return None;
+            }
+
+            // Mark that we've initiated a view change
+            self.view_timer.trigger_view_change();
+
+            return Some(NewViewMessage {
+                new_view,
+                sender: self.validator_id,
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            });
+        }
+
+        None
+    }
+
+    /// Get pending NewView messages for gossip
+    pub fn get_pending_new_views(&mut self) -> Vec<NewViewMessage> {
+        self.pending_new_views.drain(..).collect()
+    }
+
+    /// Get the current consensus view
+    pub fn get_consensus_view(&self) -> View {
+        self.new_view_collector.get_consensus_view()
     }
 
     // Get ready messages from gossip scheduler (public accessor)

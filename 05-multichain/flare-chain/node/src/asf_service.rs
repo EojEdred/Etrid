@@ -1352,6 +1352,37 @@ pub fn new_full_with_params(
                 Ok(())
             }
 
+            async fn broadcast_new_view(&self, msg: finality_gadget::NewViewMessage) -> Result<(), String> {
+                log::debug!(
+                    "Broadcasting NewView message (view: {}, sender: {})",
+                    msg.new_view.0,
+                    msg.sender.0
+                );
+
+                // Convert to ViewChangeData for serialization
+                let view_change_data = ViewChangeData {
+                    new_view: msg.new_view.0,
+                    sender: msg.sender.0,
+                };
+
+                // Serialize the data
+                let payload = bincode::serialize(&view_change_data)
+                    .map_err(|e| format!("Failed to serialize NewView: {:?}", e))?;
+
+                // Create P2P message
+                let p2p_msg = P2PMessage::NewView {
+                    data: payload,
+                };
+
+                // Broadcast to all connected peers
+                self.p2p_network.broadcast(p2p_msg).await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+
+                log::info!("📤 NewView broadcast via detrp2p (view: {})", view_change_data.new_view);
+
+                Ok(())
+            }
+
             async fn get_connected_peers(&self) -> Vec<String> {
                 // Get connected peers from P2P network
                 let peers = self.p2p_network.get_connected_peers().await;
@@ -1387,6 +1418,18 @@ pub fn new_full_with_params(
                 signatures: cert_data.signatures.into_iter()
                     .map(|(id, sig)| (finality_gadget::ValidatorId(id), sig))
                     .collect(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            }
+        }
+
+        /// Convert ViewChangeData (bridge format) to finality_gadget::NewViewMessage
+        fn convert_new_view_from_bridge(view_change_data: ViewChangeData) -> finality_gadget::NewViewMessage {
+            finality_gadget::NewViewMessage {
+                new_view: finality_gadget::View(view_change_data.new_view),
+                sender: finality_gadget::ValidatorId(view_change_data.sender),
                 timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
@@ -1950,6 +1993,49 @@ pub fn new_full_with_params(
                                     }
                                 }
                             }
+                            P2PMessage::NewView { data } => {
+                                // Deserialize NewView data
+                                match bincode::deserialize::<ViewChangeData>(&data) {
+                                    Ok(view_change_data) => {
+                                        // Extract values for logging
+                                        let new_view = view_change_data.new_view;
+                                        let sender = view_change_data.sender;
+
+                                        log::info!(
+                                            "📥 Received NewView from peer {:?} (view: {}, sender: {})",
+                                            peer_id,
+                                            new_view,
+                                            sender
+                                        );
+
+                                        // Convert to finality-gadget format
+                                        let finality_new_view = convert_new_view_from_bridge(view_change_data);
+
+                                        // Process in finality gadget (no bridge needed for NewView)
+                                        let mut gadget = bridge_finality_gadget.lock().await;
+                                        match gadget.handle_new_view(finality_new_view.clone()).await {
+                                            Ok(_) => {
+                                                log::info!(
+                                                    "✅ NewView PROCESSED by finality gadget (view: {}, from: {})",
+                                                    new_view,
+                                                    sender
+                                                );
+                                            }
+                                            Err(e) => {
+                                                log::warn!(
+                                                    "❌ NewView REJECTED by finality gadget: {:?} (view: {}, from: {})",
+                                                    e,
+                                                    new_view,
+                                                    sender
+                                                );
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to deserialize NewView from {:?}: {:?}", peer_id, e);
+                                    }
+                                }
+                            }
                             _ => {
                                 log::trace!("Received non-consensus message from peer {:?}", peer_id);
                             }
@@ -2001,6 +2087,16 @@ pub fn new_full_with_params(
                             _ => {
                                 log::trace!("Received non-vote/certificate message from bridge");
                             }
+                        }
+                    }
+
+                    // ========== CHECK VIEW TIMEOUT ==========
+                    // Periodically check if we need to initiate a view change
+                    {
+                        let mut gadget = bridge_finality_gadget.lock().await;
+                        if let Some(_new_view_msg) = gadget.check_view_timeout().await {
+                            // NewView was broadcast automatically by check_view_timeout
+                            log::debug!("View timeout triggered - NewView broadcast initiated");
                         }
                     }
 
