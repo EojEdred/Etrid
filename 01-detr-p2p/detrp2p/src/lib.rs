@@ -907,25 +907,76 @@ impl ConnectionManager {
                         .record_event(peer.id, ReputationEvent::ValidMessage)
                         .await;
 
-                    // V3 FIX: Spawn message reception task for OUTGOING connections too!
-                    // This prevents broken pipe errors and enables full bidirectional communication.
+                    // V11 FIX: Properly process messages from OUTGOING connections
+                    // Previous bug: read_half was discarding all incoming messages!
+                    // This caused unidirectional communication - could send but not receive.
+                    let msg_router_clone = self.message_router.clone();
+                    let active_connections_clone = self.active_connections.clone();
+                    let active_streams_clone = self.active_streams.clone();
+                    let outbound_peer_id = peer.id;
+
                     tokio::spawn(async move {
-                        // Keep read_half alive to maintain TCP connection
-                        // Read and discard data (message routing handled by incoming connections)
-                        let mut buf = vec![0u8; 4096];
-                        let mut reader = read_half;
+                        let mut read_stream = read_half;
+                        log::debug!("📥 Starting OUTBOUND message receiver for peer {:?}", outbound_peer_id);
+
                         loop {
-                            match reader.read(&mut buf).await {
-                                Ok(0) | Err(_) => {
-                                    // Connection closed or error - task will terminate
+                            // Read message length (4 bytes)
+                            let mut len_buf = [0u8; 4];
+                            match read_stream.read_exact(&mut len_buf).await {
+                                Ok(_) => {},
+                                Err(e) => {
+                                    log::debug!("Outbound connection closed with peer {:?}: {}", outbound_peer_id, e);
                                     break;
                                 }
-                                Ok(_) => {
-                                    // Data received - discard it (routing via incoming connections)
-                                    continue;
+                            }
+
+                            let len = u32::from_be_bytes(len_buf) as usize;
+
+                            // Validate message size (prevent DoS)
+                            if len > 10_000_000 { // 10MB limit
+                                log::warn!("⚠️ Oversized message from {:?}: {} bytes", outbound_peer_id, len);
+                                break;
+                            }
+
+                            // Read message data
+                            let mut data = vec![0u8; len];
+                            if let Err(e) = read_stream.read_exact(&mut data).await {
+                                log::debug!("Failed to read message data: {}", e);
+                                break;
+                            }
+
+                            // Update last activity
+                            {
+                                let mut conns = active_connections_clone.write().await;
+                                if let Some(conn) = conns.get_mut(&outbound_peer_id) {
+                                    conn.last_activity = Instant::now();
+                                }
+                            }
+
+                            // Decode message
+                            match Message::decode(&data) {
+                                Ok(msg) => {
+                                    match &msg {
+                                        Message::Vote { .. } => log::info!("📥 Received VOTE from {:?} (outbound conn)", outbound_peer_id),
+                                        Message::Certificate { .. } => log::info!("📥 Received CERTIFICATE from {:?} (outbound conn)", outbound_peer_id),
+                                        _ => log::trace!("📥 Received {:?} from {:?} (outbound conn)", msg, outbound_peer_id),
+                                    }
+                                    msg_router_clone.route_message(outbound_peer_id, msg).await;
+                                }
+                                Err(e) => {
+                                    log::warn!("Failed to decode message from {:?}: {}", outbound_peer_id, e);
                                 }
                             }
                         }
+
+                        // Cleanup on disconnect
+                        log::info!("🔌 Outbound peer {:?} disconnected", outbound_peer_id);
+                        let mut conns = active_connections_clone.write().await;
+                        conns.remove(&outbound_peer_id);
+
+                        // Remove write stream too
+                        let mut streams = active_streams_clone.write().await;
+                        streams.remove(&outbound_peer_id);
                     });
 
                     Ok(())
