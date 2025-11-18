@@ -1871,10 +1871,23 @@ pub fn new_full_with_params(
 
                                             // Process in finality gadget
                                             let mut gadget = bridge_finality_gadget.lock().await;
-                                            if let Err(e) = gadget.handle_vote(finality_vote).await {
-                                                log::debug!("Vote processing note: {:?}", e);
-                                            } else {
-                                                log::trace!("✅ Vote processed successfully");
+                                            match gadget.handle_vote(finality_vote.clone()).await {
+                                                Ok(_) => {
+                                                    log::info!(
+                                                        "✅ Vote ACCEPTED by finality gadget (validator: {}, view: {}, block: {:?})",
+                                                        vote_data.validator_id,
+                                                        vote_data.view,
+                                                        finality_vote.block_hash
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    log::warn!(
+                                                        "❌ Vote REJECTED by finality gadget: {:?} (validator: {}, view: {})",
+                                                        e,
+                                                        vote_data.validator_id,
+                                                        vote_data.view
+                                                    );
+                                                }
                                             }
                                         }
                                     }
@@ -1906,10 +1919,21 @@ pub fn new_full_with_params(
 
                                             // Process in finality gadget
                                             let mut gadget = bridge_finality_gadget.lock().await;
-                                            if let Err(e) = gadget.handle_certificate(finality_cert).await {
-                                                log::debug!("Certificate processing note: {:?}", e);
-                                            } else {
-                                                log::info!("✅ Certificate processed successfully");
+                                            match gadget.handle_certificate(finality_cert.clone()).await {
+                                                Ok(_) => {
+                                                    log::info!(
+                                                        "✅ Certificate ACCEPTED by finality gadget (view: {}, {} signatures)",
+                                                        cert_data.view,
+                                                        cert_data.signatures.len()
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    log::warn!(
+                                                        "❌ Certificate REJECTED by finality gadget: {:?} (view: {})",
+                                                        e,
+                                                        cert_data.view
+                                                    );
+                                                }
                                             }
                                         }
                                     }
