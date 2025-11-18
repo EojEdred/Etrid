@@ -49,8 +49,8 @@ use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 // Runtime API for validator committee queries
 use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 
-// ÉTRID P2P Networking (DEPRECATED - replaced with Substrate libp2p)
-// use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
+// ÉTRID P2P Networking
+use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
 use etrid_protocol::gadget_network_bridge::{
     GadgetNetworkBridge,
     VoteData,
