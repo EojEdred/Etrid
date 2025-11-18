@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Ëtrid Wallet",
+    "slug": "etrid-wallet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6C5CE7"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.etrid.wallet",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Enable Face ID to securely authenticate and approve transactions.",
+        "NSCameraUsageDescription": "Camera is used to scan QR codes for addresses and payments.",
+        "NSLocationWhenInUseUsageDescription": "Location is used to find nearby crypto ATMs.",
+        "NSBluetoothAlwaysUsageDescription": "Bluetooth is used to connect to your Ledger hardware wallet."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6C5CE7"
+      },
+      "package": "com.etrid.wallet",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-camera",
+      "expo-location",
+      "expo-notifications"
+    ],
+    "scheme": "etrid",
+    "extra": {
+      "eas": {
+        "projectId": "etrid-wallet-mobile"
+      }
+    }
+  }
+}
