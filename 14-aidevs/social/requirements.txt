@@ -136,11 +136,40 @@ flask-cors>=5.0.0
 # textblob>=0.18.0.post0
 
 # ============================================================================
+# WEB SCRAPING & CONTENT AGGREGATION
+# ============================================================================
+
+# Web scraping
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+
+# Advanced scraping
+scrapy>=2.11.0
+
+# Article extraction
+newspaper3k>=0.2.8
+
+# RSS feed parsing
+feedparser>=6.0.11
+
+# Reddit API
+praw>=7.7.1
+
+# HTML parsing
+html5lib>=1.1
+
+# User agent rotation
+fake-useragent>=1.5.1
+
+# ============================================================================
 # EXTERNAL APIS (Optional)
 # ============================================================================
 
 # CoinGecko API client
-# pycoingecko>=3.1.0
+pycoingecko>=3.1.0
+
+# NewsAPI for tech news
+newsapi-python>=0.2.7
 
 # ============================================================================
 # VERSION CONSTRAINTS

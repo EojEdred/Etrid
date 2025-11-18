@@ -33,6 +33,40 @@ scheduled:
     description: "Week in review from all devs"
     priority: "medium"
 
+  # Gizzi content aggregation - Daily at 08:00 UTC
+  - name: "gizzi_content_aggregation"
+    workflow: "workflows/gizzi_content_aggregator.py"
+    schedule: "0 8 * * *"  # 08:00 UTC daily
+    dev: "gizzi"
+    enabled: true
+    description: "Scrape news, Reddit, tech sites for content ideas"
+    priority: "high"
+
+  # Gizzi auto-posting - 3 times daily
+  - name: "gizzi_auto_post_morning"
+    workflow: "workflows/gizzi_auto_poster.py"
+    schedule: "0 10 * * *"  # 10:00 UTC
+    dev: "gizzi"
+    enabled: true
+    description: "Auto-generate and post based on aggregated content"
+    priority: "high"
+
+  - name: "gizzi_auto_post_afternoon"
+    workflow: "workflows/gizzi_auto_poster.py"
+    schedule: "0 15 * * *"  # 15:00 UTC
+    dev: "gizzi"
+    enabled: true
+    description: "Auto-generate and post based on aggregated content"
+    priority: "medium"
+
+  - name: "gizzi_auto_post_evening"
+    workflow: "workflows/gizzi_auto_poster.py"
+    schedule: "0 20 * * *"  # 20:00 UTC
+    dev: "gizzi"
+    enabled: true
+    description: "Auto-generate and post based on aggregated content"
+    priority: "medium"
+
   # Daily EDSC stability check - Every day at 10:00 UTC
   - name: "edsc_stability"
     workflow: "workflows/edsc_stability.py"
@@ -148,6 +182,17 @@ reactive:
     description: "Monitor and respond to Twitter mentions"
     priority: "medium"
     rate_limit: 20  # Max 20 responses per hour
+
+  # Gizzi engagement bot - Active Twitter engagement
+  - name: "gizzi_engagement"
+    workflow: "workflows/gizzi_engagement_bot.py"
+    trigger: "continuous"
+    mode: "stream"  # Real-time streaming
+    dev: "gizzi"
+    enabled: true
+    description: "Respond to mentions, retweets, replies - active promotion"
+    priority: "high"
+    rate_limit: 20  # Max 20 responses per hour (40 in aggressive mode)
 
   # Community questions (Discord, Telegram in future)
   - name: "community_questions"
