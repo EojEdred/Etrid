@@ -552,35 +552,14 @@ pub fn new_full_with_params(
     // ═══════════════════════════════════════════════════════════════════════════
     // ASF FINALITY PROTOCOL REGISTRATION (Substrate libp2p)
     // ═══════════════════════════════════════════════════════════════════════════
+    // V9: PURE DETR P2P NETWORKING
+    // ═══════════════════════════════════════════════════════════════════════════
     //
-    // Register ASF finality protocol BEFORE building network so we can get
-    // notification handles for broadcasting votes/certificates.
+    // DETR P2P is ËTRID's core networking identity - NOT using Substrate notification protocols
+    // ASF finality messages flow through DETR P2P, not Substrate libp2p
     //
-    // Protocol: /etrid/asf-finality/1
-    // Purpose: Gossip ASF finality votes and certificates between validators
-
-    const ASF_FINALITY_PROTOCOL_NAME: &str = "/etrid/asf-finality/1";
-
-    let asf_protocol_config = {
-        use sc_network::config::{NonDefaultSetConfig, NotificationHandshake};
-
-        let protocol_id = ProtocolId::from(ASF_FINALITY_PROTOCOL_NAME);
-
-        NonDefaultSetConfig {
-            notifications_protocol: protocol_id,
-            fallback_names: vec![],
-            handshake: Some(NotificationHandshake::new(vec![1u8])), // Simple version handshake
-            max_notification_size: 1024 * 1024, // 1MB for certificates with many signatures
-            set_config: Default::default(),
-        }
-    };
-
-    net_config.add_notification_protocol(asf_protocol_config);
-
-    log::info!("✅ Registered ASF finality protocol: {}", ASF_FINALITY_PROTOCOL_NAME);
-
     // v108: No GRANDPA protocol - pure ASF consensus
-    // ASF now uses Substrate's libp2p for finality messages instead of detrp2p
+    // v109: No Substrate notification protocols - pure DETR P2P
 
     // v108: Disable warp sync for pure ASF (ASF has its own sync mechanism)
     let warp_sync = None;
@@ -610,19 +589,6 @@ pub fn new_full_with_params(
         })?;
 
     log::info!("✅ Substrate network built successfully on port 30333");
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GET ASF FINALITY NOTIFICATION HANDLE
-    // ═══════════════════════════════════════════════════════════════════════════
-    //
-    // Get notification service handle for ASF finality protocol.
-    // This will be used to send/receive votes and certificates.
-
-    let asf_notification_service = network
-        .notification_service(ProtocolId::from(ASF_FINALITY_PROTOCOL_NAME))
-        .expect("ASF finality protocol was registered; qed");
-
-    log::info!("✅ Got ASF finality notification service handle");
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OFFCHAIN WORKERS
