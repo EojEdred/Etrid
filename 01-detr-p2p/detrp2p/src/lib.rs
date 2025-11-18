@@ -1126,22 +1126,22 @@ impl P2PNetwork {
 
         // CRITICAL FIX: Actually connect to bootstrap peers via TCP
         let bootstrap_peers = self.kademlia.get_bootstrap_peers();
-        println!("🔌 Connecting to {} bootstrap peers...", bootstrap_peers.len());
+        log::info!("🔌 Connecting to {} bootstrap peers...", bootstrap_peers.len());
 
         for peer in bootstrap_peers {
             match self.connection_manager.connect(peer.clone()).await {
                 Ok(()) => {
-                    println!("  ✅ Connected to bootstrap peer: {:?}", peer.address);
+                    log::info!("  ✅ Connected to bootstrap peer: {:?}", peer.address);
                 }
                 Err(e) => {
-                    println!("  ⚠️ Failed to connect to bootstrap peer {:?}: {}", peer.address, e);
+                    log::warn!("  ⚠️ Failed to connect to bootstrap peer {:?}: {}", peer.address, e);
                 }
             }
         }
 
         // Log final connection count
         let connected_count = self.connection_manager.get_connected_peers().await.len();
-        println!("📊 DETR P2P connected to {} peers", connected_count);
+        log::info!("📊 DETR P2P connected to {} peers", connected_count);
 
         // Start listening for incoming connections
         let listener = TcpListener::bind(self.local_address)
