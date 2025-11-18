@@ -1,73 +1,121 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Button, Card } from 'react-native-paper';
-import { colors, spacing, typography } from '../theme/theme';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
+import { useBalance } from '../hooks/useBalance';
+import { useTransactions } from '../hooks/useTransactions';
+import { BalanceCard } from '../components/BalanceCard';
+import { TransactionItem } from '../components/TransactionItem';
+import { colors, spacing, typography, borderRadius } from '../theme/theme';
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const { address } = useAuth();
+  const { balance, loading: balanceLoading, refresh: refreshBalance } = useBalance('ETR');
+  const { transactions, loading: txLoading, refresh: refreshTransactions } = useTransactions(5);
+
+  const handleRefresh = async () => {
+    await Promise.all([refreshBalance(), refreshTransactions()]);
+  };
+
+  const isRefreshing = balanceLoading || txLoading;
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+    >
       <View style={styles.header}>
         <Text style={styles.greeting}>Welcome back, Eoj</Text>
+        <TouchableOpacity style={styles.notificationButton}>
+          <Text style={styles.notificationIcon}>🔔</Text>
+        </TouchableOpacity>
       </View>
 
-      <Card style={styles.balanceCard}>
-        <Card.Content>
-          <Text style={styles.label}>Total Balance</Text>
-          <Text style={styles.balance}>$125,450.32</Text>
-          <Text style={styles.change}>+$1,250.15 today (+1.0%) ↗</Text>
-        </Card.Content>
-      </Card>
+      <View style={styles.balanceSection}>
+        <BalanceCard
+          balance={balance?.balanceFormatted || '0 ETR'}
+          usdValue={balance?.usdValueFormatted || '$0.00'}
+          change24h={balance?.change24hPercent}
+          loading={balanceLoading}
+        />
+      </View>
 
       <View style={styles.quickActions}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionGrid}>
-          <Button mode="contained" onPress={() => {}} style={styles.actionButton}>
-            📤 Send
-          </Button>
-          <Button mode="contained" onPress={() => {}} style={styles.actionButton}>
-            📥 Receive
-          </Button>
-          <Button mode="contained" onPress={() => {}} style={styles.actionButton}>
-            🔄 Swap
-          </Button>
-          <Button mode="contained" onPress={() => {}} style={styles.actionButton}>
-            📈 Stake
-          </Button>
-          <Button mode="contained" onPress={() => {}} style={styles.actionButton}>
-            🏧 ATM
-          </Button>
+          <ActionButton
+            icon="📤"
+            label="Send"
+            onPress={() => navigation.navigate('Send')}
+          />
+          <ActionButton
+            icon="📥"
+            label="Receive"
+            onPress={() => navigation.navigate('Receive')}
+          />
+          <ActionButton
+            icon="🔄"
+            label="Swap"
+            onPress={() => {}}
+            disabled
+          />
+          <ActionButton
+            icon="📈"
+            label="Stake"
+            onPress={() => navigation.navigate('AccountsScreen')}
+          />
         </View>
       </View>
 
-      <View style={styles.accounts}>
-        <Text style={styles.sectionTitle}>My Accounts</Text>
-        
-        <Card style={styles.accountCard}>
-          <Card.Content>
-            <Text style={styles.accountType}>💳 Checking Account</Text>
-            <Text style={styles.accountBalance}>$12,450.32</Text>
-          </Card.Content>
-        </Card>
+      <View style={styles.transactionsSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('TransactionHistory')}>
+            <Text style={styles.seeAllText}>See All →</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Card style={styles.accountCard}>
-          <Card.Content>
-            <Text style={styles.accountType}>📈 Savings Account</Text>
-            <Text style={styles.accountBalance}>$50,000.00</Text>
-            <Text style={styles.accountInfo}>Earning 15% APY</Text>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.accountCard}>
-          <Card.Content>
-            <Text style={styles.accountType}>🔒 Staking Account</Text>
-            <Text style={styles.accountBalance}>10,000 ÉTR</Text>
-            <Text style={styles.accountInfo}>+3.42 ÉTR daily</Text>
-          </Card.Content>
-        </Card>
+        {transactions.length > 0 ? (
+          transactions.slice(0, 5).map(tx => (
+            <TransactionItem
+              key={tx.id}
+              transaction={tx}
+              currentAddress={address || ''}
+            />
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>💸</Text>
+            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptySubtext}>Start by receiving or buying ETR</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
 }
+
+interface ActionButtonProps {
+  icon: string;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress, disabled }) => (
+  <TouchableOpacity
+    style={[styles.actionButton, disabled && styles.actionButtonDisabled]}
+    onPress={onPress}
+    disabled={disabled}
+    activeOpacity={0.7}
+    accessibilityLabel={label}
+    accessibilityRole="button"
+  >
+    <Text style={styles.actionIcon}>{icon}</Text>
+    <Text style={styles.actionLabel}>{label}</Text>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -75,32 +123,34 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: spacing.lg,
+    paddingTop: spacing.xl,
   },
   greeting: {
     ...typography.h2,
     color: colors.text,
   },
-  balanceCard: {
-    margin: spacing.lg,
-    backgroundColor: colors.primary,
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  label: {
-    ...typography.bodySmall,
-    color: colors.textLight,
-    marginBottom: spacing.xs,
+  notificationIcon: {
+    fontSize: 20,
   },
-  balance: {
-    ...typography.h1,
-    color: '#FFFFFF',
-    marginBottom: spacing.xs,
-  },
-  change: {
-    ...typography.body,
-    color: colors.success,
+  balanceSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
   },
   quickActions: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
     ...typography.h3,
@@ -109,31 +159,57 @@ const styles = StyleSheet.create({
   },
   actionGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   actionButton: {
     flex: 1,
-    minWidth: '30%',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    alignItems: 'center',
   },
-  accounts: {
-    padding: spacing.lg,
+  actionButtonDisabled: {
+    opacity: 0.5,
   },
-  accountCard: {
+  actionIcon: {
+    fontSize: 28,
+    marginBottom: spacing.xs,
+  },
+  actionLabel: {
+    ...typography.bodySmall,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  transactionsSection: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.md,
   },
-  accountType: {
+  seeAllText: {
     ...typography.body,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  emptyState: {
+    paddingVertical: spacing.xxl,
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: spacing.md,
+  },
+  emptyText: {
+    ...typography.h3,
     color: colors.text,
     marginBottom: spacing.xs,
   },
-  accountBalance: {
-    ...typography.h3,
-    color: colors.text,
-  },
-  accountInfo: {
-    ...typography.bodySmall,
+  emptySubtext: {
+    ...typography.body,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
   },
 });
