@@ -1148,19 +1148,71 @@ impl P2PNetwork {
             .await
             .map_err(|e| format!("Failed to bind listener: {}", e))?;
 
-        let _kademlia = self.kademlia.clone();
-        let _conn_mgr = self.connection_manager.clone();
+        let kademlia = self.kademlia.clone();
+        let conn_mgr = self.connection_manager.clone();
         let _msg_router = self.message_router.clone();
 
         tokio::spawn(async move {
             loop {
                 match listener.accept().await {
-                    Ok((_stream, peer_addr)) => {
-                        // TODO: Handle incoming connection
-                        println!("Incoming connection from {}", peer_addr);
+                    Ok((stream, peer_addr)) => {
+                        log::info!("🔗 Incoming connection from {}", peer_addr);
+
+                        // Derive a temporary peer ID from the socket address
+                        // This will allow the connection to succeed until we implement proper handshake
+                        let mut peer_id_bytes = [0u8; 32];
+                        match peer_addr.ip() {
+                            std::net::IpAddr::V4(ipv4) => {
+                                // Copy IPv4 address bytes to first 4 bytes of peer ID
+                                peer_id_bytes[..4].copy_from_slice(&ipv4.octets());
+                            }
+                            std::net::IpAddr::V6(ipv6) => {
+                                // Copy IPv6 address bytes to first 16 bytes of peer ID
+                                peer_id_bytes[..16].copy_from_slice(&ipv6.octets());
+                            }
+                        }
+
+                        let peer_id = PeerId(peer_id_bytes);
+
+                        // Create peer address from incoming connection
+                        let peer = PeerAddr {
+                            id: peer_id.clone(),
+                            address: peer_addr,
+                        };
+
+                        // Register the connection using the connection manager
+                        let kademlia_clone = kademlia.clone();
+                        let conn_mgr_clone = conn_mgr.clone();
+
+                        tokio::spawn(async move {
+                            // Add peer to routing table
+                            kademlia_clone.add_peer(peer.clone()).await;
+
+                            // Store the connection
+                            let conn = Connection {
+                                _peer_id: peer_id.clone(),
+                                _address: peer_addr,
+                                _established_at: Instant::now(),
+                                last_activity: Instant::now(),
+                            };
+
+                            let mut conns = conn_mgr_clone.active_connections.write().await;
+                            if conns.len() < conn_mgr_clone.max_connections {
+                                conns.insert(peer_id.clone(), conn);
+                                drop(conns);
+
+                                // Store the stream
+                                let mut streams = conn_mgr_clone.active_streams.write().await;
+                                streams.insert(peer_id.clone(), Arc::new(Mutex::new(stream)));
+
+                                log::info!("  ✅ Accepted and registered incoming connection from {}", peer_addr);
+                            } else {
+                                log::warn!("  ⚠️ Max connections reached, rejecting {}", peer_addr);
+                            }
+                        });
                     }
                     Err(e) => {
-                        eprintln!("Accept error: {}", e);
+                        log::error!("Accept error: {}", e);
                     }
                 }
             }
