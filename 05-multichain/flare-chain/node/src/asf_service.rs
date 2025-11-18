@@ -2212,38 +2212,44 @@ pub fn new_full_with_params(
             asf_params.epoch_duration
         );
 
-        // Load genesis validators from runtime ValidatorCommittee pallet
+        // FIX: Load validator from keystore instead of genesis
+        // This ensures each validator uses their unique ASF key from keystore
+        // rather than test keys (Alice, Bob, Charlie) from genesis/chainspec
         let genesis_validators = {
-            // Query genesis committee from runtime at genesis block
-            let genesis_hash = client.info().genesis_hash;
+            use sp_core::crypto::KeyTypeId;
+            const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
-            match client.runtime_api().validator_committee(genesis_hash) {
-                Ok(committee) if !committee.is_empty() => {
+            let keystore = keystore_container.keystore();
+            match keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
+                Some(public_key) => {
                     log::info!(
-                        "✅ Loaded {} validators from genesis ValidatorCommittee",
-                        committee.len()
+                        "✅ Loading validator from keystore (not genesis): {}",
+                        hex::encode(public_key.as_ref() as &[u8])
                     );
 
-                    // Runtime API already returns Vec<ValidatorInfo> from validator-management
-                    // No conversion needed - use directly
-                    committee
-                },
-                Ok(_) => {
-                    log::warn!(
-                        "⚠️  Genesis ValidatorCommittee is empty. Using fallback single validator."
+                    // Convert sr25519 public key to ValidatorId (AccountId32)
+                    let multi_signer = MultiSigner::Sr25519(public_key.clone());
+                    let account_id: AccountId32 = multi_signer.into_account();
+                    let validator_id = validator_management::ValidatorId::from(account_id);
+
+                    log::info!(
+                        "✅ ValidatorId for management: {}",
+                        hex::encode(validator_id.as_ref() as &[u8])
                     );
-                    vec![
-                        validator_management::ValidatorInfo::new(
-                            validator_management::ValidatorId::from([0u8; 32]),
-                            asf_params.min_validator_stake,
-                            validator_management::PeerType::FlareNode,
-                        ),
-                    ]
+
+                    // Create ValidatorInfo with keystore key
+                    let validator_info = validator_management::ValidatorInfo::new(
+                        validator_id,
+                        asf_params.min_validator_stake,
+                        validator_management::PeerType::FlareNode,
+                    );
+
+                    vec![validator_info]
                 },
-                Err(e) => {
-                    log::error!(
-                        "❌ Failed to load genesis ValidatorCommittee: {:?}. Using fallback.",
-                        e
+                None => {
+                    log::warn!(
+                        "⚠️  No ASF validator key found in keystore. Using placeholder. \
+                         Generate keys with: ./target/release/flarechain-node key insert --key-type asfk --scheme sr25519"
                     );
                     vec![
                         validator_management::ValidatorInfo::new(
