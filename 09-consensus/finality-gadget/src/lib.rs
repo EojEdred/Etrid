@@ -621,7 +621,7 @@ impl FinalityGadget {
 
         validators_for_view.insert(new_view_msg.sender);
 
-        log::info!(
+        tracing::info!(
             "🔄 NewView received: view={:?}, from validator={}, count={}/{}",
             target_view,
             new_view_msg.sender.0,
@@ -631,7 +631,7 @@ impl FinalityGadget {
 
         // Check if we have quorum for view change
         if validators_for_view.len() as u32 >= self.view_change_quorum {
-            log::info!(
+            tracing::info!(
                 "✅ View change quorum reached! Transitioning to view={:?}",
                 target_view
             );
@@ -642,7 +642,7 @@ impl FinalityGadget {
             // Clean up old pending new views
             self.pending_new_views.retain(|v, _| v >= &target_view);
 
-            log::info!(
+            tracing::info!(
                 "🔄 View transition complete: old={:?}, new={:?}",
                 current_view,
                 target_view
@@ -709,7 +709,7 @@ impl FinalityGadget {
             let mut new_view = self.view_timer.trigger_view_change();
             new_view.sender = self.validator_id;
 
-            log::info!(
+            tracing::info!(
                 "🔄 View timeout triggered: transitioning to view={:?}",
                 new_view.new_view
             );
@@ -717,7 +717,7 @@ impl FinalityGadget {
             // Broadcast NewView message to network
             self.broadcast_new_view(new_view.clone()).await?;
 
-            log::info!(
+            tracing::info!(
                 "✅ NewView message broadcast: view={:?}, validator={}",
                 new_view.new_view,
                 self.validator_id.0

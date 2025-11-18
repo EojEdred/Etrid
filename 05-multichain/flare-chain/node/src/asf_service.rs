@@ -1205,7 +1205,7 @@ pub fn new_full_with_params(
         // ========== NETWORK BRIDGE IMPLEMENTATION ==========
         //
         // Create a bridge between finality-gadget and sc-network for gossip
-        use finality_gadget::{NetworkBridge, Vote as FinalityVote, Certificate as FinalityCertificate};
+        use finality_gadget::{NetworkBridge, Vote as FinalityVote, Certificate as FinalityCertificate, NewViewMessage};
         use codec::{Encode, Decode};
 
         // Define ASF finality gossip protocol
@@ -1366,7 +1366,7 @@ pub fn new_full_with_params(
                 Ok(())
             }
 
-            async fn broadcast_new_view(&self, new_view: FinalityNewView) -> Result<(), String> {
+            async fn broadcast_new_view(&self, new_view: NewViewMessage) -> Result<(), String> {
                 log::trace!(
                     "Broadcasting ASF new view message (view: {:?}, sender: {})",
                     new_view.new_view,
