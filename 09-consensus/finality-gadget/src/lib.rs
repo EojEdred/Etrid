@@ -149,7 +149,7 @@ impl VoteCollector {
         // Standard quorum: (2 * max_validators / 3) + 1 = 15 votes
         let quorum_threshold = 2; // TODO: Revert to (2 * max_validators / 3) + 1 once broadcasts fixed
 
-        log::warn!(
+        println!(
             "⚠️  TEMPORARY QUORUM: Using 2 validators instead of {} (will finalize with Oracle validators only)",
             (2 * max_validators / 3) + 1
         );
