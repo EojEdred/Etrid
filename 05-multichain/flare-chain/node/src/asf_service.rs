@@ -552,14 +552,35 @@ pub fn new_full_with_params(
     // ═══════════════════════════════════════════════════════════════════════════
     // ASF FINALITY PROTOCOL REGISTRATION (Substrate libp2p)
     // ═══════════════════════════════════════════════════════════════════════════
-    // V9: PURE DETR P2P NETWORKING
+    // V10: Use Substrate NotificationService for ASF P2P
     // ═══════════════════════════════════════════════════════════════════════════
     //
-    // DETR P2P is ËTRID's core networking identity - NOT using Substrate notification protocols
-    // ASF finality messages flow through DETR P2P, not Substrate libp2p
-    //
-    // v108: No GRANDPA protocol - pure ASF consensus
-    // v109: No Substrate notification protocols - pure DETR P2P
+    // v110: Register ASF finality protocol to use Substrate's peer mesh (18+ peers)
+    // instead of detr_p2p which only connects to bootstrap nodes
+
+    // ASF protocol name - similar to GRANDPA's approach
+    let asf_protocol_name: sc_network::ProtocolName =
+        format!("/{}/asf-finality/1", ProtocolId::from("flare").as_ref()).into();
+
+    // Create ASF notification protocol config
+    let (asf_notification_config, asf_notification_service) =
+        sc_network::config::NonDefaultSetConfig::new(
+            asf_protocol_name.clone(),
+            Vec::new(), // No fallback names
+            1024 * 1024, // 1MB max notification size
+            None, // Use default handshake
+            sc_network::config::SetConfig {
+                in_peers: 25,
+                out_peers: 25,
+                reserved_nodes: Vec::new(),
+                non_reserved_mode: sc_network::config::NonReservedPeerMode::Accept,
+            },
+        );
+
+    // Add ASF protocol to network config
+    net_config.add_notification_protocol(asf_notification_config);
+
+    log::info!("✅ ASF finality protocol registered: {}", asf_protocol_name);
 
     // v108: Disable warp sync for pure ASF (ASF has its own sync mechanism)
     let warp_sync = None;
@@ -1279,21 +1300,56 @@ pub fn new_full_with_params(
             Certificate(FinalityCertificate),
         }
 
-        // NetworkBridge implementation using DETR P2P
+        // NetworkBridge implementation using Substrate NotificationService
+        // V10: Use Substrate's peer mesh for ASF finality broadcasts
         struct DetrP2PNetworkBridge {
-            p2p_network: Arc<P2PNetwork>,
+            notification_service: Arc<tokio::sync::Mutex<Box<dyn NotificationService>>>,
             gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+            // Track connected peers via NotificationEvents
+            connected_peers: Arc<tokio::sync::RwLock<std::collections::HashSet<SubstratePeerId>>>,
         }
 
         impl DetrP2PNetworkBridge {
             fn new(
-                p2p_network: Arc<P2PNetwork>,
+                notification_service: Box<dyn NotificationService>,
                 gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
             ) -> Self {
                 Self {
-                    p2p_network,
+                    notification_service: Arc::new(tokio::sync::Mutex::new(notification_service)),
                     gadget_bridge,
+                    connected_peers: Arc::new(tokio::sync::RwLock::new(std::collections::HashSet::new())),
                 }
+            }
+
+            /// Start background task to track peer connections via NotificationEvents
+            fn start_peer_tracking(self: Arc<Self>) {
+                let peers = self.connected_peers.clone();
+                let service = self.notification_service.clone();
+
+                tokio::spawn(async move {
+                    loop {
+                        let event = {
+                            let mut svc = service.lock().await;
+                            svc.next_event().await
+                        };
+
+                        match event {
+                            Some(NotificationEvent::NotificationStreamOpened { peer, .. }) => {
+                                peers.write().await.insert(peer);
+                                log::debug!("🔗 ASF peer connected: {:?}", peer);
+                            }
+                            Some(NotificationEvent::NotificationStreamClosed { peer }) => {
+                                peers.write().await.remove(&peer);
+                                log::debug!("🔌 ASF peer disconnected: {:?}", peer);
+                            }
+                            Some(NotificationEvent::NotificationReceived { peer, notification }) => {
+                                // Handle incoming ASF messages here
+                                log::trace!("📨 ASF message from {:?}: {} bytes", peer, notification.len());
+                            }
+                            _ => {}
+                        }
+                    }
+                });
             }
 
             /// Convert finality-gadget Vote to bridge VoteData
@@ -1345,38 +1401,23 @@ pub fn new_full_with_params(
                 // Convert vote to bridge format
                 let vote_data = Self::convert_vote_to_bridge(&vote);
 
-                // Queue vote in gadget bridge
-                let mut bridge = self.gadget_bridge.lock().await;
-                bridge.send_vote(vote_data).await
-                    .map_err(|e| format!("Failed to queue vote: {:?}", e))?;
+                // Serialize vote data with message type prefix
+                let mut payload = vec![0u8]; // 0 = Vote message type
+                payload.extend(bincode::serialize(&vote_data)
+                    .map_err(|e| format!("Failed to serialize vote: {:?}", e))?);
 
-                // Get outbound messages from bridge
-                let messages = bridge.get_outbound_messages().await;
+                // Get connected peers and notification service
+                let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
+                let peer_count = peers.len();
+                let mut service = self.notification_service.lock().await;
 
-                // Send each message via P2P
-                for (msg, _priority) in messages {
-                    match msg {
-                        ConsensusBridgeMessage::Vote(vote_data) => {
-                            // Serialize vote data
-                            let payload = bincode::serialize(&vote_data)
-                                .map_err(|e| format!("Failed to serialize vote: {:?}", e))?;
-
-                            // Create P2P message
-                            let p2p_msg = P2PMessage::Vote {
-                                data: payload,
-                            };
-
-                            // Broadcast to all connected peers
-                            self.p2p_network.broadcast(p2p_msg).await
-                                .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
-
-                            log::debug!("✅ Vote broadcast via detrp2p (view: {})", vote_data.view);
-                        }
-                        _ => {
-                            log::warn!("Unexpected message type when broadcasting vote");
-                        }
-                    }
+                // Send to each connected peer
+                for peer_id in peers {
+                    service.send_sync_notification(&peer_id, payload.clone());
                 }
+
+                log::debug!("✅ Vote broadcast via Substrate NotificationService (view: {}, peers: {})",
+                    vote_data.view, peer_count);
 
                 Ok(())
             }
@@ -1391,39 +1432,23 @@ pub fn new_full_with_params(
                 // Convert certificate to bridge format
                 let cert_data = Self::convert_certificate_to_bridge(&cert);
 
-                // Queue certificate in gadget bridge
-                let mut bridge = self.gadget_bridge.lock().await;
-                bridge.send_certificate(cert_data).await
-                    .map_err(|e| format!("Failed to queue certificate: {:?}", e))?;
+                // Serialize certificate data with message type prefix
+                let mut payload = vec![1u8]; // 1 = Certificate message type
+                payload.extend(bincode::serialize(&cert_data)
+                    .map_err(|e| format!("Failed to serialize certificate: {:?}", e))?);
 
-                // Get outbound messages from bridge
-                let messages = bridge.get_outbound_messages().await;
+                // Get connected peers and notification service
+                let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
+                let peer_count = peers.len();
+                let mut service = self.notification_service.lock().await;
 
-                // Send each message via P2P
-                for (msg, _priority) in messages {
-                    match msg {
-                        ConsensusBridgeMessage::Certificate(cert_data) => {
-                            // Serialize certificate data
-                            let payload = bincode::serialize(&cert_data)
-                                .map_err(|e| format!("Failed to serialize certificate: {:?}", e))?;
-
-                            // Create P2P message
-                            let p2p_msg = P2PMessage::Certificate {
-                                data: payload,
-                            };
-
-                            // Broadcast to all connected peers
-                            self.p2p_network.broadcast(p2p_msg).await
-                                .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
-
-                            log::debug!("✅ Certificate broadcast via detrp2p (view: {}, voters: {})",
-                                cert_data.view, cert_data.signatures.len());
-                        }
-                        _ => {
-                            log::warn!("Unexpected message type when broadcasting certificate");
-                        }
-                    }
+                // Send to each connected peer
+                for peer_id in peers {
+                    service.send_sync_notification(&peer_id, payload.clone());
                 }
+
+                log::debug!("✅ Certificate broadcast via Substrate NotificationService (view: {}, voters: {}, peers: {})",
+                    cert_data.view, cert_data.signatures.len(), peer_count);
 
                 Ok(())
             }
@@ -1449,26 +1474,32 @@ pub fn new_full_with_params(
                     timestamp: new_view.timestamp,
                 };
 
-                // Serialize
-                let payload = bincode::serialize(&new_view_data)
-                    .map_err(|e| format!("Failed to serialize new view: {:?}", e))?;
+                // Serialize new view data with message type prefix
+                let mut payload = vec![2u8]; // 2 = NewView message type
+                payload.extend(bincode::serialize(&new_view_data)
+                    .map_err(|e| format!("Failed to serialize new view: {:?}", e))?);
 
-                // Create P2P message
-                let p2p_msg = P2PMessage::NewView { data: payload };
+                // Get connected peers and notification service
+                let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
+                let peer_count = peers.len();
+                let mut service = self.notification_service.lock().await;
 
-                // Broadcast
-                self.p2p_network.broadcast(p2p_msg).await
-                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+                // Send to each connected peer
+                for peer_id in peers {
+                    service.send_sync_notification(&peer_id, payload.clone());
+                }
 
-                log::debug!("✅ NewView broadcast via detrp2p (view: {:?})", new_view.new_view);
+                log::debug!("✅ NewView broadcast via Substrate NotificationService (view: {}, peers: {})",
+                    new_view_data.new_view, peer_count);
+
                 Ok(())
             }
 
             async fn get_connected_peers(&self) -> Vec<String> {
-                // Get connected peers from P2P network
-                let peers = self.p2p_network.get_connected_peers().await;
-                peers.into_iter()
-                    .map(|peer_id| hex::encode(peer_id.as_bytes()))
+                // Get connected peers from our tracked peer set
+                let peers = self.connected_peers.read().await;
+                peers.iter()
+                    .map(|peer_id| format!("{:?}", peer_id))
                     .collect()
             }
         }
@@ -1804,13 +1835,16 @@ pub fn new_full_with_params(
 
         log::info!("✅ Gadget network bridge initialized");
 
-        // Create DetrP2PNetworkBridge combining both components
+        // Create DetrP2PNetworkBridge using Substrate NotificationService
         let network_bridge = Arc::new(DetrP2PNetworkBridge::new(
-            p2p_network.clone(),
+            asf_notification_service,
             gadget_bridge.clone(),
         ));
 
-        log::info!("✅ DetrP2PNetworkBridge created - finality messages will use detrp2p");
+        // Start background task to track peer connections
+        network_bridge.clone().start_peer_tracking();
+
+        log::info!("✅ DetrP2PNetworkBridge created - finality messages will use Substrate NotificationService");
 
         // Calculate max validators from committee size
         let max_validators = asf_params.max_committee_size;
