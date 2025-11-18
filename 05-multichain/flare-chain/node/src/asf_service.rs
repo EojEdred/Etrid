@@ -877,9 +877,11 @@ pub fn new_full_with_params(
                         let account_id: AccountId32 = multi_signer.into_account();
                         let validator_id = block_production::ValidatorId::from(account_id);
 
+                        // Use minimum stake for ValidityNode (64 ËTR = 64 * 10^21)
+                        let validity_node_min_stake: u128 = 64_000_000_000_000_000_000_000;
                         let validator_info = validator_management::ValidatorInfo::new(
                             validator_id.clone(),
-                            ppfa_params.min_validator_stake,
+                            validity_node_min_stake,
                             validator_management::PeerType::ValidityNode,
                         );
 
