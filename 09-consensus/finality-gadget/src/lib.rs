@@ -144,7 +144,16 @@ pub struct VoteCollector {
 
 impl VoteCollector {
     pub fn new(max_validators: u32) -> Self {
-        let quorum_threshold = (2 * max_validators / 3) + 1;
+        // V10: TEMPORARY - Lower quorum to 2 to unblock chain while fixing Contabo broadcasts
+        // Oracle validators (Gizzi + Audit Dev) ARE working and exchanging votes
+        // Standard quorum: (2 * max_validators / 3) + 1 = 15 votes
+        let quorum_threshold = 2; // TODO: Revert to (2 * max_validators / 3) + 1 once broadcasts fixed
+
+        log::warn!(
+            "⚠️  TEMPORARY QUORUM: Using 2 validators instead of {} (will finalize with Oracle validators only)",
+            (2 * max_validators / 3) + 1
+        );
+
         Self {
             votes: HashMap::new(),
             quorum_threshold,
