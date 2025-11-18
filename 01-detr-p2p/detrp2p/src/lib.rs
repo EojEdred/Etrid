@@ -849,6 +849,7 @@ pub struct ConnectionManager {
     idle_timeout: Duration,
     reputation: Arc<ReputationManager>,
     encryption: Arc<EncryptionManager>,
+    message_router: Arc<MessageRouter>,
 }
 
 impl ConnectionManager {
@@ -856,6 +857,7 @@ impl ConnectionManager {
         max_connections: usize,
         connection_timeout: Duration,
         idle_timeout: Duration,
+        message_router: Arc<MessageRouter>,
     ) -> Self {
         Self {
             active_connections: Arc::new(RwLock::new(HashMap::new())),
@@ -866,6 +868,7 @@ impl ConnectionManager {
             idle_timeout,
             reputation: Arc::new(ReputationManager::new()),
             encryption: Arc::new(EncryptionManager::new()),
+            message_router,
         }
     }
 
@@ -1183,12 +1186,13 @@ impl P2PNetwork {
         bootstrap_peers: Vec<PeerAddr>,
     ) -> Self {
         let kademlia = Arc::new(KademliaNetwork::new(local_node_id, bootstrap_peers));
+        let message_router = Arc::new(MessageRouter::new());
         let connection_manager = Arc::new(ConnectionManager::new(
             100,                              // max connections
             Duration::from_secs(10),          // connection timeout
             Duration::from_secs(300),         // idle timeout (5 minutes)
+            message_router.clone(),           // V11: Pass message_router for outbound connection receiver
         ));
-        let message_router = Arc::new(MessageRouter::new());
 
         Self {
             _local_node_id: local_node_id,
