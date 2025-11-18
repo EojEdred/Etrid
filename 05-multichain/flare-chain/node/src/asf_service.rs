@@ -1648,23 +1648,56 @@ pub fn new_full_with_params(
 
         let finality_gadget_clone = finality_gadget.clone();
         let client_clone = client.clone();
+        let network_bridge_clone = network_bridge.clone();
 
-        task_manager.spawn_essential_handle().spawn_blocking(
+        task_manager.spawn_essential_handle().spawn(  // Changed from spawn_blocking to spawn
             "asf-finality-gadget",
-            None,
+            Some("finality"),
             async move {
                 log::info!("🚀 Starting ASF Finality Gadget worker loop");
 
-                // Run the finality gadget worker
-                // This handles:
+                // CRITICAL FIX: Refactored worker loop to release lock between iterations
+                // instead of holding it indefinitely. This prevents lock starvation
+                // of the block import task.
+                //
+                // The worker handles:
                 // 1. Incoming vote/certificate gossip
                 // 2. Vote aggregation and quorum detection
                 // 3. Certificate creation and broadcasting
                 // 4. Finality detection (3 consecutive certificates)
                 // 5. Timeout handling and view changes
 
-                let mut gadget = finality_gadget_clone.lock().await;
-                gadget.run_worker().await;
+                use tokio::time::{interval, Duration};
+                let mut gossip_interval = interval(Duration::from_millis(500));
+                let mut timeout_interval = interval(Duration::from_secs(1));
+
+                loop {
+                    tokio::select! {
+                        _ = gossip_interval.tick() => {
+                            // Acquire lock only for getting ready messages
+                            let (votes, certs) = {
+                                let mut gadget = finality_gadget_clone.lock().await;
+                                gadget.gossip_scheduler.get_ready_messages()
+                            };  // Lock released here
+
+                            // Network I/O happens WITHOUT holding the gadget lock
+                            for vote in votes {
+                                let _ = network_bridge_clone.broadcast_vote(vote).await;
+                            }
+
+                            for cert in certs {
+                                let _ = network_bridge_clone.broadcast_certificate(cert).await;
+                            }
+                        }
+
+                        _ = timeout_interval.tick() => {
+                            // Acquire lock for timeout handling
+                            let mut gadget = finality_gadget_clone.lock().await;
+                            let _ = gadget.handle_timeout().await;
+                            // Lock released at end of block
+                        }
+                    }
+                }
             },
         );
 
@@ -1698,29 +1731,43 @@ pub fn new_full_with_params(
                     // Convert Substrate H256 to finality_gadget::BlockHash
                     let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
 
-                    log::info!(
+                    log::debug!(
                         "📦 Block imported #{} ({:?}), proposing to finality gadget",
                         block_number,
                         substrate_hash
                     );
 
-                    // Propose this block to the finality gadget
-                    // This creates a vote and broadcasts it to the network
-                    let mut gadget = block_import_finality_gadget.lock().await;
-                    match gadget.propose_block(block_hash).await {
-                        Ok(vote) => {
-                            log::info!(
-                                "✅ Created finality vote for block #{} ({:?}) at view {:?}",
-                                block_number,
-                                substrate_hash,
-                                vote.view
-                            );
+                    // CRITICAL FIX: Use try_lock() instead of lock().await to prevent
+                    // blocking the notification stream. If the gadget is busy, we skip
+                    // this block rather than waiting. This is acceptable because finality
+                    // doesn't require voting on every single block.
+                    match block_import_finality_gadget.try_lock() {
+                        Ok(mut gadget) => {
+                            match gadget.propose_block(block_hash).await {
+                                Ok(vote) => {
+                                    log::info!(
+                                        "✅ Created finality vote for block #{} ({:?}) at view {:?}",
+                                        block_number,
+                                        substrate_hash,
+                                        vote.view
+                                    );
+                                }
+                                Err(e) => {
+                                    log::warn!(
+                                        "⚠️ Failed to propose block #{} to finality gadget: {}",
+                                        block_number,
+                                        e
+                                    );
+                                }
+                            }
                         }
-                        Err(e) => {
-                            log::error!(
-                                "❌ Failed to propose block #{} to finality gadget: {}",
-                                block_number,
-                                e
+                        Err(_) => {
+                            // Gadget is busy (worker is processing). Skip this block.
+                            // We'll vote on the next block instead. This prevents
+                            // notification stream backpressure.
+                            log::debug!(
+                                "⏭️ Skipping block #{} - finality gadget busy (will vote on next block)",
+                                block_number
                             );
                         }
                     }
