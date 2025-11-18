@@ -1083,12 +1083,27 @@ impl MessageRouter {
 
     pub async fn route_message(&self, from: PeerId, msg: Message) {
         let mut inbox = self.inbox.lock().await;
-        inbox.push_back((from, msg));
+        inbox.push_back((from, msg.clone()));
+        // V5 DIAGNOSTIC: Log message queuing
+        match &msg {
+            Message::Vote { .. } => log::info!("📬 Queued VOTE in inbox (size: {})", inbox.len()),
+            Message::Certificate { .. } => log::info!("📬 Queued CERTIFICATE in inbox (size: {})", inbox.len()),
+            _ => {}
+        }
     }
 
     pub async fn get_message(&self) -> Option<(PeerId, Message)> {
         let mut inbox = self.inbox.lock().await;
-        inbox.pop_front()
+        let result = inbox.pop_front();
+        // V5 DIAGNOSTIC: Log message retrieval
+        if let Some((_, ref msg)) = result {
+            match msg {
+                Message::Vote { .. } => log::info!("📤 Retrieved VOTE from inbox (remaining: {})", inbox.len()),
+                Message::Certificate { .. } => log::info!("📤 Retrieved CERTIFICATE from inbox (remaining: {})", inbox.len()),
+                _ => {}
+            }
+        }
+        result
     }
 
     pub async fn broadcast(&self, _msg: Message, _peers: Vec<PeerId>) -> Result<(), String> {
@@ -1260,7 +1275,12 @@ impl P2PNetwork {
                                 // Decode message
                                 match Message::decode(&data) {
                                     Ok(msg) => {
-                                        log::trace!("📥 Received {:?} from {:?}", msg, peer_id);
+                                        // V5 DIAGNOSTIC: Log ALL received messages at INFO level
+                                        match &msg {
+                                            Message::Vote { .. } => log::info!("📥 Received VOTE from {:?}", peer_id),
+                                            Message::Certificate { .. } => log::info!("📥 Received CERTIFICATE from {:?}", peer_id),
+                                            _ => log::trace!("📥 Received {:?} from {:?}", msg, peer_id),
+                                        }
                                         msg_router_clone.route_message(peer_id, msg).await;
                                     }
                                     Err(e) => {

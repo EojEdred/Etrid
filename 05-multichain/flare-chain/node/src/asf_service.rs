@@ -1831,15 +1831,24 @@ pub fn new_full_with_params(
                 // Main bridge loop
                 use tokio::time::{interval, Duration};
                 let mut poll_interval = interval(Duration::from_millis(100));
+                let mut poll_count = 0u64;
 
                 loop {
                     poll_interval.tick().await;
+                    poll_count += 1;
+
+                    // V5 DIAGNOSTIC: Log polling activity every 50 iterations (~5 seconds)
+                    if poll_count % 50 == 0 {
+                        log::info!("🔄 Bridge worker polling (iteration {})", poll_count);
+                    }
 
                     // ========== HANDLE INCOMING P2P MESSAGES ==========
                     // Poll P2P network for incoming vote/certificate messages
                     while let Some((peer_id, p2p_msg)) = bridge_p2p_network.receive_message().await {
+                        log::info!("🎯 Bridge worker processing message from {:?}", peer_id);
                         match p2p_msg {
                             P2PMessage::Vote { data } => {
+                                log::info!("🗳️  Processing VOTE message from {:?}", peer_id);
                                 // Deserialize vote data
                                 match bincode::deserialize::<VoteData>(&data) {
                                     Ok(vote_data) => {
