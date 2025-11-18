@@ -183,7 +183,7 @@ impl VoteCollector {
             "📊 Vote added: view={:?}, block={}, validator={}, votes={}/{} (quorum={})",
             vote.view,
             block_hash_short,
-            vote.validator_id,
+            vote.validator_id.0,
             vote_count,
             self.max_validators,
             self.quorum_threshold
