@@ -297,10 +297,11 @@ impl CertificateGossip {
         let cert1 = &self.certificates[len - 2];
         let cert2 = &self.certificates[len - 1];
 
-        // Check if all 3 are consecutive views
-        if cert0.view.0 + 1 == cert1.view.0 && cert1.view.0 + 1 == cert2.view.0 {
-            // Return block that achieved finality
-            Some(cert2.block_hash)
+        // Check if all 3 are consecutive views AND same block
+        if cert0.view.0 + 1 == cert1.view.0 && cert1.view.0 + 1 == cert2.view.0
+           && cert0.block_hash == cert1.block_hash && cert1.block_hash == cert2.block_hash {
+            // Return first cert's block that achieved finality
+            Some(cert0.block_hash)
         } else {
             None
         }
