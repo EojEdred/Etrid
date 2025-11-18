@@ -31,7 +31,8 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend};
+use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents};
+use futures::StreamExt;
 use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
@@ -39,7 +40,9 @@ use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
 use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
-use sp_runtime::traits::Header;
+use sp_runtime::traits::{Header, IdentifyAccount};
+use sp_runtime::MultiSigner;
+use sp_core::crypto::AccountId32;
 use sp_timestamp;
 use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 
@@ -690,6 +693,7 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
+        // let ppfa_finality_gadget = finality_gadget.clone(); // TODO: finality_gadget not created until line 1607
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -736,10 +740,34 @@ pub fn new_full_with_params(
                 };
 
                 // Initialize committee with runtime validators
-                for validator_info in runtime_committee {
-                    if let Err(e) = committee.add_validator(validator_info) {
-                        log::warn!("Failed to add validator to committee: {:?}", e);
+                let mut added_count = 0;
+                for validator_info in runtime_committee.iter() {
+                    log::info!(
+                        "🔧 Attempting to add validator to committee: {:?}",
+                        validator_info.validator_id()
+                    );
+                    match committee.add_validator(validator_info.clone()) {
+                        Ok(_) => {
+                            added_count += 1;
+                            log::info!("✅ Successfully added validator {} to committee", added_count);
+                        }
+                        Err(e) => {
+                            log::error!("❌ Failed to add validator to committee: {:?}", e);
+                        }
                     }
+                }
+                log::info!(
+                    "📊 Committee population: {}/{} validators added from runtime",
+                    added_count,
+                    runtime_committee.len()
+                );
+
+                // CRITICAL: Call rotate_committee() to move validators from pool into active committee
+                log::info!("🔄 Rotating committee to populate active members from validator pool...");
+                if let Err(e) = committee.rotate_committee(0) {
+                    log::error!("❌ Failed to rotate committee: {:?}", e);
+                } else {
+                    log::info!("✅ Committee rotated successfully");
                 }
 
                 log::info!(
@@ -757,7 +785,16 @@ pub fn new_full_with_params(
                 let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
-                    let our_validator_id = block_production::ValidatorId::from(our_keys[0].0);
+                    // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
+                    let multi_signer = MultiSigner::Sr25519(our_keys[0].clone());
+                    let account_id: AccountId32 = multi_signer.into_account();
+                    let our_validator_id = block_production::ValidatorId::from(account_id);
+
+                    log::info!(
+                        "🔑 Converted sr25519 key to ValidatorId: {}",
+                        hex::encode(our_validator_id.as_ref() as &[u8])
+                    );
+
                     let our_validator_info = validator_management::ValidatorInfo::new(
                         our_validator_id.clone(),
                         ppfa_params.min_validator_stake,
@@ -850,11 +887,19 @@ pub fn new_full_with_params(
 
                         let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
-                                 log::info!(
-                                    "🔑 ASF using validator key from keystore: {}",
+                                log::info!(
+                                    "🔑 ASF using validator key from keystore (raw sr25519): {}",
                                     hex::encode(public_key.as_ref() as &[u8])
                                 );
-                                block_production::ValidatorId::from(public_key.0)
+                                // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
+                                let multi_signer = MultiSigner::Sr25519(public_key.clone());
+                                let account_id: AccountId32 = multi_signer.into_account();
+                                let validator_id = block_production::ValidatorId::from(account_id);
+                                log::info!(
+                                    "🔑 Converted to ValidatorId (AccountId32): {}",
+                                    hex::encode(validator_id.as_ref() as &[u8])
+                                );
+                                validator_id
                             }
                             None => {
                                 log::warn!(
@@ -864,6 +909,15 @@ pub fn new_full_with_params(
                                 block_production::ValidatorId::from([0u8; 32])
                             }
                         };
+
+                        // DEBUG: Log proposer comparison for troubleshooting
+                        log::info!(
+                            "🔍 Slot #{}: Current proposer = {}, Our ID = {}, Match = {}",
+                            slot_number,
+                            hex::encode(&current_proposer.encode()[..16]),
+                            hex::encode(&our_validator_id.encode()[..16]),
+                            proposer_selector.is_proposer(&our_validator_id)
+                        );
 
                         // Check if we are the proposer
                         if proposer_selector.is_proposer(&our_validator_id) {
@@ -994,6 +1048,29 @@ pub fn new_full_with_params(
                                                 block.header.number(),
                                                 result
                                             );
+
+                                            // ═══════════════════════════════════════════════════
+                                            // FINALITY INTEGRATION: Propose block to ASF finality
+                                            // ═══════════════════════════════════════════════════
+                                            // TODO: Re-enable when finality_gadget is created before PPFA task
+                                            // let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
+                                            // let mut gadget = ppfa_finality_gadget.lock().await;
+                                            // match gadget.propose_block(finality_block_hash).await {
+                                            //     Ok(vote) => {
+                                            //         log::info!(
+                                            //             "🗳️  Created finality vote for block #{} at view {:?}",
+                                            //             block.header.number(),
+                                            //             vote.view
+                                            //         );
+                                            //     }
+                                            //     Err(e) => {
+                                            //         log::error!(
+                                            //             "❌ Failed to create finality vote for block #{}: {}",
+                                            //             block.header.number(),
+                                            //             e
+                                            //         );
+                                            //     }
+                                            // }
                                         },
                                         Err(e) => {
                                             log::error!(
@@ -1284,6 +1361,39 @@ pub fn new_full_with_params(
             }
         }
 
+        // ═════════════════════════════════════════════════════════════════════════════
+        // HELPER FUNCTIONS: Bridge Format ↔ Finality-Gadget Format Conversion
+        // ═════════════════════════════════════════════════════════════════════════════
+
+        /// Convert VoteData (bridge format) to finality_gadget::Vote
+        fn convert_vote_from_bridge(vote_data: VoteData) -> finality_gadget::Vote {
+            finality_gadget::Vote {
+                validator_id: finality_gadget::ValidatorId(vote_data.validator_id),
+                view: finality_gadget::View(vote_data.view),
+                block_hash: finality_gadget::BlockHash::from_bytes(vote_data.block_hash),
+                signature: vote_data.signature,
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            }
+        }
+
+        /// Convert CertificateData (bridge format) to finality_gadget::Certificate
+        fn convert_certificate_from_bridge(cert_data: CertificateData) -> finality_gadget::Certificate {
+            finality_gadget::Certificate {
+                view: finality_gadget::View(cert_data.view),
+                block_hash: finality_gadget::BlockHash::from_bytes(cert_data.block_hash),
+                signatures: cert_data.signatures.into_iter()
+                    .map(|(id, sig)| (finality_gadget::ValidatorId(id), sig))
+                    .collect(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            }
+        }
+
         // ========== FINALITY GADGET INITIALIZATION ==========
 
         // Extract validator identity from keystore
@@ -1571,23 +1681,134 @@ pub fn new_full_with_params(
 
         let finality_gadget_clone = finality_gadget.clone();
         let client_clone = client.clone();
+        let network_bridge_clone = network_bridge.clone();
 
-        task_manager.spawn_essential_handle().spawn_blocking(
+        task_manager.spawn_essential_handle().spawn(  // Changed from spawn_blocking to spawn
             "asf-finality-gadget",
-            None,
+            Some("finality"),
             async move {
                 log::info!("🚀 Starting ASF Finality Gadget worker loop");
 
-                // Run the finality gadget worker
-                // This handles:
+                // CRITICAL FIX: Refactored worker loop to release lock between iterations
+                // instead of holding it indefinitely. This prevents lock starvation
+                // of the block import task.
+                //
+                // The worker handles:
                 // 1. Incoming vote/certificate gossip
                 // 2. Vote aggregation and quorum detection
                 // 3. Certificate creation and broadcasting
                 // 4. Finality detection (3 consecutive certificates)
                 // 5. Timeout handling and view changes
 
-                let mut gadget = finality_gadget_clone.lock().await;
-                gadget.run_worker().await;
+                use tokio::time::{interval, Duration};
+                let mut gossip_interval = interval(Duration::from_millis(500));
+                let mut timeout_interval = interval(Duration::from_secs(1));
+
+                loop {
+                    tokio::select! {
+                        _ = gossip_interval.tick() => {
+                            // Acquire lock only for getting ready messages
+                            let (votes, certs) = {
+                                let mut gadget = finality_gadget_clone.lock().await;
+                                gadget.get_ready_gossip_messages()
+                            };  // Lock released here
+
+                            // Network I/O happens WITHOUT holding the gadget lock
+                            for vote in votes {
+                                let _ = network_bridge_clone.broadcast_vote(vote).await;
+                            }
+
+                            for cert in certs {
+                                let _ = network_bridge_clone.broadcast_certificate(cert).await;
+                            }
+                        }
+
+                        _ = timeout_interval.tick() => {
+                            // Acquire lock for timeout handling
+                            let mut gadget = finality_gadget_clone.lock().await;
+                            let _ = gadget.handle_timeout().await;
+                            // Lock released at end of block
+                        }
+                    }
+                }
+            },
+        );
+
+        // ========== SPAWN BLOCK IMPORT NOTIFICATION TASK ==========
+        //
+        // This is the CRITICAL integration that connects block imports to finality.
+        // When a block is imported, we need to:
+        // 1. Notify the finality gadget via propose_block()
+        // 2. Gadget creates and broadcasts a vote
+        // 3. Votes accumulate to form certificates
+        // 4. Certificates drive finality progression
+        //
+        // WITHOUT this task, blocks are produced but finality never advances!
+
+        let block_import_finality_gadget = finality_gadget.clone();
+        let import_notifications = client.import_notification_stream();
+
+        task_manager.spawn_essential_handle().spawn(
+            "asf-block-import-finality",
+            Some("finality"),
+            async move {
+                log::info!("🔗 Starting ASF block import → finality integration");
+
+                use futures::StreamExt;
+                use tokio::time::{timeout, Duration};
+                let mut stream = import_notifications;
+
+                while let Some(notification) = stream.next().await {
+                    let substrate_hash = notification.hash;
+                    let block_number = *notification.header.number();
+
+                    // Convert Substrate H256 to finality_gadget::BlockHash
+                    let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
+
+                    log::debug!(
+                        "📦 Block imported #{} ({:?}), proposing to finality gadget",
+                        block_number,
+                        substrate_hash
+                    );
+
+                    // V4 FIX: Use lock().await with timeout to ensure votes are created
+                    // while preventing indefinite blocking. This fixes the deadlock where
+                    // try_lock() silently failed for 800+ blocks with no warning logs.
+                    match timeout(
+                        Duration::from_secs(3),
+                        block_import_finality_gadget.lock()
+                    ).await {
+                        Ok(mut gadget) => {
+                            match gadget.propose_block(block_hash).await {
+                                Ok(vote) => {
+                                    log::info!(
+                                        "✅ Created finality vote for block #{} ({:?}) at view {:?}",
+                                        block_number,
+                                        substrate_hash,
+                                        vote.view
+                                    );
+                                }
+                                Err(e) => {
+                                    log::warn!(
+                                        "⚠️ Failed to propose block #{} to finality gadget: {}",
+                                        block_number,
+                                        e
+                                    );
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            // Gadget locked for >3 seconds - this indicates a serious problem
+                            // Log at WARN level to make this visible
+                            log::warn!(
+                                "⚠️ Finality gadget locked for >3s - skipping block #{} (possible deadlock)",
+                                block_number
+                            );
+                        }
+                    }
+                }
+
+                log::warn!("⚠️  Block import notification stream ended");
             },
         );
 
@@ -1610,13 +1831,130 @@ pub fn new_full_with_params(
                 // Main bridge loop
                 use tokio::time::{interval, Duration};
                 let mut poll_interval = interval(Duration::from_millis(100));
+                let mut poll_count = 0u64;
 
                 loop {
                     poll_interval.tick().await;
+                    poll_count += 1;
+
+                    // V5 DIAGNOSTIC: Log polling activity every 50 iterations (~5 seconds)
+                    if poll_count % 50 == 0 {
+                        log::info!("🔄 Bridge worker polling (iteration {})", poll_count);
+                    }
 
                     // ========== HANDLE INCOMING P2P MESSAGES ==========
-                    // TODO: Subscribe to P2P message stream
-                    // For now, we just periodically check for outbound messages
+                    // Poll P2P network for incoming vote/certificate messages
+                    while let Some((peer_id, p2p_msg)) = bridge_p2p_network.receive_message().await {
+                        log::info!("🎯 Bridge worker processing message from {:?}", peer_id);
+                        match p2p_msg {
+                            P2PMessage::Vote { data } => {
+                                log::info!("🗳️  Processing VOTE message from {:?}", peer_id);
+                                // Deserialize vote data
+                                match bincode::deserialize::<VoteData>(&data) {
+                                    Ok(vote_data) => {
+                                        // Extract values for logging before moving
+                                        let validator_id = vote_data.validator_id;
+                                        let view = vote_data.view;
+
+                                        log::debug!(
+                                            "📥 Received vote from peer {:?} (validator: {}, view: {})",
+                                            peer_id,
+                                            validator_id,
+                                            view
+                                        );
+
+                                        // Forward to bridge for processing
+                                        let mut bridge = bridge_gadget_bridge.lock().await;
+                                        if let Err(e) = bridge.on_vote_received(vote_data.clone()).await {
+                                            log::warn!("Failed to process vote: {:?}", e);
+                                        } else {
+                                            // Convert to finality-gadget format and process
+                                            let finality_vote = convert_vote_from_bridge(vote_data);
+
+                                            drop(bridge); // Release bridge lock
+
+                                            // Process in finality gadget
+                                            let mut gadget = bridge_finality_gadget.lock().await;
+                                            match gadget.handle_vote(finality_vote.clone()).await {
+                                                Ok(_) => {
+                                                    log::info!(
+                                                        "✅ Vote ACCEPTED by finality gadget (validator: {}, view: {}, block: {:?})",
+                                                        validator_id,
+                                                        view,
+                                                        finality_vote.block_hash
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    log::warn!(
+                                                        "❌ Vote REJECTED by finality gadget: {:?} (validator: {}, view: {})",
+                                                        e,
+                                                        validator_id,
+                                                        view
+                                                    );
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to deserialize vote from {:?}: {:?}", peer_id, e);
+                                    }
+                                }
+                            }
+                            P2PMessage::Certificate { data } => {
+                                // Deserialize certificate data
+                                match bincode::deserialize::<CertificateData>(&data) {
+                                    Ok(cert_data) => {
+                                        // Extract values for logging before moving
+                                        let view = cert_data.view;
+                                        let sig_count = cert_data.signatures.len();
+
+                                        log::debug!(
+                                            "📥 Received certificate from peer {:?} (view: {}, {} voters)",
+                                            peer_id,
+                                            view,
+                                            sig_count
+                                        );
+
+                                        // Forward to bridge
+                                        let mut bridge = bridge_gadget_bridge.lock().await;
+                                        if let Err(e) = bridge.on_certificate_received(cert_data.clone()).await {
+                                            log::warn!("Failed to process certificate: {:?}", e);
+                                        } else {
+                                            // Convert to finality-gadget format
+                                            let finality_cert = convert_certificate_from_bridge(cert_data);
+
+                                            drop(bridge); // Release lock
+
+                                            // Process in finality gadget
+                                            let mut gadget = bridge_finality_gadget.lock().await;
+                                            match gadget.handle_certificate(finality_cert.clone()).await {
+                                                Ok(_) => {
+                                                    log::info!(
+                                                        "✅ Certificate ACCEPTED by finality gadget (view: {}, {} signatures)",
+                                                        view,
+                                                        sig_count
+                                                    );
+                                                }
+                                                Err(e) => {
+                                                    log::warn!(
+                                                        "❌ Certificate REJECTED by finality gadget: {:?} (view: {})",
+                                                        e,
+                                                        view
+                                                    );
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to deserialize certificate from {:?}: {:?}", peer_id, e);
+                                    }
+                                }
+                            }
+                            _ => {
+                                log::trace!("Received non-consensus message from peer {:?}", peer_id);
+                            }
+                        }
+                    }
 
                     // ========== FORWARD OUTBOUND MESSAGES TO P2P ==========
                     let mut bridge = bridge_gadget_bridge.lock().await;
@@ -1691,6 +2029,100 @@ pub fn new_full_with_params(
                     }
                 }
             },
+        );
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ASF → SUBSTRATE FINALITY APPLICATION
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        let finality_client = client.clone();
+        let finality_asf_gadget = finality_gadget.clone();
+
+        task_manager.spawn_essential_handle().spawn(
+            "asf-substrate-finality",
+            Some("finality"),
+            async move {
+                log::info!("🎯 Starting ASF → Substrate finality application task");
+
+                use tokio::time::{interval, Duration};
+                use sp_blockchain::HeaderBackend;
+
+                let mut finality_interval = interval(Duration::from_secs(6));
+                let mut last_finalized_number: u32 = 0;
+
+                loop {
+                    finality_interval.tick().await;
+
+                    // Get finalized blocks from ASF gadget
+                    let asf_finalized = {
+                        let gadget = finality_asf_gadget.lock().await;
+                        gadget.get_finalized_blocks()
+                    };
+
+                    if asf_finalized.is_empty() {
+                        continue;
+                    }
+
+                    // Get current Substrate finality state
+                    let current_info = finality_client.usage_info().chain;
+                    let current_number = current_info.finalized_number;
+
+                    // Find newest ASF-finalized block not yet Substrate-finalized
+                    for asf_block in asf_finalized.iter().rev() {
+                        // Convert ASF BlockHash to Substrate H256
+                        let substrate_hash: sp_core::H256 = {
+                            let bytes = asf_block.as_bytes();
+                            sp_core::H256::from_slice(bytes)
+                        };
+
+                        // Safety check: ensure block is imported
+                        match finality_client.block_status(substrate_hash) {
+                            Ok(sp_consensus::BlockStatus::InChainWithState) => {
+                                // Get block header to check number
+                                match finality_client.header(substrate_hash) {
+                                    Ok(Some(header)) => {
+                                        let block_number = *header.number();
+
+                                        // Log ASF finality progress
+                                        // Note: Actual finality is handled by the import queue
+                                        // This task monitors ASF finality status
+                                        if block_number > current_number &&
+                                           block_number > last_finalized_number &&
+                                           block_number <= current_number + 100 {
+
+                                            last_finalized_number = block_number;
+                                            log::info!(
+                                                "✅ ASF finalized block #{} ({:?})",
+                                                block_number,
+                                                substrate_hash
+                                            );
+
+                                            // Only process one block per round
+                                            break;
+                                        } else if block_number > current_number + 100 {
+                                            log::warn!(
+                                                "⚠️ ASF finality too far ahead: #{} vs current #{}",
+                                                block_number,
+                                                current_number
+                                            );
+                                        }
+                                    }
+                                    Ok(None) => {
+                                        log::warn!("Header not found for finalized block {:?}", substrate_hash);
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to get header: {:?}", e);
+                                    }
+                                }
+                            }
+                            Ok(sp_consensus::BlockStatus::Unknown) => {
+                                log::debug!("ASF finalized block not yet imported: {:?}", substrate_hash);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
         );
     }
 
