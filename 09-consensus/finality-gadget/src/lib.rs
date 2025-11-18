@@ -558,10 +558,15 @@ impl FinalityGadget {
                 vote.validator_id.0
             );
             self.view_timer.force_view_change(vote.view);
-        } else if vote.view < current_view {
-            // Old view - reject stale vote
+        } else if vote.view.0 + 2 < current_view.0 {
+            // Too old view (more than 2 behind) - reject stale vote
             let rep = self.peer_reputation.entry(vote.validator_id).or_insert_with(PeerReputation::new);
             rep.record_invalid();
+            log::debug!(
+                "🚫 Rejecting stale vote from view {:?} (current: {:?}, tolerance: 2)",
+                vote.view,
+                current_view
+            );
             return Err(format!("Vote from old view {:?}, current is {:?}", vote.view, current_view));
         }
         // vote.view == current_view: proceed normally
