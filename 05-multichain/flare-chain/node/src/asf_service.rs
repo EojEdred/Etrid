@@ -831,7 +831,67 @@ pub fn new_full_with_params(
 
                 // For multi-node testnet: Add other validators from config/genesis
                 // In production, this will be replaced by Runtime API query
-                // For now, we only include our own validator
+                // HARDCODED: All 21 production validator keys (raw sr25519 public keys)
+                let production_validator_keys: Vec<&str> = vec![
+                    "44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58", // gizzi
+                    "dc2e6eabc3d02e01f26bbf2bf8810c56aa05fd8a9489e80a8d64394e4892265b", // vmi2896906
+                    "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d", // vmi2896907
+                    "58716581b09066395ef75cead565526f412c1e9618a9e8401b5862d32b089c42", // vmi2896908
+                    "2c339e81f2a1fc80ae67c3bda3ecade01b7b0074979901795ceab6f35a304451", // vmi2896909
+                    "fe14bf4fd7b9cb683697114b9b60dc5a101adee961aa79e374ddb9d17c42ed4d", // vmi2896910
+                    "384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e", // vmi2896911
+                    "7cefa78d24e90d0e0823afce3cbb57f065f3bdabe8cb94c2f1168582f7a77958", // vmi2896914
+                    "f44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f", // vmi2896915
+                    "ecec5b1247d1276260758b159add80c79359e879d09356eb5bb30b446323952e", // vmi2896916
+                    "2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758", // vmi2896917
+                    "f29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c", // vmi2896918
+                    "00400f479b47d741752f1d01344ef7149e3bde1bf6bc262af07c4f5411b8d241", // vmi2896921
+                    "4a2320a52c89db6e72fa445bf1f774a2c34d5cdb9c6b1d798b969cc497343566", // vmi2896922
+                    "325362702873fdeaf94eb07f8f2a96590b577f4e02e5015c7cf75cce98121c65", // vmi2896923
+                    "7eb293d7da884a6d359abce6756326b60ce54aa03e169c4d3905e4be14061815", // vmi2896924
+                    "b01c7e76b6dcd6f3acd785a11c7b5e66f6c3bb44a4e8f6c1d0e9a2b3c4d5e6f7", // vmi2896925 (placeholder)
+                    "6a34ec613e0549d0fadf6c906fdcb881c201e279238cf622aa8d3401839e615f", // vmi2897381
+                    "e6f176e2b92ee27944ddbfdde7e513653b55bca1149dafe95b708b81928f194e", // vmi2897382
+                    "fea5143ed38344d722684467176a3a1976a75d14c680e4ee906fa3d741353f18", // vmi2897383
+                    "260438f6d74121f2fe3cc072b57ee06547d4c1e93a9178939581e2f8d719ee02", // vmi2897384
+                ];
+
+                log::info!("📋 Adding {} hardcoded production validators to committee", production_validator_keys.len());
+
+                for key_hex in &production_validator_keys {
+                    // Parse hex string to bytes
+                    let key_bytes = match hex::decode(key_hex) {
+                        Ok(bytes) => bytes,
+                        Err(e) => {
+                            log::error!("Failed to decode validator key {}: {:?}", key_hex, e);
+                            continue;
+                        }
+                    };
+
+                    // Convert to sr25519 public key then to AccountId32
+                    if key_bytes.len() == 32 {
+                        let mut arr = [0u8; 32];
+                        arr.copy_from_slice(&key_bytes);
+                        let sr25519_key = sp_core::sr25519::Public::from_raw(arr);
+                        let multi_signer = MultiSigner::Sr25519(sr25519_key);
+                        let account_id: AccountId32 = multi_signer.into_account();
+                        let validator_id = block_production::ValidatorId::from(account_id);
+
+                        let validator_info = validator_management::ValidatorInfo::new(
+                            validator_id.clone(),
+                            ppfa_params.min_validator_stake,
+                            validator_management::PeerType::ValidityNode,
+                        );
+
+                        if let Err(e) = committee.add_validator(validator_info) {
+                            log::debug!("Validator {} already in committee or error: {:?}", &key_hex[..16], e);
+                        } else {
+                            log::debug!("✅ Added validator: {}...", &key_hex[..16]);
+                        }
+                    }
+                }
+
+                log::info!("📊 Committee now has {} validators", committee.committee_size());
 
                 // Rotate to initialize committee
                 if let Err(e) = committee.rotate_committee(1) {
