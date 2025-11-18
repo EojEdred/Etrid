@@ -512,6 +512,11 @@ impl KademliaNetwork {
         Ok(())
     }
 
+    /// Get bootstrap peers
+    pub fn get_bootstrap_peers(&self) -> Vec<PeerAddr> {
+        self.bootstrap_peers.clone()
+    }
+
     /// Find k closest peers from local routing table
     pub async fn find_closest_peers(&self, target: PeerId, k: usize) -> Vec<PeerAddr> {
         self.routing_table.read().await.get_closest_peers(target, k)
@@ -1116,8 +1121,27 @@ impl P2PNetwork {
         }
         *running = true;
 
-        // Bootstrap DHT
+        // Bootstrap DHT (adds peers to routing table)
         self.kademlia.bootstrap().await?;
+
+        // CRITICAL FIX: Actually connect to bootstrap peers via TCP
+        let bootstrap_peers = self.kademlia.get_bootstrap_peers();
+        println!("🔌 Connecting to {} bootstrap peers...", bootstrap_peers.len());
+
+        for peer in bootstrap_peers {
+            match self.connection_manager.connect(peer.clone()).await {
+                Ok(()) => {
+                    println!("  ✅ Connected to bootstrap peer: {:?}", peer.address);
+                }
+                Err(e) => {
+                    println!("  ⚠️ Failed to connect to bootstrap peer {:?}: {}", peer.address, e);
+                }
+            }
+        }
+
+        // Log final connection count
+        let connected_count = self.connection_manager.get_connected_peers().await.len();
+        println!("📊 DETR P2P connected to {} peers", connected_count);
 
         // Start listening for incoming connections
         let listener = TcpListener::bind(self.local_address)

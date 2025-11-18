@@ -3851,6 +3851,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "ecies",
+ "futures",
  "hex",
  "log",
  "serde",
