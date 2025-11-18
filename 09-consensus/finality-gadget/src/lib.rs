@@ -546,12 +546,25 @@ impl FinalityGadget {
     // ========== INBOUND MESSAGE HANDLING ==========
 
     pub async fn handle_vote(&mut self, vote: Vote) -> Result<(), String> {
-        // Validate vote
-        if vote.view != self.view_timer.get_current_view() {
+        // View synchronization - CRITICAL FIX for finality
+        let current_view = self.view_timer.get_current_view();
+
+        if vote.view > current_view {
+            // ADVANCE to match the vote's view - enables consensus synchronization
+            log::info!(
+                "📈 VIEW SYNC: Advancing from {:?} to {:?} (vote from validator {})",
+                current_view,
+                vote.view,
+                vote.validator_id.0
+            );
+            self.view_timer.force_view_change(vote.view);
+        } else if vote.view < current_view {
+            // Old view - reject stale vote
             let rep = self.peer_reputation.entry(vote.validator_id).or_insert_with(PeerReputation::new);
             rep.record_invalid();
-            return Err(format!("Vote from wrong view: {:?}", vote.view));
+            return Err(format!("Vote from old view {:?}, current is {:?}", vote.view, current_view));
         }
+        // vote.view == current_view: proceed normally
 
         // Add to collector
         let reached_quorum = self.vote_collector.add_vote(vote.clone())?;
