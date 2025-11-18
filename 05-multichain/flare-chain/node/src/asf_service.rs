@@ -49,13 +49,21 @@ use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 // Runtime API for validator committee queries
 use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 
-// ÉTRID P2P Networking
-use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
+// ÉTRID P2P Networking (DEPRECATED - replaced with Substrate libp2p)
+// use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
 use etrid_protocol::gadget_network_bridge::{
     GadgetNetworkBridge,
     VoteData,
     CertificateData,
     ConsensusBridgeMessage,
+};
+
+// Substrate Network for ASF finality
+use sc_network::{
+    config::ProtocolId,
+    service::traits::NotificationEvent,
+    NotificationService,
+    PeerId as SubstratePeerId,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -541,11 +549,38 @@ pub fn new_full_with_params(
 
     let _peer_store_handle = net_config.peer_store_handle();
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ASF FINALITY PROTOCOL REGISTRATION (Substrate libp2p)
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // Register ASF finality protocol BEFORE building network so we can get
+    // notification handles for broadcasting votes/certificates.
+    //
+    // Protocol: /etrid/asf-finality/1
+    // Purpose: Gossip ASF finality votes and certificates between validators
+
+    const ASF_FINALITY_PROTOCOL_NAME: &str = "/etrid/asf-finality/1";
+
+    let asf_protocol_config = {
+        use sc_network::config::{NonDefaultSetConfig, NotificationHandshake};
+
+        let protocol_id = ProtocolId::from(ASF_FINALITY_PROTOCOL_NAME);
+
+        NonDefaultSetConfig {
+            notifications_protocol: protocol_id,
+            fallback_names: vec![],
+            handshake: Some(NotificationHandshake::new(vec![1u8])), // Simple version handshake
+            max_notification_size: 1024 * 1024, // 1MB for certificates with many signatures
+            set_config: Default::default(),
+        }
+    };
+
+    net_config.add_notification_protocol(asf_protocol_config);
+
+    log::info!("✅ Registered ASF finality protocol: {}", ASF_FINALITY_PROTOCOL_NAME);
+
     // v108: No GRANDPA protocol - pure ASF consensus
-    // ASF uses custom P2P protocols via detrp2p for:
-    // - PPFA committee gossip
-    // - Finality gadget messages (votes, certificates)
-    // - Validator health checks
+    // ASF now uses Substrate's libp2p for finality messages instead of detrp2p
 
     // v108: Disable warp sync for pure ASF (ASF has its own sync mechanism)
     let warp_sync = None;
@@ -575,6 +610,19 @@ pub fn new_full_with_params(
         })?;
 
     log::info!("✅ Substrate network built successfully on port 30333");
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GET ASF FINALITY NOTIFICATION HANDLE
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // Get notification service handle for ASF finality protocol.
+    // This will be used to send/receive votes and certificates.
+
+    let asf_notification_service = network
+        .notification_service(ProtocolId::from(ASF_FINALITY_PROTOCOL_NAME))
+        .expect("ASF finality protocol was registered; qed");
+
+    log::info!("✅ Got ASF finality notification service handle");
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OFFCHAIN WORKERS
@@ -1609,6 +1657,48 @@ pub fn new_full_with_params(
                     bootstrap_peers.push(peer_addr);
                 }
             }
+        }
+
+        // ========== V9 FIX: Filter bootstrap peers to prevent connection issues ==========
+        // Remove self-connections and unreachable IPs
+        let original_count = bootstrap_peers.len();
+        bootstrap_peers.retain(|peer| {
+            let peer_ip = peer.address.ip();
+
+            // Filter 1: Remove self-connections (own IP)
+            if peer_ip == detr_p2p_ip || peer.address == socket_addr {
+                log::warn!("  ⚠️  Filtered self-connection: {}", peer.address);
+                return false;
+            }
+
+            // Filter 2: Remove private IPs that are unreachable
+            match peer_ip {
+                IpAddr::V4(ipv4) => {
+                    let octets = ipv4.octets();
+                    // Private networks: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+                    if octets[0] == 10 {
+                        log::warn!("  ⚠️  Filtered private IP (10.0.0.0/8): {}", peer.address);
+                        return false;
+                    }
+                    if octets[0] == 172 && (octets[1] >= 16 && octets[1] <= 31) {
+                        log::warn!("  ⚠️  Filtered private IP (172.16.0.0/12): {}", peer.address);
+                        return false;
+                    }
+                    if octets[0] == 192 && octets[1] == 168 {
+                        log::warn!("  ⚠️  Filtered private IP (192.168.0.0/16): {}", peer.address);
+                        return false;
+                    }
+                }
+                _ => {}
+            }
+
+            true
+        });
+
+        let filtered_count = original_count - bootstrap_peers.len();
+        if filtered_count > 0 {
+            log::info!("🔍 Filtered {} unreachable bootstrap peers ({} → {})",
+                filtered_count, original_count, bootstrap_peers.len());
         }
 
         log::info!("📋 Total DETR P2P bootstrap peers: {}", bootstrap_peers.len());
