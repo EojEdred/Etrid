@@ -1335,16 +1335,28 @@ pub fn new_full_with_params(
 
                         match event {
                             Some(NotificationEvent::NotificationStreamOpened { peer, .. }) => {
-                                peers.write().await.insert(peer);
-                                log::debug!("🔗 ASF peer connected: {:?}", peer);
+                                let count = {
+                                    let mut p = peers.write().await;
+                                    p.insert(peer);
+                                    p.len()
+                                };
+                                log::info!("🔗 ASF peer connected: {:?} (total: {})", peer, count);
                             }
                             Some(NotificationEvent::NotificationStreamClosed { peer }) => {
-                                peers.write().await.remove(&peer);
-                                log::debug!("🔌 ASF peer disconnected: {:?}", peer);
+                                let count = {
+                                    let mut p = peers.write().await;
+                                    p.remove(&peer);
+                                    p.len()
+                                };
+                                log::info!("🔌 ASF peer disconnected: {:?} (remaining: {})", peer, count);
                             }
                             Some(NotificationEvent::NotificationReceived { peer, notification }) => {
                                 // Handle incoming ASF messages here
-                                log::trace!("📨 ASF message from {:?}: {} bytes", peer, notification.len());
+                                log::info!("📨 ASF message from {:?}: {} bytes", peer, notification.len());
+                            }
+                            None => {
+                                log::warn!("⚠️ ASF NotificationService event stream ended");
+                                break;
                             }
                             _ => {}
                         }
@@ -1392,8 +1404,8 @@ pub fn new_full_with_params(
         #[async_trait::async_trait]
         impl NetworkBridge for DetrP2PNetworkBridge {
             async fn broadcast_vote(&self, vote: FinalityVote) -> Result<(), String> {
-                log::trace!(
-                    "Broadcasting ASF finality vote (validator: {:?}, view: {:?})",
+                log::info!(
+                    "📤 Broadcasting ASF finality vote (validator: {:?}, view: {:?})",
                     vote.validator_id,
                     vote.view
                 );
@@ -1412,19 +1424,21 @@ pub fn new_full_with_params(
                 let mut service = self.notification_service.lock().await;
 
                 // Send to each connected peer
-                for peer_id in peers {
-                    service.send_sync_notification(&peer_id, payload.clone());
+                if peer_count == 0 {
+                    log::warn!("⚠️ No ASF peers connected - vote not sent! (view: {})", vote_data.view);
+                } else {
+                    for peer_id in peers {
+                        service.send_sync_notification(&peer_id, payload.clone());
+                    }
+                    log::info!("✅ Vote broadcast sent to {} ASF peers (view: {})", peer_count, vote_data.view);
                 }
-
-                log::debug!("✅ Vote broadcast via Substrate NotificationService (view: {}, peers: {})",
-                    vote_data.view, peer_count);
 
                 Ok(())
             }
 
             async fn broadcast_certificate(&self, cert: FinalityCertificate) -> Result<(), String> {
-                log::trace!(
-                    "Broadcasting ASF finality certificate (view: {:?}, voters: {})",
+                log::info!(
+                    "📤 Broadcasting ASF finality certificate (view: {:?}, voters: {})",
                     cert.view,
                     cert.signatures.len()
                 );
@@ -1443,19 +1457,22 @@ pub fn new_full_with_params(
                 let mut service = self.notification_service.lock().await;
 
                 // Send to each connected peer
-                for peer_id in peers {
-                    service.send_sync_notification(&peer_id, payload.clone());
+                if peer_count == 0 {
+                    log::warn!("⚠️ No ASF peers connected - certificate not sent! (view: {})", cert_data.view);
+                } else {
+                    for peer_id in peers {
+                        service.send_sync_notification(&peer_id, payload.clone());
+                    }
+                    log::info!("✅ Certificate broadcast sent to {} ASF peers (view: {}, voters: {})",
+                        peer_count, cert_data.view, cert_data.signatures.len());
                 }
-
-                log::debug!("✅ Certificate broadcast via Substrate NotificationService (view: {}, voters: {}, peers: {})",
-                    cert_data.view, cert_data.signatures.len(), peer_count);
 
                 Ok(())
             }
 
             async fn broadcast_new_view(&self, new_view: NewViewMessage) -> Result<(), String> {
-                log::trace!(
-                    "Broadcasting ASF new view message (view: {:?}, sender: {})",
+                log::info!(
+                    "📤 Broadcasting ASF new view message (view: {:?}, sender: {})",
                     new_view.new_view,
                     new_view.sender.0
                 );
@@ -1485,12 +1502,14 @@ pub fn new_full_with_params(
                 let mut service = self.notification_service.lock().await;
 
                 // Send to each connected peer
-                for peer_id in peers {
-                    service.send_sync_notification(&peer_id, payload.clone());
+                if peer_count == 0 {
+                    log::warn!("⚠️ No ASF peers connected - NewView not sent! (view: {})", new_view_data.new_view);
+                } else {
+                    for peer_id in peers {
+                        service.send_sync_notification(&peer_id, payload.clone());
+                    }
+                    log::info!("✅ NewView broadcast sent to {} ASF peers (view: {})", peer_count, new_view_data.new_view);
                 }
-
-                log::debug!("✅ NewView broadcast via Substrate NotificationService (view: {}, peers: {})",
-                    new_view_data.new_view, peer_count);
 
                 Ok(())
             }
