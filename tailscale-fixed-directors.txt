@@ -1,0 +1,2 @@
+Director-3 (157.173.200.86) -> 100.102.128.51 (user: root, key: contabo-validators)
+Director-4 (157.173.200.84) -> 100.71.242.104 (user: root, key: contabo-validators)

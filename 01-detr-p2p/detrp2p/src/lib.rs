@@ -80,6 +80,7 @@ pub enum Message {
     FindValueReply { key: [u8; 32], value: Option<Vec<u8>>, peers: Vec<PeerAddr> },
     Vote { data: Vec<u8> },
     Certificate { data: Vec<u8> },
+    NewView { data: Vec<u8> },
     Custom(Vec<u8>),
 }
 

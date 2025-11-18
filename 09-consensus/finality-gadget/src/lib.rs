@@ -364,6 +364,12 @@ impl ViewChangeTimer {
     pub fn get_current_view(&self) -> View {
         self.current_view
     }
+
+    pub fn force_view_change(&mut self, new_view: View) {
+        self.current_view = new_view;
+        self.last_block_time = Instant::now();
+        self.view_change_pending = false;
+    }
 }
 
 // ============================================================================
@@ -484,6 +490,7 @@ impl GossipScheduler {
 pub trait NetworkBridge: Send + Sync {
     async fn broadcast_vote(&self, vote: Vote) -> Result<(), String>;
     async fn broadcast_certificate(&self, cert: Certificate) -> Result<(), String>;
+    async fn broadcast_new_view(&self, new_view: NewViewMessage) -> Result<(), String>;
     async fn get_connected_peers(&self) -> Vec<String>;
 }
 
@@ -504,6 +511,9 @@ pub struct FinalityGadget {
     network_bridge: Arc<dyn NetworkBridge>,
     pending_votes: VecDeque<Vote>,
     pending_certificates: VecDeque<Certificate>,
+    // View transition tracking
+    pending_new_views: HashMap<View, HashSet<ValidatorId>>,
+    view_change_quorum: u32,
 }
 
 impl FinalityGadget {
@@ -512,6 +522,9 @@ impl FinalityGadget {
         max_validators: u32,
         network_bridge: Arc<dyn NetworkBridge>,
     ) -> Self {
+        // Calculate quorum for view changes (same as voting quorum)
+        let view_change_quorum = (2 * max_validators / 3) + 1;
+
         Self {
             validator_id,
             max_validators,
@@ -525,6 +538,8 @@ impl FinalityGadget {
             network_bridge,
             pending_votes: VecDeque::new(),
             pending_certificates: VecDeque::new(),
+            pending_new_views: HashMap::new(),
+            view_change_quorum,
         }
     }
 
@@ -590,6 +605,53 @@ impl FinalityGadget {
         Ok(())
     }
 
+    pub async fn handle_new_view(&mut self, new_view_msg: NewViewMessage) -> Result<(), String> {
+        let target_view = new_view_msg.new_view;
+        let current_view = self.view_timer.get_current_view();
+
+        // Ignore old view changes
+        if target_view <= current_view {
+            return Ok(());
+        }
+
+        // Track this NewView message
+        let validators_for_view = self.pending_new_views
+            .entry(target_view)
+            .or_insert_with(HashSet::new);
+
+        validators_for_view.insert(new_view_msg.sender);
+
+        log::info!(
+            "🔄 NewView received: view={:?}, from validator={}, count={}/{}",
+            target_view,
+            new_view_msg.sender.0,
+            validators_for_view.len(),
+            self.view_change_quorum
+        );
+
+        // Check if we have quorum for view change
+        if validators_for_view.len() as u32 >= self.view_change_quorum {
+            log::info!(
+                "✅ View change quorum reached! Transitioning to view={:?}",
+                target_view
+            );
+
+            // Transition to new view
+            self.view_timer.force_view_change(target_view);
+
+            // Clean up old pending new views
+            self.pending_new_views.retain(|v, _| v >= &target_view);
+
+            log::info!(
+                "🔄 View transition complete: old={:?}, new={:?}",
+                current_view,
+                target_view
+            );
+        }
+
+        Ok(())
+    }
+
     // ========== OUTBOUND MESSAGE SENDING ==========
 
     pub async fn broadcast_vote(&mut self, vote: Vote) -> Result<(), String> {
@@ -602,6 +664,10 @@ impl FinalityGadget {
         self.pending_certificates.push_back(cert.clone());
         self.gossip_scheduler.schedule_certificate(cert.clone());
         self.network_bridge.broadcast_certificate(cert).await
+    }
+
+    pub async fn broadcast_new_view(&mut self, new_view_msg: NewViewMessage) -> Result<(), String> {
+        self.network_bridge.broadcast_new_view(new_view_msg).await
     }
 
     // Get ready messages from gossip scheduler (public accessor)
@@ -643,8 +709,19 @@ impl FinalityGadget {
             let mut new_view = self.view_timer.trigger_view_change();
             new_view.sender = self.validator_id;
 
-            // TODO: Broadcast NewView message to network
-            println!("View changed to: {:?}", new_view.new_view);
+            log::info!(
+                "🔄 View timeout triggered: transitioning to view={:?}",
+                new_view.new_view
+            );
+
+            // Broadcast NewView message to network
+            self.broadcast_new_view(new_view.clone()).await?;
+
+            log::info!(
+                "✅ NewView message broadcast: view={:?}, validator={}",
+                new_view.new_view,
+                self.validator_id.0
+            );
         }
         Ok(())
     }
@@ -723,6 +800,10 @@ mod tests {
         }
 
         async fn broadcast_certificate(&self, _cert: Certificate) -> Result<(), String> {
+            Ok(())
+        }
+
+        async fn broadcast_new_view(&self, _new_view: NewViewMessage) -> Result<(), String> {
             Ok(())
         }
 
