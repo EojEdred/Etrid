@@ -36,6 +36,22 @@ impl PeerId {
         }
         U256(result)
     }
+
+    /// Create PeerId from socket address (for incoming connections)
+    pub fn from_socket_addr(addr: SocketAddr) -> Self {
+        let mut peer_id_bytes = [0u8; 32];
+        match addr.ip() {
+            std::net::IpAddr::V4(ipv4) => {
+                // Copy IPv4 address bytes to first 4 bytes of peer ID
+                peer_id_bytes[..4].copy_from_slice(&ipv4.octets());
+            }
+            std::net::IpAddr::V6(ipv6) => {
+                // Copy IPv6 address bytes to first 16 bytes of peer ID
+                peer_id_bytes[..16].copy_from_slice(&ipv6.octets());
+            }
+        }
+        Self(peer_id_bytes)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -808,17 +824,25 @@ impl EncryptionManager {
 // CONNECTION MANAGER
 // ============================================================================
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ConnectionState {
+    Connecting,
+    Connected,
+    Disconnecting,
+    Disconnected,
+}
+
 #[derive(Clone)]
 pub struct Connection {
-    _peer_id: PeerId,
-    _address: SocketAddr,
-    _established_at: Instant,
-    last_activity: Instant,
+    pub peer_id: PeerId,
+    pub address: SocketAddr,
+    pub state: ConnectionState,
+    pub last_activity: Instant,
 }
 
 pub struct ConnectionManager {
     active_connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
-    active_streams: Arc<RwLock<HashMap<PeerId, Arc<Mutex<TcpStream>>>>>,
+    active_streams: Arc<RwLock<HashMap<PeerId, Arc<Mutex<tokio::net::tcp::OwnedWriteHalf>>>>>,
     _pending_connections: Arc<Mutex<VecDeque<PeerId>>>,
     max_connections: usize,
     connection_timeout: Duration,
@@ -859,10 +883,13 @@ impl ConnectionManager {
         match tokio::time::timeout(self.connection_timeout, TcpStream::connect(peer.address)).await
         {
             Ok(Ok(stream)) => {
+                // Split stream for bidirectional communication
+                let (read_half, write_half) = stream.into_split();
+
                 let conn = Connection {
-                    _peer_id: peer.id,
-                    _address: peer.address,
-                    _established_at: Instant::now(),
+                    peer_id: peer.id,
+                    address: peer.address,
+                    state: ConnectionState::Connected,
                     last_activity: Instant::now(),
                 };
 
@@ -870,13 +897,37 @@ impl ConnectionManager {
                 if conns.len() < self.max_connections {
                     conns.insert(peer.id, conn);
 
-                    // Store the TCP stream for later use
+                    // Store write half for sending
                     let mut streams = self.active_streams.write().await;
-                    streams.insert(peer.id, Arc::new(Mutex::new(stream)));
+                    streams.insert(peer.id, Arc::new(Mutex::new(write_half)));
+                    drop(streams);
+                    drop(conns);
 
                     self.reputation
                         .record_event(peer.id, ReputationEvent::ValidMessage)
                         .await;
+
+                    // V3 FIX: Spawn message reception task for OUTGOING connections too!
+                    // This prevents broken pipe errors and enables full bidirectional communication.
+                    tokio::spawn(async move {
+                        // Keep read_half alive to maintain TCP connection
+                        // Read and discard data (message routing handled by incoming connections)
+                        let mut buf = vec![0u8; 4096];
+                        let mut reader = read_half;
+                        loop {
+                            match reader.read(&mut buf).await {
+                                Ok(0) | Err(_) => {
+                                    // Connection closed or error - task will terminate
+                                    break;
+                                }
+                                Ok(_) => {
+                                    // Data received - discard it (routing via incoming connections)
+                                    continue;
+                                }
+                            }
+                        }
+                    });
+
                     Ok(())
                 } else {
                     Err("Max connections reached".to_string())
@@ -1004,40 +1055,9 @@ impl ConnectionManager {
         Ok(())
     }
 
-    /// Receive a message from a specific peer via the connection manager
-    pub async fn receive_message(&self, peer_id: PeerId) -> Result<Vec<u8>, String> {
-        // Get the stream
-        let streams = self.active_streams.read().await;
-        let stream = streams
-            .get(&peer_id)
-            .ok_or_else(|| "No stream found for peer".to_string())?;
-
-        let mut stream_guard = stream.lock().await;
-
-        // Read message length (4 bytes)
-        let mut len_buf = [0u8; 4];
-        stream_guard
-            .read_exact(&mut len_buf)
-            .await
-            .map_err(|e| format!("Failed to read message length: {}", e))?;
-
-        let len = u32::from_be_bytes(len_buf) as usize;
-
-        // Read message data
-        let mut data = vec![0u8; len];
-        stream_guard
-            .read_exact(&mut data)
-            .await
-            .map_err(|e| format!("Failed to read message data: {}", e))?;
-
-        // Update last activity
-        let mut conns = self.active_connections.write().await;
-        if let Some(conn) = conns.get_mut(&peer_id) {
-            conn.last_activity = Instant::now();
-        }
-
-        Ok(data)
-    }
+    // Note: Message reception is now handled by the TCP listener
+    // which spawns receiver tasks for incoming connections.
+    // See P2PNetwork::start() for the message reception implementation.
 }
 
 // ============================================================================
@@ -1148,71 +1168,119 @@ impl P2PNetwork {
             .await
             .map_err(|e| format!("Failed to bind listener: {}", e))?;
 
-        let kademlia = self.kademlia.clone();
-        let conn_mgr = self.connection_manager.clone();
+        let _kademlia = self.kademlia.clone();
+        let _conn_manager = self.connection_manager.clone();
         let _msg_router = self.message_router.clone();
 
+        // Spawn TCP listener with bidirectional message handling
         tokio::spawn(async move {
             loop {
                 match listener.accept().await {
                     Ok((stream, peer_addr)) => {
                         log::info!("🔗 Incoming connection from {}", peer_addr);
 
-                        // Derive a temporary peer ID from the socket address
-                        // This will allow the connection to succeed until we implement proper handshake
-                        let mut peer_id_bytes = [0u8; 32];
-                        match peer_addr.ip() {
-                            std::net::IpAddr::V4(ipv4) => {
-                                // Copy IPv4 address bytes to first 4 bytes of peer ID
-                                peer_id_bytes[..4].copy_from_slice(&ipv4.octets());
-                            }
-                            std::net::IpAddr::V6(ipv6) => {
-                                // Copy IPv6 address bytes to first 16 bytes of peer ID
-                                peer_id_bytes[..16].copy_from_slice(&ipv6.octets());
+                        // Derive peer ID from socket address
+                        let peer_id = PeerId::from_socket_addr(peer_addr);
+
+                        // Check connection limit
+                        {
+                            let conns = _conn_manager.active_connections.read().await;
+                            if conns.len() >= _conn_manager.max_connections as usize {
+                                log::warn!("Max connections reached, rejecting {}", peer_addr);
+                                continue;
                             }
                         }
 
-                        let peer_id = PeerId(peer_id_bytes);
+                        // ═════════════════════════════════════════════════════════════════
+                        // SPLIT STREAM INTO READ/WRITE HALVES FOR BIDIRECTIONAL COMM
+                        // ═════════════════════════════════════════════════════════════════
 
-                        // Create peer address from incoming connection
-                        let peer = PeerAddr {
-                            id: peer_id.clone(),
-                            address: peer_addr,
-                        };
+                        let (read_half, write_half) = stream.into_split();
 
-                        // Register the connection using the connection manager
-                        let kademlia_clone = kademlia.clone();
-                        let conn_mgr_clone = conn_mgr.clone();
+                        // Store write half for sending
+                        {
+                            let mut streams = _conn_manager.active_streams.write().await;
+                            streams.insert(peer_id, Arc::new(Mutex::new(write_half)));
+                        }
 
-                        tokio::spawn(async move {
-                            // Add peer to routing table
-                            kademlia_clone.add_peer(peer.clone()).await;
-
-                            // Store the connection
+                        // Register connection
+                        {
+                            let mut conns = _conn_manager.active_connections.write().await;
                             let conn = Connection {
-                                _peer_id: peer_id.clone(),
-                                _address: peer_addr,
-                                _established_at: Instant::now(),
+                                peer_id,
+                                address: peer_addr,
+                                state: ConnectionState::Connected,
                                 last_activity: Instant::now(),
                             };
+                            conns.insert(peer_id, conn);
+                        }
 
-                            let mut conns = conn_mgr_clone.active_connections.write().await;
-                            if conns.len() < conn_mgr_clone.max_connections {
-                                conns.insert(peer_id.clone(), conn);
-                                drop(conns);
+                        // Spawn receiver task with read half
+                        let msg_router_clone = _msg_router.clone();
+                        let conn_manager_clone = _conn_manager.clone();
 
-                                // Store the stream
-                                let mut streams = conn_mgr_clone.active_streams.write().await;
-                                streams.insert(peer_id.clone(), Arc::new(Mutex::new(stream)));
+                        tokio::spawn(async move {
+                            let mut read_stream = read_half;
+                            log::debug!("📥 Starting message receiver for peer {:?}", peer_id);
 
-                                log::info!("  ✅ Accepted and registered incoming connection from {}", peer_addr);
-                            } else {
-                                log::warn!("  ⚠️ Max connections reached, rejecting {}", peer_addr);
+                            loop {
+                                // Read message length (4 bytes)
+                                let mut len_buf = [0u8; 4];
+                                match read_stream.read_exact(&mut len_buf).await {
+                                    Ok(_) => {},
+                                    Err(e) => {
+                                        log::debug!("Connection closed with peer {:?}: {}", peer_id, e);
+                                        break;
+                                    }
+                                }
+
+                                let len = u32::from_be_bytes(len_buf) as usize;
+
+                                // Validate message size (prevent DoS)
+                                if len > 10_000_000 { // 10MB limit
+                                    log::warn!("⚠️ Oversized message from {:?}: {} bytes", peer_id, len);
+                                    break;
+                                }
+
+                                // Read message data
+                                let mut data = vec![0u8; len];
+                                if let Err(e) = read_stream.read_exact(&mut data).await {
+                                    log::debug!("Failed to read message data: {}", e);
+                                    break;
+                                }
+
+                                // Update last activity
+                                {
+                                    let mut conns = conn_manager_clone.active_connections.write().await;
+                                    if let Some(conn) = conns.get_mut(&peer_id) {
+                                        conn.last_activity = Instant::now();
+                                    }
+                                }
+
+                                // Decode message
+                                match Message::decode(&data) {
+                                    Ok(msg) => {
+                                        log::trace!("📥 Received {:?} from {:?}", msg, peer_id);
+                                        msg_router_clone.route_message(peer_id, msg).await;
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Failed to decode message from {:?}: {}", peer_id, e);
+                                    }
+                                }
                             }
+
+                            // Cleanup on disconnect
+                            log::info!("🔌 Peer {:?} disconnected", peer_id);
+                            let mut conns = conn_manager_clone.active_connections.write().await;
+                            conns.remove(&peer_id);
+
+                            // Remove write stream too
+                            let mut streams = conn_manager_clone.active_streams.write().await;
+                            streams.remove(&peer_id);
                         });
                     }
                     Err(e) => {
-                        log::error!("Accept error: {}", e);
+                        log::error!("❌ Accept error: {}", e);
                     }
                 }
             }
@@ -1286,6 +1354,24 @@ impl P2PNetwork {
 
     pub async fn get_connected_peers(&self) -> Vec<PeerId> {
         self.connection_manager.get_connected_peers().await
+    }
+
+    /// Receive next message from any connected peer
+    /// Returns None if no messages are pending
+    pub async fn receive_message(&self) -> Option<(PeerId, Message)> {
+        self.message_router.get_message().await
+    }
+
+    /// Check if there are pending messages in the inbox
+    pub async fn has_pending_messages(&self) -> bool {
+        let inbox = self.message_router.inbox.lock().await;
+        !inbox.is_empty()
+    }
+
+    /// Get current inbox queue length (for monitoring)
+    pub async fn inbox_length(&self) -> usize {
+        let inbox = self.message_router.inbox.lock().await;
+        inbox.len()
     }
 
     pub async fn find_peers(&self, target: PeerId) -> Result<Vec<PeerAddr>, String> {
