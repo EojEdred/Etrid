@@ -1919,69 +1919,7 @@ pub fn new_full_with_params(
 
         log::info!("✅ DetrP2PNetworkBridge created - finality messages will use Substrate NotificationService");
 
-        // ========== SPAWN DETR-P2P INBOX CONSUMER TASK ==========
-        // CRITICAL: This task consumes messages from the detr-p2p MessageRouter inbox
-        // and forwards them to the GadgetNetworkBridge for processing by the finality gadget.
-        // Without this, votes are queued but never processed!
-
-        let p2p_for_inbox = p2p_network.clone();
-        let gadget_bridge_for_inbox = gadget_bridge.clone();
-
-        task_manager.spawn_handle().spawn(
-            "detr-p2p-inbox-consumer",
-            None,
-            async move {
-                log::info!("🔄 Starting DETR P2P inbox consumer task");
-
-                loop {
-                    // Poll for messages from detr-p2p inbox
-                    if let Some((_peer_id, msg)) = p2p_for_inbox.receive_message().await {
-                        match msg {
-                            P2PMessage::Vote { data } => {
-                                // Deserialize vote data
-                                match bincode::deserialize::<VoteData>(&data) {
-                                    Ok(vote_data) => {
-                                        log::info!("📤 Retrieved VOTE from inbox (validator: {}, view: {})", vote_data.validator_id, vote_data.view);
-
-                                        let mut bridge = gadget_bridge_for_inbox.lock().await;
-                                        if let Err(e) = bridge.on_vote_received(vote_data).await {
-                                            log::warn!("Failed to process vote from inbox: {:?}", e);
-                                        }
-                                    }
-                                    Err(e) => {
-                                        log::warn!("Failed to deserialize vote from inbox: {:?}", e);
-                                    }
-                                }
-                            }
-                            P2PMessage::Certificate { data } => {
-                                // Deserialize certificate data
-                                match bincode::deserialize::<CertificateData>(&data) {
-                                    Ok(cert_data) => {
-                                        log::info!("📤 Retrieved CERTIFICATE from inbox (view: {}, voters: {})", cert_data.view, cert_data.signatures.len());
-
-                                        let mut bridge = gadget_bridge_for_inbox.lock().await;
-                                        if let Err(e) = bridge.on_certificate_received(cert_data).await {
-                                            log::warn!("Failed to process certificate from inbox: {:?}", e);
-                                        }
-                                    }
-                                    Err(e) => {
-                                        log::warn!("Failed to deserialize certificate from inbox: {:?}", e);
-                                    }
-                                }
-                            }
-                            _ => {
-                                // Ignore other message types
-                            }
-                        }
-                    } else {
-                        // No message available, yield to avoid busy loop
-                        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-                    }
-                }
-            },
-        );
-
-        log::info!("✅ DETR P2P inbox consumer task spawned");
+        // NOTE: Inbox consumer moved below finality_gadget creation to call handle_vote() directly
 
         // Calculate max validators from committee size
         let max_validators = asf_params.max_committee_size;
@@ -2001,6 +1939,88 @@ pub fn new_full_with_params(
             max_validators
         );
         log::info!("ASF Finality: 3-level consensus (Pre-commit → Commit → Finalized)");
+
+        // ========== SPAWN DETR-P2P INBOX CONSUMER TASK ==========
+        // CRITICAL: This task consumes messages from the detr-p2p MessageRouter inbox
+        // and forwards them DIRECTLY to the FinalityGadget, bypassing the broken
+        // GadgetNetworkBridge/InboundRouter which has no consumer.
+
+        let p2p_for_inbox = p2p_network.clone();
+        let inbox_finality_gadget = finality_gadget.clone();
+
+        task_manager.spawn_handle().spawn(
+            "detr-p2p-inbox-consumer",
+            None,
+            async move {
+                log::info!("🔄 Starting DETR P2P inbox consumer task (direct FinalityGadget path)");
+
+                loop {
+                    // Poll for messages from detr-p2p inbox
+                    if let Some((_peer_id, msg)) = p2p_for_inbox.receive_message().await {
+                        match msg {
+                            P2PMessage::Vote { data } => {
+                                // Deserialize vote data
+                                match bincode::deserialize::<VoteData>(&data) {
+                                    Ok(vote_data) => {
+                                        log::info!("📥 Retrieved VOTE from inbox (validator: {}, view: {})", vote_data.validator_id, vote_data.view);
+
+                                        // Convert to finality-gadget format
+                                        let finality_vote = convert_vote_from_bridge(vote_data);
+
+                                        // Call FinalityGadget directly
+                                        let mut gadget = inbox_finality_gadget.lock().await;
+                                        match gadget.handle_vote(finality_vote.clone()).await {
+                                            Ok(_) => {
+                                                log::debug!("✅ Vote processed by FinalityGadget");
+                                            }
+                                            Err(e) => {
+                                                log::warn!("Failed to process vote in FinalityGadget: {:?}", e);
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Failed to deserialize vote from inbox: {:?}", e);
+                                    }
+                                }
+                            }
+                            P2PMessage::Certificate { data } => {
+                                // Deserialize certificate data
+                                match bincode::deserialize::<CertificateData>(&data) {
+                                    Ok(cert_data) => {
+                                        log::info!("📥 Retrieved CERTIFICATE from inbox (view: {}, voters: {})", cert_data.view, cert_data.signatures.len());
+
+                                        // Convert to finality-gadget format
+                                        let finality_cert = convert_certificate_from_bridge(cert_data);
+
+                                        // Call FinalityGadget directly
+                                        let mut gadget = inbox_finality_gadget.lock().await;
+                                        match gadget.handle_certificate(finality_cert.clone()).await {
+                                            Ok(_) => {
+                                                log::debug!("✅ Certificate processed by FinalityGadget");
+                                            }
+                                            Err(e) => {
+                                                log::warn!("Failed to process certificate in FinalityGadget: {:?}", e);
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Failed to deserialize certificate from inbox: {:?}", e);
+                                    }
+                                }
+                            }
+                            _ => {
+                                // Ignore other message types
+                            }
+                        }
+                    } else {
+                        // No message available, yield to avoid busy loop
+                        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+                    }
+                }
+            },
+        );
+
+        log::info!("✅ DETR P2P inbox consumer task spawned (direct FinalityGadget path)");
 
         // ========== SPAWN FINALITY WORKER TASK ==========
 
