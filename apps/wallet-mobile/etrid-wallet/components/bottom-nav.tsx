@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Receipt, Vote, Lock, User } from "lucide-react"
+import { Home, Receipt, Vote, Lock, User, CreditCard, Image, TrendingUp, Users } from "lucide-react"
 
 interface BottomNavProps {
   activeTab: string
@@ -9,10 +9,10 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "home", icon: Home, label: "Home" },
-  { id: "transactions", icon: Receipt, label: "Transactions" },
-  { id: "governance", icon: Vote, label: "Governance" },
+  { id: "savings", icon: CreditCard, label: "Savings" },
+  { id: "lending", icon: TrendingUp, label: "DeFi" },
+  { id: "governance", icon: Vote, label: "Govern" },
   { id: "stake", icon: Lock, label: "Stake" },
-  { id: "profile", icon: User, label: "Profile" },
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
