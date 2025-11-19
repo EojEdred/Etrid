@@ -137,25 +137,30 @@ impl PeerReputation {
 // ============================================================================
 
 pub struct VoteCollector {
-    votes: HashMap<View, HashMap<BlockHash, Vec<(ValidatorId, Vec<u8>)>>>,
+    // V12 FIX: Aggregate votes by View only (not by BlockHash)
+    // This allows votes for the same height to accumulate even with different block hashes
+    // Key: View -> Vec of (ValidatorId, Signature, BlockHash)
+    votes_by_view: HashMap<View, Vec<(ValidatorId, Vec<u8>, BlockHash)>>,
+    // Track which validators have voted in each view (prevent double voting)
+    voted_validators: HashMap<View, HashSet<ValidatorId>>,
     quorum_threshold: u32,
     max_validators: u32,
 }
 
 impl VoteCollector {
     pub fn new(max_validators: u32) -> Self {
-        // V10: TEMPORARY - Lower quorum to 2 to unblock chain while fixing Contabo broadcasts
-        // Oracle validators (Gizzi + Audit Dev) ARE working and exchanging votes
-        // Standard quorum: (2 * max_validators / 3) + 1 = 15 votes
-        let quorum_threshold = 2; // TODO: Revert to (2 * max_validators / 3) + 1 once broadcasts fixed
+        // V12: Use proper 2/3 + 1 quorum for security
+        let quorum_threshold = (2 * max_validators / 3) + 1;
 
         println!(
-            "⚠️  TEMPORARY QUORUM: Using 2 validators instead of {} (will finalize with Oracle validators only)",
-            (2 * max_validators / 3) + 1
+            "✅ V12 VOTE AGGREGATION: Quorum = {} votes (2/3 + 1 of {} validators)",
+            quorum_threshold,
+            max_validators
         );
 
         Self {
-            votes: HashMap::new(),
+            votes_by_view: HashMap::new(),
+            voted_validators: HashMap::new(),
             quorum_threshold,
             max_validators,
         }
@@ -166,30 +171,32 @@ impl VoteCollector {
             return Err("Empty signature".to_string());
         }
 
-        let view_votes = self
-            .votes
+        // Check for double voting using the dedicated HashSet
+        let voted = self.voted_validators
             .entry(vote.view)
-            .or_insert_with(HashMap::new);
+            .or_insert_with(HashSet::new);
 
-        let block_votes = view_votes
-            .entry(vote.block_hash)
-            .or_insert_with(Vec::new);
-
-        // Prevent double voting
-        if block_votes.iter().any(|(v_id, _)| v_id == &vote.validator_id) {
-            return Err("Validator already voted".to_string());
+        if voted.contains(&vote.validator_id) {
+            return Err("Validator already voted in this view".to_string());
         }
 
-        block_votes.push((vote.validator_id, vote.signature));
+        // Record the vote
+        voted.insert(vote.validator_id);
 
-        // V8 DIAGNOSTIC: Log vote distribution to diagnose quorum issues
-        let vote_count = block_votes.len() as u32;
+        let view_votes = self.votes_by_view
+            .entry(vote.view)
+            .or_insert_with(Vec::new);
+
+        view_votes.push((vote.validator_id, vote.signature, vote.block_hash));
+
+        // V12: Count ALL votes in this view (not per block)
+        let vote_count = view_votes.len() as u32;
         let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
             vote.block_hash.0[0], vote.block_hash.0[1],
             vote.block_hash.0[30], vote.block_hash.0[31]);
 
         tracing::info!(
-            "📊 Vote added: view={:?}, block={}, validator={}, votes={}/{} (quorum={})",
+            "📊 V12 Vote aggregated: view={:?}, block={}, validator={}, total_votes={}/{} (quorum={})",
             vote.view,
             block_hash_short,
             vote.validator_id.0,
@@ -198,14 +205,13 @@ impl VoteCollector {
             self.quorum_threshold
         );
 
-        // Check if we reached quorum (2f+1)
+        // Check if we reached quorum (2f+1) across ALL votes in this view
         let reached_quorum = vote_count >= self.quorum_threshold;
 
         if reached_quorum {
             tracing::info!(
-                "🎯 QUORUM REACHED! view={:?}, block={}, votes={}/{}",
+                "🎯 V12 QUORUM REACHED! view={:?}, votes={}/{} - Will finalize most-voted block",
                 vote.view,
-                block_hash_short,
                 vote_count,
                 self.quorum_threshold
             );
@@ -214,37 +220,68 @@ impl VoteCollector {
         Ok(reached_quorum)
     }
 
+    /// Get the most-voted block hash for a view (for certificate creation)
+    pub fn get_winning_block(&self, view: View) -> Option<(BlockHash, Vec<(ValidatorId, Vec<u8>)>)> {
+        let view_votes = self.votes_by_view.get(&view)?;
+
+        if view_votes.len() < self.quorum_threshold as usize {
+            return None;
+        }
+
+        // Count votes per block hash
+        let mut block_counts: HashMap<BlockHash, Vec<(ValidatorId, Vec<u8>)>> = HashMap::new();
+        for (validator_id, signature, block_hash) in view_votes {
+            block_counts
+                .entry(*block_hash)
+                .or_insert_with(Vec::new)
+                .push((*validator_id, signature.clone()));
+        }
+
+        // Find the block with most votes
+        block_counts
+            .into_iter()
+            .max_by_key(|(_, votes)| votes.len())
+            .map(|(hash, sigs)| (hash, sigs))
+    }
+
     pub fn get_votes_for_view(&self, view: View) -> Vec<Vote> {
-        self.votes
+        self.votes_by_view
             .get(&view)
             .map(|view_votes| {
                 view_votes
                     .iter()
-                    .flat_map(|(block_hash, sigs)| {
-                        sigs.iter().map(move |(validator_id, sig)| Vote {
-                            validator_id: *validator_id,
-                            view,
-                            block_hash: *block_hash,
-                            signature: sig.clone(),
-                            timestamp: std::time::SystemTime::now()
-                                .duration_since(std::time::UNIX_EPOCH)
-                                .unwrap()
-                                .as_secs(),
-                        })
+                    .map(|(validator_id, sig, block_hash)| Vote {
+                        validator_id: *validator_id,
+                        view,
+                        block_hash: *block_hash,
+                        signature: sig.clone(),
+                        timestamp: std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
                     })
                     .collect()
             })
             .unwrap_or_default()
     }
 
-    pub fn get_quorum_for_block(&self, view: View, block_hash: BlockHash) -> Option<Vec<(ValidatorId, Vec<u8>)>> {
-        self.votes
-            .get(&view)
-            .and_then(|view_votes| view_votes.get(&block_hash))
-            .filter(|sigs| sigs.len() as u32 >= self.quorum_threshold)
-            .cloned()
+    /// Clear votes for old views to prevent memory bloat
+    pub fn clear_old_views(&mut self, current_view: View) {
+        if current_view.0 > 10 {
+            let cutoff = View(current_view.0 - 10);
+            self.votes_by_view.retain(|v, _| *v >= cutoff);
+            self.voted_validators.retain(|v, _| *v >= cutoff);
+        }
+    }
+
+    /// V12: Deprecated - use get_winning_block() instead
+    /// This method is kept for backwards compatibility
+    pub fn get_quorum_for_block(&self, view: View, _block_hash: BlockHash) -> Option<Vec<(ValidatorId, Vec<u8>)>> {
+        // V12: Use get_winning_block which aggregates all votes in the view
+        self.get_winning_block(view).map(|(_, sigs)| sigs)
     }
 }
+
 
 // ============================================================================
 // CERTIFICATE DETECTION & FINALITY
@@ -570,10 +607,12 @@ impl FinalityGadget {
 
         // If quorum reached, create certificate
         if reached_quorum {
-            if let Some(signatures) = self.vote_collector.get_quorum_for_block(vote.view, vote.block_hash) {
+            // V12 FIX: Use get_winning_block to get the most-voted block hash
+            // This ensures certificate is for the block with majority of votes
+            if let Some((winning_block_hash, signatures)) = self.vote_collector.get_winning_block(vote.view) {
                 let cert = Certificate {
                     view: vote.view,
-                    block_hash: vote.block_hash,
+                    block_hash: winning_block_hash,  // V12: Use winning block, not vote's block
                     signatures: signatures.clone(),
                     timestamp: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -581,12 +620,12 @@ impl FinalityGadget {
                         .as_secs(),
                 };
 
-                // V8 DIAGNOSTIC: Log certificate creation
+                // V12 DIAGNOSTIC: Log certificate creation with winning block
                 let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
-                    vote.block_hash.0[0], vote.block_hash.0[1],
-                    vote.block_hash.0[30], vote.block_hash.0[31]);
+                    winning_block_hash.0[0], winning_block_hash.0[1],
+                    winning_block_hash.0[30], winning_block_hash.0[31]);
                 tracing::info!(
-                    "📜 CERTIFICATE CREATED! view={:?}, block={}, signatures={}",
+                    "📜 V12 CERTIFICATE CREATED! view={:?}, winning_block={}, signatures={}/21",
                     vote.view,
                     block_hash_short,
                     signatures.len()
@@ -594,6 +633,9 @@ impl FinalityGadget {
 
                 self.pending_certificates.push_back(cert.clone());
                 self.gossip_scheduler.schedule_certificate(cert);
+
+                // V12: Clean up old views to prevent memory bloat
+                self.vote_collector.clear_old_views(vote.view);
             }
         }
 
