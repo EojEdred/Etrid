@@ -313,9 +313,14 @@
                 <button class="btn" onclick="viewNodeDetails('${node.id}')" title="View Details">
                   👁️
                 </button>
-                <button class="btn" onclick="openSSH('${node.node_name}')" title="SSH">
-                  💻
-                </button>
+                <div class="btn-group">
+                  <button class="btn" onclick="openWebTerminal('${node.node_name}')" title="Web Terminal">
+                    💻
+                  </button>
+                  <button class="btn btn-sm" onclick="openInTerminus('${node.node_name}', ${JSON.stringify(config.ssh || {})})" title="Open in Terminus">
+                    🚀
+                  </button>
+                </div>
                 <button class="btn" onclick="viewLogs('${node.node_name}')" title="Logs">
                   📄
                 </button>
@@ -362,8 +367,39 @@
       showComingSoon('Node Details');
     }
 
-    function openSSH(nodeName) {
-      showComingSoon('SSH Terminal');
+    function openWebTerminal(nodeName) {
+      // Open web terminal in new window
+      const width = 1000;
+      const height = 700;
+      const left = (screen.width - width) / 2;
+      const top = (screen.height - height) / 2;
+
+      window.open(
+        `/terminal.html?node=${encodeURIComponent(nodeName)}`,
+        `ssh-${nodeName}`,
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+      );
+    }
+
+    function openInTerminus(nodeName, sshConfig) {
+      if (!sshConfig || !sshConfig.host) {
+        showToast('No SSH configuration for this node', 'error');
+        return;
+      }
+
+      // Generate Terminus deep link
+      const user = sshConfig.user || 'ubuntu';
+      const host = sshConfig.host;
+      const port = sshConfig.port || 22;
+
+      // Terminus deep link format
+      const terminusUrl = `terminus://ssh/${user}@${host}:${port}`;
+
+      // Try to open Terminus
+      window.location.href = terminusUrl;
+
+      // Show helpful message
+      showToast('Opening in Terminus... If it doesn\'t open, use: ssh ' + user + '@' + host + ' -p ' + port, 'info');
     }
 
     function viewLogs(nodeName) {
@@ -421,7 +457,7 @@
       initWebSocket();
     });
 
-    // Add CSS for spinning animation
+    // Add CSS for spinning animation and button groups
     const style = document.createElement('style');
     style.textContent = `
       @keyframes spin {
@@ -451,6 +487,17 @@
         max-height: 80vh;
         overflow-y: auto;
         z-index: 1001;
+      }
+      .btn-group {
+        display: inline-flex;
+        gap: 4px;
+      }
+      .btn-group .btn {
+        margin: 0;
+      }
+      .btn-sm {
+        padding: 6px 10px;
+        font-size: 0.85rem;
       }
     `;
     document.head.appendChild(style);

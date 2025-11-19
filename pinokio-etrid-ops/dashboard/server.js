@@ -433,6 +433,114 @@ io.on('connection', async (socket) => {
       socket.emit('logs-error', { error: err.message });
     }
   });
+
+  // SSH Terminal Session
+  socket.on('start-ssh-session', async (data) => {
+    try {
+      const { nodeName } = data;
+
+      // Verify user owns this node
+      const userNodes = await api.database.getUserNodes(user.id);
+      const node = userNodes.find(n => n.node_name === nodeName);
+
+      if (!node) {
+        socket.emit('ssh-error', { error: 'Access denied to this node' });
+        return;
+      }
+
+      // Parse node config
+      const config = JSON.parse(node.node_config);
+      const sshConfig = config.ssh;
+
+      if (!sshConfig || !sshConfig.host) {
+        socket.emit('ssh-error', { error: 'No SSH configuration for this node' });
+        return;
+      }
+
+      // Create SSH connection
+      const { Client } = require('ssh2');
+      const conn = new Client();
+
+      conn.on('ready', () => {
+        conn.shell((err, stream) => {
+          if (err) {
+            socket.emit('ssh-error', { error: err.message });
+            conn.end();
+            return;
+          }
+
+          socket.emit('ssh-ready');
+
+          // Forward terminal data from SSH to browser
+          stream.on('data', (data) => {
+            socket.emit('ssh-data', data.toString('utf-8'));
+          });
+
+          stream.stderr.on('data', (data) => {
+            socket.emit('ssh-data', data.toString('utf-8'));
+          });
+
+          stream.on('close', () => {
+            socket.emit('ssh-closed');
+            conn.end();
+          });
+
+          // Forward terminal input from browser to SSH
+          socket.on('ssh-input', (input) => {
+            stream.write(input);
+          });
+
+          // Handle resize events
+          socket.on('ssh-resize', (dimensions) => {
+            stream.setWindow(dimensions.rows, dimensions.cols);
+          });
+
+          // Handle session close from client
+          socket.on('ssh-close', () => {
+            stream.close();
+            conn.end();
+          });
+        });
+      });
+
+      conn.on('error', (err) => {
+        socket.emit('ssh-error', { error: err.message });
+      });
+
+      // Connect to SSH server
+      const sshOptions = {
+        host: sshConfig.host,
+        port: sshConfig.port || 22,
+        username: sshConfig.user || 'ubuntu'
+      };
+
+      // Try to read SSH key (default location)
+      const fs = require('fs');
+      const os = require('os');
+      const sshKeyPath = process.env.SSH_KEY_PATH || `${os.homedir()}/.ssh/id_rsa`;
+
+      if (fs.existsSync(sshKeyPath)) {
+        sshOptions.privateKey = fs.readFileSync(sshKeyPath);
+      } else {
+        socket.emit('ssh-error', {
+          error: 'SSH key not found. Please configure SSH_KEY_PATH in .env'
+        });
+        return;
+      }
+
+      conn.connect(sshOptions);
+
+      // Clean up on socket disconnect
+      socket.on('disconnect', () => {
+        if (conn) {
+          conn.end();
+        }
+      });
+
+    } catch (err) {
+      socket.emit('ssh-error', { error: err.message });
+    }
+  });
 });
 
 // Initialize database and start server
