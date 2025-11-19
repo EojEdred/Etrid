@@ -689,6 +689,33 @@ class Database {
       [userId, chain, nodeName]
     );
   }
+
+  /**
+   * Get all validators across all users (for network overview)
+   */
+  async getAllValidators(chain = null) {
+    let sql = 'SELECT * FROM user_nodes';
+    const params = [];
+
+    if (chain) {
+      sql += ' WHERE chain = ?';
+      params.push(chain);
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    const rows = await this.all(sql, params);
+    return rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      chain: row.chain,
+      node_name: row.node_name, // Use underscore for consistency with network-aggregator
+      nodeName: row.node_name,
+      node_config: row.node_config, // Keep as string for network-aggregator
+      nodeConfig: JSON.parse(row.node_config),
+      createdAt: row.created_at
+    }));
+  }
 }
 
 module.exports = { Database };

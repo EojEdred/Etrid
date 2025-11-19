@@ -19,9 +19,13 @@ const PORT = process.env.PORT || 8080;
 // Initialize Etrid API with Auth System
 const EtridAPI = require('../api/etrid/index.js');
 const { AutoDiscovery } = require('../api/etrid/auto-discovery.js');
+const { FinalityClient } = require('../api/etrid/finality-client.js');
+const { NetworkAggregator } = require('../api/etrid/network-aggregator.js');
 
 const api = new EtridAPI();
 const autoDiscovery = new AutoDiscovery();
+const finalityClient = new FinalityClient();
+const networkAggregator = new NetworkAggregator(api.database);
 
 // Middleware
 app.use(express.json());
@@ -231,6 +235,118 @@ app.delete('/api/user/nodes/:chain/:nodeName', api.auth.middleware(), async (req
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// ========================================
+// Network Overview Routes (Protected)
+// ========================================
+
+// Get network overview
+app.get('/api/network/overview', api.auth.middleware(), async (req, res) => {
+  try {
+    const [validators, stats, finality] = await Promise.all([
+      networkAggregator.getAllValidators(),
+      networkAggregator.getNetworkStats(),
+      finalityClient.getMetrics()
+    ]);
+
+    res.json({
+      validators,
+      stats,
+      finality,
+      timestamp: Date.now()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all validators
+app.get('/api/network/validators', api.auth.middleware(), async (req, res) => {
+  try {
+    const validators = await networkAggregator.getAllValidators();
+    res.json({ validators });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get network stats
+app.get('/api/network/stats', api.auth.middleware(), async (req, res) => {
+  try {
+    const stats = await networkAggregator.getNetworkStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get validator leaderboard
+app.get('/api/network/leaderboard', api.auth.middleware(), async (req, res) => {
+  try {
+    const metric = req.query.metric || 'blocks';
+    const limit = parseInt(req.query.limit) || 10;
+    const leaderboard = await networkAggregator.getLeaderboard(metric, limit);
+    res.json({ leaderboard, metric, limit });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Compare validators
+app.post('/api/network/compare', api.auth.middleware(), async (req, res) => {
+  try {
+    const { validatorIds } = req.body;
+    const comparison = await networkAggregator.compareValidators(validatorIds);
+    res.json(comparison);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Detect network issues
+app.get('/api/network/issues', api.auth.middleware(), async (req, res) => {
+  try {
+    const issues = await networkAggregator.detectNetworkIssues();
+    res.json(issues);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ========================================
+// Finality Metrics Routes (Protected)
+// ========================================
+
+// Get finality metrics
+app.get('/api/finality/metrics', api.auth.middleware(), async (req, res) => {
+  try {
+    const metrics = await finalityClient.getMetrics();
+    res.json(metrics);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get historical finality data
+app.get('/api/finality/historical', api.auth.middleware(), async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours) || 24;
+    const data = await finalityClient.getHistoricalMetrics(hours);
+    res.json({ data, hours });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Health check Gizzi finality dashboard
+app.get('/api/finality/health', api.auth.middleware(), async (req, res) => {
+  try {
+    const health = await finalityClient.healthCheck();
+    res.json(health);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

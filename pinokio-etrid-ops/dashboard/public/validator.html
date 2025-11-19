@@ -272,6 +272,43 @@
         <div class="value" id="blocks-authored">-</div>
         <div class="label">Blocks Authored</div>
       </div>
+
+      <div class="mega-stat" id="finality-stat">
+        <div class="icon">⚡</div>
+        <div class="value" id="finality-time">-</div>
+        <div class="label">ASF Finality Time</div>
+      </div>
+    </div>
+
+    <!-- Finality Metrics (from Gizzi) -->
+    <div class="card" style="margin: 40px 0; background: linear-gradient(135deg, rgba(77, 163, 255, 0.05), rgba(0, 214, 143, 0.05));">
+      <h3 style="display: flex; align-items: center; gap: 12px;">
+        ⚡ Network Finality
+        <span id="finality-status-badge" class="status-badge" style="font-size: 0.75rem;">Checking...</span>
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">Finalized Block</div>
+          <div style="font-size: 1.5rem; font-weight: 600;" id="finalized-block">-</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">Best Block</div>
+          <div style="font-size: 1.5rem; font-weight: 600;" id="best-block">-</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">Block Time</div>
+          <div style="font-size: 1.5rem; font-weight: 600;" id="block-time">-</div>
+        </div>
+        <div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 4px;">Network TPS</div>
+          <div style="font-size: 1.5rem; font-weight: 600;" id="network-tps">-</div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); text-align: center;">
+        <a href="finality-dashboard.html" style="color: var(--accent-blue); text-decoration: none;">
+          View Detailed Finality Metrics →
+        </a>
+      </div>
     </div>
 
     <!-- Quick Actions -->
@@ -429,6 +466,49 @@
       document.getElementById('info-version').textContent = 'v1.0.0';
       document.getElementById('info-sync').textContent = '✓ Fully Synced';
       document.getElementById('info-updated').textContent = new Date().toLocaleTimeString();
+
+      // Fetch and update finality metrics
+      try {
+        const finalityResponse = await authenticatedFetch('/api/finality/metrics');
+        const finality = await finalityResponse.json();
+
+        // Update finality mega-stat
+        const finalityTime = document.getElementById('finality-time');
+        if (finalityTime) {
+          finalityTime.textContent = `${finality.finalityTime.toFixed(1)}s`;
+        }
+
+        // Update finality card
+        const finalizedBlock = document.getElementById('finalized-block');
+        const bestBlock = document.getElementById('best-block');
+        const blockTime = document.getElementById('block-time');
+        const networkTps = document.getElementById('network-tps');
+
+        if (finalizedBlock) finalizedBlock.textContent = finality.finalizedBlock.toLocaleString();
+        if (bestBlock) bestBlock.textContent = finality.bestBlock.toLocaleString();
+        if (blockTime) blockTime.textContent = `${finality.blockTime.toFixed(1)}s`;
+        if (networkTps) networkTps.textContent = finality.networkTps.toFixed(0);
+
+        // Update status badge based on finality health
+        const badge = document.getElementById('finality-status-badge');
+        if (badge) {
+          if (finality.isHealthy) {
+            badge.textContent = '✓ Healthy';
+            badge.className = 'status-badge online';
+          } else {
+            badge.textContent = '⚠ Degraded';
+            badge.className = 'status-badge offline';
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch finality metrics:', err);
+        // Optionally update UI to show finality data is unavailable
+        const badge = document.getElementById('finality-status-badge');
+        if (badge) {
+          badge.textContent = '⚠ Unavailable';
+          badge.className = 'status-badge';
+        }
+      }
     }
 
     function updateHeroStatus(online) {

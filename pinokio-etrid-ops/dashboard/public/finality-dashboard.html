@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finality Dashboard - Etrid Operations Center</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .metric-card {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .metric-icon {
+      font-size: 2rem;
+    }
+
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 12px 0;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .metric-change.positive {
+      background: rgba(0, 214, 143, 0.15);
+      color: var(--accent-green);
+    }
+
+    .metric-change.negative {
+      background: rgba(255, 82, 82, 0.15);
+      color: var(--accent-red);
+    }
+
+    .metric-change.neutral {
+      background: rgba(128, 128, 128, 0.15);
+      color: var(--text-secondary);
+    }
+
+    .chart-container {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      height: 400px;
+      position: relative;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .time-filter {
+      display: flex;
+      gap: 8px;
+    }
+
+    .time-button {
+      padding: 6px 16px;
+      background: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .time-button:hover {
+      background: rgba(77, 163, 255, 0.1);
+      border-color: var(--accent-blue);
+    }
+
+    .time-button.active {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    .health-indicator {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .health-indicator.healthy {
+      border-left: 4px solid var(--accent-green);
+      background: linear-gradient(135deg, rgba(0, 214, 143, 0.05), transparent);
+    }
+
+    .health-indicator.warning {
+      border-left: 4px solid var(--accent-yellow);
+      background: linear-gradient(135deg, rgba(255, 184, 0, 0.05), transparent);
+    }
+
+    .health-indicator.critical {
+      border-left: 4px solid var(--accent-red);
+      background: linear-gradient(135deg, rgba(255, 82, 82, 0.05), transparent);
+    }
+
+    .health-icon {
+      font-size: 3rem;
+    }
+
+    .health-details {
+      flex: 1;
+    }
+
+    .health-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .health-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--background-color);
+      border-radius: 8px;
+    }
+
+    .stat-item .icon {
+      font-size: 1.5rem;
+    }
+
+    .stat-item .details {
+      flex: 1;
+    }
+
+    .stat-item .label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .stat-item .value {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(77, 163, 255, 0.1), rgba(0, 214, 143, 0.1));
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .info-box h4 {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-box ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      margin: 8px 0;
+      color: var(--text-secondary);
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      z-index: 10;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1 style="display: flex; align-items: center; gap: 16px;">
+          ⚡ ASF Finality Dashboard
+          <span id="finality-health-badge" class="status-badge">Loading...</span>
+        </h1>
+        <p class="subtitle">Real-time monitoring of Etrid network finality metrics</p>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-primary" onclick="refreshData()">
+          🔄 Refresh
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='/network-overview.html'">
+          🌐 Network Overview
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='/dashboard.html'">
+          ← Dashboard
+        </button>
+        <button class="btn btn-secondary" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Health Indicator -->
+    <div id="health-indicator" class="health-indicator">
+      <div class="health-icon">⚡</div>
+      <div class="health-details">
+        <div class="health-title" id="health-title">Checking Finality Health...</div>
+        <div class="health-description" id="health-description">Connecting to finality monitor...</div>
+      </div>
+    </div>
+
+    <!-- Current Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-icon">⚡</span>
+          <span id="finality-trend" class="metric-change neutral">-</span>
+        </div>
+        <div class="metric-label">Current Finality Time</div>
+        <div class="metric-value" id="current-finality">-</div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem;">Target: &lt; 20s</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-icon">⏱️</span>
+          <span id="blocktime-trend" class="metric-change neutral">-</span>
+        </div>
+        <div class="metric-label">Block Time</div>
+        <div class="metric-value" id="current-blocktime">-</div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem;">Target: ~5s</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-icon">📊</span>
+          <span id="tps-trend" class="metric-change neutral">-</span>
+        </div>
+        <div class="metric-label">Network TPS</div>
+        <div class="metric-value" id="current-tps">-</div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem;">Transactions per second</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-icon">🔗</span>
+        </div>
+        <div class="metric-label">Block Lag</div>
+        <div class="metric-value" id="block-lag">-</div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem;">Best - Finalized</div>
+      </div>
+    </div>
+
+    <!-- Current Network State -->
+    <div class="card">
+      <h3>📈 Current Network State</h3>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="icon">🔢</div>
+          <div class="details">
+            <div class="label">Best Block</div>
+            <div class="value" id="best-block">-</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="icon">✓</div>
+          <div class="details">
+            <div class="label">Finalized Block</div>
+            <div class="value" id="finalized-block">-</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="icon">👥</div>
+          <div class="details">
+            <div class="label">Active Validators</div>
+            <div class="value" id="validator-count">-</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="icon">🕐</div>
+          <div class="details">
+            <div class="label">Last Updated</div>
+            <div class="value" id="last-updated" style="font-size: 1rem;">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finality Time Chart -->
+    <div class="card">
+      <div class="chart-header">
+        <h3>⚡ Finality Time History</h3>
+        <div class="time-filter">
+          <button class="time-button active" onclick="changeTimeRange('1h', this)">1H</button>
+          <button class="time-button" onclick="changeTimeRange('6h', this)">6H</button>
+          <button class="time-button" onclick="changeTimeRange('24h', this)">24H</button>
+          <button class="time-button" onclick="changeTimeRange('7d', this)">7D</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="finality-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Block Time Chart -->
+    <div class="card">
+      <div class="chart-header">
+        <h3>⏱️ Block Time History</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="blocktime-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- TPS Chart -->
+    <div class="card">
+      <div class="chart-header">
+        <h3>📊 Network TPS History</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="tps-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Understanding Finality -->
+    <div class="info-box">
+      <h4>💡 Understanding ASF (Asynchronous Safe Finality)</h4>
+      <ul>
+        <li><strong>Finality Time:</strong> Time taken for a block to become irreversibly finalized on the blockchain</li>
+        <li><strong>Target Finality:</strong> Etrid aims for finality times under 20 seconds for optimal performance</li>
+        <li><strong>Block Time:</strong> Average time between block production (~5 seconds target)</li>
+        <li><strong>Block Lag:</strong> Difference between the latest produced block and the finalized block</li>
+        <li><strong>Health Criteria:</strong> Finality &lt; 20s, Block Time &lt; 7s, Active Validators ≥ 15</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+  <script>
+    let finalityChart, blocktimeChart, tpsChart;
+    let currentTimeRange = '24h';
+    let refreshInterval = null;
+    let previousMetrics = null;
+
+    async function loadFinalityData() {
+      try {
+        // Fetch current metrics
+        const metricsResponse = await authenticatedFetch('/api/finality/metrics');
+        const metrics = await metricsResponse.json();
+
+        // Update current metrics
+        updateCurrentMetrics(metrics);
+
+        // Fetch historical data
+        const hours = getHoursFromRange(currentTimeRange);
+        const historicalResponse = await authenticatedFetch(`/api/finality/historical?hours=${hours}`);
+        const historical = await historicalResponse.json();
+
+        // Update charts
+        updateCharts(historical.data || []);
+
+        // Store current metrics for trend calculation
+        previousMetrics = metrics;
+
+      } catch (err) {
+        console.error('Failed to load finality data:', err);
+        showError('Failed to load finality data: ' + err.message);
+      }
+    }
+
+    function updateCurrentMetrics(metrics) {
+      // Update health indicator
+      const healthIndicator = document.getElementById('health-indicator');
+      const healthTitle = document.getElementById('health-title');
+      const healthDescription = document.getElementById('health-description');
+      const healthBadge = document.getElementById('finality-health-badge');
+
+      if (metrics.isHealthy) {
+        healthIndicator.className = 'health-indicator healthy';
+        healthTitle.textContent = '✓ Finality Healthy';
+        healthDescription.textContent = `All finality metrics are within acceptable ranges. Network is performing optimally.`;
+        healthBadge.textContent = '✓ Healthy';
+        healthBadge.className = 'status-badge online';
+      } else {
+        healthIndicator.className = 'health-indicator warning';
+        healthTitle.textContent = '⚠ Finality Degraded';
+        healthDescription.textContent = `Finality metrics are outside optimal ranges. Monitor closely for potential issues.`;
+        healthBadge.textContent = '⚠ Degraded';
+        healthBadge.className = 'status-badge offline';
+      }
+
+      // Update metric cards
+      document.getElementById('current-finality').textContent = `${metrics.finalityTime.toFixed(2)}s`;
+      document.getElementById('current-blocktime').textContent = `${metrics.blockTime.toFixed(2)}s`;
+      document.getElementById('current-tps').textContent = metrics.networkTps.toFixed(0);
+      document.getElementById('block-lag').textContent = (metrics.bestBlock - metrics.finalizedBlock).toLocaleString();
+
+      // Update network state
+      document.getElementById('best-block').textContent = metrics.bestBlock.toLocaleString();
+      document.getElementById('finalized-block').textContent = metrics.finalizedBlock.toLocaleString();
+      document.getElementById('validator-count').textContent = metrics.validatorCount;
+      document.getElementById('last-updated').textContent = new Date(metrics.timestamp).toLocaleTimeString();
+
+      // Calculate and show trends
+      if (previousMetrics) {
+        updateTrend('finality-trend', metrics.finalityTime, previousMetrics.finalityTime, true); // lower is better
+        updateTrend('blocktime-trend', metrics.blockTime, previousMetrics.blockTime, true); // lower is better
+        updateTrend('tps-trend', metrics.networkTps, previousMetrics.networkTps, false); // higher is better
+      }
+    }
+
+    function updateTrend(elementId, current, previous, lowerIsBetter) {
+      const element = document.getElementById(elementId);
+      const diff = current - previous;
+      const percentChange = previous > 0 ? ((diff / previous) * 100) : 0;
+
+      if (Math.abs(percentChange) < 1) {
+        element.className = 'metric-change neutral';
+        element.textContent = '→ Stable';
+      } else {
+        const isPositive = lowerIsBetter ? (diff < 0) : (diff > 0);
+        element.className = `metric-change ${isPositive ? 'positive' : 'negative'}`;
+        const arrow = diff > 0 ? '↑' : '↓';
+        element.textContent = `${arrow} ${Math.abs(percentChange).toFixed(1)}%`;
+      }
+    }
+
+    function updateCharts(historicalData) {
+      if (historicalData.length === 0) {
+        // Generate mock data for demonstration
+        historicalData = generateMockData(currentTimeRange);
+      }
+
+      const labels = historicalData.map(d => new Date(d.timestamp).toLocaleTimeString());
+      const finalityData = historicalData.map(d => d.finalityTime);
+      const blocktimeData = historicalData.map(d => d.blockTime);
+      const tpsData = historicalData.map(d => d.networkTps);
+
+      // Update or create finality chart
+      if (finalityChart) {
+        finalityChart.data.labels = labels;
+        finalityChart.data.datasets[0].data = finalityData;
+        finalityChart.update();
+      } else {
+        const ctx = document.getElementById('finality-chart').getContext('2d');
+        finalityChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Finality Time (seconds)',
+              data: finalityData,
+              borderColor: 'rgb(77, 163, 255)',
+              backgroundColor: 'rgba(77, 163, 255, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: getChartOptions('Finality Time (s)', 20)
+        });
+      }
+
+      // Update or create blocktime chart
+      if (blocktimeChart) {
+        blocktimeChart.data.labels = labels;
+        blocktimeChart.data.datasets[0].data = blocktimeData;
+        blocktimeChart.update();
+      } else {
+        const ctx = document.getElementById('blocktime-chart').getContext('2d');
+        blocktimeChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Block Time (seconds)',
+              data: blocktimeData,
+              borderColor: 'rgb(0, 214, 143)',
+              backgroundColor: 'rgba(0, 214, 143, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: getChartOptions('Block Time (s)', 7)
+        });
+      }
+
+      // Update or create TPS chart
+      if (tpsChart) {
+        tpsChart.data.labels = labels;
+        tpsChart.data.datasets[0].data = tpsData;
+        tpsChart.update();
+      } else {
+        const ctx = document.getElementById('tps-chart').getContext('2d');
+        tpsChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Network TPS',
+              data: tpsData,
+              borderColor: 'rgb(255, 184, 0)',
+              backgroundColor: 'rgba(255, 184, 0, 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: getChartOptions('TPS', null)
+        });
+      }
+    }
+
+    function getChartOptions(yAxisLabel, thresholdLine) {
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: yAxisLabel
+            },
+            grid: {
+              color: 'rgba(128, 128, 128, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(128, 128, 128, 0.1)'
+            }
+          }
+        }
+      };
+
+      // Add threshold line if specified
+      if (thresholdLine) {
+        options.plugins.annotation = {
+          annotations: {
+            threshold: {
+              type: 'line',
+              yMin: thresholdLine,
+              yMax: thresholdLine,
+              borderColor: 'rgba(255, 82, 82, 0.5)',
+              borderWidth: 2,
+              borderDash: [5, 5]
+            }
+          }
+        };
+      }
+
+      return options;
+    }
+
+    function generateMockData(range) {
+      const dataPoints = range === '1h' ? 12 : range === '6h' ? 36 : range === '24h' ? 48 : 168;
+      const data = [];
+      const now = Date.now();
+      const interval = getHoursFromRange(range) * 3600000 / dataPoints;
+
+      for (let i = 0; i < dataPoints; i++) {
+        data.push({
+          timestamp: now - (interval * (dataPoints - i)),
+          finalityTime: 12 + Math.random() * 8, // 12-20s
+          blockTime: 4.5 + Math.random() * 1.5, // 4.5-6s
+          networkTps: 50 + Math.random() * 50 // 50-100 TPS
+        });
+      }
+
+      return data;
+    }
+
+    function getHoursFromRange(range) {
+      const map = { '1h': 1, '6h': 6, '24h': 24, '7d': 168 };
+      return map[range] || 24;
+    }
+
+    function changeTimeRange(range, button) {
+      currentTimeRange = range;
+
+      // Update active button
+      document.querySelectorAll('.time-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      button.classList.add('active');
+
+      // Reload data
+      loadFinalityData();
+    }
+
+    async function refreshData() {
+      await loadFinalityData();
+      showToast('Data refreshed!', 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function showError(message) {
+      const healthBadge = document.getElementById('finality-health-badge');
+      healthBadge.textContent = '❌ Error';
+      healthBadge.className = 'status-badge offline';
+      showToast(message, 'error');
+    }
+
+    function handleLogout() {
+      logout();
+      window.location.href = '/login.html';
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadUserInfo();
+      await loadFinalityData();
+
+      // Auto-refresh every 15 seconds
+      refreshInterval = setInterval(loadFinalityData, 15000);
+    });
+
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+      if (finalityChart) finalityChart.destroy();
+      if (blocktimeChart) blocktimeChart.destroy();
+      if (tpsChart) tpsChart.destroy();
+    });
+  </script>
+</body>
+</html>
