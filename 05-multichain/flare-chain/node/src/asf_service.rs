@@ -728,7 +728,11 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
-        // let ppfa_finality_gadget = finality_gadget.clone(); // TODO: finality_gadget not created until line 1607
+        // V13 FIX: Create shared finality_gadget holder that will be populated later
+        // This allows the PPFA task to create votes after finality_gadget is initialized
+        let ppfa_finality_gadget: Arc<tokio::sync::Mutex<Option<Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>>>> =
+            Arc::new(tokio::sync::Mutex::new(None));
+        let ppfa_finality_gadget_clone = ppfa_finality_gadget.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -1147,27 +1151,35 @@ pub fn new_full_with_params(
                                             );
 
                                             // ═══════════════════════════════════════════════════
-                                            // FINALITY INTEGRATION: Propose block to ASF finality
+                                            // V13 FIX: FINALITY INTEGRATION - Direct vote creation
                                             // ═══════════════════════════════════════════════════
-                                            // TODO: Re-enable when finality_gadget is created before PPFA task
-                                            // let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
-                                            // let mut gadget = ppfa_finality_gadget.lock().await;
-                                            // match gadget.propose_block(finality_block_hash).await {
-                                            //     Ok(vote) => {
-                                            //         log::info!(
-                                            //             "🗳️  Created finality vote for block #{} at view {:?}",
-                                            //             block.header.number(),
-                                            //             vote.view
-                                            //         );
-                                            //     }
-                                            //     Err(e) => {
-                                            //         log::error!(
-                                            //             "❌ Failed to create finality vote for block #{}: {}",
-                                            //             block.header.number(),
-                                            //             e
-                                            //         );
-                                            //     }
-                                            // }
+                                            // This bypasses the dead import_notification_stream by
+                                            // calling propose_block directly after successful import
+                                            let finality_block_hash = finality_gadget::BlockHash::from_bytes(block_hash.into());
+
+                                            // Check if finality_gadget has been initialized
+                                            let gadget_holder = ppfa_finality_gadget_clone.lock().await;
+                                            if let Some(gadget_arc) = gadget_holder.as_ref() {
+                                                let mut gadget = gadget_arc.lock().await;
+                                                match gadget.propose_block(finality_block_hash).await {
+                                                    Ok(vote) => {
+                                                        log::info!(
+                                                            "🗳️  Created finality vote for block #{} at view {:?}",
+                                                            block.header.number(),
+                                                            vote.view
+                                                        );
+                                                    }
+                                                    Err(e) => {
+                                                        log::warn!(
+                                                            "⚠️ Failed to create finality vote for block #{}: {}",
+                                                            block.header.number(),
+                                                            e
+                                                        );
+                                                    }
+                                                }
+                                            } else {
+                                                log::trace!("FinalityGadget not yet initialized, skipping vote for block #{}", block.header.number());
+                                            }
                                         },
                                         Err(e) => {
                                             log::error!(
@@ -1968,6 +1980,20 @@ pub fn new_full_with_params(
                 network_bridge.clone(),
             )
         ));
+
+        // V13 FIX: Populate the shared finality_gadget holder for PPFA task
+        // This allows the PPFA task to create votes after block import
+        let ppfa_finality_gadget_setter = ppfa_finality_gadget.clone();
+        let finality_gadget_for_ppfa = finality_gadget.clone();
+        task_manager.spawn_handle().spawn(
+            "set-ppfa-finality-gadget",
+            None,
+            async move {
+                let mut holder = ppfa_finality_gadget_setter.lock().await;
+                *holder = Some(finality_gadget_for_ppfa);
+                log::info!("✅ PPFA finality_gadget reference set - direct vote creation enabled");
+            },
+        );
 
         // V11 FIX: Set FinalityGadget reference in network_bridge for direct vote processing
         let network_bridge_for_set = network_bridge.clone();
