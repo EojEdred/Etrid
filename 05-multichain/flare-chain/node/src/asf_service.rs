@@ -1307,6 +1307,8 @@ pub fn new_full_with_params(
             gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
             // Track connected peers via NotificationEvents
             connected_peers: Arc<tokio::sync::RwLock<std::collections::HashSet<SubstratePeerId>>>,
+            // V11 FIX: Direct access to FinalityGadget for vote processing
+            finality_gadget: Arc<tokio::sync::RwLock<Option<Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>>>>,
         }
 
         impl DetrP2PNetworkBridge {
@@ -1318,7 +1320,15 @@ pub fn new_full_with_params(
                     notification_service: Arc::new(tokio::sync::Mutex::new(notification_service)),
                     gadget_bridge,
                     connected_peers: Arc::new(tokio::sync::RwLock::new(std::collections::HashSet::new())),
+                    finality_gadget: Arc::new(tokio::sync::RwLock::new(None)),
                 }
+            }
+
+            /// V11 FIX: Set the FinalityGadget reference after it's created
+            async fn set_finality_gadget(&self, gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>) {
+                let mut fg = self.finality_gadget.write().await;
+                *fg = Some(gadget);
+                log::info!("✅ FinalityGadget reference set in DetrP2PNetworkBridge");
             }
 
             /// Start background task to track peer connections via NotificationEvents
@@ -1326,6 +1336,8 @@ pub fn new_full_with_params(
                 let peers = self.connected_peers.clone();
                 let service = self.notification_service.clone();
                 let gadget_bridge = self.gadget_bridge.clone();
+                // V11 FIX: Get FinalityGadget reference for direct vote processing
+                let finality_gadget_ref = self.finality_gadget.clone();
 
                 tokio::spawn(async move {
                     loop {
@@ -1366,15 +1378,27 @@ pub fn new_full_with_params(
 
                                 match msg_type {
                                     0 => {
-                                        // Vote message
+                                        // Vote message - V11 FIX: Route directly to FinalityGadget
                                         match bincode::deserialize::<VoteData>(payload) {
                                             Ok(vote_data) => {
                                                 log::info!("🗳️  Received VOTE from {:?}: validator={}, view={}",
                                                     peer, vote_data.validator_id, vote_data.view);
 
-                                                let mut bridge = gadget_bridge.lock().await;
-                                                if let Err(e) = bridge.on_vote_received(vote_data).await {
-                                                    log::warn!("Failed to process received vote: {:?}", e);
+                                                // V11 FIX: Call FinalityGadget::handle_vote() directly
+                                                let fg_guard = finality_gadget_ref.read().await;
+                                                if let Some(fg) = fg_guard.as_ref() {
+                                                    let finality_vote = convert_vote_from_bridge(vote_data);
+                                                    let mut gadget = fg.lock().await;
+                                                    match gadget.handle_vote(finality_vote).await {
+                                                        Ok(_) => {
+                                                            log::info!("✅ Vote processed by FinalityGadget");
+                                                        }
+                                                        Err(e) => {
+                                                            log::warn!("Failed to process vote in FinalityGadget: {:?}", e);
+                                                        }
+                                                    }
+                                                } else {
+                                                    log::warn!("⚠️ FinalityGadget not yet initialized, dropping vote");
                                                 }
                                             }
                                             Err(e) => {
@@ -1383,15 +1407,27 @@ pub fn new_full_with_params(
                                         }
                                     }
                                     1 => {
-                                        // Certificate message
+                                        // Certificate message - V11 FIX: Route directly to FinalityGadget
                                         match bincode::deserialize::<CertificateData>(payload) {
                                             Ok(cert_data) => {
                                                 log::info!("📜 Received CERTIFICATE from {:?}: view={}, voters={}",
                                                     peer, cert_data.view, cert_data.signatures.len());
 
-                                                let mut bridge = gadget_bridge.lock().await;
-                                                if let Err(e) = bridge.on_certificate_received(cert_data).await {
-                                                    log::warn!("Failed to process received certificate: {:?}", e);
+                                                // V11 FIX: Call FinalityGadget::handle_certificate() directly
+                                                let fg_guard = finality_gadget_ref.read().await;
+                                                if let Some(fg) = fg_guard.as_ref() {
+                                                    let finality_cert = convert_certificate_from_bridge(cert_data);
+                                                    let mut gadget = fg.lock().await;
+                                                    match gadget.handle_certificate(finality_cert).await {
+                                                        Ok(_) => {
+                                                            log::info!("✅ Certificate processed by FinalityGadget");
+                                                        }
+                                                        Err(e) => {
+                                                            log::warn!("Failed to process certificate in FinalityGadget: {:?}", e);
+                                                        }
+                                                    }
+                                                } else {
+                                                    log::warn!("⚠️ FinalityGadget not yet initialized, dropping certificate");
                                                 }
                                             }
                                             Err(e) => {
@@ -1932,6 +1968,17 @@ pub fn new_full_with_params(
                 network_bridge.clone(),
             )
         ));
+
+        // V11 FIX: Set FinalityGadget reference in network_bridge for direct vote processing
+        let network_bridge_for_set = network_bridge.clone();
+        let finality_gadget_for_set = finality_gadget.clone();
+        task_manager.spawn_handle().spawn(
+            "set-finality-gadget-ref",
+            None,
+            async move {
+                network_bridge_for_set.set_finality_gadget(finality_gadget_for_set).await;
+            },
+        );
 
         log::info!(
             "ASF Finality Gadget initialized (validator_id: {:?}, max_validators: {})",
