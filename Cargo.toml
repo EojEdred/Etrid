@@ -40,10 +40,11 @@ resolver = "2"
 
 members = [
     # ═════════════════════════════════════════════════════════════════════════════
-    # 01 - P2P Network (6 modules)
+    # 01 - P2P Network (7 modules)
     # ═════════════════════════════════════════════════════════════════════════════
     "01-detr-p2p/aecomms",                              # ECIES encrypted communication
     "01-detr-p2p/detrp2p",                              # Core P2P networking with Kademlia DHT
+    "01-detr-p2p/director-node",                        # Director-anchored peering model
     "01-detr-p2p/dpeers",                               # Peer connection management
     "01-detr-p2p/etrid-protocol",                       # Protocol message definitions
     "01-detr-p2p/fluent",                               # Message flow control
@@ -164,13 +165,14 @@ members = [
     "08-etwasm-vm/vmw-runtime",                         # Comprehensive VMw metering runtime
 
     # ═════════════════════════════════════════════════════════════════════════════
-    # 09 - Consensus (7 modules)
+    # 09 - Consensus (8 modules)
     # ═════════════════════════════════════════════════════════════════════════════
     "09-consensus/primitives/consensus-asf",            # ASF consensus runtime API primitives
     "09-consensus/client/consensus-asf",                # ASF consensus service (Substrate client integration)
     "09-consensus/asf-algorithm",                       # ASF consensus algorithm
     "09-consensus/block-production",                    # Block production
     "09-consensus/finality-gadget",                     # Finality gadget
+    "09-consensus/checkpoint-db",                       # Checkpoint finality persistent storage
     "09-consensus/pallet",                              # Consensus pallet
     "09-consensus/validator-management",                # Validator management
 

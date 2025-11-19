@@ -82,6 +82,24 @@ pub enum Message {
     Certificate { data: Vec<u8> },
     NewView { data: Vec<u8> },
     Custom(Vec<u8>),
+
+    // Director-specific messages (for director-anchored peering)
+    DirectorValidatorAuthorization {
+        validator_id: PeerId,
+        proof: Vec<u8>,  // AuthorizationProof serialized
+    },
+    DirectorValidatorRevocation {
+        validator_id: PeerId,
+        reason: String,
+    },
+    DirectorSlashingEvidence {
+        evidence: Vec<u8>,  // SlashingEvidence serialized
+    },
+    DirectorHeartbeat {
+        director_id: PeerId,
+        validator_count: u32,
+        timestamp: u64,
+    },
 }
 
 impl Message {

@@ -1,0 +1,12 @@
+{
+  "peer_id": "0x3333333333333333333333333333333333333333333333333333333333333333",
+  "tailscale_ip": "100.64.0.3",
+  "peer_directors": [
+    "100.64.0.1",
+    "100.64.0.2"
+  ],
+  "max_validators_per_director": 7,
+  "require_authorization": true,
+  "validator_port": 30333,
+  "director_port": 30444
+}

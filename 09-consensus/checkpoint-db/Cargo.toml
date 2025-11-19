@@ -1,0 +1,44 @@
+[package]
+name = "checkpoint-db"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+license = "Apache-2.0"
+description = "Persistent checkpoint state storage for ËTRID ASF consensus"
+
+[dependencies]
+# Database
+rocksdb = { version = "0.21", default-features = false }
+
+# Substrate primitives
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+codec = { workspace = true }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
+
+# Error handling
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# Finality gadget types
+etrid-finality-gadget = { path = "../finality-gadget" }
+
+# Async trait
+async-trait = "0.1"
+
+[dev-dependencies]
+tempfile = "3.8"
+tokio = { version = "1.36", features = ["full"] }
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "sp-runtime/std",
+    "codec/std",
+]

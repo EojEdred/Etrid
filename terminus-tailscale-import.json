@@ -1,0 +1,26 @@
+{
+  "hosts": [
+    {"name": "ts-gizzi-director-1", "host": "100.96.84.69", "user": "ubuntu", "privateKey": "~/.ssh/gizzi-validator"},
+    {"name": "ts-auditdev-director-2", "host": "100.70.242.106", "user": "ubuntu", "privateKey": "~/.ssh/gizzi-validator"},
+    {"name": "ts-director-3", "host": "100.102.128.51", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-director-4", "host": "100.71.242.104", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-director-5", "host": "100.74.84.28", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-director-6", "host": "100.89.102.75", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-6", "host": "100.95.0.72", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-7", "host": "100.86.111.37", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-8", "host": "100.125.147.88", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-9", "host": "100.80.84.82", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-10", "host": "100.109.252.56", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-11", "host": "100.117.43.53", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-12", "host": "100.88.104.58", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-13", "host": "100.70.73.10", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-14", "host": "100.68.185.50", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-15", "host": "100.71.127.127", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-16", "host": "100.93.43.18", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-17", "host": "100.124.117.73", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-18", "host": "100.74.204.23", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-19", "host": "100.125.251.60", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-20", "host": "100.114.244.62", "user": "root", "privateKey": "~/.ssh/contabo-validators"},
+    {"name": "ts-validator-21", "host": "100.113.226.111", "user": "root", "privateKey": "~/.ssh/contabo-validators"}
+  ]
+}

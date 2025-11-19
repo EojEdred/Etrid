@@ -272,6 +272,35 @@ pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
+/// Director-anchored mainnet config (v2 - Director backbone with rotating validators)
+/// Uses 3 director nodes (Tailscale private network) to relay messages between validators
+pub fn director_anchored_mainnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
+
+    Ok(ChainSpec::builder(
+        wasm_binary,
+        None,
+    )
+    .with_name("Ëtrid FlareChain Mainnet (Director Anchored)")
+    .with_id("flarechain_mainnet_v2_directors")
+    .with_chain_type(ChainType::Live)
+    .with_protocol_id("flarechain")
+    .with_properties({
+        let mut properties = sc_service::Properties::new();
+        properties.insert("tokenSymbol".into(), "ETR".into());
+        properties.insert("tokenDecimals".into(), 12.into());
+        properties.insert("ss58Format".into(), 42.into());
+        properties.insert("runtimeVersion".into(), 108.into());
+        properties.insert("consensusMode".into(), "pure_asf".into());
+        properties.insert("blockProduction".into(), "PPFA".into());
+        properties.insert("finality".into(), "ASF".into());
+        properties.insert("networkTopology".into(), "director_anchored".into());
+        properties
+    })
+    .with_genesis_config_preset_name("flarechain_mainnet_v2_directors")
+    .build())
+}
+
 /// Development config for Pure ASF (single validator - Alice, NO GRANDPA)
 pub fn development_asf_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;

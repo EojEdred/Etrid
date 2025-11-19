@@ -3167,23 +3167,167 @@ pub fn new_full_with_params(
 
                         _ = health_interval.tick() => {
                             // ========== CHECK FINALITY HEALTH ==========
+                            use sp_blockchain::HeaderBackend;
+
                             let last_finalized = *checkpoint_state_for_periodic.last_finalized_checkpoint.lock().await;
-                            let metrics = checkpoint_state_for_periodic.metrics.lock().await;
+                            let mut metrics = checkpoint_state_for_periodic.metrics.lock().await;
                             let certs = checkpoint_state_for_periodic.certificates.lock().await;
+                            let mut recovery_mode = checkpoint_state_for_periodic.recovery_mode.lock().await;
+                            let mut health_status = checkpoint_state_for_periodic.health_status.lock().await;
+                            let mut last_stuck_time = checkpoint_state_for_periodic.last_stuck_time.lock().await;
+
+                            // Get current block number from client
+                            let current_block = checkpoint_client.info().best_number;
 
                             log::info!(
-                                "🏥 Checkpoint health: last_finalized={:?}, certificates={}, total_sigs={}, avg_quorum_time={:?}",
+                                "🏥 Checkpoint health: last_finalized={:?}, certificates={}, total_sigs={}, avg_quorum_time={:?}, current_block={}",
                                 last_finalized,
                                 certs.len(),
                                 metrics.total_signatures,
-                                metrics.average_quorum_time
+                                metrics.average_quorum_time,
+                                current_block
                             );
 
-                            // Check for stuck finality
+                            // ========== STUCK DETECTION LOGIC ==========
                             if let Some(last_cp) = last_finalized {
-                                let expected_block = (last_cp.0 + 1) * checkpoint_params_interval;
-                                // TODO: Get current block number and check if stuck
-                                log::trace!("Expected next checkpoint at block #{}", expected_block);
+                                let expected_checkpoint_block = (last_cp.0 + 1) * checkpoint_params_interval;
+
+                                // Calculate finality lag
+                                let lag = if current_block > expected_checkpoint_block {
+                                    current_block - expected_checkpoint_block
+                                } else {
+                                    0
+                                };
+
+                                // Update metrics
+                                metrics.finality_lag = lag as u64;
+
+                                // Determine health status based on lag
+                                let new_status = if lag == 0 {
+                                    FinalityHealthStatus::Healthy
+                                } else if lag < 20 {
+                                    // Less than 1.2 missed checkpoints (assuming 16 block interval)
+                                    FinalityHealthStatus::Degraded
+                                } else if lag < 50 {
+                                    // Less than 3 missed checkpoints
+                                    FinalityHealthStatus::Critical
+                                } else {
+                                    // 50+ blocks behind = 3+ missed checkpoints = STUCK
+                                    FinalityHealthStatus::Stuck
+                                };
+
+                                let status_changed = new_status != *health_status;
+                                *health_status = new_status;
+
+                                // ========== HANDLE STUCK FINALITY ==========
+                                if new_status == FinalityHealthStatus::Stuck {
+                                    // Track when we became stuck
+                                    if last_stuck_time.is_none() {
+                                        *last_stuck_time = Some(std::time::Instant::now());
+                                        metrics.stuck_checkpoints += 1;
+
+                                        log::error!(
+                                            "🚨 CHECKPOINT FINALITY STUCK! Expected checkpoint at block #{}, current block #{}, lag={} blocks (>3 missed checkpoints)",
+                                            expected_checkpoint_block,
+                                            current_block,
+                                            lag
+                                        );
+                                    }
+
+                                    // Enter recovery mode if not already
+                                    if !*recovery_mode {
+                                        *recovery_mode = true;
+                                        log::warn!("🔧 ENTERING RECOVERY MODE - Attempting to unstick finality");
+
+                                        // Drop locks before recovery actions to avoid deadlocks
+                                        drop(metrics);
+                                        drop(recovery_mode);
+                                        drop(health_status);
+                                        drop(last_stuck_time);
+                                        drop(certs);
+
+                                        // ========== RECOVERY ACTIONS ==========
+
+                                        // 1. Broadcast recent signatures again (help network converge)
+                                        let sigs = checkpoint_state_for_periodic.signatures.lock().await;
+                                        log::info!("📡 Recovery: Re-broadcasting recent signatures to network");
+                                        for checkpoint_num in (last_cp.0.saturating_sub(2))..=(last_cp.0 + 5) {
+                                            let cp = CheckpointNumber(checkpoint_num);
+                                            if let Some(checkpoint_sigs) = sigs.get(&cp) {
+                                                for sig in checkpoint_sigs.iter() {
+                                                    if let Ok(payload) = bincode::serialize(sig) {
+                                                        let msg = P2PMessage::Custom(payload);
+                                                        if let Err(e) = checkpoint_p2p.broadcast(msg).await {
+                                                            log::debug!("Recovery broadcast failed: {:?}", e);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        drop(sigs);
+
+                                        // 2. Request missing signatures/certificates from peers
+                                        log::info!("🔍 Recovery: Requesting missing certificates from peers");
+                                        let missing_checkpoints: Vec<CheckpointNumber> = ((last_cp.0 + 1)..=(last_cp.0 + 5))
+                                            .map(CheckpointNumber)
+                                            .collect();
+
+                                        for cp in missing_checkpoints {
+                                            // Request certificate for this checkpoint
+                                            // Note: This would need a request/response protocol in production
+                                            log::debug!("Recovery: Requesting checkpoint {:?} from network", cp);
+                                        }
+
+                                        // 3. Log operator alert
+                                        log::error!(
+                                            "⚠️  OPERATOR ALERT: Checkpoint finality has been stuck for {} blocks. Manual intervention may be required.",
+                                            lag
+                                        );
+                                        log::error!(
+                                            "    Last finalized: {:?}, Expected: #{}, Current: #{}, Missing: {} checkpoints",
+                                            last_cp,
+                                            expected_checkpoint_block,
+                                            current_block,
+                                            (lag + checkpoint_params_interval - 1) / checkpoint_params_interval
+                                        );
+                                    }
+                                } else {
+                                    // Not stuck - clear stuck tracking and exit recovery mode if we were in it
+                                    if last_stuck_time.is_some() && new_status == FinalityHealthStatus::Healthy {
+                                        let stuck_duration = last_stuck_time.unwrap().elapsed();
+                                        log::info!(
+                                            "✅ Checkpoint finality RECOVERED after {:?}",
+                                            stuck_duration
+                                        );
+                                        *last_stuck_time = None;
+                                    }
+
+                                    if *recovery_mode {
+                                        *recovery_mode = false;
+                                        log::info!("✅ EXITING RECOVERY MODE - Finality progressing normally");
+                                    }
+                                }
+
+                                // ========== STATUS LOGGING ==========
+                                if status_changed {
+                                    match new_status {
+                                        FinalityHealthStatus::Healthy => {
+                                            log::info!("💚 Finality health: HEALTHY (lag={} blocks)", lag);
+                                        }
+                                        FinalityHealthStatus::Degraded => {
+                                            log::warn!("💛 Finality health: DEGRADED (lag={} blocks, <1.2 checkpoints behind)", lag);
+                                        }
+                                        FinalityHealthStatus::Critical => {
+                                            log::warn!("🧡 Finality health: CRITICAL (lag={} blocks, <3 checkpoints behind)", lag);
+                                        }
+                                        FinalityHealthStatus::Stuck => {
+                                            log::error!("❤️  Finality health: STUCK (lag={} blocks, 3+ checkpoints behind)", lag);
+                                        }
+                                    }
+                                }
+                            } else {
+                                // No checkpoints finalized yet - this is normal at startup
+                                log::trace!("No checkpoints finalized yet (startup phase)");
                             }
                         }
                     }

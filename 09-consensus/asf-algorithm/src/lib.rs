@@ -21,7 +21,6 @@ use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
 
-pub mod hotstuff;
 pub mod certificates;
 pub mod votes;
 pub mod finality;
@@ -31,7 +30,6 @@ pub mod crypto;
 pub mod slashing;
 pub mod network;
 
-pub use hotstuff::*;
 pub use certificates::*;
 pub use votes::*;
 pub use finality::*;
