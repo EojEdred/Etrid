@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 8080;
 
 // Initialize Etrid API with Auth System
 const EtridAPI = require('../api/etrid/index.js');
+const { AutoDiscovery } = require('../api/etrid/auto-discovery.js');
+
 const api = new EtridAPI();
+const autoDiscovery = new AutoDiscovery();
 
 // Middleware
 app.use(express.json());
@@ -36,7 +39,24 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, organization } = req.body;
     const user = await api.auth.register({ name, email, password, organization });
-    res.json({ success: true, user });
+
+    // Auto-discover and configure local validator
+    try {
+      const discoveryResult = await autoDiscovery.autoConfigureValidator(api.database, user.id);
+      console.log('Auto-discovery result:', discoveryResult);
+
+      res.json({
+        success: true,
+        user,
+        validatorAutoConfigured: discoveryResult.success,
+        validatorInfo: discoveryResult.validator
+      });
+    } catch (discoveryErr) {
+      // Don't fail registration if auto-discovery fails
+      console.error('Auto-discovery failed:', discoveryErr);
+      res.json({ success: true, user, validatorAutoConfigured: false });
+    }
+
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

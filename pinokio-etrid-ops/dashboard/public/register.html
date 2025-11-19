@@ -184,21 +184,51 @@
           throw new Error(data.error || 'Registration failed');
         }
 
-        // Show success message
-        successDiv.innerHTML = `
-          <strong>Account created successfully!</strong>
-          <p>Please check your email to verify your account.</p>
-          <p>Redirecting to login...</p>
-        `;
+        // Check if validator was auto-configured
+        if (data.validatorAutoConfigured && data.validatorInfo) {
+          successDiv.innerHTML = `
+            <strong>🎉 Welcome aboard!</strong><br><br>
+            Your validator has been automatically detected and configured:<br>
+            <strong>${data.validatorInfo.metadata.chain}</strong> v${data.validatorInfo.metadata.version}<br><br>
+            Logging you in...
+          `;
+        } else {
+          successDiv.textContent = 'Account created successfully! Logging you in...';
+        }
         successDiv.style.display = 'block';
 
         // Hide form
         document.getElementById('register-form').style.display = 'none';
 
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 3000);
+        // Auto-login and redirect to validator dashboard
+        try {
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, remember: false })
+          });
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            localStorage.setItem('accessToken', loginData.accessToken);
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+
+            // Redirect to validator dashboard
+            setTimeout(() => {
+              window.location.href = '/validator.html';
+            }, 2000);
+          } else {
+            // Redirect to login if auto-login fails
+            setTimeout(() => {
+              window.location.href = '/login.html';
+            }, 2000);
+          }
+        } catch (loginErr) {
+          // Redirect to login if auto-login fails
+          setTimeout(() => {
+            window.location.href = '/login.html';
+          }, 2000);
+        }
 
       } catch (err) {
         errorDiv.textContent = err.message;
