@@ -1,0 +1,52 @@
+name: Deploy Landing Page to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - claude/*
+    paths:
+      - 'apps/wallet-mobile/landing-page/**'
+  pull_request:
+    paths:
+      - 'apps/wallet-mobile/landing-page/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: apps/wallet-mobile/landing-page/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/wallet-mobile/landing-page
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/wallet-mobile/landing-page
+        run: npm run build
+
+      - name: Deploy to Vercel (Preview)
+        if: github.event_name == 'pull_request'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN_LANDING }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
+          working-directory: apps/wallet-mobile/landing-page
+
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN_LANDING }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING }}
+          vercel-args: '--prod'
+          working-directory: apps/wallet-mobile/landing-page

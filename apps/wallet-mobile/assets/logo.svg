@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="etridGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#etridGrad)" opacity="0.1"/>
+
+  <!-- Ë with accent -->
+  <path d="M180 160 L180 360 L300 360 M180 260 L280 260 M240 140 L240 155 M220 140 L260 140"
+        stroke="url(#etridGrad)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Geometric accent - triangle/arrow -->
+  <path d="M340 200 L380 280 L300 280 Z" fill="url(#etridGrad)" opacity="0.8"/>
+
+  <!-- Connection lines (representing blockchain) -->
+  <path d="M140 340 L160 350 M180 350 L200 340 M220 350 L240 340 M260 350 L280 340"
+        stroke="url(#etridGrad)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+</svg>

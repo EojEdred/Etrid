@@ -29,6 +29,8 @@ target 'EtridWallet' do
   # Firebase
   pod 'Firebase/Core'
   pod 'Firebase/Messaging'
+  pod 'Firebase/Analytics'
+  pod 'Firebase/Crashlytics'
 
   target 'EtridWalletTests' do
     inherit! :complete
