@@ -351,6 +351,137 @@ app.get('/api/finality/health', api.auth.middleware(), async (req, res) => {
 });
 
 // ========================================
+// Webhook Configuration & Alerts
+// ========================================
+
+// In-memory webhook storage (consider moving to database for production)
+let webhookConfig = {
+  telegram: { token: null, chatId: null },
+  discord: { webhookUrl: null }
+};
+
+// Save webhook configuration
+app.post('/api/webhooks/config', api.auth.middleware(), async (req, res) => {
+  try {
+    const { telegram, discord } = req.body;
+
+    if (telegram) {
+      webhookConfig.telegram = telegram;
+    }
+    if (discord) {
+      webhookConfig.discord = discord;
+    }
+
+    res.json({ success: true, message: 'Webhook configuration saved' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get webhook configuration
+app.get('/api/webhooks/config', api.auth.middleware(), async (req, res) => {
+  try {
+    // Return config without exposing full tokens
+    const safeConfig = {
+      telegram: {
+        configured: !!webhookConfig.telegram.token,
+        chatId: webhookConfig.telegram.chatId
+      },
+      discord: {
+        configured: !!webhookConfig.discord.webhookUrl
+      }
+    };
+    res.json(safeConfig);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Send test webhook
+app.post('/api/webhooks/test', api.auth.middleware(), async (req, res) => {
+  try {
+    const testMessage = '🧪 Test Alert from Etrid Operations Center\n\nThis is a test notification. Your webhook is configured correctly!';
+
+    const results = {
+      telegram: false,
+      discord: false
+    };
+
+    // Send Telegram test
+    if (webhookConfig.telegram.token && webhookConfig.telegram.chatId) {
+      try {
+        await sendTelegramMessage(testMessage);
+        results.telegram = true;
+      } catch (err) {
+        console.error('Telegram test failed:', err.message);
+      }
+    }
+
+    // Send Discord test
+    if (webhookConfig.discord.webhookUrl) {
+      try {
+        await sendDiscordMessage(testMessage);
+        results.discord = true;
+      } catch (err) {
+        console.error('Discord test failed:', err.message);
+      }
+    }
+
+    res.json({ success: true, results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper function to send Telegram message
+async function sendTelegramMessage(message) {
+  const { token, chatId } = webhookConfig.telegram;
+  if (!token || !chatId) return;
+
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  await axios.post(url, {
+    chat_id: chatId,
+    text: message,
+    parse_mode: 'HTML'
+  });
+}
+
+// Helper function to send Discord message
+async function sendDiscordMessage(message) {
+  const { webhookUrl } = webhookConfig.discord;
+  if (!webhookUrl) return;
+
+  await axios.post(webhookUrl, {
+    content: message,
+    username: 'Etrid Monitor'
+  });
+}
+
+// Helper function to send alert to all configured webhooks
+async function sendAlert(alert) {
+  const severityEmoji = {
+    high: '🔴',
+    medium: '🟡',
+    low: '🔵'
+  };
+
+  const emoji = severityEmoji[alert.severity] || '⚠️';
+  const message = `${emoji} <b>${alert.severity.toUpperCase()} Alert</b>\n\n` +
+                 `<b>Type:</b> ${alert.type.replace(/_/g, ' ')}\n` +
+                 `<b>Message:</b> ${alert.message}\n` +
+                 `<b>Time:</b> ${new Date().toLocaleString()}`;
+
+  try {
+    await Promise.all([
+      sendTelegramMessage(message),
+      sendDiscordMessage(message.replace(/<[^>]*>/g, '')) // Strip HTML for Discord
+    ]);
+  } catch (err) {
+    console.error('Failed to send alert:', err);
+  }
+}
+
+// ========================================
 // Protected Node Operations
 // ========================================
 
@@ -529,9 +660,63 @@ io.on('connection', async (socket) => {
     }
   }, 30000); // Every 30 seconds
 
+  // Stream network updates every 30 seconds
+  const networkInterval = setInterval(async () => {
+    try {
+      const [validators, stats, finality] = await Promise.all([
+        networkAggregator.getAllValidators(),
+        networkAggregator.getNetworkStats(),
+        finalityClient.getMetrics()
+      ]);
+
+      socket.emit('network-update', {
+        validators,
+        stats,
+        finality,
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('Error streaming network update:', err);
+    }
+  }, 30000);
+
+  // Stream finality updates every 15 seconds
+  const finalityInterval = setInterval(async () => {
+    try {
+      const metrics = await finalityClient.getMetrics();
+      socket.emit('finality-update', metrics);
+    } catch (err) {
+      console.error('Error streaming finality update:', err);
+    }
+  }, 15000);
+
+  // Check for network issues every minute and send alerts
+  const alertsInterval = setInterval(async () => {
+    try {
+      const issues = await networkAggregator.detectNetworkIssues();
+
+      if (issues.issues && issues.issues.length > 0) {
+        for (const issue of issues.issues) {
+          // Emit to socket
+          socket.emit('alert', issue);
+
+          // Send to webhooks if high severity
+          if (issue.severity === 'high') {
+            await sendAlert(issue);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error checking alerts:', err);
+    }
+  }, 60000);
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
     clearInterval(statusInterval);
+    clearInterval(networkInterval);
+    clearInterval(finalityInterval);
+    clearInterval(alertsInterval);
   });
 
   // Handle custom events (with authorization checks)
