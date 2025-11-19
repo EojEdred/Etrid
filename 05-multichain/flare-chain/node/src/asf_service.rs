@@ -2261,6 +2261,7 @@ pub fn new_full_with_params(
         let enable_implicit_fallback = asf_params.enable_implicit_fallback;
         let checkpoint_validator_id = validator_id;
         let checkpoint_keystore = keystore_container.keystore();
+        let checkpoint_p2p_for_import = p2p_network.clone();
 
         task_manager.spawn_essential_handle().spawn(
             "asf-block-import-finality",
@@ -2415,6 +2416,19 @@ pub fn new_full_with_params(
                             sig_count,
                             checkpoint_quorum
                         );
+
+                        // Broadcast checkpoint signature to all peers
+                        log::info!("📤 Broadcasting checkpoint signature for block #{}", block_number);
+                        if let Ok(payload) = bincode::serialize(&checkpoint_sig) {
+                            let p2p_msg = P2PMessage::Custom(payload);
+                            if let Err(e) = checkpoint_p2p_for_import.broadcast(p2p_msg).await {
+                                log::warn!("Failed to broadcast checkpoint signature for block #{}: {:?}", block_number, e);
+                            } else {
+                                log::info!("✅ Checkpoint signature broadcast complete for block #{}", block_number);
+                            }
+                        } else {
+                            log::error!("❌ Failed to serialize checkpoint signature for block #{}", block_number);
+                        }
 
                         // Check if quorum reached
                         if sig_count >= checkpoint_quorum as usize {
@@ -2700,7 +2714,81 @@ pub fn new_full_with_params(
                                         checkpoint_sig.checkpoint_number,
                                         checkpoint_sig.validator_id
                                     );
-                                    // TODO: Add to checkpoint state and check quorum
+
+                                    // Validate and add to checkpoint state
+                                    let mut sigs = bridge_checkpoint_state.signatures.lock().await;
+
+                                    // Check for duplicate signatures from same validator
+                                    let existing_sigs = sigs.entry(checkpoint_sig.checkpoint_number).or_insert_with(Vec::new);
+                                    let already_signed = existing_sigs.iter().any(|s| s.validator_id == checkpoint_sig.validator_id);
+
+                                    if !already_signed {
+                                        existing_sigs.push(checkpoint_sig.clone());
+                                        let sig_count = existing_sigs.len();
+
+                                        log::info!(
+                                            "✅ Added checkpoint signature (checkpoint: {:?}, validator: {:?}, total: {}/{})",
+                                            checkpoint_sig.checkpoint_number,
+                                            checkpoint_sig.validator_id,
+                                            sig_count,
+                                            bridge_checkpoint_quorum
+                                        );
+
+                                        // Check if quorum reached
+                                        if sig_count >= bridge_checkpoint_quorum as usize {
+                                            log::info!(
+                                                "🎯 Checkpoint quorum reached for {:?} ({}/{})! Creating certificate...",
+                                                checkpoint_sig.checkpoint_number,
+                                                sig_count,
+                                                bridge_checkpoint_quorum
+                                            );
+
+                                            // Create certificate
+                                            let signatures_vec: Vec<(ValidatorId, Vec<u8>)> = existing_sigs
+                                                .iter()
+                                                .map(|s| (s.validator_id, s.signature.clone()))
+                                                .collect();
+
+                                            let cert = CheckpointCertificate {
+                                                checkpoint_number: checkpoint_sig.checkpoint_number,
+                                                block_hash: checkpoint_sig.block_hash,
+                                                authority_set_id: checkpoint_sig.authority_set_id,
+                                                signatures: signatures_vec,
+                                                timestamp: std::time::SystemTime::now()
+                                                    .duration_since(std::time::UNIX_EPOCH)
+                                                    .unwrap()
+                                                    .as_secs(),
+                                            };
+
+                                            // Store certificate
+                                            let mut certs = bridge_checkpoint_state.certificates.lock().await;
+                                            certs.insert(checkpoint_sig.checkpoint_number, cert.clone());
+                                            drop(certs);
+                                            drop(sigs);
+
+                                            log::info!(
+                                                "📜 Certificate created for checkpoint {:?} with {} signatures",
+                                                checkpoint_sig.checkpoint_number,
+                                                sig_count
+                                            );
+
+                                            // Broadcast certificate to network
+                                            if let Ok(payload) = bincode::serialize(&cert) {
+                                                let cert_msg = P2PMessage::Custom(payload);
+                                                if let Err(e) = bridge_p2p_network.broadcast(cert_msg).await {
+                                                    log::warn!("Failed to broadcast checkpoint certificate: {:?}", e);
+                                                } else {
+                                                    log::info!("✅ Checkpoint certificate broadcast complete for {:?}", checkpoint_sig.checkpoint_number);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        log::debug!(
+                                            "⚠️ Duplicate signature from validator {:?} for checkpoint {:?} - ignoring",
+                                            checkpoint_sig.validator_id,
+                                            checkpoint_sig.checkpoint_number
+                                        );
+                                    }
                                 }
                                 // Try CheckpointCertificate
                                 else if let Ok(checkpoint_cert) = bincode::deserialize::<CheckpointCertificate>(&data) {
