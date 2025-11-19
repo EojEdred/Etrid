@@ -2533,6 +2533,49 @@ pub fn new_full_with_params(
                     // Get current Substrate finality state
                     let current_info = finality_client.usage_info().chain;
                     let current_number = current_info.finalized_number;
+                    let best_number = finality_client.info().best_number;
+
+                    // ═══════════════════════════════════════════════════════════
+                    // V14: IMPLICIT FINALITY TEST - Finalize blocks N-10
+                    // This bypasses all P2P complexity to test if finalize_block works
+                    // ═══════════════════════════════════════════════════════════
+                    if best_number > 10 {
+                        let target_finalize = best_number - 10;
+                        if target_finalize > current_number {
+                            // Get the hash of the block to finalize
+                            match finality_client.hash(target_finalize) {
+                                Ok(Some(target_hash)) => {
+                                    // Try to finalize the block
+                                    match finality_client.finalize_block(
+                                        target_hash,
+                                        None,  // No justification needed for implicit finality
+                                        true,  // Notify about finalization
+                                    ) {
+                                        Ok(_) => {
+                                            log::info!(
+                                                "🎯 IMPLICIT FINALITY: Finalized block #{} ({:?})",
+                                                target_finalize,
+                                                target_hash
+                                            );
+                                        }
+                                        Err(e) => {
+                                            log::error!(
+                                                "❌ IMPLICIT FINALITY FAILED for #{}: {:?}",
+                                                target_finalize,
+                                                e
+                                            );
+                                        }
+                                    }
+                                }
+                                Ok(None) => {
+                                    log::warn!("Block #{} hash not found", target_finalize);
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to get hash for #{}: {:?}", target_finalize, e);
+                                }
+                            }
+                        }
+                    }
 
                     // Find newest ASF-finalized block not yet Substrate-finalized
                     for asf_block in asf_finalized.iter().rev() {
