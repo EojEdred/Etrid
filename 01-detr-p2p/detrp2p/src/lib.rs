@@ -81,6 +81,10 @@ pub enum Message {
     Vote { data: Vec<u8> },
     Certificate { data: Vec<u8> },
     NewView { data: Vec<u8> },
+    /// Checkpoint signature for multi-sig finality
+    CheckpointSig { data: Vec<u8> },
+    /// Checkpoint certificate (finality proof)
+    CheckpointCert { data: Vec<u8> },
     Custom(Vec<u8>),
 }
 

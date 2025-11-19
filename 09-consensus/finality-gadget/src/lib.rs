@@ -18,7 +18,205 @@ use codec::{Encode, Decode};
 pub struct ValidatorId(pub u32);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
-pub struct BlockHash([u8; 32]);
+pub struct BlockHash(pub [u8; 32]);
+
+/// Block number for checkpoint finality
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Encode, Decode)]
+pub struct BlockNumber(pub u32);
+
+// ============================================================================
+// CHECKPOINT FINALITY (Simple Multi-Sig at Intervals)
+// ============================================================================
+
+/// Signature for a checkpoint block
+#[derive(Clone, Debug, Serialize, Deserialize, Encode, Decode)]
+pub struct CheckpointSignature {
+    pub block_number: BlockNumber,
+    pub block_hash: BlockHash,
+    pub validator_id: ValidatorId,
+    pub signature: Vec<u8>,
+    pub timestamp: u64,
+}
+
+/// Checkpoint finality certificate (proof that 2/3+1 signed)
+#[derive(Clone, Debug, Serialize, Deserialize, Encode, Decode)]
+pub struct CheckpointCertificate {
+    pub block_number: BlockNumber,
+    pub block_hash: BlockHash,
+    pub signatures: Vec<(ValidatorId, Vec<u8>)>,
+    pub timestamp: u64,
+}
+
+/// Simple checkpoint-based finality collector
+pub struct CheckpointFinality {
+    /// Our validator ID
+    validator_id: ValidatorId,
+    /// Checkpoint interval (e.g., 100 blocks)
+    checkpoint_interval: u32,
+    /// Max validators (for quorum calculation)
+    max_validators: u32,
+    /// Quorum threshold (2/3 + 1)
+    quorum_threshold: u32,
+    /// Signatures collected per checkpoint: BlockNumber -> (BlockHash, signatures)
+    checkpoints: HashMap<BlockNumber, (BlockHash, Vec<(ValidatorId, Vec<u8>)>)>,
+    /// Last finalized checkpoint
+    last_finalized: BlockNumber,
+    /// Pending certificates to broadcast
+    pending_certificates: VecDeque<CheckpointCertificate>,
+}
+
+impl CheckpointFinality {
+    pub fn new(validator_id: ValidatorId, max_validators: u32, checkpoint_interval: u32) -> Self {
+        let quorum_threshold = (2 * max_validators / 3) + 1;
+
+        tracing::info!(
+            "🔒 Checkpoint Finality initialized: interval={}, quorum={}/{}",
+            checkpoint_interval, quorum_threshold, max_validators
+        );
+
+        Self {
+            validator_id,
+            checkpoint_interval,
+            max_validators,
+            quorum_threshold,
+            checkpoints: HashMap::new(),
+            last_finalized: BlockNumber(0),
+            pending_certificates: VecDeque::new(),
+        }
+    }
+
+    /// Check if a block number is a checkpoint
+    pub fn is_checkpoint(&self, block_number: u32) -> bool {
+        block_number > 0 && block_number % self.checkpoint_interval == 0
+    }
+
+    /// Create a signature for a checkpoint block (called when we import a checkpoint)
+    pub fn sign_checkpoint(&mut self, block_number: u32, block_hash: BlockHash) -> Option<CheckpointSignature> {
+        if !self.is_checkpoint(block_number) {
+            return None;
+        }
+
+        let block_num = BlockNumber(block_number);
+
+        // Don't sign checkpoints we've already finalized
+        if block_num.0 <= self.last_finalized.0 {
+            return None;
+        }
+
+        // Create signature (dummy for now - will use keystore)
+        let mut sig = Vec::with_capacity(64);
+        sig.extend_from_slice(&self.validator_id.0.to_le_bytes());
+        sig.extend_from_slice(&block_number.to_le_bytes());
+        sig.extend_from_slice(&block_hash.0[0..56]);
+
+        let checkpoint_sig = CheckpointSignature {
+            block_number: block_num,
+            block_hash,
+            validator_id: self.validator_id,
+            signature: sig,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        };
+
+        tracing::info!(
+            "✍️ Signed checkpoint #{} ({:02x}{:02x}..)",
+            block_number,
+            block_hash.0[0], block_hash.0[1]
+        );
+
+        // Add our own signature to collection
+        self.add_signature(checkpoint_sig.clone());
+
+        Some(checkpoint_sig)
+    }
+
+    /// Add a checkpoint signature (from self or network)
+    /// Returns Some(CheckpointCertificate) if quorum reached
+    pub fn add_signature(&mut self, sig: CheckpointSignature) -> Option<CheckpointCertificate> {
+        // Don't process signatures for already-finalized checkpoints
+        if sig.block_number.0 <= self.last_finalized.0 {
+            return None;
+        }
+
+        let entry = self.checkpoints
+            .entry(sig.block_number)
+            .or_insert_with(|| (sig.block_hash, Vec::new()));
+
+        // Verify block hash matches (prevent equivocation)
+        if entry.0 != sig.block_hash {
+            tracing::warn!(
+                "⚠️ Checkpoint #{} hash mismatch from validator {}",
+                sig.block_number.0, sig.validator_id.0
+            );
+            return None;
+        }
+
+        // Check for duplicate signature from same validator
+        if entry.1.iter().any(|(v, _)| *v == sig.validator_id) {
+            return None;
+        }
+
+        // Add signature
+        entry.1.push((sig.validator_id, sig.signature));
+
+        let sig_count = entry.1.len() as u32;
+
+        tracing::debug!(
+            "📊 Checkpoint #{} signatures: {}/{} (need {})",
+            sig.block_number.0, sig_count, self.max_validators, self.quorum_threshold
+        );
+
+        // Check if we reached quorum
+        if sig_count >= self.quorum_threshold {
+            let cert = CheckpointCertificate {
+                block_number: sig.block_number,
+                block_hash: entry.0,
+                signatures: entry.1.clone(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            };
+
+            tracing::info!(
+                "🎉 CHECKPOINT FINALIZED! Block #{} with {}/{} signatures",
+                sig.block_number.0, sig_count, self.max_validators
+            );
+
+            // Update last finalized
+            if sig.block_number.0 > self.last_finalized.0 {
+                self.last_finalized = sig.block_number;
+            }
+
+            // Queue certificate for broadcast
+            self.pending_certificates.push_back(cert.clone());
+
+            // Clean up old checkpoints
+            self.checkpoints.retain(|num, _| num.0 >= self.last_finalized.0);
+
+            return Some(cert);
+        }
+
+        None
+    }
+
+    /// Get pending certificates to broadcast
+    pub fn get_pending_certificates(&mut self) -> Vec<CheckpointCertificate> {
+        self.pending_certificates.drain(..).collect()
+    }
+
+    /// Get last finalized block number
+    pub fn last_finalized_number(&self) -> u32 {
+        self.last_finalized.0
+    }
+
+    /// Get checkpoint interval
+    pub fn checkpoint_interval(&self) -> u32 {
+        self.checkpoint_interval
+    }
+}
 
 impl BlockHash {
     /// Create a new BlockHash from bytes
