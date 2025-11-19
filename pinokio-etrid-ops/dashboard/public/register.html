@@ -136,6 +136,19 @@
 
   <script src="auth.js"></script>
   <script>
+    // Check for autostart parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const autostart = urlParams.get('autostart') === 'true';
+
+    if (autostart) {
+      // Update header for autostart flow
+      const header = document.querySelector('.auth-header p');
+      header.textContent = '🚀 Get your validator running in 60 seconds';
+
+      // Update button text
+      document.getElementById('register-btn').textContent = '🚀 Launch My Node';
+    }
+
     // Handle registration form submission
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -160,7 +173,12 @@
 
       // Disable button
       btn.disabled = true;
-      btn.textContent = 'Creating account...';
+
+      if (autostart) {
+        btn.textContent = '🚀 Setting up your node...';
+      } else {
+        btn.textContent = 'Creating account...';
+      }
 
       try {
         const name = document.getElementById('name').value;
@@ -186,21 +204,42 @@
 
         // Check if validator was auto-configured
         if (data.validatorAutoConfigured && data.validatorInfo) {
-          successDiv.innerHTML = `
-            <strong>🎉 Welcome aboard!</strong><br><br>
-            Your validator has been automatically detected and configured:<br>
-            <strong>${data.validatorInfo.metadata.chain}</strong> v${data.validatorInfo.metadata.version}<br><br>
-            Logging you in...
-          `;
+          if (autostart) {
+            successDiv.innerHTML = `
+              <strong>🎉 Your Node is Live!</strong><br><br>
+              <div style="text-align: left; padding: 16px; background: rgba(0, 214, 143, 0.1); border-radius: 8px; margin: 16px 0;">
+                <strong>✓ Validator Detected:</strong> ${data.validatorInfo.metadata.chain}<br>
+                <strong>✓ Version:</strong> v${data.validatorInfo.metadata.version}<br>
+                <strong>✓ Auto-configured:</strong> All network settings applied<br>
+                <strong>✓ Status:</strong> Syncing blocks and connecting to peers
+              </div>
+              <p>Taking you to your dashboard...</p>
+            `;
+          } else {
+            successDiv.innerHTML = `
+              <strong>🎉 Welcome aboard!</strong><br><br>
+              Your validator has been automatically detected and configured:<br>
+              <strong>${data.validatorInfo.metadata.chain}</strong> v${data.validatorInfo.metadata.version}<br><br>
+              Logging you in...
+            `;
+          }
         } else {
-          successDiv.textContent = 'Account created successfully! Logging you in...';
+          if (autostart) {
+            successDiv.innerHTML = `
+              <strong>🎉 Account Created!</strong><br><br>
+              <p>Searching for available validator nodes to provision...</p>
+              <p>This may take a few seconds.</p>
+            `;
+          } else {
+            successDiv.textContent = 'Account created successfully! Logging you in...';
+          }
         }
         successDiv.style.display = 'block';
 
         // Hide form
         document.getElementById('register-form').style.display = 'none';
 
-        // Auto-login and redirect to validator dashboard
+        // Auto-login and redirect
         try {
           const loginResponse = await fetch('/api/auth/login', {
             method: 'POST',
@@ -213,10 +252,25 @@
             localStorage.setItem('accessToken', loginData.accessToken);
             localStorage.setItem('user', JSON.stringify(loginData.user));
 
-            // Redirect to validator dashboard
+            // Store autostart flag for onboarding
+            if (autostart) {
+              localStorage.setItem('showOnboarding', 'true');
+            }
+
+            // Redirect based on setup status
             setTimeout(() => {
-              window.location.href = '/validator.html';
-            }, 2000);
+              if (data.validatorAutoConfigured && data.validatorInfo) {
+                // Go directly to validator page
+                const nodeName = encodeURIComponent(data.validatorInfo.nodeName);
+                window.location.href = `/validator.html?node=${nodeName}&welcome=true`;
+              } else if (autostart) {
+                // Go to onboarding wizard
+                window.location.href = '/onboarding.html';
+              } else {
+                // Go to dashboard
+                window.location.href = '/dashboard.html';
+              }
+            }, autostart ? 3000 : 2000);
           } else {
             // Redirect to login if auto-login fails
             setTimeout(() => {
@@ -234,7 +288,7 @@
         errorDiv.textContent = err.message;
         errorDiv.style.display = 'block';
         btn.disabled = false;
-        btn.textContent = 'Create Account';
+        btn.textContent = autostart ? '🚀 Launch My Node' : 'Create Account';
       }
     });
 
