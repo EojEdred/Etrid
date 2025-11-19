@@ -435,12 +435,32 @@ io.on('connection', async (socket) => {
   });
 });
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`🚀 Etrid Operations Center running on http://localhost:${PORT}`);
-  console.log(`📊 Dashboard accessible from any browser`);
-  console.log(`🔗 Use Pinokio's Local Share for remote access`);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    console.log('🔧 Initializing database...');
+
+    // Initialize database with all tables
+    await api.database.init();
+    console.log('✅ Database initialized successfully');
+
+    // Start the server
+    server.listen(PORT, () => {
+      console.log(`🚀 Etrid Operations Center running on http://localhost:${PORT}`);
+      console.log(`📊 Dashboard accessible from any browser`);
+      console.log(`🔗 Use Pinokio's Local Share for remote access`);
+      console.log(`\n💡 Access the dashboard at:`);
+      console.log(`   - Login: http://localhost:${PORT}/login.html`);
+      console.log(`   - Register: http://localhost:${PORT}/register.html`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
 
 // Handle shutdown
 process.on('SIGTERM', () => {

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Nodes - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="authenticated">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Etrid Ops</h1>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">
+          <span>📊</span>
+          Dashboard
+        </a>
+        <a href="my-nodes.html" class="active">
+          <span>🖥️</span>
+          My Nodes
+        </a>
+        <a href="#" onclick="showComingSoon('Alerts'); return false;">
+          <span>🔔</span>
+          Alerts
+        </a>
+        <a href="#" onclick="showComingSoon('Analytics'); return false;">
+          <span>📈</span>
+          Analytics
+        </a>
+        <a href="settings.html">
+          <span>⚙️</span>
+          Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="sidebar-avatar">JD</div>
+          <div class="user-details">
+            <strong id="sidebar-name">Loading...</strong>
+            <small id="sidebar-email">...</small>
+            <span class="tier-badge-small" id="sidebar-tier">Free</span>
+          </div>
+        </div>
+        <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header>
+        <div>
+          <h1>My Nodes</h1>
+          <p id="node-count" style="color: var(--text-secondary); margin-top: 8px;">Loading...</p>
+        </div>
+        <button class="btn btn-primary" onclick="showAddNodeWizard()">
+          <span>➕</span> Add Node
+        </button>
+      </header>
+
+      <!-- Tier limit warning -->
+      <div id="tier-warning" class="alert-banner warning" style="display: none;">
+        <div class="icon">⚠️</div>
+        <div class="content">
+          <strong>Node Limit Reached</strong>
+          <p>You've reached the maximum number of nodes for your tier. Upgrade to add more nodes.</p>
+        </div>
+        <button class="btn-upgrade" onclick="showComingSoon('Upgrade')">Upgrade Now</button>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="quick-stats">
+        <div class="stat-card">
+          <h4>Total Nodes</h4>
+          <div class="value" id="total-nodes">0</div>
+          <div class="label">Nodes Configured</div>
+        </div>
+        <div class="stat-card online">
+          <h4>Online</h4>
+          <div class="value" id="online-nodes">0</div>
+          <div class="label">Running</div>
+        </div>
+        <div class="stat-card syncing">
+          <h4>Syncing</h4>
+          <div class="value" id="syncing-nodes">0</div>
+          <div class="label">In Sync</div>
+        </div>
+        <div class="stat-card offline">
+          <h4>Offline</h4>
+          <div class="value" id="offline-nodes">0</div>
+          <div class="label">Not Responding</div>
+        </div>
+      </div>
+
+      <!-- Nodes Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Node List</h3>
+          <div class="controls">
+            <select id="chain-filter" onchange="filterNodes()">
+              <option value="all">All Chains</option>
+              <option value="etrid-mainnet">Etrid Mainnet</option>
+              <option value="etrid-testnet">Etrid Testnet</option>
+              <option value="polkadot">Polkadot</option>
+              <option value="kusama">Kusama</option>
+            </select>
+            <button class="btn" onclick="refreshNodes()">
+              <span id="refresh-icon">🔄</span> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="nodes-loading" class="loading">
+          Loading nodes...
+        </div>
+
+        <!-- Empty State -->
+        <div id="nodes-empty" class="empty-state" style="display: none;">
+          <div class="icon">🖥️</div>
+          <h3>No Nodes Yet</h3>
+          <p>Add your first blockchain node to start monitoring your infrastructure.</p>
+          <button class="btn btn-primary" onclick="showAddNodeWizard()">
+            <span>➕</span> Add Your First Node
+          </button>
+        </div>
+
+        <!-- Nodes Table -->
+        <table id="nodes-table" class="nodes-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>Node Name</th>
+              <th>Chain</th>
+              <th>Status</th>
+              <th>Block Height</th>
+              <th>Peers</th>
+              <th>Uptime</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="nodes-tbody">
+            <!-- Nodes will be populated here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Upgrade Banner for Free Tier -->
+      <div id="upgrade-banner" class="upgrade-banner" style="display: none;">
+        <div class="content">
+          <h4>Need More Nodes?</h4>
+          <p>Upgrade to Pro and monitor up to 50 nodes with advanced features</p>
+          <ul class="benefits">
+            <li>50 nodes</li>
+            <li>1min health checks</li>
+            <li>30 days history</li>
+            <li>Priority support</li>
+          </ul>
+        </div>
+        <button class="btn-upgrade" onclick="showComingSoon('Upgrade')">
+          Upgrade to Pro - $19/mo
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Node Modal (will be created dynamically) -->
+  <div id="modal-backdrop" class="modal-backdrop" style="display: none;" onclick="closeModal()"></div>
+  <div id="add-node-modal" class="modal" style="display: none;">
+    <!-- Modal content will be injected here -->
+  </div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    // Ensure user is authenticated
+    requireAuth();
+
+    let socket = null;
+    let nodes = [];
+    let filteredNodes = [];
+    let currentFilter = 'all';
+
+    // Initialize WebSocket with authentication
+    function initWebSocket() {
+      const token = getAccessToken();
+      socket = io({
+        auth: { token }
+      });
+
+      socket.on('connect', () => {
+        console.log('WebSocket connected');
+      });
+
+      socket.on('status-update', (data) => {
+        console.log('Status update received:', data);
+        updateNodeStatus(data);
+      });
+
+      socket.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        showToast('Connection error: ' + error.message, 'error');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
+      });
+    }
+
+    // Load user info
+    async function loadUserInfo() {
+      const user = getUser();
+      if (!user) {
+        // Fetch user info from API
+        try {
+          const response = await authenticatedFetch('/api/auth/me');
+          const data = await response.json();
+          localStorage.setItem('user', JSON.stringify(data.user));
+          displayUserInfo(data.user);
+        } catch (err) {
+          console.error('Failed to load user info:', err);
+        }
+      } else {
+        displayUserInfo(user);
+      }
+    }
+
+    function displayUserInfo(user) {
+      const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('sidebar-avatar').textContent = initials;
+      document.getElementById('sidebar-name').textContent = user.name;
+      document.getElementById('sidebar-email').textContent = user.email;
+      document.getElementById('sidebar-tier').textContent = user.tier.toUpperCase();
+
+      // Show upgrade banner for free tier users
+      if (user.tier === 'free') {
+        document.getElementById('upgrade-banner').style.display = 'flex';
+      }
+    }
+
+    // Load nodes
+    async function loadNodes() {
+      try {
+        document.getElementById('nodes-loading').style.display = 'block';
+        document.getElementById('nodes-empty').style.display = 'none';
+        document.getElementById('nodes-table').style.display = 'none';
+
+        const response = await authenticatedFetch('/api/user/nodes');
+        const data = await response.json();
+        nodes = data.nodes || [];
+        filteredNodes = nodes;
+
+        updateStats();
+        displayNodes();
+      } catch (err) {
+        console.error('Failed to load nodes:', err);
+        showToast('Failed to load nodes: ' + err.message, 'error');
+        document.getElementById('nodes-loading').style.display = 'none';
+        document.getElementById('nodes-empty').style.display = 'block';
+      }
+    }
+
+    function updateStats() {
+      const total = nodes.length;
+      const user = getUser();
+      const tierLimits = { free: 5, pro: 50, enterprise: 9999 };
+      const limit = tierLimits[user.tier] || 5;
+
+      document.getElementById('node-count').textContent =
+        `${total} of ${limit} nodes configured`;
+      document.getElementById('total-nodes').textContent = total;
+
+      // Show warning if at limit
+      if (total >= limit) {
+        document.getElementById('tier-warning').style.display = 'flex';
+      }
+
+      // These will be updated by real-time status
+      document.getElementById('online-nodes').textContent = '—';
+      document.getElementById('syncing-nodes').textContent = '—';
+      document.getElementById('offline-nodes').textContent = '—';
+    }
+
+    function displayNodes() {
+      document.getElementById('nodes-loading').style.display = 'none';
+
+      if (filteredNodes.length === 0) {
+        document.getElementById('nodes-empty').style.display = 'block';
+        document.getElementById('nodes-table').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('nodes-empty').style.display = 'none';
+      document.getElementById('nodes-table').style.display = 'table';
+
+      const tbody = document.getElementById('nodes-tbody');
+      tbody.innerHTML = filteredNodes.map(node => {
+        const config = JSON.parse(node.node_config);
+        return `
+          <tr data-node-id="${node.id}">
+            <td><strong>${node.node_name}</strong></td>
+            <td>${node.chain}</td>
+            <td><span class="status-badge" id="status-${node.id}">Checking...</span></td>
+            <td id="height-${node.id}">—</td>
+            <td id="peers-${node.id}">—</td>
+            <td id="uptime-${node.id}">—</td>
+            <td>
+              <div class="controls">
+                <button class="btn" onclick="viewNodeDetails('${node.id}')" title="View Details">
+                  👁️
+                </button>
+                <button class="btn" onclick="openSSH('${node.node_name}')" title="SSH">
+                  💻
+                </button>
+                <button class="btn" onclick="viewLogs('${node.node_name}')" title="Logs">
+                  📄
+                </button>
+                <button class="btn" onclick="deleteNode('${node.chain}', '${node.node_name}')" title="Delete">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterNodes() {
+      currentFilter = document.getElementById('chain-filter').value;
+      if (currentFilter === 'all') {
+        filteredNodes = nodes;
+      } else {
+        filteredNodes = nodes.filter(n => n.chain === currentFilter);
+      }
+      displayNodes();
+    }
+
+    async function refreshNodes() {
+      const icon = document.getElementById('refresh-icon');
+      icon.style.animation = 'spin 1s linear infinite';
+      await loadNodes();
+      setTimeout(() => {
+        icon.style.animation = '';
+      }, 1000);
+    }
+
+    function updateNodeStatus(statusData) {
+      // Update stats and individual node status from WebSocket data
+      // This will be implemented based on actual API response format
+      console.log('Updating node status:', statusData);
+    }
+
+    function showAddNodeWizard() {
+      window.location.href = 'add-node.html';
+    }
+
+    function viewNodeDetails(nodeId) {
+      showComingSoon('Node Details');
+    }
+
+    function openSSH(nodeName) {
+      showComingSoon('SSH Terminal');
+    }
+
+    function viewLogs(nodeName) {
+      showComingSoon('Node Logs');
+    }
+
+    async function deleteNode(chain, nodeName) {
+      if (!confirm(`Are you sure you want to delete node "${nodeName}"?`)) {
+        return;
+      }
+
+      try {
+        const response = await authenticatedFetch(`/api/user/nodes/${chain}/${nodeName}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          showToast('Node deleted successfully', 'success');
+          await loadNodes();
+        } else {
+          const error = await response.json();
+          showToast('Failed to delete node: ' + error.error, 'error');
+        }
+      } catch (err) {
+        showToast('Failed to delete node: ' + err.message, 'error');
+      }
+    }
+
+    function showComingSoon(feature) {
+      showToast(`${feature} feature coming soon!`, 'info');
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').style.display = 'none';
+      document.getElementById('add-node-modal').style.display = 'none';
+    }
+
+    function handleLogout() {
+      logout();
+      window.location.href = '/login.html';
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadUserInfo();
+      await loadNodes();
+      initWebSocket();
+    });
+
+    // Add CSS for spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+      }
+      .modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 32px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 1001;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

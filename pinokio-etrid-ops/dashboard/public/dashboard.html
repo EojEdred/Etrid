@@ -237,9 +237,13 @@
     loadUserInfo();
     loadNodes();
 
-    // Connect to WebSocket for real-time updates
-    socket = io();
+    // Connect to WebSocket for real-time updates with authentication
+    const token = getAccessToken();
+    socket = io({
+      auth: { token }
+    });
     socket.on('connect', () => {
+      console.log('WebSocket connected');
       updateConnectionStatus(true);
     });
     socket.on('disconnect', () => {

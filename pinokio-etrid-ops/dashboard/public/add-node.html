@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Node - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="authenticated">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Etrid Ops</h1>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">
+          <span>📊</span>
+          Dashboard
+        </a>
+        <a href="my-nodes.html" class="active">
+          <span>🖥️</span>
+          My Nodes
+        </a>
+        <a href="#" onclick="showComingSoon('Alerts'); return false;">
+          <span>🔔</span>
+          Alerts
+        </a>
+        <a href="#" onclick="showComingSoon('Analytics'); return false;">
+          <span>📈</span>
+          Analytics
+        </a>
+        <a href="settings.html">
+          <span>⚙️</span>
+          Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="sidebar-avatar">JD</div>
+          <div class="user-details">
+            <strong id="sidebar-name">Loading...</strong>
+            <small id="sidebar-email">...</small>
+            <span class="tier-badge-small" id="sidebar-tier">Free</span>
+          </div>
+        </div>
+        <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header>
+        <div>
+          <h1>Add New Node</h1>
+          <p style="color: var(--text-secondary); margin-top: 8px;">
+            Configure a new blockchain node for monitoring
+          </p>
+        </div>
+        <button class="btn" onclick="window.location.href='my-nodes.html'">
+          ← Back to Nodes
+        </button>
+      </header>
+
+      <!-- Add Node Form -->
+      <div class="card" style="max-width: 700px;">
+        <h3>Node Configuration</h3>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <form id="add-node-form" onsubmit="handleSubmit(event)">
+          <!-- Step 1: Basic Info -->
+          <div class="form-section">
+            <h4 style="margin-bottom: 16px; color: var(--accent-blue);">Basic Information</h4>
+
+            <div class="form-group">
+              <label for="node-name">Node Name *</label>
+              <input
+                type="text"
+                id="node-name"
+                name="nodeName"
+                required
+                placeholder="e.g., etrid-validator-01"
+                pattern="[a-zA-Z0-9-_]+"
+                title="Only letters, numbers, hyphens, and underscores allowed"
+              >
+              <small>Unique identifier for this node</small>
+            </div>
+
+            <div class="form-group">
+              <label for="chain">Blockchain Network *</label>
+              <select id="chain" name="chain" required onchange="updateChainInfo()">
+                <option value="">Select a network...</option>
+                <option value="etrid-mainnet">Etrid Mainnet</option>
+                <option value="etrid-testnet">Etrid Testnet</option>
+                <option value="polkadot">Polkadot</option>
+                <option value="kusama">Kusama</option>
+                <option value="custom">Custom Network</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="custom-chain-group" style="display: none;">
+              <label for="custom-chain">Custom Chain Name</label>
+              <input type="text" id="custom-chain" name="customChain" placeholder="my-custom-chain">
+            </div>
+          </div>
+
+          <!-- Step 2: Connection Info -->
+          <div class="form-section">
+            <h4 style="margin-bottom: 16px; color: var(--accent-blue);">Connection Details</h4>
+
+            <div class="form-group">
+              <label for="rpc-endpoint">RPC Endpoint *</label>
+              <input
+                type="url"
+                id="rpc-endpoint"
+                name="rpcEndpoint"
+                required
+                placeholder="wss://rpc.etrid.org:9944"
+              >
+              <small>WebSocket RPC endpoint for node connection</small>
+            </div>
+
+            <div class="form-group">
+              <label for="http-endpoint">HTTP Endpoint (Optional)</label>
+              <input
+                type="url"
+                id="http-endpoint"
+                name="httpEndpoint"
+                placeholder="https://rpc.etrid.org:9933"
+              >
+              <small>HTTP endpoint for REST API calls</small>
+            </div>
+          </div>
+
+          <!-- Step 3: SSH Configuration -->
+          <div class="form-section">
+            <h4 style="margin-bottom: 16px; color: var(--accent-blue);">SSH Access (Optional)</h4>
+
+            <div class="form-group">
+              <label for="ssh-host">SSH Host</label>
+              <input
+                type="text"
+                id="ssh-host"
+                name="sshHost"
+                placeholder="12.34.56.78 or node.example.com"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="ssh-port">SSH Port</label>
+              <input
+                type="number"
+                id="ssh-port"
+                name="sshPort"
+                value="22"
+                min="1"
+                max="65535"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="ssh-user">SSH User</label>
+              <input
+                type="text"
+                id="ssh-user"
+                name="sshUser"
+                placeholder="ubuntu"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="cloud-provider">Cloud Provider</label>
+              <select id="cloud-provider" name="cloudProvider">
+                <option value="">None / Self-hosted</option>
+                <option value="aws">Amazon Web Services (AWS)</option>
+                <option value="gcp">Google Cloud Platform (GCP)</option>
+                <option value="azure">Microsoft Azure</option>
+                <option value="digitalocean">DigitalOcean</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Step 4: Monitoring Settings -->
+          <div class="form-section">
+            <h4 style="margin-bottom: 16px; color: var(--accent-blue);">Monitoring Settings</h4>
+
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="enableAlerts" id="enable-alerts" checked>
+                Enable alerts for this node
+              </label>
+            </div>
+
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="autoHealthCheck" id="auto-health-check" checked>
+                Automatic health checks
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="check-interval">Health Check Interval</label>
+              <select id="check-interval" name="checkInterval">
+                <option value="60">1 minute (Pro)</option>
+                <option value="300" selected>5 minutes</option>
+                <option value="600">10 minutes</option>
+                <option value="1800">30 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Chain Info Display -->
+          <div id="chain-info" class="alert-banner info" style="display: none;">
+            <div class="icon">ℹ️</div>
+            <div class="content" id="chain-info-content">
+              <!-- Chain-specific info will be displayed here -->
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="form-group" style="margin-top: 32px;">
+            <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+              ➕ Add Node
+            </button>
+            <button
+              type="button"
+              class="btn btn-block"
+              onclick="window.location.href='my-nodes.html'"
+              style="margin-top: 12px;"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Help Section -->
+      <div class="card" style="max-width: 700px; margin-top: 20px;">
+        <h3>Need Help?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+          Here are some common node configurations:
+        </p>
+
+        <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; margin-top: 12px;">
+          <strong>Etrid Mainnet Validator</strong>
+          <pre style="margin-top: 8px; color: var(--accent-green);">RPC: wss://mainnet-rpc.etrid.org:9944</pre>
+        </div>
+
+        <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; margin-top: 12px;">
+          <strong>Etrid Testnet Node</strong>
+          <pre style="margin-top: 8px; color: var(--accent-green);">RPC: wss://testnet-rpc.etrid.org:9944</pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    requireAuth();
+
+    // Load user info
+    async function loadUserInfo() {
+      const user = getUser();
+      if (!user) {
+        try {
+          const response = await authenticatedFetch('/api/auth/me');
+          const data = await response.json();
+          localStorage.setItem('user', JSON.stringify(data.user));
+          displayUserInfo(data.user);
+        } catch (err) {
+          console.error('Failed to load user info:', err);
+        }
+      } else {
+        displayUserInfo(user);
+      }
+    }
+
+    function displayUserInfo(user) {
+      const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('sidebar-avatar').textContent = initials;
+      document.getElementById('sidebar-name').textContent = user.name;
+      document.getElementById('sidebar-email').textContent = user.email;
+      document.getElementById('sidebar-tier').textContent = user.tier.toUpperCase();
+
+      // Update health check interval based on tier
+      const intervalSelect = document.getElementById('check-interval');
+      if (user.tier === 'free') {
+        intervalSelect.querySelector('option[value="60"]').disabled = true;
+        intervalSelect.querySelector('option[value="60"]').textContent = '1 minute (Pro only)';
+      }
+    }
+
+    function updateChainInfo() {
+      const chain = document.getElementById('chain').value;
+      const customGroup = document.getElementById('custom-chain-group');
+      const chainInfo = document.getElementById('chain-info');
+      const chainInfoContent = document.getElementById('chain-info-content');
+
+      if (chain === 'custom') {
+        customGroup.style.display = 'block';
+        chainInfo.style.display = 'none';
+      } else {
+        customGroup.style.display = 'none';
+
+        if (chain) {
+          const chainInfoMap = {
+            'etrid-mainnet': 'Etrid Mainnet - Production network for the Etrid blockchain',
+            'etrid-testnet': 'Etrid Testnet - Test network for development and testing',
+            'polkadot': 'Polkadot - Multi-chain network connecting specialized blockchains',
+            'kusama': 'Kusama - Polkadot\'s canary network for early deployments'
+          };
+
+          chainInfoContent.textContent = chainInfoMap[chain] || '';
+          chainInfo.style.display = 'flex';
+        } else {
+          chainInfo.style.display = 'none';
+        }
+      }
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+
+      const submitBtn = document.getElementById('submit-btn');
+      const errorMsg = document.getElementById('error-message');
+      const successMsg = document.getElementById('success-message');
+
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding node...';
+
+      try {
+        const formData = new FormData(event.target);
+        const chain = formData.get('chain') === 'custom'
+          ? formData.get('customChain')
+          : formData.get('chain');
+
+        const nodeConfig = {
+          rpcEndpoint: formData.get('rpcEndpoint'),
+          httpEndpoint: formData.get('httpEndpoint') || null,
+          ssh: {
+            host: formData.get('sshHost') || null,
+            port: parseInt(formData.get('sshPort')) || 22,
+            user: formData.get('sshUser') || null
+          },
+          cloudProvider: formData.get('cloudProvider') || null,
+          monitoring: {
+            enableAlerts: formData.get('enableAlerts') === 'on',
+            autoHealthCheck: formData.get('autoHealthCheck') === 'on',
+            checkInterval: parseInt(formData.get('checkInterval')) || 300
+          }
+        };
+
+        const response = await authenticatedFetch('/api/user/nodes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chain,
+            nodeName: formData.get('nodeName'),
+            nodeConfig: JSON.stringify(nodeConfig)
+          })
+        });
+
+        if (response.ok) {
+          successMsg.textContent = 'Node added successfully! Redirecting...';
+          successMsg.style.display = 'block';
+          setTimeout(() => {
+            window.location.href = 'my-nodes.html';
+          }, 1500);
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to add node');
+        }
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '➕ Add Node';
+      }
+    }
+
+    function showComingSoon(feature) {
+      alert(`${feature} feature coming soon!`);
+    }
+
+    function handleLogout() {
+      logout();
+      window.location.href = '/login.html';
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', loadUserInfo);
+
+    // Add CSS for form sections
+    const style = document.createElement('style');
+    style.textContent = `
+      .form-section {
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .form-section:last-of-type {
+        border-bottom: none;
+      }
+      .form-section h4 {
+        font-size: 1.1rem;
+      }
+      pre {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

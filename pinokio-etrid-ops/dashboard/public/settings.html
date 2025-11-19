@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Etrid Operations Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="authenticated">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Etrid Ops</h1>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">
+          <span>📊</span>
+          Dashboard
+        </a>
+        <a href="my-nodes.html">
+          <span>🖥️</span>
+          My Nodes
+        </a>
+        <a href="#" onclick="showComingSoon('Alerts'); return false;">
+          <span>🔔</span>
+          Alerts
+        </a>
+        <a href="#" onclick="showComingSoon('Analytics'); return false;">
+          <span>📈</span>
+          Analytics
+        </a>
+        <a href="settings.html" class="active">
+          <span>⚙️</span>
+          Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="sidebar-avatar">JD</div>
+          <div class="user-details">
+            <strong id="sidebar-name">Loading...</strong>
+            <small id="sidebar-email">...</small>
+            <span class="tier-badge-small" id="sidebar-tier">Free</span>
+          </div>
+        </div>
+        <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header>
+        <h1>Settings</h1>
+      </header>
+
+      <div class="settings-container" style="max-width: 800px;">
+        <!-- Profile Settings -->
+        <div class="card">
+          <h3>Profile Information</h3>
+          <div id="profile-error" class="error-message" style="display: none;"></div>
+          <div id="profile-success" class="success-message" style="display: none;"></div>
+
+          <form id="profile-form" onsubmit="updateProfile(event)">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" disabled>
+              <small>Email cannot be changed</small>
+            </div>
+
+            <div class="form-group">
+              <label for="organization">Organization (Optional)</label>
+              <input type="text" id="organization" name="organization">
+            </div>
+
+            <div class="form-group">
+              <label>Account Tier</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="tier-badge-small" id="tier-display" style="font-size: 1rem; padding: 8px 16px;">FREE</span>
+                <button type="button" class="btn btn-sm" onclick="showComingSoon('Upgrade')">Upgrade</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="profile-submit">
+              Save Changes
+            </button>
+          </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card">
+          <h3>Change Password</h3>
+          <div id="password-error" class="error-message" style="display: none;"></div>
+          <div id="password-success" class="success-message" style="display: none;"></div>
+
+          <form id="password-form" onsubmit="changePassword(event)">
+            <div class="form-group">
+              <label for="current-password">Current Password</label>
+              <input type="password" id="current-password" name="currentPassword" required minlength="8">
+            </div>
+
+            <div class="form-group">
+              <label for="new-password">New Password</label>
+              <input type="password" id="new-password" name="newPassword" required minlength="8">
+              <small>At least 8 characters</small>
+            </div>
+
+            <div class="form-group">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" name="confirmPassword" required minlength="8">
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="password-submit">
+              Update Password
+            </button>
+          </form>
+        </div>
+
+        <!-- API Key -->
+        <div class="card">
+          <h3>API Key</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">
+            Use your API key to access the Etrid Ops API programmatically.
+          </p>
+
+          <div class="form-group">
+            <label>Your API Key</label>
+            <div style="display: flex; gap: 12px;">
+              <input
+                type="password"
+                id="api-key"
+                value="••••••••••••••••••••••••••••••••"
+                readonly
+                style="flex: 1;"
+              >
+              <button type="button" class="btn" onclick="toggleApiKey()">
+                <span id="api-key-toggle-icon">👁️</span>
+              </button>
+              <button type="button" class="btn" onclick="copyApiKey()">
+                📋 Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="alert-banner warning">
+            <div class="icon">⚠️</div>
+            <div class="content">
+              <strong>Keep your API key secret!</strong>
+              <p>Anyone with your API key can access your nodes. Never share it publicly.</p>
+            </div>
+          </div>
+
+          <button type="button" class="btn" onclick="regenerateApiKey()">
+            🔄 Regenerate API Key
+          </button>
+        </div>
+
+        <!-- Account Information -->
+        <div class="card">
+          <h3>Account Information</h3>
+
+          <div style="display: grid; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span style="color: var(--text-secondary);">Account Created</span>
+              <strong id="account-created">Loading...</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span style="color: var(--text-secondary);">Last Login</span>
+              <strong id="last-login">Loading...</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+              <span style="color: var(--text-secondary);">Account Status</span>
+              <strong style="color: var(--accent-green);" id="account-status">Active</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+              <span style="color: var(--text-secondary);">Nodes Configured</span>
+              <strong id="nodes-count">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card" style="border: 1px solid var(--accent-red);">
+          <h3 style="color: var(--accent-red);">Danger Zone</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">
+            Permanent actions that cannot be undone.
+          </p>
+
+          <button type="button" class="btn" style="border-color: var(--accent-red); color: var(--accent-red);" onclick="showComingSoon('Delete Account')">
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    requireAuth();
+
+    let userData = null;
+    let apiKeyVisible = false;
+    let actualApiKey = '';
+
+    // Load user info and populate forms
+    async function loadUserInfo() {
+      try {
+        const response = await authenticatedFetch('/api/auth/me');
+        const data = await response.json();
+        userData = data.user;
+
+        // Update sidebar
+        const initials = userData.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('sidebar-avatar').textContent = initials;
+        document.getElementById('sidebar-name').textContent = userData.name;
+        document.getElementById('sidebar-email').textContent = userData.email;
+        document.getElementById('sidebar-tier').textContent = userData.tier.toUpperCase();
+
+        // Populate profile form
+        document.getElementById('name').value = userData.name;
+        document.getElementById('email').value = userData.email;
+        document.getElementById('organization').value = userData.organization || '';
+        document.getElementById('tier-display').textContent = userData.tier.toUpperCase();
+
+        // Update account info
+        actualApiKey = userData.apiKey || '';
+        const createdDate = new Date(userData.createdAt).toLocaleDateString();
+        const lastLoginDate = userData.lastLogin
+          ? new Date(userData.lastLogin).toLocaleDateString()
+          : 'Never';
+
+        document.getElementById('account-created').textContent = createdDate;
+        document.getElementById('last-login').textContent = lastLoginDate;
+        document.getElementById('account-status').textContent = userData.active ? 'Active' : 'Inactive';
+
+        // Get nodes count
+        loadNodesCount();
+      } catch (err) {
+        console.error('Failed to load user info:', err);
+        showError('profile', 'Failed to load user information');
+      }
+    }
+
+    async function loadNodesCount() {
+      try {
+        const response = await authenticatedFetch('/api/user/nodes');
+        const data = await response.json();
+        document.getElementById('nodes-count').textContent = data.nodes.length;
+      } catch (err) {
+        console.error('Failed to load nodes count:', err);
+      }
+    }
+
+    async function updateProfile(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('profile-submit');
+      const errorEl = document.getElementById('profile-error');
+      const successEl = document.getElementById('profile-success');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      try {
+        const formData = new FormData(event.target);
+        const response = await authenticatedFetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.get('name'),
+            organization: formData.get('organization')
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('user', JSON.stringify(data.user));
+          successEl.textContent = 'Profile updated successfully!';
+          successEl.style.display = 'block';
+          await loadUserInfo();
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update profile');
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Changes';
+      }
+    }
+
+    async function changePassword(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('password-submit');
+      const errorEl = document.getElementById('password-error');
+      const successEl = document.getElementById('password-success');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      const formData = new FormData(event.target);
+      const newPassword = formData.get('newPassword');
+      const confirmPassword = formData.get('confirmPassword');
+
+      if (newPassword !== confirmPassword) {
+        errorEl.textContent = 'New passwords do not match';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Updating...';
+
+      try {
+        const response = await authenticatedFetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: formData.get('currentPassword'),
+            newPassword: newPassword
+          })
+        });
+
+        if (response.ok) {
+          successEl.textContent = 'Password updated successfully!';
+          successEl.style.display = 'block';
+          event.target.reset();
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update password');
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Password';
+      }
+    }
+
+    function toggleApiKey() {
+      const input = document.getElementById('api-key');
+      const icon = document.getElementById('api-key-toggle-icon');
+
+      if (apiKeyVisible) {
+        input.type = 'password';
+        input.value = '••••••••••••••••••••••••••••••••';
+        icon.textContent = '👁️';
+        apiKeyVisible = false;
+      } else {
+        input.type = 'text';
+        input.value = actualApiKey;
+        icon.textContent = '🙈';
+        apiKeyVisible = true;
+      }
+    }
+
+    async function copyApiKey() {
+      try {
+        await navigator.clipboard.writeText(actualApiKey);
+        showToast('API key copied to clipboard!', 'success');
+      } catch (err) {
+        showToast('Failed to copy API key', 'error');
+      }
+    }
+
+    async function regenerateApiKey() {
+      if (!confirm('Are you sure you want to regenerate your API key? Your old key will stop working immediately.')) {
+        return;
+      }
+
+      try {
+        const response = await authenticatedFetch('/api/auth/regenerate-api-key', {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          actualApiKey = data.apiKey;
+          showToast('API key regenerated successfully!', 'success');
+          if (apiKeyVisible) {
+            document.getElementById('api-key').value = actualApiKey;
+          }
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to regenerate API key');
+        }
+      } catch (err) {
+        showToast('Failed to regenerate API key: ' + err.message, 'error');
+      }
+    }
+
+    function showComingSoon(feature) {
+      showToast(`${feature} feature coming soon!`, 'info');
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function showError(section, message) {
+      const errorEl = document.getElementById(`${section}-error`);
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function handleLogout() {
+      logout();
+      window.location.href = '/login.html';
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', loadUserInfo);
+  </script>
+</body>
+</html>
