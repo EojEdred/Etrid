@@ -31,8 +31,8 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents, Finalizer};
-use futures::StreamExt;
+use sc_client_api::{UsageProvider, Backend, HeaderBackend, BlockchainEvents, Finalizer};
+// use futures::StreamExt; // Unused for now
 use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
@@ -57,6 +57,9 @@ use etrid_protocol::gadget_network_bridge::{
     CertificateData,
     ConsensusBridgeMessage,
 };
+
+// Finality gadget with checkpoint support
+use finality_gadget::*;
 
 // Substrate Network for ASF finality
 use sc_network::{
@@ -120,6 +123,18 @@ pub struct AsfParams {
 
     /// Minimum stake for validators (in smallest unit)
     pub min_validator_stake: u128,
+
+    /// Enable checkpoint finality (every N blocks)
+    pub enable_checkpoint_finality: bool,
+
+    /// Checkpoint interval (blocks)
+    pub checkpoint_interval: u64,
+
+    /// Checkpoint quorum threshold
+    pub checkpoint_quorum: u32,
+
+    /// Enable implicit fallback finality (N-100)
+    pub enable_implicit_fallback: bool,
 }
 
 impl Default for AsfParams {
@@ -130,6 +145,10 @@ impl Default for AsfParams {
             epoch_duration: 2400, // ~4 hours at 6s blocks (from validator-management::EPOCH_DURATION)
             enable_finality_gadget: true,
             min_validator_stake: 64_000_000_000_000_000_000_000, // 64 ËTR for FlareNode
+            enable_checkpoint_finality: true,
+            checkpoint_interval: 16, // Checkpoint every 16 blocks
+            checkpoint_quorum: 15, // 15 out of 21 validators (2/3 + 1)
+            enable_implicit_fallback: true,
         }
     }
 }
@@ -1982,6 +2001,36 @@ pub fn new_full_with_params(
             )
         ));
 
+        // ========== CREATE CHECKPOINT FINALITY INSTANCE ==========
+        // Initialize checkpoint finality tracking for every Nth block
+        use std::collections::{HashMap, VecDeque};
+
+        #[derive(Clone)]
+        struct CheckpointState {
+            signatures: Arc<tokio::sync::Mutex<HashMap<CheckpointNumber, Vec<CheckpointSignature>>>>,
+            certificates: Arc<tokio::sync::Mutex<HashMap<CheckpointNumber, CheckpointCertificate>>>,
+            pending_checkpoints: Arc<tokio::sync::Mutex<VecDeque<CheckpointNumber>>>,
+            last_finalized_checkpoint: Arc<tokio::sync::Mutex<Option<CheckpointNumber>>>,
+            metrics: Arc<tokio::sync::Mutex<CheckpointMetrics>>,
+            authority_set_id: Arc<tokio::sync::Mutex<AuthoritySetId>>,
+        }
+
+        let checkpoint_state = CheckpointState {
+            signatures: Arc::new(tokio::sync::Mutex::new(HashMap::new())),
+            certificates: Arc::new(tokio::sync::Mutex::new(HashMap::new())),
+            pending_checkpoints: Arc::new(tokio::sync::Mutex::new(VecDeque::new())),
+            last_finalized_checkpoint: Arc::new(tokio::sync::Mutex::new(None)),
+            metrics: Arc::new(tokio::sync::Mutex::new(CheckpointMetrics::new())),
+            authority_set_id: Arc::new(tokio::sync::Mutex::new(AuthoritySetId(0))),
+        };
+
+        log::info!(
+            "✅ Checkpoint finality initialized (interval: {}, quorum: {}, fallback: {})",
+            asf_params.checkpoint_interval,
+            asf_params.checkpoint_quorum,
+            asf_params.enable_implicit_fallback
+        );
+
         // V13 FIX: Populate the shared finality_gadget holder for PPFA task
         // This allows the PPFA task to create votes after block import
         let ppfa_finality_gadget_setter = ppfa_finality_gadget.clone();
@@ -2166,6 +2215,12 @@ pub fn new_full_with_params(
 
         let block_import_finality_gadget = finality_gadget.clone();
         let import_notifications = client.import_notification_stream();
+        let checkpoint_state_for_import = checkpoint_state.clone();
+        let checkpoint_interval = asf_params.checkpoint_interval;
+        let checkpoint_quorum = asf_params.checkpoint_quorum;
+        let enable_checkpoint_finality = asf_params.enable_checkpoint_finality;
+        let enable_implicit_fallback = asf_params.enable_implicit_fallback;
+        let checkpoint_validator_id = validator_id;
 
         task_manager.spawn_essential_handle().spawn(
             "asf-block-import-finality",
@@ -2221,6 +2276,129 @@ pub fn new_full_with_params(
                             // Log at WARN level to make this visible
                             log::warn!(
                                 "⚠️ Finality gadget locked for >3s - skipping block #{} (possible deadlock)",
+                                block_number
+                            );
+                        }
+                    }
+
+                    // ========== CHECKPOINT FINALITY HANDLING ==========
+                    let checkpoint_interval_u32 = checkpoint_interval as u32;
+                    if enable_checkpoint_finality && block_number % checkpoint_interval_u32 == 0 {
+                        let checkpoint_num = CheckpointNumber((block_number / checkpoint_interval_u32) as u64);
+
+                        log::info!(
+                            "🔖 Checkpoint block detected: #{} (checkpoint: {:?})",
+                            block_number,
+                            checkpoint_num
+                        );
+
+                        // Create checkpoint signature
+                        let authority_set_id = *checkpoint_state_for_import.authority_set_id.lock().await;
+
+                        // Create dummy signature (TODO: use real validator keystore)
+                        let mut sig_data = Vec::with_capacity(64);
+                        sig_data.extend_from_slice(&checkpoint_validator_id.0.to_le_bytes());
+                        sig_data.extend_from_slice(&checkpoint_num.0.to_le_bytes());
+                        sig_data.extend_from_slice(&block_hash.as_bytes()[0..52]);
+
+                        let checkpoint_sig = CheckpointSignature {
+                            validator_id: checkpoint_validator_id,
+                            checkpoint_number: checkpoint_num,
+                            block_hash,
+                            authority_set_id,
+                            signature: sig_data,
+                            timestamp: std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap()
+                                .as_secs(),
+                        };
+
+                        // Add to pending signatures
+                        let mut sigs = checkpoint_state_for_import.signatures.lock().await;
+                        sigs.entry(checkpoint_num)
+                            .or_insert_with(Vec::new)
+                            .push(checkpoint_sig.clone());
+
+                        let sig_count = sigs.get(&checkpoint_num).map(|v| v.len()).unwrap_or(0);
+
+                        log::info!(
+                            "✅ Checkpoint signature created for #{} (total sigs: {}/{})",
+                            block_number,
+                            sig_count,
+                            checkpoint_quorum
+                        );
+
+                        // Check if quorum reached
+                        if sig_count >= checkpoint_quorum as usize {
+                            log::info!(
+                                "🎯 Checkpoint quorum reached for #{} ({}/{})",
+                                block_number,
+                                sig_count,
+                                checkpoint_quorum
+                            );
+
+                            // Create certificate
+                            let signatures_vec: Vec<(ValidatorId, Vec<u8>)> = sigs
+                                .get(&checkpoint_num)
+                                .unwrap()
+                                .iter()
+                                .map(|s| (s.validator_id, s.signature.clone()))
+                                .collect();
+
+                            let cert = CheckpointCertificate {
+                                checkpoint_number: checkpoint_num,
+                                block_hash,
+                                authority_set_id,
+                                signatures: signatures_vec,
+                                timestamp: std::time::SystemTime::now()
+                                    .duration_since(std::time::UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_secs(),
+                            };
+
+                            // Store certificate
+                            checkpoint_state_for_import.certificates.lock().await
+                                .insert(checkpoint_num, cert.clone());
+
+                            // Update last finalized
+                            *checkpoint_state_for_import.last_finalized_checkpoint.lock().await = Some(checkpoint_num);
+
+                            // Update metrics
+                            let mut metrics = checkpoint_state_for_import.metrics.lock().await;
+                            metrics.total_certificates += 1;
+
+                            log::info!(
+                                "📜 Checkpoint certificate created for #{} (checkpoint: {:?})",
+                                block_number,
+                                checkpoint_num
+                            );
+                        }
+                    }
+
+                    // ========== IMPLICIT FALLBACK FINALITY ==========
+                    if enable_implicit_fallback && block_number > 100 {
+                        let fallback_number = block_number - 100;
+                        log::trace!(
+                            "🔄 Implicit fallback: finalize block #{} (current: #{})",
+                            fallback_number,
+                            block_number
+                        );
+                    }
+
+                    // ========== STUCK CHECKPOINT RECOVERY ==========
+                    // Check if any checkpoints are stuck (no progress for >50 blocks)
+                    let pending = checkpoint_state_for_import.pending_checkpoints.lock().await;
+                    let last_finalized = *checkpoint_state_for_import.last_finalized_checkpoint.lock().await;
+
+                    if let Some(last_cp) = last_finalized {
+                        let expected_next = CheckpointNumber(last_cp.0 + 1);
+                        let expected_block = (expected_next.0 * checkpoint_interval) as u32;
+
+                        if block_number > expected_block + 50 {
+                            log::warn!(
+                                "⚠️ Stuck checkpoint detected: expected {:?} at block #{}, currently at #{}",
+                                expected_next,
+                                expected_block,
                                 block_number
                             );
                         }
@@ -2417,6 +2595,34 @@ pub fn new_full_with_params(
                                     }
                                 }
                             }
+                            P2PMessage::Custom(data) => {
+                                // Try to decode as checkpoint messages
+                                log::trace!("Received custom message from peer {:?}, checking if checkpoint-related", peer_id);
+
+                                // Try CheckpointSignature
+                                if let Ok(checkpoint_sig) = bincode::deserialize::<CheckpointSignature>(&data) {
+                                    log::info!(
+                                        "🔖 Received CheckpointSignature from {:?} (checkpoint: {:?}, validator: {:?})",
+                                        peer_id,
+                                        checkpoint_sig.checkpoint_number,
+                                        checkpoint_sig.validator_id
+                                    );
+                                    // TODO: Add to checkpoint state and check quorum
+                                }
+                                // Try CheckpointCertificate
+                                else if let Ok(checkpoint_cert) = bincode::deserialize::<CheckpointCertificate>(&data) {
+                                    log::info!(
+                                        "📜 Received CheckpointCertificate from {:?} (checkpoint: {:?}, {} signatures)",
+                                        peer_id,
+                                        checkpoint_cert.checkpoint_number,
+                                        checkpoint_cert.signatures.len()
+                                    );
+                                    // TODO: Verify and apply certificate
+                                }
+                                else {
+                                    log::trace!("Custom message is not checkpoint-related");
+                                }
+                            }
                             _ => {
                                 log::trace!("Received non-consensus message from peer {:?}", peer_id);
                             }
@@ -2493,6 +2699,111 @@ pub fn new_full_with_params(
                         );
 
                         LAST_STATUS_LOG.store(now, Ordering::Relaxed);
+                    }
+                }
+            },
+        );
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CHECKPOINT FINALITY PERIODIC TASKS
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        let checkpoint_state_for_periodic = checkpoint_state.clone();
+        let checkpoint_p2p = p2p_network.clone();
+        let checkpoint_params_interval = asf_params.checkpoint_interval;
+
+        task_manager.spawn_handle().spawn(
+            "checkpoint-finality-periodic",
+            Some("finality"),
+            async move {
+                log::info!("🔄 Starting checkpoint finality periodic tasks");
+
+                use tokio::time::{interval, Duration};
+                let mut prune_interval = interval(Duration::from_secs(60)); // Prune every minute
+                let mut broadcast_interval = interval(Duration::from_secs(10)); // Broadcast every 10s
+                let mut health_interval = interval(Duration::from_secs(30)); // Health check every 30s
+
+                loop {
+                    tokio::select! {
+                        _ = prune_interval.tick() => {
+                            // ========== PRUNE OLD SIGNATURES/CERTIFICATES ==========
+                            let mut sigs = checkpoint_state_for_periodic.signatures.lock().await;
+                            let mut certs = checkpoint_state_for_periodic.certificates.lock().await;
+                            let last_finalized = *checkpoint_state_for_periodic.last_finalized_checkpoint.lock().await;
+
+                            if let Some(last_cp) = last_finalized {
+                                // Keep last 100 checkpoints
+                                let cutoff = if last_cp.0 > 100 {
+                                    CheckpointNumber(last_cp.0 - 100)
+                                } else {
+                                    CheckpointNumber(0)
+                                };
+
+                                let before_sigs = sigs.len();
+                                let before_certs = certs.len();
+
+                                sigs.retain(|cp, _| cp >= &cutoff);
+                                certs.retain(|cp, _| cp >= &cutoff);
+
+                                let pruned_sigs = before_sigs - sigs.len();
+                                let pruned_certs = before_certs - certs.len();
+
+                                if pruned_sigs > 0 || pruned_certs > 0 {
+                                    log::debug!(
+                                        "🧹 Pruned old checkpoint data: {} signatures, {} certificates (cutoff: {:?})",
+                                        pruned_sigs,
+                                        pruned_certs,
+                                        cutoff
+                                    );
+                                }
+                            }
+                        }
+
+                        _ = broadcast_interval.tick() => {
+                            // ========== BROADCAST RECENT SIGNATURES ==========
+                            let sigs = checkpoint_state_for_periodic.signatures.lock().await;
+                            let last_finalized = *checkpoint_state_for_periodic.last_finalized_checkpoint.lock().await;
+
+                            if let Some(last_cp) = last_finalized {
+                                // Broadcast signatures for recent unfinalized checkpoints
+                                for checkpoint_num in (last_cp.0 + 1)..=(last_cp.0 + 5) {
+                                    let cp = CheckpointNumber(checkpoint_num);
+                                    if let Some(checkpoint_sigs) = sigs.get(&cp) {
+                                        for sig in checkpoint_sigs.iter().take(3) {
+                                            // Broadcast up to 3 signatures per checkpoint
+                                            if let Ok(payload) = bincode::serialize(sig) {
+                                                let msg = P2PMessage::Custom(payload);
+                                                if let Err(e) = checkpoint_p2p.broadcast(msg).await {
+                                                    log::warn!("Failed to broadcast checkpoint signature: {:?}", e);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        _ = health_interval.tick() => {
+                            // ========== CHECK FINALITY HEALTH ==========
+                            let last_finalized = *checkpoint_state_for_periodic.last_finalized_checkpoint.lock().await;
+                            let metrics = checkpoint_state_for_periodic.metrics.lock().await;
+                            let certs = checkpoint_state_for_periodic.certificates.lock().await;
+
+                            log::info!(
+                                "🏥 Checkpoint health: last_finalized={:?}, certificates={}, total_sigs={}, avg_quorum_time={:?}",
+                                last_finalized,
+                                certs.len(),
+                                metrics.total_signatures,
+                                metrics.average_quorum_time
+                            );
+
+                            // Check for stuck finality
+                            if let Some(last_cp) = last_finalized {
+                                let expected_block = (last_cp.0 + 1) * checkpoint_params_interval;
+                                // TODO: Get current block number and check if stuck
+                                log::trace!("Expected next checkpoint at block #{}", expected_block);
+                            }
+                        }
                     }
                 }
             },

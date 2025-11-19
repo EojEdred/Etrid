@@ -12,6 +12,11 @@ sp-std = { workspace = true }
 codec = { workspace = true }
 scale-info = { workspace = true }
 
+# Substrate Client API (needed for checkpoint finality)
+sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
 # Async runtime
 tokio = { version = "1.36", features = ["full"] }
 futures = "0.3"
