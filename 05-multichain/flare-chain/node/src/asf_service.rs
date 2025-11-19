@@ -2520,24 +2520,15 @@ pub fn new_full_with_params(
                 loop {
                     finality_interval.tick().await;
 
-                    // Get finalized blocks from ASF gadget
-                    let asf_finalized = {
-                        let gadget = finality_asf_gadget.lock().await;
-                        gadget.get_finalized_blocks()
-                    };
-
-                    if asf_finalized.is_empty() {
-                        continue;
-                    }
-
-                    // Get current Substrate finality state
+                    // Get current Substrate finality state FIRST (before ASF check)
                     let current_info = finality_client.usage_info().chain;
                     let current_number = current_info.finalized_number;
                     let best_number = finality_client.info().best_number;
 
                     // ═══════════════════════════════════════════════════════════
-                    // V14: IMPLICIT FINALITY TEST - Finalize blocks N-10
+                    // V15: IMPLICIT FINALITY TEST - Finalize blocks N-10
                     // This bypasses all P2P complexity to test if finalize_block works
+                    // MOVED BEFORE asf_finalized check so it always runs!
                     // ═══════════════════════════════════════════════════════════
                     if best_number > 10 {
                         let target_finalize = best_number - 10;
@@ -2575,6 +2566,16 @@ pub fn new_full_with_params(
                                 }
                             }
                         }
+                    }
+
+                    // Get finalized blocks from ASF gadget
+                    let asf_finalized = {
+                        let gadget = finality_asf_gadget.lock().await;
+                        gadget.get_finalized_blocks()
+                    };
+
+                    if asf_finalized.is_empty() {
+                        continue;
                     }
 
                     // Find newest ASF-finalized block not yet Substrate-finalized
