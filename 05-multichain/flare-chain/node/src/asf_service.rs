@@ -931,21 +931,31 @@ pub fn new_full_with_params(
                             validator_management::PeerType::ValidityNode,
                         );
 
-                        if let Err(e) = committee.add_validator(validator_info) {
-                            log::debug!("Validator {} already in committee or error: {:?}", &key_hex[..16], e);
-                        } else {
-                            log::debug!("✅ Added validator: {}...", &key_hex[..16]);
+                        match committee.add_validator(validator_info.clone()) {
+                            Ok(()) => {
+                                log::info!("✅ Added validator to pool: {}... (stake: {}, active: {}, reputation: {})",
+                                    &key_hex[..16], validator_info.stake, validator_info.active, validator_info.reputation);
+                            }
+                            Err(e) => {
+                                log::error!("❌ FAILED to add validator {}: {:?}", &key_hex[..16], e);
+                                log::error!("   Validator details: stake={}, active={}, reputation={}, peer_type={:?}",
+                                    validator_info.stake, validator_info.active, validator_info.reputation, validator_info.peer_type);
+                            }
                         }
                     }
                 }
 
-                log::info!("📊 Committee now has {} validators", committee.committee_size());
+                log::info!("📊 Validator pool size: {}", committee.total_validators());
+                log::info!("📊 Current committee size (before rotation): {}", committee.committee_size());
+                log::info!("📊 Eligible validators: {}", committee.eligible_validators());
 
                 // Rotate to initialize committee
                 if let Err(e) = committee.rotate_committee(1) {
                     log::error!("Failed to initialize committee rotation: {:?}", e);
                     return;
                 }
+
+                log::info!("📊 Current committee size (after rotation): {}", committee.committee_size());
 
                 // Create proposer selector
                 let mut proposer_selector = ProposerSelector::new(committee.clone());
