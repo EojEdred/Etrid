@@ -689,6 +689,11 @@ pub fn new_full_with_params(
     // This replaces AURA's round-robin with ASF's PPFA (Proposing Panel for Attestation)
     // rotation scheme.
 
+    // V13 FIX: Create shared finality_gadget holder OUTSIDE the authority block
+    // This allows it to be accessible both in PPFA task and in finality_gadget setup later
+    let ppfa_finality_gadget: Arc<tokio::sync::Mutex<Option<Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>>>> =
+        Arc::new(tokio::sync::Mutex::new(None));
+
     if role.is_authority() {
         log::info!(
             "🔥 Starting ASF consensus (PPFA) for FlareChain authority node"
@@ -728,10 +733,6 @@ pub fn new_full_with_params(
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
-        // V13 FIX: Create shared finality_gadget holder that will be populated later
-        // This allows the PPFA task to create votes after finality_gadget is initialized
-        let ppfa_finality_gadget: Arc<tokio::sync::Mutex<Option<Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>>>> =
-            Arc::new(tokio::sync::Mutex::new(None));
         let ppfa_finality_gadget_clone = ppfa_finality_gadget.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
