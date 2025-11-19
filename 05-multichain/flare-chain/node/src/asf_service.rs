@@ -31,7 +31,7 @@
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
 use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents};
+use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents, Finalizer};
 use futures::StreamExt;
 use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
