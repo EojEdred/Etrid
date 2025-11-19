@@ -1551,17 +1551,19 @@ pub fn new_full_with_params(
                 payload.extend(bincode::serialize(&vote_data)
                     .map_err(|e| format!("Failed to serialize vote: {:?}", e))?);
 
-                // Get connected peers and notification service
+                // Get connected peers
                 let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
                 let peer_count = peers.len();
-                let mut service = self.notification_service.lock().await;
 
-                // Send to each connected peer
+                // Send to each connected peer WITHOUT holding any locks
                 if peer_count == 0 {
                     log::warn!("⚠️ No ASF peers connected - vote not sent! (view: {})", vote_data.view);
                 } else {
+                    // Acquire lock only for each individual send, release immediately
                     for peer_id in peers {
+                        let mut service = self.notification_service.lock().await;
                         service.send_sync_notification(&peer_id, payload.clone());
+                        // Lock released here at end of scope
                     }
                     log::info!("✅ Vote broadcast sent to {} ASF peers (view: {})", peer_count, vote_data.view);
                 }
@@ -1584,17 +1586,19 @@ pub fn new_full_with_params(
                 payload.extend(bincode::serialize(&cert_data)
                     .map_err(|e| format!("Failed to serialize certificate: {:?}", e))?);
 
-                // Get connected peers and notification service
+                // Get connected peers
                 let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
                 let peer_count = peers.len();
-                let mut service = self.notification_service.lock().await;
 
-                // Send to each connected peer
+                // Send to each connected peer WITHOUT holding any locks
                 if peer_count == 0 {
                     log::warn!("⚠️ No ASF peers connected - certificate not sent! (view: {})", cert_data.view);
                 } else {
+                    // Acquire lock only for each individual send, release immediately
                     for peer_id in peers {
+                        let mut service = self.notification_service.lock().await;
                         service.send_sync_notification(&peer_id, payload.clone());
+                        // Lock released here at end of scope
                     }
                     log::info!("✅ Certificate broadcast sent to {} ASF peers (view: {}, voters: {})",
                         peer_count, cert_data.view, cert_data.signatures.len());
@@ -1629,17 +1633,19 @@ pub fn new_full_with_params(
                 payload.extend(bincode::serialize(&new_view_data)
                     .map_err(|e| format!("Failed to serialize new view: {:?}", e))?);
 
-                // Get connected peers and notification service
+                // Get connected peers
                 let peers: Vec<SubstratePeerId> = self.connected_peers.read().await.iter().cloned().collect();
                 let peer_count = peers.len();
-                let mut service = self.notification_service.lock().await;
 
-                // Send to each connected peer
+                // Send to each connected peer WITHOUT holding any locks
                 if peer_count == 0 {
                     log::warn!("⚠️ No ASF peers connected - NewView not sent! (view: {})", new_view_data.new_view);
                 } else {
+                    // Acquire lock only for each individual send, release immediately
                     for peer_id in peers {
+                        let mut service = self.notification_service.lock().await;
                         service.send_sync_notification(&peer_id, payload.clone());
+                        // Lock released here at end of scope
                     }
                     log::info!("✅ NewView broadcast sent to {} ASF peers (view: {})", peer_count, new_view_data.new_view);
                 }
