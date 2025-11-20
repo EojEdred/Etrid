@@ -12,7 +12,6 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11", default-features = false, features = ["derive"] }
-serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 
 # Substrate dependencies
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false, optional = true }
@@ -40,8 +39,6 @@ std = [
     "frame-system/std",
     "pallet-session/std",
     "scale-info/std",
-    "serde/std",
-    "serde/alloc",
     "sp-core/std",
     "sp-core/serde",
     "sp-runtime/std",
