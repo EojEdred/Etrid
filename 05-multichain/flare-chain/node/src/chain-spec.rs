@@ -268,7 +268,7 @@ pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("finality".into(), "ASF".into());
         properties
     })
-    .with_genesis_config_preset_name("flarechain_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet_v108_pure_asf")
     .build())
 }
 
