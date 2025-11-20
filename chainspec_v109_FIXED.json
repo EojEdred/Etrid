@@ -13,8 +13,8 @@
   "codeSubstitutes": {},
   "genesis": {
     "runtimeGenesis": {
-      "validator_committee": {
-        "committee_size": 21,
+      "validatorCommittee": {
+        "committeeSize": 21,
         "validators": [
           ["0x44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58", 128000000000000000000000, 2],
           ["0xf29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c", 128000000000000000000000, 2],
