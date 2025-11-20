@@ -172,7 +172,7 @@ pub mod pallet {
     pub type EpochDuration<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>;
 
     #[pallet::genesis_config]
-    #[derive(frame_support::DefaultNoBound)]
+    #[derive(frame_support::DefaultNoBound, serde::Serialize, serde::Deserialize)]
     pub struct GenesisConfig<T: Config> {
         /// Initial validators (validator_id, stake, peer_type_u8)
         pub validators: Vec<(ValidatorId, Balance, u8)>,

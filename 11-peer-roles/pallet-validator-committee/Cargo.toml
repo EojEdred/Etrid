@@ -41,6 +41,7 @@ std = [
     "pallet-session/std",
     "scale-info/std",
     "serde/std",
+    "serde/alloc",
     "sp-core/std",
     "sp-core/serde",
     "sp-runtime/std",
