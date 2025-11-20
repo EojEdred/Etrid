@@ -19,5 +19,13 @@
       ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 64000000000000000000000, "FlareNode"]
     ],
     "slotDuration": 6000
+  },
+  "validatorCommittee": {
+    "committeeSize": 3,
+    "validators": [
+      ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 64000000000000000000000, 0],
+      ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 64000000000000000000000, 0],
+      ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 64000000000000000000000, 0]
+    ]
   }
 }
