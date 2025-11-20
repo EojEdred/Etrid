@@ -4,6 +4,7 @@
 TEST_VALIDATOR="100.95.0.72"
 SSH_KEY="~/.ssh/contabo-validators"
 CHAIN_ID="flarechain_prod_21val_v109"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=========================================="
 echo "Test Fixed Chainspec (camelCase fields)"
@@ -14,7 +15,7 @@ echo ""
 
 # Upload fixed chainspec
 echo "→ Uploading fixed chainspec..."
-scp -i $SSH_KEY /Users/macbook/Desktop/etrid/chainspec_v109_FIXED.json root@${TEST_VALIDATOR}:/root/chainspec_v109_FIXED.json
+scp -i $SSH_KEY "${SCRIPT_DIR}/chainspec_v109_FIXED.json" root@${TEST_VALIDATOR}:/root/chainspec_v109_FIXED.json
 
 if [ $? -ne 0 ]; then
     echo "❌ Failed to upload chainspec"
