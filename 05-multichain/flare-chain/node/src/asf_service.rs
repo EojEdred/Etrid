@@ -1068,14 +1068,12 @@ pub fn new_full_with_params(
     let validator_pubkeys: Vec<[u8; 32]> = match client.runtime_api().validator_committee(best_hash) {
         Ok(members) => {
             log::info!("✅ Loaded {} validators for checkpoint BFT", members.len());
-            // V24: SessionKeys infrastructure is in place (runtime/src/lib.rs:72-89)
-            // Validators need to call session.setKeys() to publish ASF keys on-chain
-            // TODO V25: Add runtime API to query ASF session keys from pallet_session::NextKeys storage
-            // For now, use placeholder keys as temporary measure
-            (0..members.len()).map(|i| {
-                let mut key = [0u8; 32];
-                key[0] = i as u8;  // Placeholder: will be replaced when validators set ASF keys
-                key
+            // V25: Extract actual sr25519 public keys from validator AccountIds
+            // AccountId32 contains the raw 32-byte public key that validators use for signing
+            members.iter().map(|validator_info| {
+                // Extract the 32-byte public key from AccountId
+                let account_id_bytes: &[u8; 32] = validator_info.validator_id().as_ref();
+                *account_id_bytes
             }).collect()
         }
         Err(e) => {
