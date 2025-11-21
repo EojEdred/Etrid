@@ -1,0 +1,4 @@
+✅ Network key generated
+✅ Session keys generated
+AURA/ASF: 
+GRANDPA: 

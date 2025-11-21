@@ -1,0 +1,1 @@
+Error: Input("Error parsing spec file: invalid type: integer `2025`, expected struct ClientSpec at line 1 column 4")

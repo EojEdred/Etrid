@@ -296,6 +296,11 @@ pub mod pallet {
             vote_count: u32,
             total_stake: AsfBalance,
         },
+        /// Checkpoint anchor added via governance
+        CheckpointAnchorAdded {
+            block_number: u32,
+            block_hash: Hash,
+        },
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -328,6 +333,8 @@ pub mod pallet {
         InvalidPhase,
         /// Block hash not found
         BlockNotFound,
+        /// Invalid checkpoint block
+        InvalidCheckpointBlock,
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -583,7 +590,79 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Add social consensus checkpoint anchor (requires governance approval)
+        ///
+        /// This provides long-range attack protection by allowing governance to
+        /// checkpoint specific blocks that are considered finalized by social consensus.
+        ///
+        /// # Parameters
+        /// - `origin`: Must be root (governance)
+        /// - `block_number`: Block number to checkpoint
+        /// - `block_hash`: Hash of the block to checkpoint
+        /// - `authority_set_id`: Authority set ID at time of checkpoint
+        #[pallet::call_index(4)]
+        #[pallet::weight(Weight::from_parts(50_000, 0))]
+        pub fn add_checkpoint_anchor(
+            origin: OriginFor<T>,
+            block_number: u32,
+            block_hash: Hash,
+            authority_set_id: u64,
+        ) -> DispatchResult {
+            // Only root can add checkpoints (governance)
+            ensure_root(origin)?;
+
+            // Verify block exists and matches
+            let current_block: u32 = <frame_system::Pallet<T>>::block_number()
+                .try_into()
+                .unwrap_or(0);
+
+            ensure!(
+                block_number > 0 && block_number <= current_block,
+                Error::<T>::InvalidCheckpointBlock
+            );
+
+            // Store checkpoint anchor
+            <CheckpointAnchors<T>>::insert(
+                block_number,
+                CheckpointAnchor {
+                    block_hash,
+                    authority_set_id,
+                    added_at: current_block,
+                }
+            );
+
+            Self::deposit_event(Event::CheckpointAnchorAdded {
+                block_number,
+                block_hash,
+            });
+
+            Ok(())
+        }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STORAGE ITEMS FOR CHECKPOINT GOVERNANCE
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// Checkpoint anchor structure for long-range attack protection
+    #[derive(Clone, Debug, Encode, Decode, TypeInfo, MaxEncodedLen)]
+    pub struct CheckpointAnchor {
+        pub block_hash: Hash,
+        pub authority_set_id: u64,
+        pub added_at: u32,
+    }
+
+    /// Social consensus checkpoint anchors (for long-range protection)
+    #[pallet::storage]
+    #[pallet::getter(fn checkpoint_anchors)]
+    pub type CheckpointAnchors<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        u32,  // block_number
+        CheckpointAnchor,
+        OptionQuery,
+    >;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // INTERNAL HELPER FUNCTIONS

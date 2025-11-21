@@ -1520,165 +1520,8 @@ pub fn new_full_with_params(
                                                 result
                                             );
 
-                                            // ═══════════════════════════════════════════════════
-                                            // V17: CHECKPOINT BFT DETECTION
-                                            // ═══════════════════════════════════════════════════
-
-                                            let block_number = *block.header.number();
-                                            let block_hash = block.header.hash();
-
-                                            // Detect if this block should be a checkpoint
-                                            let checkpoint_type = if is_guaranteed_checkpoint(block_number) {
-                                                Some(CheckpointType::Guaranteed)
-                                            } else {
-                                                // Opportunity checkpoints detected via VRF
-                                                let parent_hash = block.header.parent_hash();
-                                                let parent_hash_bytes: [u8; 32] = parent_hash.as_ref().try_into()
-                                                    .unwrap_or([0u8; 32]);
-
-                                                // Get epoch information for VRF evaluation
-                                                let epoch = (block_number / ppfa_params.epoch_duration) as u64;
-
-                                                // Generate epoch randomness from authority set ID
-                                                // In production, this would come from BABE/VRF consensus
-                                                let vrf_authority_set = ppfa_checkpoint_collector.get_authority_set();
-                                                let authority_set_id = vrf_authority_set.set_id;
-                                                let mut epoch_randomness = [0u8; 32];
-                                                epoch_randomness[..8].copy_from_slice(&authority_set_id.to_le_bytes());
-                                                epoch_randomness[8..16].copy_from_slice(&epoch.to_le_bytes());
-
-                                                // Evaluate VRF checkpoint decision
-                                                use checkpoint_bft::vrf::{VrfCheckpointDecision};
-                                                let vrf_decision = VrfCheckpointDecision::evaluate(
-                                                    block_number,
-                                                    parent_hash_bytes,
-                                                    epoch,
-                                                    epoch_randomness,
-                                                );
-
-                                                if vrf_decision.is_checkpoint {
-                                                    log::debug!(
-                                                        "🎲 VRF triggered opportunity checkpoint at block #{} (epoch: {})",
-                                                        block_number,
-                                                        epoch
-                                                    );
-                                                    Some(vrf_decision.checkpoint_type)
-                                                } else {
-                                                    None
-                                                }
-                                            };
-
-                                            if let Some(cp_type) = checkpoint_type {
-                                                log::info!(
-                                                    "📍 Checkpoint detected at block #{} ({:?}, hash: {:?})",
-                                                    block_number,
-                                                    cp_type,
-                                                    block_hash
-                                                );
-
-                                                // Record checkpoint opportunity for Byzantine tracking
-                                                if let Ok(mut tracker) = ppfa_byzantine_tracker.lock() {
-                                                    tracker.record_checkpoint_opportunity(
-                                                        block_number,
-                                                        &(0..21).collect::<Vec<_>>(), // All validators expected to sign
-                                                    );
-                                                }
-
-                                                // ═══════════════════════════════════════════════════
-                                                // V17: CHECKPOINT SIGNATURE CREATION
-                                                // ═══════════════════════════════════════════════════
-
-                                                // Get validator signing key
-                                                match get_validator_sr25519_key(&ppfa_keystore) {
-                                                    Ok((public_key, validator_id)) => {
-                                                        // Get validator public key (32 bytes)
-                                                        let public_bytes: [u8; 32] = public_key.0;
-
-                                                        // Get CURRENT authority set information (fetch fresh for each checkpoint)
-                                                        let current_authority_set = ppfa_checkpoint_collector.get_authority_set();
-                                                        let authority_set_id = current_authority_set.set_id;
-                                                        let authority_set_hash = current_authority_set.authority_set_hash;
-
-                                                        // Get chain ID (using network ID, not genesis hash)
-                                                        // Must match FLARECHAIN_NETWORK_ID in checkpoint-bft crate
-                                                        use checkpoint_bft::FLARECHAIN_NETWORK_ID;
-                                                        let chain_id = FLARECHAIN_NETWORK_ID;
-
-                                                        // Get signature nonce
-                                                        let signature_nonce = get_next_signature_nonce(validator_id);
-
-                                                        // Convert block hash to [u8; 32]
-                                                        let block_hash_bytes: [u8; 32] = block_hash.into();
-
-                                                        // Create checkpoint signature
-                                                        let signature = create_checkpoint_signature(
-                                                            block_number,
-                                                            &block_hash_bytes,
-                                                            validator_id,
-                                                            public_bytes,
-                                                            authority_set_id,
-                                                            authority_set_hash,
-                                                            cp_type.clone(),
-                                                            signature_nonce,
-                                                            &ppfa_keystore,
-                                                            &public_key,
-                                                            chain_id,
-                                                        );
-
-                                                        log::info!(
-                                                            "✍️  Signed checkpoint #{} as validator {} (nonce: {})",
-                                                            block_number,
-                                                            validator_id,
-                                                            signature_nonce
-                                                        );
-
-                                                        // Add signature to collector
-                                                        match ppfa_checkpoint_collector.add_signature(signature.clone()) {
-                                                            Ok(Some(certificate)) => {
-                                                                log::info!(
-                                                                    "🎉 Checkpoint certificate complete for block #{} with {} signatures!",
-                                                                    certificate.block_number,
-                                                                    certificate.signatures.len()
-                                                                );
-
-                                                                // Record finalized checkpoint in tracker
-                                                                if let Ok(tracker) = ppfa_finality_tracker.lock() {
-                                                                    let _ = tracker.finalize_block(
-                                                                        certificate.block_number,
-                                                                        certificate.block_hash,
-                                                                        certificate.signatures.len() as u32,
-                                                                    );
-                                                                }
-
-                                                                // Block finalization happens when checkpoint certificate is received
-                                                                // via P2P and processed by checkpoint-bft-p2p-handler task
-                                                            }
-                                                            Ok(None) => {
-                                                                log::debug!(
-                                                                    "   Checkpoint signature added, awaiting quorum ({}/15)",
-                                                                    ppfa_checkpoint_collector.get_signature_count(block_number)
-                                                                );
-                                                            }
-                                                            Err(e) => {
-                                                                log::warn!("⚠️  Failed to add checkpoint signature: {}", e);
-                                                            }
-                                                        }
-
-                                                        // Broadcast signature via P2P (will be handled by broadcast task below)
-                                                        if let Err(e) = ppfa_sig_tx.send(signature.clone()).await {
-                                                            log::warn!("⚠️  Failed to send signature to broadcast task: {}", e);
-                                                        } else {
-                                                            log::debug!("   Checkpoint signature queued for P2P broadcast");
-                                                        }
-                                                    }
-                                                    Err(e) => {
-                                                        log::debug!(
-                                                            "   No validator key available for checkpoint signing: {}",
-                                                            e
-                                                        );
-                                                    }
-                                                }
-                                            }
+                                            // V22: Checkpoint detection moved to dedicated task
+                                            // that listens to ALL block imports (not just self-authored blocks)
 
                                             // ═══════════════════════════════════════════════════
                                             // FINALITY INTEGRATION: Propose block to ASF finality
@@ -1811,6 +1654,194 @@ pub fn new_full_with_params(
             },
         );
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // V22: CHECKPOINT DETECTION FOR ALL BLOCK IMPORTS
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // This task listens to ALL block imports (not just self-authored blocks) and:
+    // 1. Detects guaranteed checkpoints (every 32 blocks)
+    // 2. Detects opportunity checkpoints (VRF-triggered)
+    // 3. Creates checkpoint signatures for this validator
+    // 4. Broadcasts signatures via P2P
+    //
+    // This runs on ALL validators (not just authorities), ensuring 15+/21 signatures.
+
+    let checkpoint_detection_client = client.clone();
+    let checkpoint_detection_keystore = keystore_container.keystore();
+    let checkpoint_detection_collector = checkpoint_collector.clone();
+    let checkpoint_detection_byzantine = byzantine_tracker.clone();
+    let checkpoint_detection_finality = finality_tracker.clone();
+    let checkpoint_detection_sig_tx = ppfa_sig_tx.clone();
+    let checkpoint_detection_params = asf_params.clone();
+
+    task_manager.spawn_essential_handle().spawn(
+        "checkpoint-detection-all-imports",
+        Some("finality"),
+        async move {
+            log::info!("🔍 Starting checkpoint detection for ALL block imports (V22)");
+
+            // Subscribe to ALL block import notifications
+            let mut block_import_stream = checkpoint_detection_client.every_import_notification_stream();
+
+            while let Some(notification) = block_import_stream.next().await {
+                let block_number = *notification.header.number();
+                let block_hash = notification.hash;
+
+                // Detect if this block should be a checkpoint
+                let checkpoint_type = if is_guaranteed_checkpoint(block_number) {
+                    Some(CheckpointType::Guaranteed)
+                } else {
+                    // Opportunity checkpoints detected via VRF
+                    let parent_hash = notification.header.parent_hash();
+                    let parent_hash_bytes: [u8; 32] = parent_hash.as_ref().try_into()
+                        .unwrap_or([0u8; 32]);
+
+                    // Get epoch information for VRF evaluation
+                    let epoch = (block_number / checkpoint_detection_params.epoch_duration) as u64;
+
+                    // Generate epoch randomness from authority set ID
+                    let vrf_authority_set = checkpoint_detection_collector.get_authority_set();
+                    let authority_set_id = vrf_authority_set.set_id;
+                    let mut epoch_randomness = [0u8; 32];
+                    epoch_randomness[..8].copy_from_slice(&authority_set_id.to_le_bytes());
+                    epoch_randomness[8..16].copy_from_slice(&epoch.to_le_bytes());
+
+                    // Evaluate VRF checkpoint decision
+                    use checkpoint_bft::vrf::VrfCheckpointDecision;
+                    let vrf_decision = VrfCheckpointDecision::evaluate(
+                        block_number,
+                        parent_hash_bytes,
+                        epoch,
+                        epoch_randomness,
+                    );
+
+                    if vrf_decision.is_checkpoint {
+                        log::debug!(
+                            "🎲 VRF triggered opportunity checkpoint at block #{} (epoch: {})",
+                            block_number,
+                            epoch
+                        );
+                        Some(vrf_decision.checkpoint_type)
+                    } else {
+                        None
+                    }
+                };
+
+                if let Some(cp_type) = checkpoint_type {
+                    log::info!(
+                        "📍 Checkpoint detected at block #{} ({:?}, hash: {:?})",
+                        block_number,
+                        cp_type,
+                        block_hash
+                    );
+
+                    // Record checkpoint opportunity for Byzantine tracking
+                    if let Ok(mut tracker) = checkpoint_detection_byzantine.lock() {
+                        tracker.record_checkpoint_opportunity(
+                            block_number,
+                            &(0..21).collect::<Vec<_>>(), // All validators expected to sign
+                        );
+                    }
+
+                    // ═══════════════════════════════════════════════════
+                    // CHECKPOINT SIGNATURE CREATION
+                    // ═══════════════════════════════════════════════════
+
+                    // Get validator signing key
+                    match get_validator_sr25519_key(&checkpoint_detection_keystore) {
+                        Ok((public_key, validator_id)) => {
+                            // Get validator public key (32 bytes)
+                            let public_bytes: [u8; 32] = public_key.0;
+
+                            // Get CURRENT authority set information
+                            let current_authority_set = checkpoint_detection_collector.get_authority_set();
+                            let authority_set_id = current_authority_set.set_id;
+                            let authority_set_hash = current_authority_set.authority_set_hash;
+
+                            // Get chain ID
+                            use checkpoint_bft::FLARECHAIN_NETWORK_ID;
+                            let chain_id = FLARECHAIN_NETWORK_ID;
+
+                            // Get signature nonce
+                            let signature_nonce = get_next_signature_nonce(validator_id);
+
+                            // Convert block hash to [u8; 32]
+                            let block_hash_bytes: [u8; 32] = block_hash.into();
+
+                            // Create checkpoint signature
+                            let signature = create_checkpoint_signature(
+                                block_number,
+                                &block_hash_bytes,
+                                validator_id,
+                                public_bytes,
+                                authority_set_id,
+                                authority_set_hash,
+                                cp_type.clone(),
+                                signature_nonce,
+                                &checkpoint_detection_keystore,
+                                &public_key,
+                                chain_id,
+                            );
+
+                            log::info!(
+                                "✍️  Signed checkpoint #{} as validator {} (nonce: {})",
+                                block_number,
+                                validator_id,
+                                signature_nonce
+                            );
+
+                            // Add signature to collector
+                            match checkpoint_detection_collector.add_signature(signature.clone()) {
+                                Ok(Some(certificate)) => {
+                                    log::info!(
+                                        "🎉 Checkpoint certificate complete for block #{} with {} signatures!",
+                                        certificate.block_number,
+                                        certificate.signatures.len()
+                                    );
+
+                                    // Record finalized checkpoint in tracker
+                                    if let Ok(tracker) = checkpoint_detection_finality.lock() {
+                                        let _ = tracker.finalize_block(
+                                            certificate.block_number,
+                                            certificate.block_hash,
+                                            certificate.signatures.len() as u32,
+                                        );
+                                    }
+                                }
+                                Ok(None) => {
+                                    log::debug!(
+                                        "   Checkpoint signature added, awaiting quorum ({}/15)",
+                                        checkpoint_detection_collector.get_signature_count(block_number)
+                                    );
+                                }
+                                Err(e) => {
+                                    log::warn!("⚠️  Failed to add checkpoint signature: {}", e);
+                                }
+                            }
+
+                            // Broadcast signature via P2P
+                            if let Err(e) = checkpoint_detection_sig_tx.send(signature.clone()).await {
+                                log::warn!("⚠️  Failed to send signature to broadcast task: {}", e);
+                            } else {
+                                log::debug!("   Checkpoint signature queued for P2P broadcast");
+                            }
+                        }
+                        Err(e) => {
+                            log::debug!(
+                                "   No validator key available for checkpoint signing: {}",
+                                e
+                            );
+                        }
+                    }
+                }
+            }
+
+            log::warn!("⚠️  Checkpoint detection stream ended unexpectedly");
+        },
+    );
+
+    log::info!("✅ Checkpoint detection task spawned (listens to ALL block imports)");
 
     // ═══════════════════════════════════════════════════════════════════════════
     // ASF FINALITY GADGET (Pure ASF, v108)
