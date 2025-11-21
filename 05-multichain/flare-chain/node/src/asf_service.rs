@@ -161,6 +161,7 @@ fn get_next_signature_nonce(validator_id: u32) -> u64 {
 /// Production will use dedicated checkpoint signing keys.
 fn get_validator_sr25519_key(
     keystore: &Arc<dyn sc_keystore::Keystore>,
+    checkpoint_collector: &Arc<checkpoint_bft::CheckpointCollector>,
 ) -> Result<(sp_core::sr25519::Public, u32), String> {
     use sp_core::crypto::KeyTypeId;
     use sc_keystore::Keystore;
@@ -174,17 +175,25 @@ fn get_validator_sr25519_key(
         return Err("No ASF Sr25519 keys found in keystore".to_string());
     }
 
-    // Get first available key (return public key, not private pair)
+    // Get first available key
     let public = public_keys[0];
+    let public_bytes: [u8; 32] = public.0;
 
-    // Derive validator ID from first 4 bytes of public key
-    let key_bytes: &[u8] = public.as_ref();
-    let validator_id = u32::from_le_bytes([
-        key_bytes[0],
-        key_bytes[1],
-        key_bytes[2],
-        key_bytes[3],
-    ]);
+    // V23 FIX: Look up validator_id in authority set (0-19 index)
+    // Get current authority set (CheckpointCollector has internal RwLock)
+    let authority_set = checkpoint_collector.get_authority_set();
+
+    // Find this validator's index in the authority set
+    let validator_id = authority_set
+        .authorities
+        .iter()
+        .position(|auth_pubkey| *auth_pubkey == public_bytes)
+        .ok_or_else(|| {
+            format!(
+                "Validator public key {:?} not found in authority set",
+                hex::encode(public_bytes)
+            )
+        })? as u32;
 
     Ok((public, validator_id))
 }
@@ -1748,8 +1757,8 @@ pub fn new_full_with_params(
                     // CHECKPOINT SIGNATURE CREATION
                     // ═══════════════════════════════════════════════════
 
-                    // Get validator signing key
-                    match get_validator_sr25519_key(&checkpoint_detection_keystore) {
+                    // Get validator signing key (V23: now looks up validator_id in authority set)
+                    match get_validator_sr25519_key(&checkpoint_detection_keystore, &checkpoint_detection_collector) {
                         Ok((public_key, validator_id)) => {
                             // Get validator public key (32 bytes)
                             let public_bytes: [u8; 32] = public_key.0;
