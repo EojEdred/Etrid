@@ -41,6 +41,7 @@ sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk.git", 
 sc-offchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sc-network = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 sc-network-sync = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sc-keystore = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Substrate Primitives
 sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -67,7 +68,7 @@ pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/polkadot
 sc-rpc = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Local dependencies (will create these)
-flare-chain-runtime = { path = "../runtime" }
+flare-chain-runtime = { path = "../runtime", default-features = false, features = ["std"] }
 
 # ASF Consensus Modules (ËTRID custom consensus)
 asf-algorithm = { path = "../../../09-consensus/asf-algorithm" }
@@ -75,6 +76,9 @@ block-production = { path = "../../../09-consensus/block-production" }
 finality-gadget = { package = "etrid-finality-gadget", path = "../../../09-consensus/finality-gadget" }
 validator-management = { path = "../../../09-consensus/validator-management" }
 pallet-validator-committee-runtime-api = { path = "../../../11-peer-roles/pallet-validator-committee/runtime-api" }
+
+# V17: Checkpoint BFT
+checkpoint-bft = { path = "../../../09-consensus/checkpoint-bft" }
 
 # ÉTRID P2P Networking
 detrp2p = { path = "../../../01-detr-p2p/detrp2p" }
@@ -87,6 +91,7 @@ futures-timer = "3.0"
 codec = { package = "parity-scale-codec", version = "3.6.1", features = ["derive"] }
 tokio = { version = "1.40", features = ["macros", "sync", "time"] }
 hex = "0.4"
+once_cell = "1.19"
 
 # Additional Substrate dependencies for ASF consensus
 sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
