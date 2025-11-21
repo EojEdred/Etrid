@@ -201,26 +201,29 @@ impl CheckpointSignature {
         payload
     }
 
-    /// Verify signature with canonical Ed25519 (prevents malleability)
+    /// Verify signature with sr25519 (Schnorr signatures on Ristretto curve)
     ///
-    /// Uses ed25519-dalek for strict canonical signature enforcement
+    /// V28 FIX: Changed from Ed25519 to sr25519 to match keystore signing
+    /// The keystore uses sr25519_sign(), so we must verify with sr25519
     pub fn verify_canonical(&self, public_key: &[u8; 32]) -> Result<(), String> {
-        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+        use schnorrkel::{PublicKey, Signature, signing_context};
 
         let payload = self.signing_payload();
 
-        // Parse public key
-        let verifying_key = VerifyingKey::from_bytes(public_key)
-            .map_err(|e| format!("Invalid public key: {:?}", e))?;
+        // Parse sr25519 public key (Ristretto point)
+        let pk = PublicKey::from_bytes(public_key)
+            .map_err(|e| format!("Invalid sr25519 public key: {:?}", e))?;
 
-        // Parse signature (enforces canonical form)
-        let signature = Signature::from_slice(&self.signature)
-            .map_err(|e| format!("Invalid signature format: {:?}", e))?;
+        // Parse sr25519 signature (64 bytes)
+        let sig_bytes: [u8; 64] = self.signature.clone().try_into()
+            .map_err(|_| format!("Invalid signature length: expected 64, got {}", self.signature.len()))?;
+        let signature = Signature::from_bytes(&sig_bytes)
+            .map_err(|e| format!("Invalid sr25519 signature format: {:?}", e))?;
 
-        // Verify signature
-        verifying_key
-            .verify(&payload, &signature)
-            .map_err(|e| format!("Signature verification failed: {:?}", e))?;
+        // Verify signature with Substrate's standard signing context
+        let ctx = signing_context(b"substrate");
+        pk.verify(ctx.bytes(&payload), &signature)
+            .map_err(|e| format!("sr25519 signature verification failed: {:?}", e))?;
 
         Ok(())
     }
