@@ -1126,8 +1126,8 @@ pub fn new_full_with_params(
         hex_to_bytes32("2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"),
         // vmi2896915 - Validator 7
         hex_to_bytes32("b89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"),
-        // vmi2896916 - Validator 8 (note: same key as vmi2896906)
-        hex_to_bytes32("44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58"),
+        // vmi2896916 - Validator 8 (V30 FIX: unique key generated Nov 2024)
+        hex_to_bytes32("96af82e1893897d94e891d4b9f8f5a48d5605558cd01c930f5028a2c29a6a92a"),
         // vmi2896917 - Validator 9
         hex_to_bytes32("be9fdd4416eff9375461618f1e2bd244bd0a3ee69b9d2b4949e046796bbe752f"),
         // vmi2896918 - Validator 10
