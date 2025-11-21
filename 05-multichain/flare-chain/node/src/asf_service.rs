@@ -1578,9 +1578,10 @@ pub fn new_full_with_params(
                                                         let authority_set_id = ppfa_authority_set.set_id;
                                                         let authority_set_hash = ppfa_authority_set.authority_set_hash;
 
-                                                        // Get chain ID (using genesis hash)
-                                                        let chain_id_hash = get_genesis_hash(&ppfa_client);
-                                                        let chain_id: [u8; 32] = chain_id_hash.into();
+                                                        // Get chain ID (using network ID, not genesis hash)
+                                                        // Must match FLARECHAIN_NETWORK_ID in checkpoint-bft crate
+                                                        use checkpoint_bft::FLARECHAIN_NETWORK_ID;
+                                                        let chain_id = FLARECHAIN_NETWORK_ID;
 
                                                         // Get signature nonce
                                                         let signature_nonce = get_next_signature_nonce(validator_id);
