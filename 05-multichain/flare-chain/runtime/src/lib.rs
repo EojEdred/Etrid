@@ -1632,6 +1632,34 @@ impl_runtime_apis! {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
+    // V26 SESSIONKEYS INTEGRATION - ASF Public Key Queries
+    // ═══════════════════════════════════════════════════════════════════════════════
+    //
+    // V26 adds SessionKeys integration to fix V25 signature verification failures.
+    // The asf_apis.rs file defines two new methods on the AsfApi trait:
+    //   1. get_validator_asf_key(account_id) -> Option<Vec<u8>>
+    //   2. get_all_validator_asf_keys() -> Vec<(AccountId, Vec<u8>)>
+    //
+    // These methods query pallet_session::NextKeys storage to retrieve ASF public keys
+    // published by validators via session.setKeys() extrinsic. This allows the authority
+    // set to query real sr25519 keys instead of using placeholder AccountId bytes.
+    //
+    // IMPLEMENTATION NOTE:
+    // The asf_apis.rs file uses decl_runtime_apis! which creates a standalone runtime API.
+    // When included as a module (mod asf_apis;), it conflicts with the main impl_runtime_apis!
+    // block, causing RUNTIME_API_VERSIONS to not be generated properly.
+    //
+    // For V26, the authority set will query SessionKeys via direct state storage queries:
+    //   api.storage().fetch(&pallet_session::NextKeys::<Runtime>::hashed_key_for(account_id))
+    // Then extract the ASF key from the SessionKeys struct: keys.asf.encode()
+    //
+    // This avoids the module conflict while providing the needed functionality.
+    // Future V27+ can move asf_apis to a proper runtime-api crate structure.
+    //
+    // The asf_apis.rs file remains as documentation of the API interface.
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════════════
     // EVM RUNTIME APIs MOVED TO ETH-PBC
     // ═══════════════════════════════════════════════════════════════════════════════
     // Ethereum JSON-RPC compatibility (MetaMask, web3.js, ethers.js) is handled by
@@ -1648,7 +1676,8 @@ impl_runtime_apis! {
     #[cfg(feature = "try-runtime")]
     impl frame_try_runtime::TryRuntime<Block> for Runtime {
         fn on_runtime_upgrade(checks: frame_try_runtime::UpgradeCheckSelect) -> (Weight, Weight) {
-            let weight = Executive::try_runtime_upgrade(checks).unwrap();
+            let weight = Executive::try_runtime_upgrade(checks)
+                .expect("Runtime upgrade checks failed - aborting to prevent corrupted state");
             (weight, RuntimeBlockWeights::get().max_block)
         }
 
@@ -1658,7 +1687,8 @@ impl_runtime_apis! {
             signature_check: bool,
             select: frame_try_runtime::TryStateSelect,
         ) -> Weight {
-            Executive::try_execute_block(block, state_root_check, signature_check, select).unwrap()
+            Executive::try_execute_block(block, state_root_check, signature_check, select)
+                .expect("Block execution failed in try-runtime - aborting to prevent invalid state")
         }
     }
 

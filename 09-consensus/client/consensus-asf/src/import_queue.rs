@@ -31,7 +31,7 @@ where
     B: BlockT,
     C: ProvideRuntimeApi<B> + HeaderBackend<B> + AuxStore,
     C::Api: AsfApi<B, AuthorityId>,
-    AuthorityId: Codec + Clone,
+    AuthorityId: Codec + Clone + AsRef<[u8]> + std::fmt::Debug,
 {
     /// Create a new import queue verifier
     pub fn new(client: Arc<C>) -> Self {
@@ -48,7 +48,7 @@ where
     B: BlockT,
     C: ProvideRuntimeApi<B> + HeaderBackend<B> + AuxStore + Send + Sync,
     C::Api: AsfApi<B, AuthorityId>,
-    AuthorityId: Codec + Clone + Send + Sync,
+    AuthorityId: Codec + Clone + AsRef<[u8]> + std::fmt::Debug + Send + Sync,
 {
     async fn verify(
         &self,
@@ -92,7 +92,7 @@ where
         + 'static,
     C::Api: AsfApi<B, AuthorityId>,
     I: BlockImport<B, Error = ConsensusError> + Send + Sync + 'static,
-    AuthorityId: Codec + Clone + Send + Sync + 'static,
+    AuthorityId: Codec + Clone + AsRef<[u8]> + std::fmt::Debug + Send + Sync + 'static,
 {
     log::info!(
         target: "asf",

@@ -255,6 +255,8 @@ where
                 let block_import_params = build_block_import_params(
                     block,
                     current_slot,
+                    &keystore,
+                    &expected_proposer,
                 );
 
                 if let Err(e) = block_import
@@ -391,7 +393,7 @@ where
         (slot_duration.as_millis() as f32 * block_proposal_slot_portion) as u64,
     );
 
-    let max_proposal_duration = max_block_proposal_slot_portion.map(|portion| {
+    let _max_proposal_duration = max_block_proposal_slot_portion.map(|portion| {
         Duration::from_millis((slot_duration.as_millis() as f32 * portion) as u64)
     });
 
@@ -425,29 +427,106 @@ where
 }
 
 /// Build block import parameters for a newly authored block
-fn build_block_import_params<B>(
+///
+/// This function:
+/// 1. Extracts the block header and body
+/// 2. Signs the block hash with the proposer's private key
+/// 3. Adds the signature as a Seal digest
+/// 4. Adds the slot as a PreRuntime digest
+fn build_block_import_params<B, AuthorityId>(
     block: B,
     slot: Slot,
+    keystore: &KeystorePtr,
+    proposer_id: &AuthorityId,
 ) -> BlockImportParams<B>
 where
     B: BlockT,
+    AuthorityId: AsRef<[u8]> + Clone,
 {
     let (header, body) = block.deconstruct();
-    let post_hash = header.hash();
+    let block_hash = header.hash();
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BLOCK SIGNING (Critical for Byzantine Fault Tolerance)
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Sign the block hash with the proposer's private key from the keystore.
+    // This signature will be verified by other nodes before accepting the block.
+
+    use sp_application_crypto::sr25519;
+    use sp_core::crypto::ByteArray;
+
+    // Convert proposer ID to sr25519 public key
+    let proposer_bytes = proposer_id.as_ref();
+    let public_key = match sr25519::Public::from_slice(proposer_bytes) {
+        Ok(key) => key,
+        Err(_) => {
+            log::error!(
+                target: "asf",
+                "Failed to parse proposer ID as sr25519 public key"
+            );
+            // Continue without seal - verifier will reject the block
+            let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
+            block_import_params.body = Some(body);
+            return block_import_params;
+        }
+    };
+
+    // Sign the block hash
+    let key_type = sp_core::crypto::key_types::AURA;
+    let signature = match keystore.sr25519_sign(key_type, &public_key, block_hash.as_ref()) {
+        Ok(Some(sig)) => sig,
+        Ok(None) => {
+            log::error!(
+                target: "asf",
+                "Failed to sign block: key not found in keystore"
+            );
+            // Continue without seal - verifier will reject the block
+            let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
+            block_import_params.body = Some(body);
+            return block_import_params;
+        }
+        Err(e) => {
+            log::error!(
+                target: "asf",
+                "Failed to sign block: {:?}",
+                e
+            );
+            // Continue without seal - verifier will reject the block
+            let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
+            block_import_params.body = Some(body);
+            return block_import_params;
+        }
+    };
+
+    log::debug!(
+        target: "asf",
+        "Signed block #{} with hash {:?}",
+        header.number(),
+        block_hash
+    );
+
+    // ═══════════════════════════════════════════════════════════════════════
 
     // Create pre-runtime digest with slot information
     let mut pre_digest = Vec::new();
     slot.encode_to(&mut pre_digest);
 
+    // Create block import params with both PreRuntime (slot) and Seal (signature)
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
     block_import_params.state_action = StateAction::ApplyChanges(StorageChanges::Changes(Default::default()));
+
+    // Add PreRuntime digest with slot
     block_import_params.post_digests.push(DigestItem::PreRuntime(*b"asf0", pre_digest));
+
+    // Add Seal digest with signature
+    block_import_params.post_digests.push(DigestItem::Seal(*b"asf0", signature.0.to_vec()));
 
     log::debug!(
         target: "asf",
-        "Built import params for block {:?}",
-        post_hash
+        "Built import params for block {:?} (with seal)",
+        block_hash
     );
 
     block_import_params

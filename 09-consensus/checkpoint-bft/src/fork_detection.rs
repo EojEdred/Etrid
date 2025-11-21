@@ -137,14 +137,13 @@ impl ForkAwareCollector {
             );
 
             // Create certificate
-            let sigs: Vec<CheckpointSignature> = self
-                .signatures
-                .read()
-                .get(&block_hash)
-                .unwrap()
-                .values()
-                .cloned()
-                .collect();
+            let sigs: Vec<CheckpointSignature> = match self.signatures.read().get(&block_hash) {
+                Some(sig_map) => sig_map.values().cloned().collect(),
+                None => {
+                    log::error!("Signatures not found for block hash: {:?}", block_hash);
+                    return Err("Signatures not found for block".to_string());
+                }
+            };
 
             if let Some(cert) = CheckpointCertificate::new(
                 block_number,

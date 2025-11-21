@@ -178,7 +178,9 @@ impl RotationManager {
         }
 
         // Fallback to last collator (shouldn't happen)
-        Ok(committee.collators.last().unwrap().clone())
+        committee.collators.last()
+            .cloned()
+            .ok_or_else(|| "No collators available in committee".to_string())
     }
 
     /// Hybrid selection: stake-weighted with cooldown

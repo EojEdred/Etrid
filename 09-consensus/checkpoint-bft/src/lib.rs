@@ -358,7 +358,10 @@ impl CheckpointCertificate {
             signers,
             finalized_at_ms: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_else(|e| {
+                    log::error!("System time before UNIX epoch in checkpoint certificate: {:?}", e);
+                    std::time::Duration::from_secs(0)
+                })
                 .as_millis() as u64,
         })
     }

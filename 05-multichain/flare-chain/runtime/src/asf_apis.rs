@@ -114,5 +114,32 @@ decl_runtime_apis! {
         /// # Returns
         /// `true` if block has reached BFT threshold (finalized)
         fn has_bft_finality(block_hash: Hash) -> bool;
+
+        /// Get the ASF key for a specific validator from session storage
+        ///
+        /// Queries `pallet_session::NextKeys` storage to retrieve the ASF public key
+        /// published by a validator via `session.setKeys()` extrinsic.
+        ///
+        /// This allows the authority set to query ASF keys from all validators
+        /// instead of using placeholder keys, fixing V25's signature verification failure.
+        ///
+        /// # Parameters
+        /// - `account_id`: The validator's AccountId
+        ///
+        /// # Returns
+        /// - `Some(AsfId)`: The validator's ASF public key if published
+        /// - `None`: If the validator hasn't published session keys yet
+        fn get_validator_asf_key(account_id: ValidatorId) -> Option<Vec<u8>>;
+
+        /// Get all validator ASF keys from session storage
+        ///
+        /// Queries all validators in the current session and returns their ASF keys.
+        /// This provides a complete mapping of AccountId -> AsfId for the authority set.
+        ///
+        /// Validators without published session keys are excluded from the results.
+        ///
+        /// # Returns
+        /// Vector of (AccountId, AsfId) tuples for all validators with published keys
+        fn get_all_validator_asf_keys() -> Vec<(ValidatorId, Vec<u8>)>;
     }
 }

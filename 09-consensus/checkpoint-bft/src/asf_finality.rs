@@ -119,7 +119,10 @@ impl FinalityInfo {
             signature_count,
             finalized_at: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_else(|e| {
+                    log::error!("System time before UNIX epoch in finality info: {:?}", e);
+                    std::time::Duration::from_secs(0)
+                })
                 .as_millis() as u64,
             locked,
         }

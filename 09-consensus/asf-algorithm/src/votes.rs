@@ -71,12 +71,38 @@ impl Vote {
         }
     }
 
-    /// Create an unsigned vote for testing purposes ONLY
+    /// ⚠️ CRITICAL SECURITY WARNING: Test-only unsigned vote constructor
     ///
-    /// # Warning
-    /// This function is only available in test builds and creates an INVALID vote
-    /// that will FAIL validation. Only use this for unit testing infrastructure.
-    #[cfg(test)]
+    /// This function creates a vote with an INVALID signature that will FAIL
+    /// cryptographic verification.
+    ///
+    /// # Security Implications
+    /// - The vote will be REJECTED by signature verification
+    /// - Any consensus using this vote is INSECURE
+    /// - This MUST NEVER be used in production code paths
+    ///
+    /// # Usage
+    /// This function is ONLY for:
+    /// - Unit tests that don't require signature verification
+    /// - Mock implementations in test environments
+    ///
+    /// # Production Usage
+    /// In production, ALWAYS use `Vote::new()` with a properly signed vote:
+    /// ```ignore
+    /// use crate::crypto::sign_vote;
+    /// use sp_core::{sr25519, Pair};
+    ///
+    /// let (keypair, _) = sr25519::Pair::generate();
+    /// let signature = sign_vote(&keypair, block_hash, block_number, phase as u8, epoch, timestamp);
+    /// let vote = Vote::new(block_hash, block_number, phase, validator, stake_weight, epoch, timestamp, signature);
+    /// ```
+    ///
+    /// # ⚠️ FOR TESTING ONLY - DO NOT USE IN PRODUCTION
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.1.0",
+        note = "This function uses an invalid signature and is only for testing. Use Vote::new() with a real signature in production."
+    )]
     pub fn new_unsigned(
         block_hash: Hash,
         block_number: BlockNumber,
@@ -87,7 +113,7 @@ impl Vote {
         timestamp: u64,
     ) -> Self {
         use crate::crypto::Signature;
-        // Create a dummy signature for testing
+        // SECURITY: Dummy signature for testing ONLY - will fail verification
         Self {
             block_hash,
             block_number,

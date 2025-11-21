@@ -34,8 +34,23 @@ pub enum Signature {
 }
 
 impl Default for Signature {
-    /// Create a dummy signature for testing
-    /// WARNING: This is NOT cryptographically valid
+    /// ⚠️ SECURITY WARNING: Default signature is NOT cryptographically valid
+    ///
+    /// This implementation exists ONLY for:
+    /// - Deserialization of incomplete data structures
+    /// - Testing purposes with `#[cfg(test)]`
+    ///
+    /// ❌ NEVER use Default::default() in production code
+    /// ✅ ALWAYS create signatures using proper Sr25519 signing:
+    ///
+    /// ```ignore
+    /// use sp_core::{sr25519, Pair};
+    /// let (pair, _) = sr25519::Pair::generate();
+    /// let signature = Signature::Sr25519(pair.sign(message));
+    /// ```
+    ///
+    /// Any code using Default::default() for signatures in consensus
+    /// logic represents a CRITICAL SECURITY VULNERABILITY.
     fn default() -> Self {
         Signature::Sr25519(sr25519::Signature::from_raw([0u8; 64]))
     }

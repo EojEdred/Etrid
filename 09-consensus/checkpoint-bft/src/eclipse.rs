@@ -493,6 +493,7 @@ mod tests {
         let report = detector.generate_report();
 
         // Validator 1 should be at risk
+        // SAFETY: Test data always includes validator 1
         let val1_report = report
             .validator_diversity
             .iter()

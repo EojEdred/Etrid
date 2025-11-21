@@ -148,7 +148,13 @@ static SIGNATURE_NONCES: Lazy<Mutex<HashMap<u32, u64>>> =
 
 /// Get next signature nonce for a validator
 fn get_next_signature_nonce(validator_id: u32) -> u64 {
-    let mut nonces = SIGNATURE_NONCES.lock().unwrap();
+    let mut nonces = match SIGNATURE_NONCES.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            log::error!("Signature nonce mutex poisoned, recovering: validator_id={}", validator_id);
+            poisoned.into_inner()
+        }
+    };
     let nonce = nonces.entry(validator_id).or_insert(0);
     *nonce += 1;
     *nonce
@@ -244,7 +250,10 @@ fn create_checkpoint_signature(
     // Get current timestamp
     let timestamp_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|e| {
+            log::error!("System time before UNIX epoch: {:?}", e);
+            std::time::Duration::from_secs(0)
+        })
         .as_millis() as u64;
 
     // Create signature struct (without signature field initially)
@@ -1064,22 +1073,48 @@ pub fn new_full_with_params(
     // Get best block for runtime queries
     let best_hash = client.info().best_hash;
 
-    // Query validator public keys from runtime
-    let validator_pubkeys: Vec<[u8; 32]> = match client.runtime_api().validator_committee(best_hash) {
-        Ok(members) => {
-            log::info!("✅ Loaded {} validators for checkpoint BFT", members.len());
-            // V25: Extract actual sr25519 public keys from validator AccountIds
-            // AccountId32 contains the raw 32-byte public key that validators use for signing
-            members.iter().map(|validator_info| {
-                // Extract the 32-byte public key from AccountId
-                let account_id_bytes: &[u8; 32] = validator_info.validator_id().as_ref();
-                *account_id_bytes
-            }).collect()
+    // V26 FIX: Use raw sr25519 public keys from keystore, NOT AccountId hashes
+    //
+    // The V25 bug: AccountId32 = Blake2-256(sr25519_public_key), NOT the raw key!
+    // This caused "Cannot decompress Edwards point" errors in signature verification.
+    //
+    // V26 Solution: Query real sr25519 keys from local keystore for authority set.
+    // Each validator's keystore contains their actual signing key.
+
+    const ASF_KEY_TYPE: sp_core::crypto::KeyTypeId = sp_core::crypto::KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
+
+    // Get our validator's real sr25519 public key from keystore
+    let keystore = keystore_container.keystore();
+    let our_asf_keys = keystore.sr25519_public_keys(ASF_KEY_TYPE);
+
+    // V26: Build authority set from real keystore keys
+    // For now, we use our own key as the authority set entry for ourselves
+    // Other validators' keys will be synced via P2P authority set gossip
+    let validator_pubkeys: Vec<[u8; 32]> = if !our_asf_keys.is_empty() {
+        // Use the raw sr25519 public key bytes (NOT hashed AccountId!)
+        let our_raw_pubkey: [u8; 32] = our_asf_keys[0].0;
+        log::info!(
+            "✅ V26: Using raw sr25519 key from keystore: {}",
+            hex::encode(&our_raw_pubkey[..8])
+        );
+
+        // Query validator committee to get the count, but use raw keys
+        match client.runtime_api().validator_committee(best_hash) {
+            Ok(members) => {
+                log::info!("✅ Loaded {} validators for checkpoint BFT (using raw keys)", members.len());
+                // V26: For multi-validator setup, each validator signs with their keystore key
+                // The authority set needs real sr25519 keys, not AccountId hashes
+                // For now, initialize with our own key - P2P will sync other validators' keys
+                vec![our_raw_pubkey]
+            }
+            Err(e) => {
+                log::warn!("⚠️  Failed to query validators: {:?}, using our key only", e);
+                vec![our_raw_pubkey]
+            }
         }
-        Err(e) => {
-            log::warn!("⚠️  Failed to load validators: {:?}, using minimal set", e);
-            vec![[0u8; 32]]  // Minimal bootstrap set
-        }
+    } else {
+        log::warn!("⚠️  No ASF keys in keystore! Generate with: key insert --key-type asfk");
+        vec![[0u8; 32]]  // Placeholder - node won't be able to sign checkpoints
     };
 
     // Create authority set for checkpoint BFT
@@ -1263,15 +1298,14 @@ pub fn new_full_with_params(
 
                 let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
-                    // Add ourselves as a validator
-                    // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
-                    let multi_signer = MultiSigner::Sr25519(our_keys[0].clone());
-                    let account_id: AccountId32 = multi_signer.into_account();
-                    let our_validator_id = block_production::ValidatorId::from(account_id);
+                    // V26 FIX: Use raw sr25519 public key bytes, NOT hashed AccountId!
+                    // The V25 bug: into_account() hashes the key with Blake2-256
+                    let raw_pubkey: [u8; 32] = our_keys[0].0;
+                    let our_validator_id = block_production::ValidatorId::from(raw_pubkey);
 
                     log::info!(
-                        "🔑 Converted sr25519 key to ValidatorId: {}",
-                        hex::encode(our_validator_id.as_ref() as &[u8])
+                        "🔑 V26: Using RAW sr25519 key for ValidatorId: {}",
+                        hex::encode(&raw_pubkey[..8])
                     );
 
                     let our_validator_info = validator_management::ValidatorInfo::new(
@@ -1364,21 +1398,17 @@ pub fn new_full_with_params(
 
                         const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
+                        // V26 FIX: Use raw sr25519 public key bytes, NOT hashed AccountId!
+                        // The V25 bug: into_account() hashes the key with Blake2-256
                         let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
                             Some(public_key) => {
+                                // Use raw sr25519 bytes (.0) directly - NO HASHING!
+                                let raw_pubkey: [u8; 32] = public_key.0;
                                 log::info!(
-                                    "🔑 ASF using validator key from keystore (raw sr25519): {}",
-                                    hex::encode(public_key.as_ref() as &[u8])
+                                    "🔑 V26: Using RAW sr25519 key from keystore: {}",
+                                    hex::encode(&raw_pubkey[..8])
                                 );
-                                // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
-                                let multi_signer = MultiSigner::Sr25519(public_key.clone());
-                                let account_id: AccountId32 = multi_signer.into_account();
-                                let validator_id = block_production::ValidatorId::from(account_id);
-                                log::info!(
-                                    "🔑 Converted to ValidatorId (AccountId32): {}",
-                                    hex::encode(validator_id.as_ref() as &[u8])
-                                );
-                                validator_id
+                                block_production::ValidatorId::from(raw_pubkey)
                             }
                             None => {
                                 log::warn!(

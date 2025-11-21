@@ -96,10 +96,37 @@ impl PpfaSeal {
         }
     }
 
-    /// Create a new PPFA seal with a dummy signature for testing
+    /// ⚠️ CRITICAL SECURITY WARNING: Test-only unsigned seal constructor
     ///
-    /// WARNING: FOR TESTING ONLY - DO NOT USE IN PRODUCTION
-    
+    /// This function creates a PPFA seal with an INVALID signature.
+    ///
+    /// # Security Implications
+    /// - The seal will FAIL signature verification
+    /// - Any consensus using this seal is INSECURE
+    /// - This MUST NEVER be used in production code paths
+    ///
+    /// # Usage
+    /// This function exists ONLY for:
+    /// - Unit tests that don't require signature verification
+    /// - Mock/stub implementations in test environments
+    ///
+    /// # Production Usage
+    /// In production, ALWAYS use:
+    /// ```ignore
+    /// use crate::crypto::{sign_seal, Signature};
+    /// use sp_core::{sr25519, Pair};
+    ///
+    /// let (pair, _) = sr25519::Pair::generate();
+    /// let signature = sign_seal(&pair, slot, ppfa_index, block_number, block_hash, epoch);
+    /// let seal = PpfaSeal::new(slot, ppfa_index, validator, stake_weight, epoch, block_number, block_hash, signature);
+    /// ```
+    ///
+    /// # ⚠️ FOR TESTING ONLY - DO NOT USE IN PRODUCTION
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.1.0",
+        note = "This function uses an invalid signature and is only for testing. Use PpfaSeal::new() with a real signature in production."
+    )]
     pub fn new_unsigned(
         slot: u64,
         ppfa_index: u32,
@@ -420,10 +447,28 @@ impl PpfaSealingEngine {
         Ok(seal)
     }
 
-    /// Create a seal with a dummy signature for testing
+    /// ⚠️ CRITICAL SECURITY WARNING: Test-only unsigned seal creation
     ///
-    /// WARNING: FOR TESTING ONLY - DO NOT USE IN PRODUCTION
-    
+    /// This function creates a PPFA seal with an INVALID signature.
+    ///
+    /// # Security Implications
+    /// - The seal will FAIL signature verification
+    /// - Any consensus using this seal is INSECURE and will be rejected
+    /// - This MUST NEVER be called in production code paths
+    ///
+    /// # Production Usage
+    /// In production, ALWAYS use `create_seal()` with a valid keypair:
+    /// ```ignore
+    /// use sp_keystore::KeystorePtr;
+    /// let seal = engine.create_seal(validator_id, block_number, block_hash, &keypair)?;
+    /// ```
+    ///
+    /// # ⚠️ FOR TESTING ONLY - DO NOT USE IN PRODUCTION
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.1.0",
+        note = "This function uses an invalid signature and is only for testing. Use create_seal() with a real keypair in production."
+    )]
     pub fn create_seal_unsigned(
         &self,
         validator: ValidatorId,
@@ -442,7 +487,7 @@ impl PpfaSealingEngine {
             return Err(AsfError::InvalidVote("Not validator's turn to propose"));
         }
 
-        // Create seal with dummy signature
+        // Create seal with dummy signature (TEST ONLY)
         let seal = PpfaSeal::new_unsigned(
             self.current_slot,
             member.index,

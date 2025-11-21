@@ -5,7 +5,7 @@
 
 use alloc::vec::Vec;
 use codec::Encode;
-use sp_core::hashing::blake2_256;
+use sp_core::{hashing::blake2_256, sr25519, Pair};
 
 use crate::{
     Block, BlockBody, BlockHeader, BlockNumber, BlockProposal, BlockProductionResult, BlockType,
@@ -257,42 +257,75 @@ impl BlockBuilder {
 // BLOCK SIGNER
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Signs blocks for proposals
+/// Signs blocks for proposals using Sr25519 cryptography
 pub struct BlockSigner {
-    /// Validator ID (public key)
-    validator: ValidatorId,
+    /// Validator keypair for signing
+    keypair: sr25519::Pair,
 }
 
 impl BlockSigner {
-    /// Create a new block signer
-    pub fn new(validator: ValidatorId) -> Self {
-        Self { validator }
+    /// Create a new block signer with a keypair
+    pub fn new(keypair: sr25519::Pair) -> Self {
+        Self { keypair }
+    }
+
+    /// Get the validator ID (public key) for this signer
+    pub fn validator_id(&self) -> ValidatorId {
+        let public_bytes: [u8; 32] = self.keypair.public().0;
+        ValidatorId::from(public_bytes)
     }
 
     /// Sign a block (creates proposal)
+    ///
+    /// # Security
+    /// This uses Sr25519 cryptographic signatures to ensure:
+    /// - Only the holder of the private key can create valid signatures
+    /// - Signatures are verifiable by anyone with the public key
+    /// - Signatures cannot be forged or tampered with
     pub fn sign_block(&self, block: Block) -> BlockProductionResult<BlockProposal> {
-        // In production, this would use the validator's private key
-        // For now, we create a dummy signature
         let signature = self.create_signature(&block);
-        
         Ok(BlockProposal::new(block, signature))
     }
 
-    /// Create signature (simplified - would use real crypto in production)
+    /// Create Sr25519 signature for a block
+    ///
+    /// # Security Details
+    /// - Uses the block hash as the message to sign
+    /// - Signs with the validator's Sr25519 private key
+    /// - Returns a 64-byte Sr25519 signature
     fn create_signature(&self, block: &Block) -> Vec<u8> {
         let block_hash = block.hash();
+        let message = block_hash.as_ref();
 
-        // Dummy signature: hash(validator_id + block_hash)
-        let mut data = self.validator.encode();
-        data.extend_from_slice(block_hash.as_ref());
-
-        blake2_256(&data).to_vec()
+        // Sign with Sr25519
+        let signature = self.keypair.sign(message);
+        signature.0.to_vec()
     }
 
-    /// Verify a signature
-    pub fn verify_signature(&self, proposal: &BlockProposal) -> bool {
-        let expected = self.create_signature(&proposal.block);
-        expected == proposal.signature
+    /// Verify a signature against a public key
+    ///
+    /// # Security
+    /// Performs cryptographic verification of the signature using Sr25519
+    pub fn verify_signature(proposal: &BlockProposal, validator_id: &ValidatorId) -> bool {
+        let block_hash = proposal.block.hash();
+        let message = block_hash.as_ref();
+
+        // Convert signature bytes to Sr25519 Signature
+        if proposal.signature.len() != 64 {
+            return false;
+        }
+
+        let mut sig_bytes = [0u8; 64];
+        sig_bytes.copy_from_slice(&proposal.signature);
+        let signature = sr25519::Signature::from_raw(sig_bytes);
+
+        // Convert ValidatorId to Sr25519 Public key
+        let public_bytes: [u8; 32] = validator_id.clone().into();
+        let public = sr25519::Public::from_raw(public_bytes);
+
+        // Verify using sp_core's verify trait
+        use sp_core::crypto::Pair as _;
+        sr25519::Pair::verify(&signature, message, &public)
     }
 }
 
@@ -423,15 +456,17 @@ mod tests {
 
     #[test]
     fn test_block_signer() {
-        let validator = ValidatorId::from([1u8; 32]);
-        let signer = BlockSigner::new(validator.clone());
-        
+        // Generate a test keypair
+        let (keypair, _) = sr25519::Pair::generate();
+        let validator = ValidatorId::from(keypair.public().0);
+        let signer = BlockSigner::new(keypair);
+
         let parent_hash = Hash::default();
-        let mut builder = BlockBuilder::new(0, parent_hash, validator, 0, 1);
+        let mut builder = BlockBuilder::new(0, parent_hash, validator.clone(), 0, 1);
         let block = builder.build_queen(1000).unwrap();
-        
+
         let proposal = signer.sign_block(block).unwrap();
-        assert!(signer.verify_signature(&proposal));
+        assert!(BlockSigner::verify_signature(&proposal, &validator));
     }
 
     #[test]
