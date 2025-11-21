@@ -1145,7 +1145,6 @@ pub fn new_full_with_params(
         let ppfa_checkpoint_collector = checkpoint_collector.clone();
         let ppfa_byzantine_tracker = byzantine_tracker.clone();
         let ppfa_finality_tracker = finality_tracker.clone();
-        let ppfa_authority_set = checkpoint_collector.get_authority_set();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -1522,7 +1521,8 @@ pub fn new_full_with_params(
 
                                                 // Generate epoch randomness from authority set ID
                                                 // In production, this would come from BABE/VRF consensus
-                                                let authority_set_id = ppfa_authority_set.set_id;
+                                                let vrf_authority_set = ppfa_checkpoint_collector.get_authority_set();
+                                                let authority_set_id = vrf_authority_set.set_id;
                                                 let mut epoch_randomness = [0u8; 32];
                                                 epoch_randomness[..8].copy_from_slice(&authority_set_id.to_le_bytes());
                                                 epoch_randomness[8..16].copy_from_slice(&epoch.to_le_bytes());
@@ -1574,9 +1574,10 @@ pub fn new_full_with_params(
                                                         // Get validator public key (32 bytes)
                                                         let public_bytes: [u8; 32] = public_key.0;
 
-                                                        // Get authority set information
-                                                        let authority_set_id = ppfa_authority_set.set_id;
-                                                        let authority_set_hash = ppfa_authority_set.authority_set_hash;
+                                                        // Get CURRENT authority set information (fetch fresh for each checkpoint)
+                                                        let current_authority_set = ppfa_checkpoint_collector.get_authority_set();
+                                                        let authority_set_id = current_authority_set.set_id;
+                                                        let authority_set_hash = current_authority_set.authority_set_hash;
 
                                                         // Get chain ID (using network ID, not genesis hash)
                                                         // Must match FLARECHAIN_NETWORK_ID in checkpoint-bft crate
