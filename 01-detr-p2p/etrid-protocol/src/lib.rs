@@ -4,7 +4,6 @@
 //! and protocol validation logic.
 
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 // Gadget Network Bridge module (integration with finality gadget)
 #[path = "../gadget-network-bridge/src/lib.rs"]
@@ -25,6 +24,11 @@ pub enum MessageType {
     Certificate = 13,
     StateSync = 14,
     HeartBeat = 15,
+    // V17: Checkpoint BFT messages
+    CheckpointSignature = 16,
+    CheckpointCertificate = 17,
+    RequestCheckpointSignatures = 18,
+    CheckpointSignaturesResponse = 19,
     Error = 255,
 }
 
@@ -40,6 +44,10 @@ impl MessageType {
             13 => Some(MessageType::Certificate),
             14 => Some(MessageType::StateSync),
             15 => Some(MessageType::HeartBeat),
+            16 => Some(MessageType::CheckpointSignature),
+            17 => Some(MessageType::CheckpointCertificate),
+            18 => Some(MessageType::RequestCheckpointSignatures),
+            19 => Some(MessageType::CheckpointSignaturesResponse),
             255 => Some(MessageType::Error),
             _ => None,
         }
@@ -345,6 +353,109 @@ impl ErrorMessage {
     pub fn new(error_code: u32, message: String) -> Self {
         Self { error_code, message }
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V17: CHECKPOINT BFT MESSAGES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Checkpoint signature broadcast (V17)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CheckpointSignatureMsg {
+    pub block_number: u32,
+    pub block_hash: [u8; 32],
+    pub validator_id: u32,
+    pub authority_set_id: u64,
+    pub signature: Vec<u8>,
+    pub timestamp_ms: u64,
+}
+
+impl CheckpointSignatureMsg {
+    pub fn new(
+        block_number: u32,
+        block_hash: [u8; 32],
+        validator_id: u32,
+        authority_set_id: u64,
+        signature: Vec<u8>,
+    ) -> Self {
+        Self {
+            block_number,
+            block_hash,
+            validator_id,
+            authority_set_id,
+            signature,
+            timestamp_ms: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as u64,
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if self.signature.is_empty() {
+            return Err("Signature required".to_string());
+        }
+        if self.block_number == 0 {
+            return Err("Block number must be > 0".to_string());
+        }
+        Ok(())
+    }
+}
+
+/// Checkpoint certificate broadcast (V17)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CheckpointCertificateMsg {
+    pub block_number: u32,
+    pub block_hash: [u8; 32],
+    pub authority_set_id: u64,
+    pub signatures: Vec<CheckpointSignatureMsg>,
+    pub finalized_at_ms: u64,
+}
+
+impl CheckpointCertificateMsg {
+    pub fn new(
+        block_number: u32,
+        block_hash: [u8; 32],
+        authority_set_id: u64,
+        signatures: Vec<CheckpointSignatureMsg>,
+    ) -> Self {
+        Self {
+            block_number,
+            block_hash,
+            authority_set_id,
+            signatures,
+            finalized_at_ms: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as u64,
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if self.signatures.is_empty() {
+            return Err("Certificate must have signatures".to_string());
+        }
+        if self.block_number == 0 {
+            return Err("Block number must be > 0".to_string());
+        }
+        for sig in &self.signatures {
+            sig.validate()?;
+        }
+        Ok(())
+    }
+}
+
+/// Request checkpoint signatures for a block (V17)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RequestCheckpointSignaturesMsg {
+    pub block_number: u32,
+}
+
+/// Response with checkpoint signatures (V17)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CheckpointSignaturesResponseMsg {
+    pub block_number: u32,
+    pub signatures: Vec<CheckpointSignatureMsg>,
 }
 
 /// Protocol message envelope

@@ -80,6 +80,11 @@ pub enum Message {
     FindValueReply { key: [u8; 32], value: Option<Vec<u8>>, peers: Vec<PeerAddr> },
     Vote { data: Vec<u8> },
     Certificate { data: Vec<u8> },
+    // V17: Checkpoint BFT messages
+    CheckpointSignature { data: Vec<u8> },
+    CheckpointCertificate { data: Vec<u8> },
+    RequestCheckpointSignatures { block_number: u32 },
+    CheckpointSignaturesResponse { block_number: u32, signatures: Vec<Vec<u8>> },
     Custom(Vec<u8>),
 }
 
@@ -1088,6 +1093,8 @@ impl MessageRouter {
         match &msg {
             Message::Vote { .. } => log::info!("📬 Queued VOTE in inbox (size: {})", inbox.len()),
             Message::Certificate { .. } => log::info!("📬 Queued CERTIFICATE in inbox (size: {})", inbox.len()),
+            Message::CheckpointSignature { .. } => log::info!("📬 Queued CHECKPOINT SIGNATURE in inbox (size: {})", inbox.len()),
+            Message::CheckpointCertificate { .. } => log::info!("📬 Queued CHECKPOINT CERTIFICATE in inbox (size: {})", inbox.len()),
             _ => {}
         }
     }
@@ -1100,6 +1107,8 @@ impl MessageRouter {
             match msg {
                 Message::Vote { .. } => log::info!("📤 Retrieved VOTE from inbox (remaining: {})", inbox.len()),
                 Message::Certificate { .. } => log::info!("📤 Retrieved CERTIFICATE from inbox (remaining: {})", inbox.len()),
+                Message::CheckpointSignature { .. } => log::info!("📤 Retrieved CHECKPOINT SIGNATURE from inbox (remaining: {})", inbox.len()),
+                Message::CheckpointCertificate { .. } => log::info!("📤 Retrieved CHECKPOINT CERTIFICATE from inbox (remaining: {})", inbox.len()),
                 _ => {}
             }
         }
@@ -1279,6 +1288,8 @@ impl P2PNetwork {
                                         match &msg {
                                             Message::Vote { .. } => log::info!("📥 Received VOTE from {:?}", peer_id),
                                             Message::Certificate { .. } => log::info!("📥 Received CERTIFICATE from {:?}", peer_id),
+                                            Message::CheckpointSignature { .. } => log::info!("📥 Received CHECKPOINT SIGNATURE from {:?}", peer_id),
+                                            Message::CheckpointCertificate { .. } => log::info!("📥 Received CHECKPOINT CERTIFICATE from {:?}", peer_id),
                                             _ => log::trace!("📥 Received {:?} from {:?}", msg, peer_id),
                                         }
                                         msg_router_clone.route_message(peer_id, msg).await;
