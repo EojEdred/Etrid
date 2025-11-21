@@ -365,7 +365,11 @@ pub struct CheckpointSignatureMsg {
     pub block_number: u32,
     pub block_hash: [u8; 32],
     pub validator_id: u32,
+    pub validator_pubkey: [u8; 32],
     pub authority_set_id: u64,
+    pub authority_set_hash: [u8; 32],
+    pub checkpoint_type: u8,
+    pub signature_nonce: u64,
     pub signature: Vec<u8>,
     pub timestamp_ms: u64,
 }
@@ -375,14 +379,22 @@ impl CheckpointSignatureMsg {
         block_number: u32,
         block_hash: [u8; 32],
         validator_id: u32,
+        validator_pubkey: [u8; 32],
         authority_set_id: u64,
+        authority_set_hash: [u8; 32],
+        checkpoint_type: u8,
+        signature_nonce: u64,
         signature: Vec<u8>,
     ) -> Self {
         Self {
             block_number,
             block_hash,
             validator_id,
+            validator_pubkey,
             authority_set_id,
+            authority_set_hash,
+            checkpoint_type,
+            signature_nonce,
             signature,
             timestamp_ms: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

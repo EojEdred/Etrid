@@ -283,11 +283,20 @@ async fn broadcast_checkpoint_signature_p2p(
     use etrid_protocol::{CheckpointSignatureMsg, ProtocolMessage, MessageType};
 
     // Convert CheckpointSignature to P2P message format
+    let checkpoint_type_u8 = match signature.checkpoint_type {
+        CheckpointType::Guaranteed => 0,
+        CheckpointType::Opportunity { .. } => 1,
+    };
+
     let msg = CheckpointSignatureMsg {
         block_number: signature.block_number,
         block_hash: signature.block_hash,
         validator_id: signature.validator_id,
+        validator_pubkey: signature.validator_pubkey,
         authority_set_id: signature.authority_set_id,
+        authority_set_hash: signature.authority_set_hash,
+        checkpoint_type: checkpoint_type_u8,
+        signature_nonce: signature.signature_nonce,
         signature: signature.signature.clone(),
         timestamp_ms: signature.timestamp_ms,
     };
@@ -329,13 +338,24 @@ async fn broadcast_checkpoint_certificate_p2p(
     // Convert signatures to P2P format
     let signatures: Vec<CheckpointSignatureMsg> = certificate.signatures
         .iter()
-        .map(|sig| CheckpointSignatureMsg {
-            block_number: sig.block_number,
-            block_hash: sig.block_hash,
-            validator_id: sig.validator_id,
-            authority_set_id: sig.authority_set_id,
-            signature: sig.signature.clone(),
-            timestamp_ms: sig.timestamp_ms,
+        .map(|sig| {
+            let checkpoint_type_u8 = match sig.checkpoint_type {
+                CheckpointType::Guaranteed => 0,
+                CheckpointType::Opportunity { .. } => 1,
+            };
+
+            CheckpointSignatureMsg {
+                block_number: sig.block_number,
+                block_hash: sig.block_hash,
+                validator_id: sig.validator_id,
+                validator_pubkey: sig.validator_pubkey,
+                authority_set_id: sig.authority_set_id,
+                authority_set_hash: sig.authority_set_hash,
+                checkpoint_type: checkpoint_type_u8,
+                signature_nonce: sig.signature_nonce,
+                signature: sig.signature.clone(),
+                timestamp_ms: sig.timestamp_ms,
+            }
         })
         .collect();
 
@@ -2375,20 +2395,29 @@ pub fn new_full_with_params(
                                         // Deserialize checkpoint signature
                                         match bincode::deserialize::<CheckpointSignatureMsg>(&proto_msg.payload) {
                                             Ok(sig_msg) => {
-                                                // Convert to CheckpointSignature using getter methods
-                                                let authority_set = checkpoint_collector_worker.get_authority_set();
+                                                // Convert to CheckpointSignature using values from P2P message
                                                 let chain_id = checkpoint_collector_worker.get_chain_id();
+
+                                                // Convert checkpoint_type u8 to enum
+                                                let checkpoint_type = match sig_msg.checkpoint_type {
+                                                    0 => CheckpointType::Guaranteed,
+                                                    1 => CheckpointType::Opportunity {
+                                                        vrf_output: vec![0u8; 32], // Placeholder - full VRF data in future
+                                                        vrf_proof: Vec::new(),
+                                                    },
+                                                    _ => CheckpointType::Guaranteed, // Fallback
+                                                };
 
                                                 let signature = CheckpointSignature {
                                                     chain_id,
                                                     block_number: sig_msg.block_number,
                                                     block_hash: sig_msg.block_hash,
                                                     validator_id: sig_msg.validator_id,
-                                                    validator_pubkey: [0u8; 32], // Will be filled from authority set
+                                                    validator_pubkey: sig_msg.validator_pubkey,
                                                     authority_set_id: sig_msg.authority_set_id,
-                                                    authority_set_hash: [0u8; 32], // Will be filled from authority set
-                                                    checkpoint_type: CheckpointType::Guaranteed, // Default
-                                                    signature_nonce: 0, // Will be incremented
+                                                    authority_set_hash: sig_msg.authority_set_hash,
+                                                    checkpoint_type,
+                                                    signature_nonce: sig_msg.signature_nonce,
                                                     signature: sig_msg.signature.clone(),
                                                     timestamp_ms: sig_msg.timestamp_ms,
                                                 };
@@ -2503,6 +2532,57 @@ pub fn new_full_with_params(
 
         // Substrate finality is applied directly in finalize_checkpoint_block() (line ~472)
         // when checkpoint certificates reach quorum. No separate monitoring task needed.
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // IMPLICIT FINALITY MONITOR (V21)
+        // ═══════════════════════════════════════════════════════════════════════════
+        //
+        // Ensures finality progresses even if checkpoint signatures are delayed.
+        // Automatically finalizes blocks that are 100 blocks behind the best block.
+        // This prevents finality stalling while maintaining checkpoint-based finality as primary.
+
+        let finality_client = client.clone();
+        task_manager.spawn_essential_handle().spawn(
+            "implicit-finality-monitor",
+            Some("finality"),
+            async move {
+                use tokio::time::{interval, Duration};
+                use sp_blockchain::HeaderBackend;
+                let mut finality_interval = interval(Duration::from_secs(6));
+                const FINALITY_LAG: u32 = 100;
+
+                log::info!("🔄 Starting implicit finality monitor (lag threshold: {} blocks)", FINALITY_LAG);
+
+                loop {
+                    finality_interval.tick().await;
+                    let info = finality_client.usage_info().chain;
+                    let best_number = info.best_number;
+                    let finalized_number = info.finalized_number;
+
+                    if best_number > finalized_number + FINALITY_LAG {
+                        let target_finalize = best_number - FINALITY_LAG;
+                        if let Ok(Some(target_hash)) = finality_client.hash(target_finalize.into()) {
+                            use sc_client_api::Finalizer;
+                            match finality_client.finalize_block(target_hash, None, true) {
+                                Ok(_) => {
+                                    log::info!(
+                                        "✅ Implicit finality: finalized block #{} (best: #{}, finalized: #{})",
+                                        target_finalize,
+                                        best_number,
+                                        finalized_number
+                                    );
+                                }
+                                Err(e) => {
+                                    log::debug!("Implicit finality failed for block #{}: {:?}", target_finalize, e);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        );
+
+        log::info!("✅ Implicit finality monitor spawned");
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

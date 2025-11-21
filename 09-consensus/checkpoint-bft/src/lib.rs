@@ -450,11 +450,12 @@ impl AuthoritySet {
     /// Security: Hash binds signatures to exact validator set composition
     /// Prevents replay attacks if validator set changes but set_id reused
     pub fn calculate_authority_set_hash(authorities: &[[u8; 32]]) -> [u8; 32] {
+        use sp_core::hashing::blake2_256;
         let mut data = Vec::new();
         for pubkey in authorities {
             data.extend_from_slice(pubkey);
         }
-        sp_io::hashing::blake2_256(&data)
+        blake2_256(&data)
     }
 
     /// Check if validator_id is valid
