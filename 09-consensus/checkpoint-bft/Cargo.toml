@@ -1,0 +1,39 @@
+[package]
+name = "checkpoint-bft"
+version = "1.0.0"
+edition = "2021"
+authors = ["ËTRID Foundation"]
+
+[dependencies]
+# Substrate primitives
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+
+# Substrate client
+sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2407" }
+
+# Cryptography
+schnorrkel = { version = "0.11", default-features = false, features = ["preaudit_deprecated"] }
+ed25519-dalek = { version = "2.0", default-features = false }
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0", features = ["derive"] }
+
+# Logging
+tracing = "0.1"
+log = "0.4"
+
+# Collections
+parking_lot = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"
+rand = "0.8"
