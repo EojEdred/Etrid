@@ -1073,49 +1073,79 @@ pub fn new_full_with_params(
     // Get best block for runtime queries
     let best_hash = client.info().best_hash;
 
-    // V26 FIX: Use raw sr25519 public keys from keystore, NOT AccountId hashes
+    // V27 FIX: Hardcoded authority set with all 20 validators' raw sr25519 public keys
     //
-    // The V25 bug: AccountId32 = Blake2-256(sr25519_public_key), NOT the raw key!
-    // This caused "Cannot decompress Edwards point" errors in signature verification.
+    // V26 bug: Each validator only had its OWN key in authority set, causing hash mismatches.
+    // All validators MUST have identical authority sets for signature verification to work.
     //
-    // V26 Solution: Query real sr25519 keys from local keystore for authority set.
-    // Each validator's keystore contains their actual signing key.
+    // V27 Solution: Hardcode all 20 validators' ASF keystore public keys.
+    // This ensures ALL validators compute the same authority_set_hash.
+    //
+    // These are the raw sr25519 public keys extracted from each validator's keystore:
+    // /var/lib/etrid/chains/flarechain_mainnet_v1/keystore/6173666b{pubkey}
 
     const ASF_KEY_TYPE: sp_core::crypto::KeyTypeId = sp_core::crypto::KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
-    // Get our validator's real sr25519 public key from keystore
+    // Get our validator's key for signing (we still need this to sign checkpoints)
     let keystore = keystore_container.keystore();
     let our_asf_keys = keystore.sr25519_public_keys(ASF_KEY_TYPE);
 
-    // V26: Build authority set from real keystore keys
-    // For now, we use our own key as the authority set entry for ourselves
-    // Other validators' keys will be synced via P2P authority set gossip
-    let validator_pubkeys: Vec<[u8; 32]> = if !our_asf_keys.is_empty() {
-        // Use the raw sr25519 public key bytes (NOT hashed AccountId!)
-        let our_raw_pubkey: [u8; 32] = our_asf_keys[0].0;
+    if !our_asf_keys.is_empty() {
         log::info!(
-            "✅ V26: Using raw sr25519 key from keystore: {}",
-            hex::encode(&our_raw_pubkey[..8])
+            "✅ V27: Local ASF signing key: {}",
+            hex::encode(&our_asf_keys[0].0[..8])
         );
-
-        // Query validator committee to get the count, but use raw keys
-        match client.runtime_api().validator_committee(best_hash) {
-            Ok(members) => {
-                log::info!("✅ Loaded {} validators for checkpoint BFT (using raw keys)", members.len());
-                // V26: For multi-validator setup, each validator signs with their keystore key
-                // The authority set needs real sr25519 keys, not AccountId hashes
-                // For now, initialize with our own key - P2P will sync other validators' keys
-                vec![our_raw_pubkey]
-            }
-            Err(e) => {
-                log::warn!("⚠️  Failed to query validators: {:?}, using our key only", e);
-                vec![our_raw_pubkey]
-            }
-        }
     } else {
-        log::warn!("⚠️  No ASF keys in keystore! Generate with: key insert --key-type asfk");
-        vec![[0u8; 32]]  // Placeholder - node won't be able to sign checkpoints
-    };
+        log::warn!("⚠️  No ASF key in keystore! This validator cannot sign checkpoints.");
+    }
+
+    // V27: Hardcoded authority set - ALL 20 validators' raw sr25519 public keys
+    // These MUST be identical across all validators for signature verification to work
+    let validator_pubkeys: Vec<[u8; 32]> = vec![
+        // vmi2896906 - Validator 0
+        hex_literal::hex!("44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58"),
+        // vmi2896907 - Validator 1
+        hex_literal::hex!("f29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c"),
+        // vmi2896908 - Validator 2
+        hex_literal::hex!("384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e"),
+        // vmi2896909 - Validator 3
+        hex_literal::hex!("ecec5b1247d1276260758b159add80c79359e879d09356eb5bb30b446323952e"),
+        // vmi2896910 - Validator 4
+        hex_literal::hex!("36edba289334c21d8c78b81d56dba974dd49ebe709c81dfc5b05469fcf6d772b"),
+        // vmi2896911 - Validator 5
+        hex_literal::hex!("f44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f"),
+        // vmi2896914 - Validator 6
+        hex_literal::hex!("2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"),
+        // vmi2896915 - Validator 7
+        hex_literal::hex!("b89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"),
+        // vmi2896916 - Validator 8 (note: same key as vmi2896906)
+        hex_literal::hex!("44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58"),
+        // vmi2896917 - Validator 9
+        hex_literal::hex!("be9fdd4416eff9375461618f1e2bd244bd0a3ee69b9d2b4949e046796bbe752f"),
+        // vmi2896918 - Validator 10
+        hex_literal::hex!("9e270842ee6d0cc5d4634760717fb2fea85596491c89fc72189a994dbf421d4c"),
+        // vmi2896921 - Validator 11
+        hex_literal::hex!("fe14bf4fd7b9cb683697114b9b60dc5a101adee961aa79e374ddb9d17c42ed4d"),
+        // vmi2896922 - Validator 12
+        hex_literal::hex!("2c339e81f2a1fc80ae67c3bda3ecade01b7b0074979901795ceab6f35a304451"),
+        // vmi2896923 - Validator 13
+        hex_literal::hex!("58716581b09066395ef75cead565526f412c1e9618a9e8401b5862d32b089c42"),
+        // vmi2896924 - Validator 14
+        hex_literal::hex!("d27ae8bc2d7b32cfd6e1a301a4d9931ef2b8c752745a9a86840e376f7bfc9969"),
+        // vmi2896925 - Validator 15
+        hex_literal::hex!("dc2e6eabc3d02e01f26bbf2bf8810c56aa05fd8a9489e80a8d64394e4892265b"),
+        // vmi2897381 - Validator 16
+        hex_literal::hex!("9e33e587928d3f3fd9bed5d407350889e6afb1e7732b494d383e5d7326d93e14"),
+        // vmi2897382 - Validator 17
+        hex_literal::hex!("e0c54cb3ece056f709dead74390ba2d0e493183635b5a54a14ba578a01585b13"),
+        // vmi2897383 - Validator 18
+        hex_literal::hex!("0444b71616811ae39a88b352e36cd43e798b9f8ceaae36371fbef8ee0450573c"),
+        // vmi2897384 - Validator 19
+        hex_literal::hex!("4a2320a52c89db6e72fa445bf1f774a2c34d5cdb9c6b1d798b969cc497343566"),
+    ];
+
+    log::info!("✅ V27: Authority set initialized with {} hardcoded validators", validator_pubkeys.len());
+    log::info!("   All validators will have identical authority_set_hash for signature verification");
 
     // Create authority set for checkpoint BFT
     let authority_set = AuthoritySet::new(
