@@ -203,29 +203,31 @@ impl CheckpointSignature {
 
     /// Verify signature with sr25519 (Schnorr signatures on Ristretto curve)
     ///
-    /// V28 FIX: Changed from Ed25519 to sr25519 to match keystore signing
-    /// The keystore uses sr25519_sign(), so we must verify with sr25519
+    /// V29 FIX: Use sp_core::sr25519::Pair::verify() instead of schnorrkel directly
+    /// V28's schnorrkel pk.verify(ctx.bytes(&payload), &sig) uses a different API than
+    /// how keystore.sr25519_sign() creates signatures. sp_core uses verify_simple()
+    /// internally which matches the keystore's signing method.
     pub fn verify_canonical(&self, public_key: &[u8; 32]) -> Result<(), String> {
-        use schnorrkel::{PublicKey, Signature, signing_context};
+        use sp_core::sr25519::{Public, Signature, Pair};
+        use sp_core::Pair as PairT;
 
         let payload = self.signing_payload();
 
-        // Parse sr25519 public key (Ristretto point)
-        let pk = PublicKey::from_bytes(public_key)
-            .map_err(|e| format!("Invalid sr25519 public key: {:?}", e))?;
+        // Parse sr25519 public key using sp_core
+        let public = Public::from_raw(*public_key);
 
         // Parse sr25519 signature (64 bytes)
         let sig_bytes: [u8; 64] = self.signature.clone().try_into()
             .map_err(|_| format!("Invalid signature length: expected 64, got {}", self.signature.len()))?;
-        let signature = Signature::from_bytes(&sig_bytes)
-            .map_err(|e| format!("Invalid sr25519 signature format: {:?}", e))?;
+        let signature = Signature::from_raw(sig_bytes);
 
-        // Verify signature with Substrate's standard signing context
-        let ctx = signing_context(b"substrate");
-        pk.verify(ctx.bytes(&payload), &signature)
-            .map_err(|e| format!("sr25519 signature verification failed: {:?}", e))?;
-
-        Ok(())
+        // V29: Use sp_core's sr25519 verification which matches keystore.sr25519_sign()
+        // This internally uses schnorrkel's verify_simple() with the same context
+        if Pair::verify(&signature, &payload, &public) {
+            Ok(())
+        } else {
+            Err("sr25519 signature verification failed: signature does not match public key and message".to_string())
+        }
     }
 
     /// Legacy verify method (for backward compatibility)
