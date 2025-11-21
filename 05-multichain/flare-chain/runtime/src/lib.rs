@@ -69,33 +69,46 @@ pub mod opaque {
     /// Opaque block identifier type.
     pub type BlockId = generic::BlockId<Block>;
 
+    /// ASF key type identifier: "asfk"
+    pub const ASF_KEY_TYPE: sp_core::crypto::KeyTypeId = sp_core::crypto::KeyTypeId(*b"asfk");
+
+    /// ASF application crypto type for checkpoint BFT signatures
+    pub mod asf {
+        use sp_application_crypto::{app_crypto, sr25519};
+        app_crypto!(sr25519, super::ASF_KEY_TYPE);
+    }
+
+    /// ASF authority ID type
+    pub type AsfId = asf::Public;
+
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // Empty - ASF consensus manages validator rotation internally
-            // Custom EmptySessionHandler below satisfies trait bounds
+            /// ASF finality key - used for checkpoint BFT signatures
+            pub asf: AsfId,
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EMPTY SESSION HANDLER FOR ASF CONSENSUS
+// ASF SESSION HANDLER FOR CHECKPOINT BFT
 // ═══════════════════════════════════════════════════════════════════════════════
 //
-// ASF (Ascending Scale of Finality) manages validator rotation internally via
-// the ValidatorCommittee pallet. We don't need session keys for consensus, but
-// pallet_session requires a SessionHandler implementation.
+// ASF (Ascending Scale of Finality) uses session keys to share validator public keys.
+// This allows the authority set to query ALL validators' ASF keys from session storage
+// instead of using placeholder keys.
 //
-// This empty handler satisfies the trait bounds without requiring any actual
-// session key management.
+// Validators publish their ASF keys via session.setKeys() extrinsic.
+// The authority set then queries these keys to build the BFT validator set.
 
-/// Empty session handler for ASF consensus
-pub struct EmptySessionHandler;
+/// ASF session handler for checkpoint BFT key management
+pub struct AsfSessionHandler;
 
-impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
-    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
+impl pallet_session::SessionHandler<AccountId> for AsfSessionHandler {
+    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[opaque::ASF_KEY_TYPE];
 
     fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
-        // No-op: ASF handles validator initialization via ValidatorCommittee
+        // Keys are stored in session pallet storage automatically
+        // Authority set will query them via runtime API
     }
 
     fn on_new_session<Ks: OpaqueKeys>(
@@ -103,11 +116,12 @@ impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
         _validators: &[(AccountId, Ks)],
         _queued_validators: &[(AccountId, Ks)],
     ) {
-        // No-op: ASF handles validator rotation via ValidatorCommittee
+        // Keys are stored in session pallet storage automatically
+        // Authority set will query them via runtime API
     }
 
     fn on_disabled(_validator_index: u32) {
-        // No-op: ASF handles validator disabling via ValidatorCommittee
+        // ValidatorCommittee pallet handles actual disabling logic
     }
 }
 
@@ -257,8 +271,9 @@ impl pallet_session::Config for Runtime {
     // - Validator set updates every 600 blocks (session period)
     // - ASF validator committee synchronization with active validators
     type SessionManager = ValidatorCommittee;
-    // Use EmptySessionHandler since ASF manages validator keys internally
-    type SessionHandler = EmptySessionHandler;
+    // Use AsfSessionHandler for checkpoint BFT key management
+    // This allows authority set to query ASF public keys from session storage
+    type SessionHandler = AsfSessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
     type DisablingStrategy = UpToLimitDisablingStrategy;

@@ -1068,18 +1068,19 @@ pub fn new_full_with_params(
     let validator_pubkeys: Vec<[u8; 32]> = match client.runtime_api().validator_committee(best_hash) {
         Ok(members) => {
             log::info!("✅ Loaded {} validators for checkpoint BFT", members.len());
-            // Extract public keys from validator committee
-            // For now, use placeholder keys - will be properly extracted when key management is integrated
+            // V24: SessionKeys infrastructure is in place (runtime/src/lib.rs:72-89)
+            // Validators need to call session.setKeys() to publish ASF keys on-chain
+            // TODO V25: Add runtime API to query ASF session keys from pallet_session::NextKeys storage
+            // For now, use placeholder keys as temporary measure
             (0..members.len()).map(|i| {
                 let mut key = [0u8; 32];
-                key[0] = i as u8;
+                key[0] = i as u8;  // Placeholder: will be replaced when validators set ASF keys
                 key
             }).collect()
         }
         Err(e) => {
             log::warn!("⚠️  Failed to load validators: {:?}, using minimal set", e);
-            // Minimal bootstrap set
-            vec![[0u8; 32]]
+            vec![[0u8; 32]]  // Minimal bootstrap set
         }
     };
 
