@@ -951,6 +951,20 @@ impl pallet_validator_committee::Config for Runtime {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ASF REGISTRY PALLET (Dynamic Validator Registration)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const MaxAsfValidators: u32 = 100;
+}
+
+impl pallet_asf_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxAsfValidators = MaxAsfValidators;
+    type StakeChecker = (); // Default: allow all (integrate with EtridStaking for production)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // VALIDATOR REWARDS PALLET
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1256,6 +1270,7 @@ construct_runtime!(
         // ASF Consensus pallets
         ValidatorCommittee: pallet_validator_committee,
         ValidatorRewards: pallet_validator_rewards,
+        AsfRegistry: pallet_asf_registry,
 
         // Oracle Network
         OracleNetwork: pallet_oracle_network,
@@ -1497,6 +1512,21 @@ impl_runtime_apis! {
 
         fn epoch_duration() -> u32 {
             ValidatorCommittee::get_epoch_duration()
+        }
+    }
+
+    // ASF Registry Runtime API
+    impl pallet_asf_registry::AsfRegistryApi<Block> for Runtime {
+        fn asf_validator_set() -> Vec<[u8; 32]> {
+            AsfRegistry::asf_validator_set()
+        }
+
+        fn validator_set_version() -> u64 {
+            AsfRegistry::get_validator_set_version()
+        }
+
+        fn validator_count() -> u32 {
+            AsfRegistry::validator_count()
         }
     }
 

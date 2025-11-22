@@ -69,6 +69,7 @@ sc-rpc = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkad
 
 # Local dependencies
 primearc-runtime = { path = "../runtime", default-features = false, features = ["std"] }
+pallet-asf-registry = { path = "../runtime/pallets/pallet-asf-registry" }
 
 # ASF Consensus Modules (ËTRID custom consensus)
 asf-algorithm = { path = "../../../09-consensus/asf-algorithm" }

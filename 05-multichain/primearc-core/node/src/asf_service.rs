@@ -49,6 +49,9 @@ use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 // Runtime API for validator committee queries
 use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 
+// Runtime API for ASF validator registry
+use pallet_asf_registry::AsfRegistryApi;
+
 // ÉTRID P2P Networking
 use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
 use etrid_protocol::gadget_network_bridge::{
@@ -1099,10 +1102,6 @@ pub fn new_full_with_params(
         log::warn!("⚠️  No ASF key in keystore! This validator cannot sign checkpoints.");
     }
 
-    // V31: Hardcoded authority set - ALL 20 validators' REAL ASF sr25519 public keys
-    // Generated with deterministic seeds: //Validator0 through //Validator19
-    // Keys are now in validator keystores with key_type "asfk" (0x6173666b)
-    // These MUST match the keys in each validator's keystore for signing to work
     // Helper to convert hex string to [u8; 32]
     fn hex_to_bytes32(hex_str: &str) -> [u8; 32] {
         let bytes = hex::decode(hex_str).expect("Invalid hex string");
@@ -1111,51 +1110,77 @@ pub fn new_full_with_params(
         arr
     }
 
-    let validator_pubkeys: Vec<[u8; 32]> = vec![
-        // vmi2896906 - Validator 0 (seed: //Validator0)
-        hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"),
-        // vmi2896907 - Validator 1 (seed: //Validator1)
-        hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"),
-        // vmi2896908 - Validator 2 (seed: //Validator2)
-        hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"),
-        // vmi2896909 - Validator 3 (seed: //Validator3)
-        hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"),
-        // vmi2896910 - Validator 4 (seed: //Validator4)
-        hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"),
-        // vmi2896911 - Validator 5 (seed: //Validator5)
-        hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"),
-        // vmi2896914 - Validator 6 (seed: //Validator6)
-        hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"),
-        // vmi2896915 - Validator 7 (seed: //Validator7)
-        hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"),
-        // vmi2896916 - Validator 8 (seed: //Validator8)
-        hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"),
-        // vmi2896917 - Validator 9 (seed: //Validator9)
-        hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"),
-        // vmi2896918 - Validator 10 (seed: //Validator10)
-        hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"),
-        // vmi2896921 - Validator 11 (seed: //Validator11)
-        hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"),
-        // vmi2896922 - Validator 12 (seed: //Validator12)
-        hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"),
-        // vmi2896923 - Validator 13 (seed: //Validator13)
-        hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"),
-        // vmi2896924 - Validator 14 (seed: //Validator14)
-        hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"),
-        // vmi2896925 - Validator 15 (seed: //Validator15)
-        hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"),
-        // vmi2897381 - Validator 16 (seed: //Validator16)
-        hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"),
-        // vmi2897382 - Validator 17 (seed: //Validator17)
-        hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"),
-        // vmi2897383 - Validator 18 (seed: //Validator18)
-        hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"),
-        // vmi2897384 - Validator 19 (seed: //Validator19)
-        hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"),
-    ];
+    // V33: Query ASF validator set from runtime API (pallet_asf_registry)
+    // Falls back to hardcoded keys if no validators registered on-chain
+    let validator_pubkeys: Vec<[u8; 32]> = {
+        // Try to query the runtime API for registered ASF validators
+        let best_hash = client.info().best_hash;
+        let runtime_validators: Option<Vec<[u8; 32]>> = client
+            .runtime_api()
+            .asf_validator_set(best_hash)
+            .ok()
+            .filter(|v| !v.is_empty());
 
-    log::info!("✅ V31: Authority set initialized with {} validators using REAL ASF keystore keys", validator_pubkeys.len());
-    log::info!("   Keys generated with deterministic seeds //Validator0 through //Validator19");
+        if let Some(validators) = runtime_validators {
+            log::info!(
+                "✅ V33: Using DYNAMIC ASF validator set from pallet_asf_registry ({} validators)",
+                validators.len()
+            );
+            let version = client.runtime_api().validator_set_version(best_hash).unwrap_or(0);
+            log::info!("   Validator set version: {}", version);
+            validators
+        } else {
+            log::info!("⚠️  V33: No validators in pallet_asf_registry, using HARDCODED fallback keys");
+            log::info!("   Validators should register via `asfRegistry.registerAsfKey()` extrinsic");
+
+            // Fallback: Hardcoded authority set - ALL 20 validators' REAL ASF sr25519 public keys
+            // Generated with deterministic seeds: //Validator0 through //Validator19
+            vec![
+                // vmi2896906 - Validator 0 (seed: //Validator0)
+                hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"),
+                // vmi2896907 - Validator 1 (seed: //Validator1)
+                hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"),
+                // vmi2896908 - Validator 2 (seed: //Validator2)
+                hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"),
+                // vmi2896909 - Validator 3 (seed: //Validator3)
+                hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"),
+                // vmi2896910 - Validator 4 (seed: //Validator4)
+                hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"),
+                // vmi2896911 - Validator 5 (seed: //Validator5)
+                hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"),
+                // vmi2896914 - Validator 6 (seed: //Validator6)
+                hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"),
+                // vmi2896915 - Validator 7 (seed: //Validator7)
+                hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"),
+                // vmi2896916 - Validator 8 (seed: //Validator8)
+                hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"),
+                // vmi2896917 - Validator 9 (seed: //Validator9)
+                hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"),
+                // vmi2896918 - Validator 10 (seed: //Validator10)
+                hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"),
+                // vmi2896921 - Validator 11 (seed: //Validator11)
+                hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"),
+                // vmi2896922 - Validator 12 (seed: //Validator12)
+                hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"),
+                // vmi2896923 - Validator 13 (seed: //Validator13)
+                hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"),
+                // vmi2896924 - Validator 14 (seed: //Validator14)
+                hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"),
+                // vmi2896925 - Validator 15 (seed: //Validator15)
+                hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"),
+                // vmi2897381 - Validator 16 (seed: //Validator16)
+                hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"),
+                // vmi2897382 - Validator 17 (seed: //Validator17)
+                hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"),
+                // vmi2897383 - Validator 18 (seed: //Validator18)
+                hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"),
+                // vmi2897384 - Validator 19 (seed: //Validator19)
+                hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"),
+            ]
+        }
+    };
+
+    log::info!("✅ Authority set initialized with {} validators", validator_pubkeys.len());
 
     // Create authority set for checkpoint BFT
     let authority_set = AuthoritySet::new(
@@ -1266,40 +1291,64 @@ pub fn new_full_with_params(
                 let mut committee = CommitteeManager::new(100);  // Use 100 to ensure all 21 validators are selected
 
                 // ═══════════════════════════════════════════════════════════════
-                // V32 FIX: Use hardcoded ASF authority set for PPFA committee
-                // This ensures PPFA proposer selection matches ASF keystore keys
+                // V33: Query ASF validator set from pallet_asf_registry for PPFA committee
+                // Falls back to hardcoded keys if no validators registered on-chain
                 // ═══════════════════════════════════════════════════════════════
 
-                // V32: Hardcoded ASF keys (same as checkpoint BFT authority set)
-                // These are sr25519 public keys generated with seeds //Validator0 through //Validator19
-                let v32_validator_pubkeys: Vec<[u8; 32]> = vec![
-                    hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"), // Validator 0
-                    hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"), // Validator 1
-                    hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"), // Validator 2
-                    hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"), // Validator 3
-                    hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"), // Validator 4
-                    hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"), // Validator 5
-                    hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"), // Validator 6
-                    hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"), // Validator 7
-                    hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"), // Validator 8
-                    hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"), // Validator 9
-                    hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"), // Validator 10
-                    hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"), // Validator 11
-                    hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"), // Validator 12
-                    hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"), // Validator 13
-                    hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"), // Validator 14
-                    hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"), // Validator 15
-                    hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"), // Validator 16
-                    hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"), // Validator 17
-                    hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"), // Validator 18
-                    hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"), // Validator 19
-                ];
+                // V33: Query runtime API for registered ASF validators
+                let v33_validator_pubkeys: Vec<[u8; 32]> = {
+                    use pallet_asf_registry::AsfRegistryApi;
 
-                log::info!("✅ V32: Using hardcoded ASF authority set for PPFA committee ({} validators)", v32_validator_pubkeys.len());
+                    let best_hash = ppfa_client.info().best_hash;
+                    let runtime_validators: Option<Vec<[u8; 32]>> = ppfa_client
+                        .runtime_api()
+                        .asf_validator_set(best_hash)
+                        .ok()
+                        .filter(|v| !v.is_empty());
 
-                // Add hardcoded validators to PPFA committee
+                    if let Some(validators) = runtime_validators {
+                        log::info!(
+                            "✅ V33: PPFA committee using DYNAMIC validator set from pallet_asf_registry ({} validators)",
+                            validators.len()
+                        );
+                        let version = ppfa_client.runtime_api().validator_set_version(best_hash).unwrap_or(0);
+                        log::info!("   Validator set version: {}", version);
+                        validators
+                    } else {
+                        log::info!("⚠️  V33: PPFA using HARDCODED fallback keys (no on-chain validators)");
+                        log::info!("   Validators should register via `asfRegistry.registerAsfKey()` extrinsic");
+
+                        // Fallback: Hardcoded ASF keys (sr25519, seeds //Validator0 through //Validator19)
+                        vec![
+                            hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"), // Validator 0
+                            hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"), // Validator 1
+                            hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"), // Validator 2
+                            hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"), // Validator 3
+                            hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"), // Validator 4
+                            hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"), // Validator 5
+                            hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"), // Validator 6
+                            hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"), // Validator 7
+                            hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"), // Validator 8
+                            hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"), // Validator 9
+                            hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"), // Validator 10
+                            hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"), // Validator 11
+                            hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"), // Validator 12
+                            hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"), // Validator 13
+                            hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"), // Validator 14
+                            hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"), // Validator 15
+                            hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"), // Validator 16
+                            hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"), // Validator 17
+                            hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"), // Validator 18
+                            hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"), // Validator 19
+                        ]
+                    }
+                };
+
+                log::info!("✅ V33: PPFA committee initialized with {} validators", v33_validator_pubkeys.len());
+
+                // Add validators to PPFA committee
                 let mut added_count = 0;
-                for (idx, pubkey) in v32_validator_pubkeys.iter().enumerate() {
+                for (idx, pubkey) in v33_validator_pubkeys.iter().enumerate() {
                     let validator_id = block_production::ValidatorId::from(*pubkey);
                     let validator_info = validator_management::ValidatorInfo::new(
                         validator_id,
@@ -1317,9 +1366,9 @@ pub fn new_full_with_params(
                     }
                 }
                 log::info!(
-                    "📊 V32 PPFA committee: {}/{} hardcoded validators added",
+                    "📊 V33 PPFA committee: {}/{} validators added (dynamic or fallback)",
                     added_count,
-                    v32_validator_pubkeys.len()
+                    v33_validator_pubkeys.len()
                 );
 
                 // CRITICAL: Call rotate_committee() to move validators from pool into active committee
@@ -1336,7 +1385,7 @@ pub fn new_full_with_params(
                     ppfa_params.max_committee_size
                 );
 
-                // V32: Verify our ASF key from keystore is in the hardcoded committee
+                // V33: Verify our ASF key from keystore is in the hardcoded committee
                 // FIX: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
                 use sp_core::crypto::KeyTypeId;
                 const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
@@ -1345,8 +1394,8 @@ pub fn new_full_with_params(
                 if !our_keys.is_empty() {
                     let raw_pubkey: [u8; 32] = our_keys[0].0;
 
-                    // V32: Check if our key is in the hardcoded validator list
-                    let is_in_committee = v32_validator_pubkeys.iter().any(|pk| pk == &raw_pubkey);
+                    // V33: Check if our key is in the hardcoded validator list
+                    let is_in_committee = v33_validator_pubkeys.iter().any(|pk| pk == &raw_pubkey);
 
                     if is_in_committee {
                         log::info!(
@@ -1365,7 +1414,7 @@ pub fn new_full_with_params(
                     );
                 }
 
-                // V32: Committee is now fully populated from hardcoded list (no separate addition needed)
+                // V33: Committee is now fully populated from hardcoded list (no separate addition needed)
 
                 // Rotate to initialize committee
                 if let Err(e) = committee.rotate_committee(1) {
