@@ -1099,8 +1099,10 @@ pub fn new_full_with_params(
         log::warn!("⚠️  No ASF key in keystore! This validator cannot sign checkpoints.");
     }
 
-    // V27: Hardcoded authority set - ALL 20 validators' raw sr25519 public keys
-    // These MUST be identical across all validators for signature verification to work
+    // V31: Hardcoded authority set - ALL 20 validators' REAL ASF sr25519 public keys
+    // Generated with deterministic seeds: //Validator0 through //Validator19
+    // Keys are now in validator keystores with key_type "asfk" (0x6173666b)
+    // These MUST match the keys in each validator's keystore for signing to work
     // Helper to convert hex string to [u8; 32]
     fn hex_to_bytes32(hex_str: &str) -> [u8; 32] {
         let bytes = hex::decode(hex_str).expect("Invalid hex string");
@@ -1110,50 +1112,50 @@ pub fn new_full_with_params(
     }
 
     let validator_pubkeys: Vec<[u8; 32]> = vec![
-        // vmi2896906 - Validator 0
-        hex_to_bytes32("44f5ed22b0372d4822bcd0c3a0cad74a29ca5c7e9ee3cc50e8f59fa491620b58"),
-        // vmi2896907 - Validator 1
-        hex_to_bytes32("f29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c"),
-        // vmi2896908 - Validator 2
-        hex_to_bytes32("384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e"),
-        // vmi2896909 - Validator 3
-        hex_to_bytes32("ecec5b1247d1276260758b159add80c79359e879d09356eb5bb30b446323952e"),
-        // vmi2896910 - Validator 4
-        hex_to_bytes32("36edba289334c21d8c78b81d56dba974dd49ebe709c81dfc5b05469fcf6d772b"),
-        // vmi2896911 - Validator 5
-        hex_to_bytes32("f44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f"),
-        // vmi2896914 - Validator 6
-        hex_to_bytes32("2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"),
-        // vmi2896915 - Validator 7
-        hex_to_bytes32("b89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"),
-        // vmi2896916 - Validator 8 (V30 FIX: unique key generated Nov 2024)
-        hex_to_bytes32("96af82e1893897d94e891d4b9f8f5a48d5605558cd01c930f5028a2c29a6a92a"),
-        // vmi2896917 - Validator 9
-        hex_to_bytes32("be9fdd4416eff9375461618f1e2bd244bd0a3ee69b9d2b4949e046796bbe752f"),
-        // vmi2896918 - Validator 10
-        hex_to_bytes32("9e270842ee6d0cc5d4634760717fb2fea85596491c89fc72189a994dbf421d4c"),
-        // vmi2896921 - Validator 11
-        hex_to_bytes32("fe14bf4fd7b9cb683697114b9b60dc5a101adee961aa79e374ddb9d17c42ed4d"),
-        // vmi2896922 - Validator 12
-        hex_to_bytes32("2c339e81f2a1fc80ae67c3bda3ecade01b7b0074979901795ceab6f35a304451"),
-        // vmi2896923 - Validator 13
-        hex_to_bytes32("58716581b09066395ef75cead565526f412c1e9618a9e8401b5862d32b089c42"),
-        // vmi2896924 - Validator 14
-        hex_to_bytes32("d27ae8bc2d7b32cfd6e1a301a4d9931ef2b8c752745a9a86840e376f7bfc9969"),
-        // vmi2896925 - Validator 15
-        hex_to_bytes32("dc2e6eabc3d02e01f26bbf2bf8810c56aa05fd8a9489e80a8d64394e4892265b"),
-        // vmi2897381 - Validator 16
-        hex_to_bytes32("9e33e587928d3f3fd9bed5d407350889e6afb1e7732b494d383e5d7326d93e14"),
-        // vmi2897382 - Validator 17
-        hex_to_bytes32("e0c54cb3ece056f709dead74390ba2d0e493183635b5a54a14ba578a01585b13"),
-        // vmi2897383 - Validator 18
-        hex_to_bytes32("0444b71616811ae39a88b352e36cd43e798b9f8ceaae36371fbef8ee0450573c"),
-        // vmi2897384 - Validator 19
-        hex_to_bytes32("4a2320a52c89db6e72fa445bf1f774a2c34d5cdb9c6b1d798b969cc497343566"),
+        // vmi2896906 - Validator 0 (seed: //Validator0)
+        hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"),
+        // vmi2896907 - Validator 1 (seed: //Validator1)
+        hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"),
+        // vmi2896908 - Validator 2 (seed: //Validator2)
+        hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"),
+        // vmi2896909 - Validator 3 (seed: //Validator3)
+        hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"),
+        // vmi2896910 - Validator 4 (seed: //Validator4)
+        hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"),
+        // vmi2896911 - Validator 5 (seed: //Validator5)
+        hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"),
+        // vmi2896914 - Validator 6 (seed: //Validator6)
+        hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"),
+        // vmi2896915 - Validator 7 (seed: //Validator7)
+        hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"),
+        // vmi2896916 - Validator 8 (seed: //Validator8)
+        hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"),
+        // vmi2896917 - Validator 9 (seed: //Validator9)
+        hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"),
+        // vmi2896918 - Validator 10 (seed: //Validator10)
+        hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"),
+        // vmi2896921 - Validator 11 (seed: //Validator11)
+        hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"),
+        // vmi2896922 - Validator 12 (seed: //Validator12)
+        hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"),
+        // vmi2896923 - Validator 13 (seed: //Validator13)
+        hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"),
+        // vmi2896924 - Validator 14 (seed: //Validator14)
+        hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"),
+        // vmi2896925 - Validator 15 (seed: //Validator15)
+        hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"),
+        // vmi2897381 - Validator 16 (seed: //Validator16)
+        hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"),
+        // vmi2897382 - Validator 17 (seed: //Validator17)
+        hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"),
+        // vmi2897383 - Validator 18 (seed: //Validator18)
+        hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"),
+        // vmi2897384 - Validator 19 (seed: //Validator19)
+        hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"),
     ];
 
-    log::info!("✅ V27: Authority set initialized with {} hardcoded validators", validator_pubkeys.len());
-    log::info!("   All validators will have identical authority_set_hash for signature verification");
+    log::info!("✅ V31: Authority set initialized with {} validators using REAL ASF keystore keys", validator_pubkeys.len());
+    log::info!("   Keys generated with deterministic seeds //Validator0 through //Validator19");
 
     // Create authority set for checkpoint BFT
     let authority_set = AuthoritySet::new(
