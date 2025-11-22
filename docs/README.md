@@ -51,17 +51,17 @@ Welcome to the official ËTRID documentation. Learn how to use, build on, and op
 
 ✨ **Cross-Chain Interoperability** - Seamlessly bridge assets between Bitcoin, Ethereum, Solana, and 10 other major chains
 
-🚀 **Massive Scalability** - **171,000+ TPS** across three layers (FlareChain + 14 PBCs + Lightning Bloc)
+🚀 **Massive Scalability** - **171,000+ TPS** across three layers (Primearc Core + 14 PBCs + Lightning Bloc)
 
 ⚡ **Instant Transactions** - Lightning Bloc Layer 2 provides 100ms transaction speed with zero fees
 
-🔗 **Multi-Layer Architecture** - Guaranteed finality in 56 minutes from Lightning to FlareChain via PBC checkpoints
+🔗 **Multi-Layer Architecture** - Guaranteed finality in 61 minutes from Lightning to Primearc Core via PBC checkpoints
 
 🗳️ **Democratic Governance** - Annual Consensus Day where stakeholders vote on network upgrades and fiscal policy
 
 💰 **DeFi & Staking** - Earn 8-15% APY by staking ÉTR to secure the network
 
-🔐 **Enterprise-Grade Security** - Multi-layer fraud proofs, GRANDPA finality, and audited codebase
+🔐 **Enterprise-Grade Security** - Multi-layer fraud proofs, ASF checkpoint finality, and audited codebase
 
 ---
 
@@ -79,7 +79,7 @@ Welcome to the official ËTRID documentation. Learn how to use, build on, and op
     🔶🔶 70,000 TPS | 13 Chains 🔶🔶           1,800-2,100°F
       🔶🔶🔶🔶🔶🔶🔶🔶🔶🔶🔶
          🔵🔵🔵🔵🔵🔵🔵
-       🔵🔵 FlareChain 🔵🔵                   Blue Core (Hottest)
+       🔵🔵 Primearc Core 🔵🔵                 Blue Core (Hottest)
      🔵🔵 1,000 TPS | 24s 🔵🔵                 2,600°F
        🔵🔵🔵🔵🔵🔵🔵
 
@@ -90,7 +90,7 @@ Welcome to the official ËTRID documentation. Learn how to use, build on, and op
 
 | Layer | Color | Analogy | Purpose | Performance |
 |-------|-------|---------|---------|-------------|
-| **FlareChain (L1)** | 🔵 Blue | Hottest part of flame (complete combustion) | Maximum security, absolute finality | 1,000 TPS, 24s GRANDPA |
+| **Primearc Core (L1)** | 🔵 Blue | Hottest part of flame (complete combustion) | Maximum security, absolute finality | 1,000 TPS, 10min ASF |
 | **PBCs (L2)** | 🔶 Orange | Middle flame (most energy output) | High throughput, specialized chains | 70,000 TPS, 51min checkpoints |
 | **Lightning (L3)** | ⚡ Yellow | Outer flame (fastest, furthest reach) | Instant transactions, zero friction | 100,000+ TPS, 100ms latency |
 
@@ -123,16 +123,16 @@ Connect to major blockchains:
 
 **171,000+ TPS** across optimized layers:
 
-**Layer 1: FlareChain (Relay Chain)**
+**Layer 1: Primearc Core (Relay Chain)**
 - 1,000 TPS baseline capacity
-- GRANDPA finality in 24 seconds
+- ASF checkpoint finality in ~10 minutes
 - Stores PBC state checkpoints (32 bytes each)
 - Coordinated by Directors 1-5
 
 **Layer 2: Partition Burst Chains (14 PBCs)**
 - 5,000 TPS per chain = 70,000 TPS total
 - Specialized runtimes for each asset type
-- Checkpoints to FlareChain every 256 blocks (~51 min)
+- Checkpoints to Primearc Core every 100 blocks (~10 min)
 - Validators 6-21 rotate across PBCs
 
 **Layer 3: Lightning Bloc (Payment Channels)**
@@ -236,14 +236,14 @@ Next Consensus Day: **December 1, 2026**
 
 ## Core Concepts
 
-### FlareChain (Relay Chain)
+### Primearc Core (Relay Chain)
 - Main blockchain secured by 21 validators
 - Coordinates cross-chain messages
 - Processes governance transactions
-- 15-second finality with ASF consensus
+- ~10 minute checkpoint finality with ASF consensus
 
 ### Partition Burst Chains (PBCs)
-- 13 specialized chains connected to FlareChain
+- 13 specialized chains connected to Primearc Core
 - Each PBC bridges to an external blockchain
 - Light client verification for security
 - Enables cross-chain asset transfers

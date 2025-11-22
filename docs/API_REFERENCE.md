@@ -30,7 +30,7 @@ The Etrid blockchain provides a comprehensive suite of pallets for managing the 
 
 ### Architecture
 
-- **FlareChain**: Main execution chain (reserve management, oracles, governance)
+- **Primearc Core**: Main execution chain (reserve management, oracles, governance)
 - **PBC-EDSC**: Dedicated EDSC partition burst chain
 - **Cross-chain**: DETRP2P messaging protocol for checkpoint synchronization
 
@@ -970,7 +970,7 @@ Send checkpoint to destination chain
 
 **Parameters:**
 - `origin`: `OriginFor<T>` - Must be root
-- `destination_chain`: `u8` - Destination (0=FlareChain, 1=PbcEdsc, 2+=Other)
+- `destination_chain`: `u8` - Destination (0=Primearc Core, 1=PbcEdsc, 2+=Other)
 - `reserve_ratio`: `u16` - Reserve ratio (basis points)
 - `total_reserves`: `u128` - Total reserves (USD cents)
 - `vault_value`: `u128` - Vault value (USD cents)
@@ -1004,11 +1004,11 @@ XcmBridge::send_checkpoint(
 
 ##### `receive_checkpoint`
 
-Receive and process checkpoint from FlareChain
+Receive and process checkpoint from Primearc Core
 
 **Parameters:**
 - `origin`: `OriginFor<T>` - Must be root
-- `source_chain`: `u8` - Source (0=FlareChain, 1=PbcEdsc, 2+=Other)
+- `source_chain`: `u8` - Source (0=Primearc Core, 1=PbcEdsc, 2+=Other)
 - `nonce`: `u64` - Message nonce
 - `reserve_ratio`: `u16`
 - `total_reserves`: `u128`
@@ -1029,7 +1029,7 @@ Receive and process checkpoint from FlareChain
 ```rust
 XcmBridge::receive_checkpoint(
     Origin::root(),
-    0, // FlareChain
+    0, // Primearc Core
     42, // nonce
     11500, // 115%
     57_500_000_000,
@@ -2264,7 +2264,7 @@ interface Attestation {
 
 ```typescript
 enum ChainId {
-  FlareChain = 0,
+  Primearc Core = 0,
   PbcEdsc = 1,
   Other = 2,
 }

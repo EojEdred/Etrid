@@ -34,7 +34,7 @@ echo ""
 for VM in "${VMS[@]}"; do
     # Get peer ID from logs
     PEER_ID=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM \
-        'journalctl -u flarechain-validator --since "10 minutes ago" --no-pager 2>/dev/null | grep "Local node identity is:" | tail -1 | grep -oP "12D3[a-zA-Z0-9]+"' 2>/dev/null)
+        'journalctl -u primearc-validator --since "10 minutes ago" --no-pager 2>/dev/null | grep "Local node identity is:" | tail -1 | grep -oP "12D3[a-zA-Z0-9]+"' 2>/dev/null)
 
     # Get Tailscale IP
     TAILSCALE_IP=$(tailscale status | grep "$VM" | awk '{print $1}')

@@ -1,8 +1,8 @@
-//! RPC extensions for FlareChain
+//! RPC extensions for Primearc Core Chain
 
 use std::sync::Arc;
 
-use flare_chain_runtime::{opaque::Block, AccountId, Balance, Nonce};
+use primearc_runtime::{opaque::Block, AccountId, Balance, Nonce};
 use jsonrpsee::RpcModule;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;

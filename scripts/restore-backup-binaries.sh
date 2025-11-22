@@ -16,10 +16,10 @@ for VM in "${VMS[@]}"; do
     echo "─── Restoring $VM..."
 
     if ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" '
-        if [ -f /usr/local/bin/flarechain-node.backup ]; then
-            cp /usr/local/bin/flarechain-node.backup /usr/local/bin/flarechain-node
-            chmod +x /usr/local/bin/flarechain-node
-            systemctl restart flarechain-validator
+        if [ -f /usr/local/bin/primearc-node.backup ]; then
+            cp /usr/local/bin/primearc-node.backup /usr/local/bin/primearc-node
+            chmod +x /usr/local/bin/primearc-node
+            systemctl restart primearc-validator
             echo "restored"
         else
             echo "no_backup"

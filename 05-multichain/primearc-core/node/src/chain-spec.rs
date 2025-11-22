@@ -1,7 +1,7 @@
-use flare_chain_runtime::WASM_BINARY;
+use primearc_runtime::WASM_BINARY;
 use sc_service::ChainType;
 
-/// Specialized `ChainSpec` for FlareChain
+/// Specialized `ChainSpec` for Primearc Core Chain
 pub type ChainSpec = sc_service::GenericChainSpec;
 
 /// Development config (single validator - Alice)
@@ -12,8 +12,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain Development")
-    .with_id("flarechain_dev")
+    .with_name("Ëtrid Primearc Core Development")
+    .with_id("primearc_dev")
     .with_chain_type(ChainType::Development)
     .with_genesis_config_preset_name(sp_genesis_builder::DEV_RUNTIME_PRESET)
     .build())
@@ -27,10 +27,10 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain Local Testnet")
-    .with_id("flarechain_local")
+    .with_name("Ëtrid Primearc Core Local Testnet")
+    .with_id("primearc_local")
     .with_chain_type(ChainType::Local)
-    .with_protocol_id("flarechain")
+    .with_protocol_id("primearc")
     .with_genesis_config_preset_name(sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET)
     .build())
 }
@@ -58,7 +58,8 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-/// FlareChain mainnet config (using runtime preset with 21 validators)
+/// Primearc Core mainnet config (using runtime preset with 21 validators)
+/// Note: Chain ID kept as "flarechain_mainnet" for backward compatibility with existing deployments
 pub fn flarechain_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
 
@@ -66,7 +67,7 @@ pub fn flarechain_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain Mainnet")
+    .with_name("Ëtrid Primearc Core Mainnet")
     .with_id("flarechain_mainnet")
     .with_chain_type(ChainType::Live)
     .with_protocol_id("flarechain")
@@ -89,10 +90,10 @@ pub fn test_2validator_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain 2-Validator Test")
-    .with_id("flarechain_test_2val")
+    .with_name("Ëtrid Primearc Core 2-Validator Test")
+    .with_id("primearc_test_2val")
     .with_chain_type(ChainType::Local)
-    .with_protocol_id("flarechain_test")
+    .with_protocol_id("primearc_test")
     .with_properties({
         let mut properties = sc_service::Properties::new();
         properties.insert("tokenSymbol".into(), "ETR".into());
@@ -112,10 +113,10 @@ pub fn test_21validator_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain 21-Validator Test")
-    .with_id("flarechain_test_21val")
+    .with_name("Ëtrid Primearc Core 21-Validator Test")
+    .with_id("primearc_test_21val")
     .with_chain_type(ChainType::Local)
-    .with_protocol_id("flarechain_test_21")
+    .with_protocol_id("primearc_test_21")
     .with_properties({
         let mut properties = sc_service::Properties::new();
         properties.insert("tokenSymbol".into(), "ETR".into());
@@ -135,7 +136,7 @@ pub fn directors_9_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain Mainnet (9 Directors)")
+    .with_name("Ëtrid Primearc Core Mainnet (9 Directors)")
     .with_id("flarechain_mainnet_9directors")
     .with_chain_type(ChainType::Live)
     .with_protocol_id("flarechain")

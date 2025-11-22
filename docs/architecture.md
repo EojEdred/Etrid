@@ -10,7 +10,7 @@
 
 Ëtrid is a next-generation multichain blockchain implementing the E³20 (Essential Elements to Operate) protocol with 13 core components, all now at 100% Alpha Complete status. The architecture combines:
 
-- **FlareChain Relay Chain** with Ascending Scale of Finality (ASF) consensus
+- **Primearc Core Chain (Relay)** with Ascending Scale of Finality (ASF) consensus + PPFA block production
 - **13 Partition Burst Chains (PBCs)** for cross-chain interoperability
 - **Lightning-Bloc Layer 2** for payment channels and instant transactions
 - **World's First AI DID Standard** (AIDID) for AI identity management
@@ -27,9 +27,10 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                       │
 │  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                    FlareChain (Relay Chain)                    │  │
-│  │  - ASF Consensus (Ascending Scale of Finality)                │  │
-│  │  - Validator Set Management                                    │  │
+│  │                Primearc Core Chain (Relay Chain)               │  │
+│  │  - ASF Consensus (Asynchronous Safety Finality)               │  │
+│  │  - PPFA Block Production (Parallel Proof-of-Authority)        │  │
+│  │  - Validator Set Management (21 validators)                   │  │
 │  │  - Cross-Chain Message Routing                                 │  │
 │  │  - Governance & Treasury                                       │  │
 │  │  - State Anchoring for all PBCs                                │  │
@@ -45,7 +46,7 @@
 │  │  - Dedicated collator set                                       │  │
 │  │  - Bridge to native blockchain                                  │  │
 │  │  - Specialized runtime for asset type                           │  │
-│  │  - Periodic state checkpoints to FlareChain                     │  │
+│  │  - Periodic state checkpoints to Primearc Core                  │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                       │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -320,7 +321,7 @@
 
 **Status**: 100% Alpha Complete
 
-**Purpose**: FlareChain relay + 13 PBCs + cross-chain bridges
+**Purpose**: Primearc Core relay + 13 PBCs + cross-chain bridges
 
 **Architecture**: [See detailed multichain architecture section below]
 
@@ -329,7 +330,7 @@
 - Multi-signature bridge custodians (M-of-N)
 - EDSC stablecoin with 3-path redemption
 - Cross-chain message passing
-- State anchoring to FlareChain
+- State anchoring to Primearc Core
 
 **Location**: `05-multichain/`
 
@@ -343,12 +344,21 @@
 
 ## Multichain Architecture (Component 05)
 
-### FlareChain Relay Chain
+### Primearc Core Chain (Relay Chain)
 
-**Consensus**: Ascending Scale of Finality (ASF)
+**Consensus**: Hybrid ASF + PPFA
+- **ASF**: Asynchronous Safety Finality - checkpoint-based BFT finality with 15+/21 signatures
+- **PPFA**: Parallel Proof-of-Authority - deterministic round-robin block production
+
 **Validators**: 21 (mainnet target)
-**Block Time**: 5 seconds
-**Finality**: ~15 seconds (3 blocks)
+**Block Time**: 6 seconds
+**Finality**: Every 100 blocks via ASF certificates (~10 minutes)
+
+**Key Technical Details**:
+- **Authority Keys**: sr25519 with key type `asfk` (0x6173666b)
+- **Checkpoint Interval**: Every 100 blocks
+- **BFT Quorum**: 15+/21 validators (>2/3 + 1)
+- **Key Seeds**: Deterministic `//Validator{N}` derivation
 
 **Responsibilities**:
 1. Validator set management
@@ -493,15 +503,15 @@ Source PBC
     ↓
 [1] Message Creation (XCM format)
     ↓
-State Checkpoint to FlareChain
+State Checkpoint to Primearc Core
     ↓
-[2] FlareChain Message Router
+[2] Primearc Core Message Router
     ↓
 Destination PBC Collator
     ↓
 [3] Message Execution
     ↓
-Result Confirmation to FlareChain
+Result Confirmation to Primearc Core
     ↓
 [4] Source PBC Notified
 ```
@@ -538,7 +548,7 @@ Payment Complete
 
 ### Overview
 
-Ëtrid's three-layer architecture requires efficient state propagation mechanisms to ensure FlareChain Directors can monitor and verify the entire network without storing massive amounts of data.
+Ëtrid's three-layer architecture requires efficient state propagation mechanisms to ensure Primearc Core Directors can monitor and verify the entire network without storing massive amounts of data.
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -556,8 +566,8 @@ Payment Complete
                      │ State Checkpoints
                      ↓
 ┌──────────────────────────────────────────────────────┐
-│  Layer 1: FlareChain (Main Chain)                    │
-│  • ~1,000 TPS | 12s blocks | GRANDPA finality        │
+│  Layer 1: Primearc Core (Main Chain)                 │
+│  • ~1,000 TPS | 6s blocks | ASF finality             │
 │  • Storage: Merkle roots only (32 bytes per PBC)     │
 └──────────────────────────────────────────────────────┘
 ```
@@ -568,7 +578,7 @@ Payment Complete
 
 ### Layer 2 → Layer 1: PBC Checkpoints
 
-**Purpose**: PBCs submit compact state commitments to FlareChain for economic finality.
+**Purpose**: PBCs submit compact state commitments to Primearc Core for economic finality.
 
 #### Checkpoint Structure
 
@@ -593,14 +603,14 @@ PBC-EDSC (Validators 6-13)
 │   ├─ Lightning channel states
 │   └─ Cross-chain bridge states
 ├─ Create checkpoint extrinsic
-└─ Submit to FlareChain
+└─ Submit to Primearc Core
     ↓
-FlareChain (Directors 1-5)
+Primearc Core (Directors 1-5)
 ├─ Receive checkpoint
 ├─ Verify collator signature
 ├─ Store in checkpoint registry
 │   (Only Merkle root: 32 bytes)
-├─ Finalize via GRANDPA (2 blocks = 24s)
+├─ Finalize via ASF (every 100 blocks = ~10min)
 └─ Checkpoint now immutable ✅
 ```
 
@@ -638,7 +648,7 @@ PBC-EDSC Runtime
 ├─ Lightning state now in PBC
 └─ Included in next checkpoint (256 blocks)
     ↓
-FlareChain
+Primearc Core
 └─ PBC checkpoint includes Lightning states
     (via PBC Merkle root)
 ```
@@ -650,7 +660,7 @@ FlareChain
 - **Compression**: ~30% size reduction
 - **On-chain cost**: Merkle root (32 bytes) + compressed data (~105 KB)
 
-#### Complete Lightning → FlareChain Timeline
+#### Complete Lightning → Primearc Core Timeline
 
 ```
 Lightning Transaction (Layer 3)
@@ -662,14 +672,14 @@ Batch Settlement (Layer 2)
    Time: 5 minutes ✅ (batch timeout)
        ↓ (51 minutes)
 Checkpoint Submission (Layer 1)
-└─ PBC → FlareChain checkpoint
+└─ PBC → Primearc Core checkpoint
    Time: 51 minutes ✅ (256 blocks)
-       ↓ (24 seconds)
-GRANDPA Finality
-└─ Checkpoint finalized on FlareChain
-   Time: 24 seconds ✅ (2 blocks)
+       ↓ (~10 minutes)
+ASF Finality
+└─ Checkpoint finalized on Primearc Core
+   Time: ~10 minutes ✅ (100 blocks)
 
-Total: ~56 minutes from Lightning tx to FlareChain finality
+Total: ~61 minutes from Lightning tx to Primearc Core finality
 ```
 
 **For users**: Transaction is instant off-chain. Finality comes later.
@@ -678,7 +688,7 @@ Total: ~56 minutes from Lightning tx to FlareChain finality
 
 ### State Query Mechanism
 
-**Challenge**: FlareChain stores only Merkle roots (32 bytes per PBC), not full state.
+**Challenge**: Primearc Core stores only Merkle roots (32 bytes per PBC), not full state.
 
 **Solution**: Merkle proof verification
 
@@ -686,7 +696,7 @@ Total: ~56 minutes from Lightning tx to FlareChain finality
 User Query: "What's Alice's balance on PBC-EDSC?"
 
 [1] Get Latest Checkpoint
-FlareChain RPC → state_root: 0xabc123...
+Primearc Core RPC → state_root: 0xabc123...
 
 [2] Request Merkle Proof
 PBC-EDSC Node → merkle_proof: [hash1, hash2, ..., hash32]
@@ -695,7 +705,7 @@ PBC-EDSC Node → merkle_proof: [hash1, hash2, ..., hash32]
 hash(Alice's balance + merkle_path) == 0xabc123 ✅
 
 [4] Result
-Alice has 9,900 ÉTR (verified against FlareChain)
+Alice has 9,900 ÉTR (verified against Primearc Core)
 ```
 
 **Proof size**: ~1 KB (32 hashes × 32 bytes)
@@ -705,15 +715,15 @@ Alice has 9,900 ÉTR (verified against FlareChain)
 
 ### Validator Role Separation
 
-#### Flare Nodes (Layer 1 Validators)
+#### Primearc Core Validators (Layer 1 Validators)
 
-**Who**: Decentralized Directors 1-5 (elected board)
+**Who**: Decentralized Directors (elected board)
 
 **Responsibilities**:
-- ✅ Validate FlareChain blocks
+- ✅ Validate Primearc Core blocks
 - ✅ Verify PBC checkpoint signatures
 - ✅ Store checkpoint Merkle roots
-- ✅ Finalize via GRANDPA consensus
+- ✅ Finalize via ASF consensus
 - ✅ Coordinate governance
 
 **Requirements**:
@@ -728,7 +738,7 @@ Alice has 9,900 ÉTR (verified against FlareChain)
 **Responsibilities**:
 - ✅ Validate PBC blocks
 - ✅ Calculate state Merkle roots
-- ✅ Submit checkpoints to FlareChain
+- ✅ Submit checkpoints to Primearc Core
 - ✅ Process Lightning batch settlements
 - ✅ Provide Merkle proofs on request
 
@@ -742,16 +752,16 @@ Alice has 9,900 ÉTR (verified against FlareChain)
 - PBC-BTC: Validators 14-21 (8 nodes)
 
 **Key Principle**:
-> Flare Nodes and Validity Nodes have distinct responsibilities. Only Decentralized Directors can serve as Flare Nodes. This prevents centralization and ensures governance accountability.
+> Primearc Core Validators and Validity Nodes have distinct responsibilities. Only Decentralized Directors can serve as Primearc Core Validators. This prevents centralization and ensures governance accountability.
 
 ---
 
 ### Security Properties
 
-#### Layer 1 (FlareChain)
+#### Layer 1 (Primearc Core)
 
-- **Consensus**: ASF + GRANDPA
-- **Finality**: 2 blocks (~24 seconds)
+- **Consensus**: ASF + PPFA
+- **Finality**: Every 100 blocks (~10 minutes via ASF)
 - **Byzantine tolerance**: Tolerates 33% malicious nodes
 - **Attack cost**: Requires controlling 2/3 of elected Directors
 
@@ -777,7 +787,7 @@ Alice has 9,900 ÉTR (verified against FlareChain)
 
 | Layer | Throughput per Chain | Number of Chains | Total TPS |
 |-------|---------------------|------------------|-----------|
-| **Layer 1** (FlareChain) | 1,000 TPS | 1 | 1,000 TPS |
+| **Layer 1** (Primearc Core) | 1,000 TPS | 1 | 1,000 TPS |
 | **Layer 2** (PBCs) | 5,000 TPS | 14 chains | 70,000 TPS |
 | **Layer 3** (Lightning) | 100,000+ TPS | Off-chain | 100,000+ TPS |
 | **Total** | - | - | **171,000+ TPS** |
@@ -796,7 +806,7 @@ Alice has 9,900 ÉTR (verified against FlareChain)
 #### Scenario 1: PBC Stops Submitting Checkpoints
 
 ```
-FlareChain monitors checkpoint liveness
+Primearc Core monitors checkpoint liveness
     ↓
 No checkpoint for 512 blocks (102 minutes)
     ↓
@@ -832,7 +842,7 @@ Honest validator detects invalid state root
     ↓
 Submit fraud proof with Merkle proof
     ↓
-FlareChain verifies fraud proof
+Primearc Core verifies fraud proof
     ↓
 Action: Slash malicious collator (10,000 ÉTR)
     ↓
@@ -849,30 +859,30 @@ Reward: Challenger receives 1,000 ÉTR bounty ✅
 - Off-chain scaling via Lightning channels
 
 **2. Efficiency**:
-- FlareChain: Stores only 32 bytes per PBC
+- Primearc Core: Stores only 32 bytes per PBC
 - Full network state verifiable via Merkle proofs
 - 99.9% of transactions stay off Layer 1
 
 **3. Security**:
 - Multi-layer fraud proofs
 - Economic finality via checkpoints
-- Absolute finality via GRANDPA
+- Absolute finality via ASF checkpoints
 
 **4. User Experience**:
 - Lightning: Instant transactions (100ms)
 - PBCs: Fast finality (2 seconds)
-- FlareChain: Guaranteed finality (56 minutes)
+- Primearc Core: Guaranteed finality (~61 minutes)
 
 **5. Cost**:
 - Lightning: Zero fees (off-chain)
 - PBCs: Low fees (~$0.001 per tx)
-- FlareChain: Moderate fees (~$0.01 per tx)
+- Primearc Core: Moderate fees (~$0.01 per tx)
 
 ---
 
 ## Performance Characteristics
 
-### FlareChain Metrics
+### Primearc Core Metrics
 - **Block Time**: 5 seconds
 - **Finality**: ~15 seconds (3 blocks)
 - **Target TPS**: 1000+ transactions/second
@@ -886,7 +896,7 @@ Reward: Challenger receives 1,000 ÉTR bounty ✅
 - **Payment Finality**: Instant (off-chain)
 
 ### Storage Requirements
-- **FlareChain Full Node**: ~50 GB (estimated after 1 year)
+- **Primearc Core Full Node**: ~50 GB (estimated after 1 year)
 - **PBC Collator**: ~10 GB per chain
 - **Archive Node**: ~500 GB (all history)
 
@@ -968,7 +978,7 @@ Reward: Challenger receives 1,000 ÉTR bounty ✅
 
 ### Immediate (1-2 weeks)
 1. External security audit preparation
-2. Testnet deployment (FlareChain + all PBCs)
+2. Testnet deployment (Primearc Core + all PBCs)
 3. Performance benchmarking and optimization
 4. Documentation completion
 

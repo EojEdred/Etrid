@@ -65,7 +65,7 @@ for i in "${!VMS[@]}"; do
     echo "VM $((i+1)): $VM -> Validator ID: $VALIDATOR_ID"
 
     # Stop the validator
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl stop flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl stop primearc-validator' 2>/dev/null
 
     # Clear existing keystore
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'rm -rf /var/lib/etrid/chains/flarechain_mainnet_v1/keystore/*' 2>/dev/null
@@ -75,7 +75,7 @@ for i in "${!VMS[@]}"; do
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" "mkdir -p /var/lib/etrid/chains/flarechain_mainnet_v1/keystore && echo -n '\"0x${FULL_KEY}\"' > /var/lib/etrid/chains/flarechain_mainnet_v1/keystore/6173660x${FULL_KEY}"
 
     # Start the validator
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl start flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl start primearc-validator' 2>/dev/null
 
     echo "✅ $VM updated with validator key"
 done
@@ -88,7 +88,7 @@ echo ""
 echo "Checking status..."
 ACTIVE=0
 for VM in "${VMS[@]}"; do
-    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 "root@$VM" 'systemctl is-active flarechain-validator 2>/dev/null' 2>/dev/null)
+    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 "root@$VM" 'systemctl is-active primearc-validator 2>/dev/null' 2>/dev/null)
     if [ "$STATUS" = "active" ]; then
         echo "✅ $VM: ACTIVE"
         ACTIVE=$((ACTIVE + 1))

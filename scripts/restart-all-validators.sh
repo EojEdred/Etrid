@@ -31,7 +31,7 @@ echo ""
 
 for VM in "${VMS[@]}"; do
     echo "Restarting $VM..."
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl restart flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl restart primearc-validator' 2>/dev/null
     echo "✅ $VM restarted"
 done
 
@@ -43,7 +43,7 @@ echo ""
 echo "Checking status..."
 ACTIVE=0
 for VM in "${VMS[@]}"; do
-    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 root@$VM 'systemctl is-active flarechain-validator 2>/dev/null' 2>/dev/null)
+    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 root@$VM 'systemctl is-active primearc-validator 2>/dev/null' 2>/dev/null)
     if [ "$STATUS" = "active" ]; then
         echo "✅ $VM: ACTIVE"
         ACTIVE=$((ACTIVE + 1))

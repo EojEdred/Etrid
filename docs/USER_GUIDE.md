@@ -48,7 +48,7 @@ Etrid is a next-generation multichain blockchain platform that connects 13 major
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │                    FlareChain (Relay)                      │  │
+│  │                    Primearc Core (Relay)                      │  │
 │  │  - Main blockchain with 15-second finality                 │  │
 │  │  - Secured by 21 validators using ASF consensus            │  │
 │  │  - Processes cross-chain messages and governance           │  │
@@ -204,7 +204,7 @@ Your recovery phrase is the ONLY way to restore your account if:
 ### Understanding Your Account
 
 **Your Etrid Address:**
-- Starts with "5" (for FlareChain accounts)
+- Starts with "5" (for Primearc Core accounts)
 - 48 characters long
 - This is your PUBLIC identifier - safe to share
 - Think of it like your email address or bank account number
@@ -483,7 +483,7 @@ You'll receive **100 test ETR** within 15-30 seconds.
 
 **In Wallet:**
 - Balance displayed prominently on dashboard
-- Separate balances for each chain (FlareChain, PBC-BTC, etc.)
+- Separate balances for each chain (Primearc Core, PBC-BTC, etc.)
 - Click chain selector to switch between chains
 
 **Balance Format:**
@@ -1108,7 +1108,7 @@ An annual event (February 14th) where stakeholders vote on:
 │ ● 50% Development, 30% Marketing, 20% Community                │
 │ ○ 70% Development, 20% Marketing, 10% Community                │
 │                                                                   │
-│ Proposal 3: Enable EVM Compatibility on FlareChain              │
+│ Proposal 3: Enable EVM Compatibility on Primearc Core              │
 │ ● YES (support Ethereum smart contracts)                        │
 │ ○ NO (keep Wasm only)                                           │
 │                                                                   │
@@ -1474,7 +1474,7 @@ Threshold: 2 of 3
 
 2. **Check network status:**
    - Visit [status.etrid.io](https://status.etrid.io)
-   - Verify FlareChain is operational
+   - Verify Primearc Core is operational
 
 3. **Try different node:**
    - Settings → "Network"
@@ -1785,7 +1785,7 @@ A: Ascending Scale of Finality (ASF) - a novel mechanism that combines proof of 
 
 **Q: How many transactions per second can Etrid handle?**
 
-A: FlareChain handles ~1,000 TPS. With Lightning-Bloc Layer 2, throughput scales to ~100,000 TPS.
+A: Primearc Core handles ~1,000 TPS. With Lightning-Bloc Layer 2, throughput scales to ~100,000 TPS.
 
 **Q: Is Etrid compatible with Ethereum?**
 

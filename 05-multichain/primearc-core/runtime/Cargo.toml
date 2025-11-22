@@ -1,9 +1,10 @@
 [package]
-name = "flare-chain-runtime"
+name = "primearc-runtime"
 version = "0.1.0"
 authors = ["Ëtrid Foundation"]
 edition = "2021"
 license = "Apache-2.0"
+description = "Primearc Core Chain runtime for Ëtrid Multichain Network"
 
 [dependencies]
 # Local pallets
@@ -59,7 +60,7 @@ pallet-edsc-receipts = { path = "../../bridge-protocols/edsc-bridge/substrate-pa
 pallet-edsc-redemption = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-redemption", default-features = false }
 pallet-edsc-oracle = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-oracle", default-features = false }
 
-# FlareChain-specific EDSC pallets
+# Primearc Core-specific EDSC pallets
 pallet-reserve-vault = { path = "../../../06-native-currency/pallets/pallet-reserve-vault", default-features = false }
 pallet-custodian-registry = { path = "../../../06-native-currency/pallets/pallet-custodian-registry", default-features = false }
 pallet-reserve-oracle = { path = "../../../06-native-currency/pallets/pallet-reserve-oracle", default-features = false }
@@ -99,7 +100,7 @@ pallet-edsc-bridge-token-messenger = { path = "../../bridge-protocols/edsc-bridg
 pallet-edsc-bridge-attestation = { path = "../../bridge-protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation", default-features = false }
 
 # EVM Layer moved to ETH-PBC (preserving Ëtrid's unique identity)
-# FlareChain is the pure coordination layer with ËtwasmVM for native contracts
+# Primearc Core is the pure coordination layer with ËtwasmVM for native contracts
 
 # Substrate core
 codec = { workspace = true }
@@ -252,7 +253,7 @@ std = [
     # Post-Quantum Cryptography (TODO: Fix compilation errors before enabling)
     # "etrid-post-quantum/std",
 
-    # EVM Layer moved to ETH-PBC (FlareChain remains pure)
+    # EVM Layer moved to ETH-PBC (Primearc Core remains pure)
 
     "frame-executive/std",
     "frame-support/std",

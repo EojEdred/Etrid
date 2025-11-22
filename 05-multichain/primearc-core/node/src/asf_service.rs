@@ -1,7 +1,7 @@
 //! # ASF Consensus Service Integration
 //!
 //! This module integrates the custom ËTRID ASF (Ascending Scale of Finality) consensus
-//! modules into the FlareChain node service layer.
+//! modules into the Primearc Core Chain node service layer.
 //!
 //! ## Architecture Overview
 //!
@@ -30,7 +30,7 @@
 //!
 //! Built for polkadot-stable2506 with Substrate service patterns.
 
-use flare_chain_runtime::{self, opaque::Block, RuntimeApi};
+use primearc_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents};
 use futures::StreamExt;
 use sc_consensus::BlockImport;
@@ -1266,54 +1266,60 @@ pub fn new_full_with_params(
                 let mut committee = CommitteeManager::new(100);  // Use 100 to ensure all 21 validators are selected
 
                 // ═══════════════════════════════════════════════════════════════
-                // Load committee from runtime via validator-management Runtime API
+                // V32 FIX: Use hardcoded ASF authority set for PPFA committee
+                // This ensures PPFA proposer selection matches ASF keystore keys
                 // ═══════════════════════════════════════════════════════════════
 
-                // Get best block hash for runtime queries
-                let best_hash = ppfa_client.info().best_hash;
+                // V32: Hardcoded ASF keys (same as checkpoint BFT authority set)
+                // These are sr25519 public keys generated with seeds //Validator0 through //Validator19
+                let v32_validator_pubkeys: Vec<[u8; 32]> = vec![
+                    hex_to_bytes32("d684fb9413cc36d5388fd1b4a9112158d76344a46c7ba78f3abd78f044df012e"), // Validator 0
+                    hex_to_bytes32("f452cc9c48012cdde4ccdf3b5c2f5a26816292f85572554f9ee7ac14c1fcab46"), // Validator 1
+                    hex_to_bytes32("b2a618444ec2fe714b3d811358154ee326822c8f4c9dfa11ddddce86232df05e"), // Validator 2
+                    hex_to_bytes32("40746dd99b0cd9b8003137482d5e5a5db27018b5fcf3dfc2804ba79dd18fa064"), // Validator 3
+                    hex_to_bytes32("0084df35e1a4365297c88c8c1d23771f33629a985595801eac6a8d63ad37cf7c"), // Validator 4
+                    hex_to_bytes32("de829258a4d8f3b7aba1fcafac2a3f90934fe06e29fb5e892676efd55aa5ab7a"), // Validator 5
+                    hex_to_bytes32("24fb1fce1c3362778ee8a1c39ac55cf84114fa9fa2159f145be5ff9db471692c"), // Validator 6
+                    hex_to_bytes32("a0043aeb20a72fe653b8a9033f45f6f773e74a7459291f0749e83e4c88a40138"), // Validator 7
+                    hex_to_bytes32("009f9573813397c72b4dc6c892042f0966e215acbd50d42d6160536d7459ec36"), // Validator 8
+                    hex_to_bytes32("4620c12c7e24b58439098cd5a187c9cf4c0c4f46f4aefbe3501dfa2793a08b1f"), // Validator 9
+                    hex_to_bytes32("18b6b5b3ae15d535150edd2a0368c19d3f938c1e18aa25940e4d07c8e7827e51"), // Validator 10
+                    hex_to_bytes32("3a1ea38d46b86d5ddb0bf21e98fe6728a97f46cdee85342520451a1696e1174c"), // Validator 11
+                    hex_to_bytes32("b2669b95a01cf04d89e0ccddc19dd3b37a80c53d77b3e8643359a213330ceb68"), // Validator 12
+                    hex_to_bytes32("f06f9181f1d8aadb108a637c43ce69c739f3c407afadc9f0d36078baf687a567"), // Validator 13
+                    hex_to_bytes32("060e511e0cf6825e6a01db5a35294d0cbc1f444f3f9b80f77277cb4b8cb27052"), // Validator 14
+                    hex_to_bytes32("ea618651fbcb535f1d4006d6e9eb9b82110ee279d1ae7e8a06f1140e0dc46947"), // Validator 15
+                    hex_to_bytes32("6ee9536da0982e077854c8d53d84d9d08148ead33ae67355f92857dabdfd3e58"), // Validator 16
+                    hex_to_bytes32("925455da5062769f3c118ce13045d8501120470013f3ac63eab84c7fd8595145"), // Validator 17
+                    hex_to_bytes32("d06f4bf091f6785ab4565f3de532c79f52c1986a4e2a27b4c85035953fe98421"), // Validator 18
+                    hex_to_bytes32("72f6e8ed338d2d4b5cab78208d02384c9ee2f0ff55b598eba6a6988c2cdcfe43"), // Validator 19
+                ];
 
-                // Query runtime for active committee members
-                let runtime_committee = match ppfa_client.runtime_api()
-                    .validator_committee(best_hash)
-                {
-                    Ok(members) => {
-                        log::info!(
-                            "✅ Loaded {} committee members from runtime at block {:?}",
-                            members.len(),
-                            best_hash
-                        );
-                        members
-                    }
-                    Err(e) => {
-                        log::warn!(
-                            "⚠️  Failed to load committee from runtime: {:?}, using empty committee",
-                            e
-                        );
-                        Vec::new()
-                    }
-                };
+                log::info!("✅ V32: Using hardcoded ASF authority set for PPFA committee ({} validators)", v32_validator_pubkeys.len());
 
-                // Initialize committee with runtime validators
+                // Add hardcoded validators to PPFA committee
                 let mut added_count = 0;
-                for validator_info in runtime_committee.iter() {
-                    log::info!(
-                        "🔧 Attempting to add validator to committee: {:?}",
-                        validator_info.validator_id()
+                for (idx, pubkey) in v32_validator_pubkeys.iter().enumerate() {
+                    let validator_id = block_production::ValidatorId::from(*pubkey);
+                    let validator_info = validator_management::ValidatorInfo::new(
+                        validator_id,
+                        ppfa_params.min_validator_stake,
+                        validator_management::PeerType::ValidityNode,
                     );
-                    match committee.add_validator(validator_info.clone()) {
+                    match committee.add_validator(validator_info) {
                         Ok(_) => {
                             added_count += 1;
-                            log::info!("✅ Successfully added validator {} to committee", added_count);
+                            log::debug!("✅ Added validator {} to PPFA committee: {}", idx, hex::encode(&pubkey[..8]));
                         }
                         Err(e) => {
-                            log::error!("❌ Failed to add validator to committee: {:?}", e);
+                            log::error!("❌ Failed to add validator {} to PPFA committee: {:?}", idx, e);
                         }
                     }
                 }
                 log::info!(
-                    "📊 Committee population: {}/{} validators added from runtime",
+                    "📊 V32 PPFA committee: {}/{} hardcoded validators added",
                     added_count,
-                    runtime_committee.len()
+                    v32_validator_pubkeys.len()
                 );
 
                 // CRITICAL: Call rotate_committee() to move validators from pool into active committee
@@ -1330,47 +1336,36 @@ pub fn new_full_with_params(
                     ppfa_params.max_committee_size
                 );
 
-                // Get our validator key from keystore (using ASF validator keys)
-                // FIX: ASF uses dedicated "asfk" key type
-                // v108: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
+                // V32: Verify our ASF key from keystore is in the hardcoded committee
+                // FIX: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
                 use sp_core::crypto::KeyTypeId;
                 const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
                 let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
-                    // V26 FIX: Use raw sr25519 public key bytes, NOT hashed AccountId!
-                    // The V25 bug: into_account() hashes the key with Blake2-256
                     let raw_pubkey: [u8; 32] = our_keys[0].0;
-                    let our_validator_id = block_production::ValidatorId::from(raw_pubkey);
 
-                    log::info!(
-                        "🔑 V26: Using RAW sr25519 key for ValidatorId: {}",
-                        hex::encode(&raw_pubkey[..8])
-                    );
+                    // V32: Check if our key is in the hardcoded validator list
+                    let is_in_committee = v32_validator_pubkeys.iter().any(|pk| pk == &raw_pubkey);
 
-                    let our_validator_info = validator_management::ValidatorInfo::new(
-                        our_validator_id.clone(),
-                        ppfa_params.min_validator_stake,
-                        validator_management::PeerType::ValidityNode,
-                    );
-                    if let Err(e) = committee.add_validator(our_validator_info) {
-                        log::error!("Failed to add our validator to committee: {:?}", e);
-                        return;
+                    if is_in_committee {
+                        log::info!(
+                            "🔑 V32: Our ASF key {} is in hardcoded committee - block production enabled",
+                            hex::encode(&raw_pubkey[..8])
+                        );
+                    } else {
+                        log::warn!(
+                            "⚠️  V32: Our ASF key {} is NOT in hardcoded committee! Check keystore seed.",
+                            hex::encode(&raw_pubkey[..8])
+                        );
                     }
-                    log::info!(
-                        "✅ Added our validator to committee: {}",
-                        hex::encode(&our_validator_id.encode()[..8])
-                    );
                 } else {
                     log::warn!(
-                        "⚠️  No validator keys in keystore. Committee will be empty. \
-                         Generate keys with: ./target/release/flare-chain key insert --key-type asfk --scheme sr25519"
+                        "⚠️  No ASF keys in keystore. Generate with: ./target/release/primearc-core key insert --key-type asfk --scheme sr25519"
                     );
                 }
 
-                // For multi-node testnet: Add other validators from config/genesis
-                // In production, this will be replaced by Runtime API query
-                // For now, we only include our own validator
+                // V32: Committee is now fully populated from hardcoded list (no separate addition needed)
 
                 // Rotate to initialize committee
                 if let Err(e) = committee.rotate_committee(1) {

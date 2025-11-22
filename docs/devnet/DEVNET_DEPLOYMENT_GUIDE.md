@@ -100,9 +100,9 @@ cd /Users/macbook/Desktop/etrid
 
 ### Systemd Service
 
-Each node runs as a systemd service: `flarechain-devnet`
+Each node runs as a systemd service: `primearc-devnet`
 
-**Service File Location:** `/etc/systemd/system/flarechain-devnet.service`
+**Service File Location:** `/etc/systemd/system/primearc-devnet.service`
 
 **Service Commands:**
 ```bash
@@ -110,28 +110,28 @@ Each node runs as a systemd service: `flarechain-devnet`
 ssh -i ~/.ssh/etrid_vm1 user@host
 
 # Then on remote:
-sudo systemctl status flarechain-devnet      # Check status
-sudo systemctl start flarechain-devnet       # Start service
-sudo systemctl stop flarechain-devnet        # Stop service
-sudo systemctl restart flarechain-devnet     # Restart service
-sudo systemctl enable flarechain-devnet      # Enable on boot
+sudo systemctl status primearc-devnet      # Check status
+sudo systemctl start primearc-devnet       # Start service
+sudo systemctl stop primearc-devnet        # Stop service
+sudo systemctl restart primearc-devnet     # Restart service
+sudo systemctl enable primearc-devnet      # Enable on boot
 
 # View logs
-journalctl -u flarechain-devnet -f           # Follow logs
-journalctl -u flarechain-devnet -n 100       # Last 100 lines
+journalctl -u primearc-devnet -f           # Follow logs
+journalctl -u primearc-devnet -n 100       # Last 100 lines
 ```
 
 ### Node Configuration
 
-**Binary Path:** `/opt/flarechain/flarechain-node`
+**Binary Path:** `/opt/primearc/primearc-core-node`
 
-**Data Directory:** `/data/flarechain`
+**Data Directory:** `/data/primearc`
 
 **Key Startup Flags:**
 ```bash
 --dev                           # Development mode (no real consensus)
 --<account>                     # Account flag (alice, bob, charlie, etc.)
---base-path /data/flarechain    # Data directory
+--base-path /data/primearc    # Data directory
 --name node<N>                  # Node name
 --port 30333                    # P2P port
 --rpc-port 9944                 # RPC port
@@ -256,13 +256,13 @@ All nodes use the same SSH key: `~/.ssh/etrid_vm1`
 ssh -i ~/.ssh/etrid_vm1 user@host
 
 # Follow service logs in real-time
-journalctl -u flarechain-devnet -f
+journalctl -u primearc-devnet -f
 
 # Search for errors
-journalctl -u flarechain-devnet | grep -i error
+journalctl -u primearc-devnet | grep -i error
 
 # Get summary statistics
-journalctl -u flarechain-devnet --no-pager | tail -50
+journalctl -u primearc-devnet --no-pager | tail -50
 ```
 
 ### Common Log Messages
@@ -402,20 +402,20 @@ TIMEOUT=60 ./verify-devnet-nodes.sh status
 ssh -i ~/.ssh/etrid_vm1 user@host
 
 # Backup data directory
-sudo tar czf /backup/flarechain-backup-$(date +%s).tar.gz /data/flarechain
+sudo tar czf /backup/primearc-backup-$(date +%s).tar.gz /data/primearc
 ```
 
 ### Restore Node State
 
 ```bash
 # Stop service
-sudo systemctl stop flarechain-devnet
+sudo systemctl stop primearc-devnet
 
 # Restore backup
-sudo tar xzf /backup/flarechain-backup-TIMESTAMP.tar.gz -C /
+sudo tar xzf /backup/primearc-backup-TIMESTAMP.tar.gz -C /
 
 # Start service
-sudo systemctl start flarechain-devnet
+sudo systemctl start primearc-devnet
 ```
 
 ## Maintenance
@@ -444,7 +444,7 @@ cd /Users/macbook/Desktop/etrid
 git pull
 
 # Rebuild if needed
-cargo build --release -p flarechain-node
+cargo build --release -p primearc-core-node
 
 # Redeploy if binary changed
 ./deploy-devnet-test-keys.sh
@@ -457,12 +457,12 @@ cargo build --release -p flarechain-node
 ssh -i ~/.ssh/etrid_vm1 user@host
 
 # Check disk usage
-du -sh /data/flarechain
+du -sh /data/primearc
 
 # If >50GB, consider pruning or resetting
-sudo systemctl stop flarechain-devnet
-sudo rm -rf /data/flarechain/*
-sudo systemctl start flarechain-devnet
+sudo systemctl stop primearc-devnet
+sudo rm -rf /data/primearc/*
+sudo systemctl start primearc-devnet
 ```
 
 ## Success Criteria

@@ -158,10 +158,10 @@ The dashboard includes 17 panels organized into sections:
 
 ```promql
 # Current block height
-substrate_block_height{job="flarechain-alice"}
+substrate_block_height{job="primearc-alice"}
 
 # Finalized block height
-substrate_finalized_height{job="flarechain-alice"}
+substrate_finalized_height{job="primearc-alice"}
 
 # Block production rate (blocks/sec)
 rate(substrate_block_height[5m])
@@ -706,9 +706,9 @@ Examples:
 
 Common labels used in metrics:
 - `instance`: Node identifier (alice, bob, charlie)
-- `job`: Prometheus job name (flarechain-alice)
+- `job`: Prometheus job name (primearc-alice)
 - `node_type`: Type of node (validator, full_node, collator)
-- `chain`: Chain name (flarechain, btc-pbc, eth-pbc)
+- `chain`: Chain name (primearc, btc-pbc, eth-pbc)
 - `status`: Operation status (success, failure)
 - `direction`: Network direction (in, out)
 

@@ -50,7 +50,7 @@ pub enum Subcommand {
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
-        "Ëtrid FlareChain Node".into()
+        "Ëtrid Primearc Core Chain Node".into()
     }
 
     fn impl_version() -> String {
@@ -172,7 +172,7 @@ fn main() -> sc_cli::Result<()> {
         }
         Some(Subcommand::ChainInfo(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.sync_run(|config| cmd.run::<flare_chain_runtime::Block>(&config))
+            runner.sync_run(|config| cmd.run::<primearc_runtime::Block>(&config))
         }
         None => {
             let runner = cli.create_runner(&cli.run)?;

@@ -25,7 +25,7 @@
 
 Etrid is a multichain blockchain implementing the E320 (Essential Elements to Operate) protocol with:
 
-- **FlareChain Relay Chain** with Ascending Scale of Finality (ASF) consensus
+- **Primearc Core Relay Chain** with Ascending Scale of Finality (ASF) consensus
 - **13 Partition Burst Chains (PBCs)** for cross-chain interoperability
 - **Lightning-Bloc Layer 2** for payment channels and instant transactions
 - **Watchtower Network** for security monitoring and fraud detection
@@ -38,7 +38,7 @@ Etrid is a multichain blockchain implementing the E320 (Essential Elements to Op
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │            FlareChain Validators (21 nodes)                │  │
+│  │            Primearc Core Validators (21 nodes)             │  │
 │  │  - Run ASF consensus (PPFA committee)                      │  │
 │  │  - Produce blocks every 5 seconds                          │  │
 │  │  - Achieve finality in ~15 seconds                         │  │
@@ -48,7 +48,7 @@ Etrid is a multichain blockchain implementing the E320 (Essential Elements to Op
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │         PBC Collators (13 chains x N collators)            │  │
 │  │  - Validate partition burst chain blocks                   │  │
-│  │  - Submit state checkpoints to FlareChain                  │  │
+│  │  - Submit state checkpoints to Primearc Core               │  │
 │  │  - Operate cross-chain bridges                             │  │
 │  │  - Minimum stake: 64 ETR per chain                         │  │
 │  └───────────────────────────────────────────────────────────┘  │
@@ -71,7 +71,7 @@ Etrid is a multichain blockchain implementing the E320 (Essential Elements to Op
 | **Common Peer** | 0 ETR | Network participant | Read access, transactions |
 | **Staking Common** | 1 ETR | Staker | Vote on governance proposals |
 | **Validity Node** | 64 ETR | PBC Validator | Validate PBC blocks, bridge operations |
-| **Flare Node** | 64 ETR | FlareChain Validator | PPFA committee, block production |
+| **Primearc Node** | 64 ETR | Primearc Core Validator | PPFA committee, block production |
 | **Decentralized Director** | 128 ETR | Governance leader | Propose changes, vote weights |
 
 ---
@@ -80,7 +80,7 @@ Etrid is a multichain blockchain implementing the E320 (Essential Elements to Op
 
 ### Hardware Requirements
 
-#### Minimum Requirements (FlareChain Validator)
+#### Minimum Requirements (Primearc Core Validator)
 
 ```
 CPU:        4 cores (8 threads) @ 2.5 GHz
@@ -125,7 +125,7 @@ Monitoring:
 
 #### PBC Collator Requirements
 
-Each PBC collator has similar requirements to FlareChain validators, but can share infrastructure:
+Each PBC collator has similar requirements to Primearc Core validators, but can share infrastructure:
 
 ```
 CPU:        2 cores per PBC
@@ -205,11 +205,11 @@ git checkout v1.0.0  # Replace with latest stable tag
 #### Step 2: Build Validator Node
 
 ```bash
-# Build FlareChain validator (release mode)
-cargo build --release --package etrid-flare-node
+# Build Primearc Core validator (release mode)
+cargo build --release --package primearc-core-node
 
 # Verify build
-./target/release/etrid-flare-node --version
+./target/release/primearc-core-node --version
 
 # Optional: Build specific components
 cargo build --release --package etrid-btc-pbc-collator  # Bitcoin PBC
@@ -233,9 +233,9 @@ sudo mkdir -p /var/lib/etrid-validator/{chains,keystore,config}
 sudo chown -R etrid-validator:etrid-validator /var/lib/etrid-validator
 
 # Copy binary
-sudo cp target/release/etrid-flare-node /usr/local/bin/
-sudo chown etrid-validator:etrid-validator /usr/local/bin/etrid-flare-node
-sudo chmod 755 /usr/local/bin/etrid-flare-node
+sudo cp target/release/primearc-core-node /usr/local/bin/
+sudo chown etrid-validator:etrid-validator /usr/local/bin/primearc-core-node
+sudo chmod 755 /usr/local/bin/primearc-core-node
 ```
 
 ### Configuration
@@ -247,9 +247,9 @@ sudo chmod 755 /usr/local/bin/etrid-flare-node
 sudo -u etrid-validator -i
 
 # Generate session keys
-etrid-flare-node key generate --scheme Sr25519 --output-type json > ~/stash-key.json
-etrid-flare-node key generate --scheme Sr25519 --output-type json > ~/controller-key.json
-etrid-flare-node key generate --scheme Ed25519 --output-type json > ~/session-key.json
+primearc-core-node key generate --scheme Sr25519 --output-type json > ~/stash-key.json
+primearc-core-node key generate --scheme Sr25519 --output-type json > ~/controller-key.json
+primearc-core-node key generate --scheme Ed25519 --output-type json > ~/session-key.json
 
 # IMPORTANT: Backup these files to secure offline storage!
 # Store passwords in password manager (1Password, Bitwarden, etc.)
@@ -258,16 +258,16 @@ etrid-flare-node key generate --scheme Ed25519 --output-type json > ~/session-ke
 cat ~/stash-key.json | grep -o '"ss58Address":"[^"]*"'
 
 # Import keys to keystore
-etrid-flare-node key insert \
+primearc-core-node key insert \
   --base-path /var/lib/etrid-validator \
-  --chain flarechain \
+  --chain primearc \
   --scheme Sr25519 \
   --suri "$(cat ~/stash-key.json | grep -o '"secretPhrase":"[^"]*"' | cut -d'"' -f4)" \
   --key-type stash
 
-etrid-flare-node key insert \
+primearc-core-node key insert \
   --base-path /var/lib/etrid-validator \
-  --chain flarechain \
+  --chain primearc \
   --scheme Sr25519 \
   --suri "$(cat ~/controller-key.json | grep -o '"secretPhrase":"[^"]*"' | cut -d'"' -f4)" \
   --key-type controller
@@ -285,10 +285,10 @@ etrid-flare-node key insert \
 Create `/var/lib/etrid-validator/config/config.toml`:
 
 ```toml
-# Etrid FlareChain Validator Configuration
+# Etrid Primearc Core Validator Configuration
 
 [chain]
-name = "flarechain"
+name = "primearc"
 base_path = "/var/lib/etrid-validator"
 
 [network]
@@ -384,7 +384,7 @@ Create `/etc/systemd/system/etrid-validator.service`:
 
 ```ini
 [Unit]
-Description=Etrid FlareChain Validator
+Description=Etrid Primearc Core Validator
 After=network.target
 Documentation=https://docs.etrid.org
 
@@ -406,7 +406,7 @@ ExecStart=/usr/local/bin/etrid \
   --config /var/lib/etrid-validator/config/config.toml \
   --validator \
   --name "MyValidator-01" \
-  --chain flarechain \
+  --chain primearc \
   --base-path /var/lib/etrid-validator \
   --port 30333 \
   --rpc-port 9944 \
@@ -469,7 +469,7 @@ sudo systemctl restart etrid-validator
 #### Step 1: Acquire Minimum Stake
 
 ```bash
-# You need at least 64 ETR for Validity Node / Flare Node
+# You need at least 64 ETR for Validity Node / Primearc Node
 # Transfer ETR to your stash account address
 # Verify balance using web wallet or CLI:
 
@@ -565,7 +565,7 @@ etrid-cli query session info
 
 ### Purpose and Architecture
 
-Partition Burst Chain (PBC) collators are specialized nodes that validate transactions on one of Ëtrid's 13 cross-chain bridges. Each PBC is dedicated to a specific blockchain ecosystem and checkpoint their state to FlareChain every 256 blocks (~51 minutes).
+Partition Burst Chain (PBC) collators are specialized nodes that validate transactions on one of Ëtrid's 13 cross-chain bridges. Each PBC is dedicated to a specific blockchain ecosystem and checkpoint their state to Primearc Core every 100 blocks (~10 minutes).
 
 **The 13 PBCs:**
 1. **PBC-BTC** (Bitcoin)
@@ -723,7 +723,7 @@ listen_addr = [
     "/ip4/0.0.0.0/tcp/30434/ws"
 ]
 
-# FlareChain relay endpoint (for checkpoints)
+# Primearc Core relay endpoint (for checkpoints)
 relay_chain_rpc_url = "ws://127.0.0.1:9944"
 
 # Bootnodes for PBC-BTC network
@@ -994,7 +994,7 @@ done
 # Monitor checkpoint submissions
 sudo journalctl -u etrid-pbc-btc | grep "Checkpoint submitted"
 
-# Check last checkpoint on FlareChain
+# Check last checkpoint on Primearc Core
 etrid-cli query pbc checkpoint-history pbc-btc --limit 10
 ```
 
@@ -1049,7 +1049,7 @@ scrape_configs:
 ```
 # Collation metrics
 pbc_blocks_produced_total            # Total blocks produced
-pbc_checkpoint_submissions_total     # Checkpoints submitted to FlareChain
+pbc_checkpoint_submissions_total     # Checkpoints submitted to Primearc Core
 pbc_checkpoint_submission_failures   # Failed checkpoint submissions
 
 # Bridge metrics
@@ -1159,7 +1159,7 @@ sudo systemctl start etrid-pbc-btc
 #### Checkpoint Submission Failures
 
 ```bash
-# Check FlareChain RPC connection
+# Check Primearc Core RPC connection
 curl -X POST http://localhost:9944 \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"system_health","id":1}'
@@ -1309,7 +1309,7 @@ check_interval = 30
 max_channels = 1000
 
 [network]
-# FlareChain node endpoint
+# Primearc Core node endpoint
 chain_endpoint = "ws://127.0.0.1:9944"
 
 # Lightning network topology file
@@ -1414,7 +1414,7 @@ Watchtowers monitor multiple data sources:
 
 ```bash
 # 1. On-chain channel state
-# Query channel status from FlareChain
+# Query channel status from Primearc Core
 curl -X POST http://localhost:9944 \
   -H "Content-Type: application/json" \
   -d '{
@@ -1941,21 +1941,21 @@ When a new node binary is released:
 
 ```bash
 # 1. Backup current binary
-sudo cp /usr/local/bin/etrid-flare-node /usr/local/bin/etrid-flare-node.backup
+sudo cp /usr/local/bin/primearc-core-node /usr/local/bin/primearc-core-node.backup
 
 # 2. Build or download new version
 cd ~/etrid/Etrid
 git fetch --tags
 git checkout v1.1.0  # New version
-cargo build --release --package etrid-flare-node
+cargo build --release --package primearc-core-node
 
 # 3. Stop validator gracefully
 sudo systemctl stop etrid-validator
 
 # 4. Replace binary
-sudo cp target/release/etrid-flare-node /usr/local/bin/
-sudo chown etrid-validator:etrid-validator /usr/local/bin/etrid-flare-node
-sudo chmod 755 /usr/local/bin/etrid-flare-node
+sudo cp target/release/primearc-core-node /usr/local/bin/
+sudo chown etrid-validator:etrid-validator /usr/local/bin/primearc-core-node
+sudo chmod 755 /usr/local/bin/primearc-core-node
 
 # 5. Restart validator
 sudo systemctl start etrid-validator
@@ -1964,10 +1964,10 @@ sudo systemctl start etrid-validator
 sudo journalctl -u etrid-validator -f
 
 # 7. Verify version
-etrid-flare-node --version
+primearc-core-node --version
 
 # 8. Rollback if needed
-# sudo cp /usr/local/bin/etrid-flare-node.backup /usr/local/bin/etrid-flare-node
+# sudo cp /usr/local/bin/primearc-core-node.backup /usr/local/bin/primearc-core-node
 # sudo systemctl restart etrid-validator
 ```
 
@@ -1977,7 +1977,7 @@ etrid-flare-node --version
 
 ```bash
 # Check database size
-du -sh /var/lib/etrid-validator/chains/flarechain/db
+du -sh /var/lib/etrid-validator/chains/primearc/db
 
 # Archive mode (keeps all blocks):
 # - Size: ~50 GB after 1 year
@@ -2005,9 +2005,9 @@ sudo systemctl start etrid-validator
 sudo systemctl stop etrid-validator
 
 # Run compaction (this can take hours)
-etrid-flare-node purge-chain \
+primearc-core-node purge-chain \
   --base-path /var/lib/etrid-validator \
-  --chain flarechain \
+  --chain primearc \
   --pruning 256 \
   --blocks-pruning 256
 
@@ -2034,7 +2034,7 @@ sudo systemctl start etrid-validator
    /etc/systemd/system/etrid-validator.service
 
 3. Database (optional, for quick recovery):
-   /var/lib/etrid-validator/chains/flarechain/db/
+   /var/lib/etrid-validator/chains/primearc/db/
 ```
 
 #### Automated Backup Script
@@ -2195,21 +2195,21 @@ sudo journalctl -u etrid-validator -n 100 --no-pager
 **Solutions:**
 ```bash
 # 1. Add bootnodes
-etrid-flare-node \
+primearc-core-node \
   --bootnodes /dns4/bootnode-01.etrid.org/tcp/30333/p2p/12D3KooW... \
   --bootnodes /dns4/bootnode-02.etrid.org/tcp/30333/p2p/12D3KooW...
 
 # 2. Clear peer database
 sudo systemctl stop etrid-validator
-rm -rf /var/lib/etrid-validator/chains/flarechain/network/*
+rm -rf /var/lib/etrid-validator/chains/primearc/network/*
 sudo systemctl start etrid-validator
 
 # 3. Purge and re-sync from snapshot
 sudo systemctl stop etrid-validator
-etrid-flare-node purge-chain --base-path /var/lib/etrid-validator --chain flarechain
+primearc-core-node purge-chain --base-path /var/lib/etrid-validator --chain primearc
 # Download snapshot from https://snapshots.etrid.org
 wget https://snapshots.etrid.org/latest.tar.gz
-tar -xzf latest.tar.gz -C /var/lib/etrid-validator/chains/flarechain/
+tar -xzf latest.tar.gz -C /var/lib/etrid-validator/chains/primearc/
 sudo chown -R etrid-validator:etrid-validator /var/lib/etrid-validator
 sudo systemctl start etrid-validator
 ```
@@ -2230,7 +2230,7 @@ htop  # or top
 iostat -x 1
 
 # Check database size
-du -sh /var/lib/etrid-validator/chains/flarechain/db
+du -sh /var/lib/etrid-validator/chains/primearc/db
 
 # Check for memory leaks
 sudo journalctl -u etrid-validator | grep -i "memory\|oom"
@@ -2421,14 +2421,14 @@ sudo systemctl stop etrid-validator
 sudo cp -r /var/lib/etrid-validator/chains /backup/corrupted-db-$(date +%Y%m%d)
 
 # 3. Purge database
-etrid-flare-node purge-chain \
+primearc-core-node purge-chain \
   --base-path /var/lib/etrid-validator \
-  --chain flarechain
+  --chain primearc
 
 # 4. Restore from snapshot (faster than full sync)
-cd /var/lib/etrid-validator/chains/flarechain
-wget https://snapshots.etrid.org/flarechain-latest.tar.gz
-tar -xzf flarechain-latest.tar.gz
+cd /var/lib/etrid-validator/chains/primearc
+wget https://snapshots.etrid.org/primearc-latest.tar.gz
+tar -xzf primearc-latest.tar.gz
 sudo chown -R etrid-validator:etrid-validator /var/lib/etrid-validator
 
 # 5. Start node
@@ -2540,11 +2540,11 @@ sudo ufw default allow outgoing
 # Allow SSH (change port if using non-standard)
 sudo ufw allow 22/tcp comment 'SSH'
 
-# Allow P2P (FlareChain)
-sudo ufw allow 30333/tcp comment 'FlareChain P2P'
+# Allow P2P (Primearc Core)
+sudo ufw allow 30333/tcp comment 'Primearc Core P2P'
 
 # Allow WebSocket (if exposing publicly - NOT recommended)
-# sudo ufw allow 30334/tcp comment 'FlareChain WebSocket'
+# sudo ufw allow 30334/tcp comment 'Primearc Core WebSocket'
 
 # Allow Prometheus (only from monitoring server)
 sudo ufw allow from <MONITORING_IP> to any port 9615 proto tcp comment 'Prometheus'

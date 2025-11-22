@@ -11,7 +11,7 @@ version = "0.1.0"
 authors = ["ËTRID Foundation"]
 edition = "2021"
 license = "Apache-2.0"
-description = "ËTRID Multichain Protocol - Unified Node Binary (FlareChain + PBC Collators)"
+description = "ËTRID Multichain Protocol - Unified Node Binary (Primearc Core + PBC Collators)"
 homepage = "https://etrid.io"
 repository = "https://github.com/etrid/etrid"
 
@@ -29,7 +29,7 @@ sc-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkad
 sc-service = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # ËTRID Node Libraries
-flare_chain_node = { package = "flarechain-node", path = "05-multichain/flare-chain/node" }
+primearc_node = { package = "primearc-node", path = "05-multichain/primearc-core/node" }
 
 [workspace]
 resolver = "2"
@@ -73,9 +73,9 @@ members = [
     # ═════════════════════════════════════════════════════════════════════════════
     # 05 - Multichain Layer (Substrate-based)
     # ═════════════════════════════════════════════════════════════════════════════
-    "05-multichain/flare-chain/runtime",                # Flare Chain runtime
-    "05-multichain/flare-chain/runtime/pallets/pallet-asf", # ASF consensus pallet
-    "05-multichain/flare-chain/node",                   # Flare Chain node
+    "05-multichain/primearc-core/runtime",                # Primearc Chain runtime
+    "05-multichain/primearc-core/runtime/pallets/pallet-asf", # ASF consensus pallet
+    "05-multichain/primearc-core/node",                   # Primearc Chain node
     "05-multichain/primitives",                         # Multichain primitives
     "05-multichain/partition-burst-chains/pbc-common",  # PBC common runtime code (NEW - shared)
     "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime

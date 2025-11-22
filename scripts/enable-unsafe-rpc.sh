@@ -33,15 +33,15 @@ for VM in "${VMS[@]}"; do
     echo "Updating $VM..."
 
     # Stop service
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl stop flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" 'systemctl stop primearc-validator' 2>/dev/null
 
     # Update systemd file to add --rpc-methods=unsafe
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" \
-        'sed -i "s/--unsafe-rpc-external/--unsafe-rpc-external \\\\\n    --rpc-methods unsafe/" /etc/systemd/system/flarechain-validator.service' 2>/dev/null
+        'sed -i "s/--unsafe-rpc-external/--unsafe-rpc-external \\\\\n    --rpc-methods unsafe/" /etc/systemd/system/primearc-validator.service' 2>/dev/null
 
     # Reload systemd and start service
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" \
-        'systemctl daemon-reload && systemctl start flarechain-validator' 2>/dev/null
+        'systemctl daemon-reload && systemctl start primearc-validator' 2>/dev/null
 
     echo "✅ $VM updated and restarted"
 done
@@ -54,7 +54,7 @@ echo ""
 echo "Checking status..."
 ACTIVE=0
 for VM in "${VMS[@]}"; do
-    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 "root@$VM" 'systemctl is-active flarechain-validator 2>/dev/null' 2>/dev/null)
+    STATUS=$(ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 "root@$VM" 'systemctl is-active primearc-validator 2>/dev/null' 2>/dev/null)
     if [ "$STATUS" = "active" ]; then
         echo "✅ $VM: ACTIVE"
         ACTIVE=$((ACTIVE + 1))

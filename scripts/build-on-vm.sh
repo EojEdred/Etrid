@@ -1,13 +1,13 @@
 #!/bin/bash
-# Build FlareChain binary on VM from git branch
+# Build Primearc Core binary on VM from git branch
 
 BUILD_VM="vmi2896906"
 SSH_KEY="$HOME/.ssh/contabo-validators"
-GIT_BRANCH="claude/chain-spec-local-testing-01Vsk2ZiZSovJrb9upMzxcYv"
+GIT_BRANCH="main"
 REPO_URL="https://github.com/EojEdred/Etrid.git"
 
 echo "═══════════════════════════════════════════════════════════════════════"
-echo "Building FlareChain on $BUILD_VM"
+echo "Building Primearc Core on $BUILD_VM"
 echo "═══════════════════════════════════════════════════════════════════════"
 echo "Branch: $GIT_BRANCH"
 echo ""
@@ -52,23 +52,23 @@ else
 fi
 
 echo ""
-echo "Step 5: Building FlareChain binary..."
+echo "Step 5: Building Primearc Core binary..."
 echo "This will take 20-30 minutes..."
-cd /opt/etrid-build/05-multichain/flare-chain
+cd /opt/etrid-build/05-multichain/primearc-core
 cargo build --release 2>&1 | tail -20
 echo "✅ Binary built"
 
 echo ""
 echo "Step 6: Generating chain spec..."
-./target/release/flarechain-node build-spec --chain=mainnet_v108_pure_asf --raw > /tmp/flarechain-mainnet-v108-raw.json 2>&1 || \
-./target/release/flarechain-node build-spec --raw > /tmp/flarechain-mainnet-v108-raw.json 2>&1
+./target/release/primearc-node build-spec --chain=mainnet --raw > /tmp/primearc-mainnet-raw.json 2>&1 || \
+./target/release/primearc-node build-spec --raw > /tmp/primearc-mainnet-raw.json 2>&1
 echo "✅ Chain spec generated"
 
 echo ""
-echo "Binary location: /opt/etrid-build/05-multichain/flare-chain/target/release/flarechain-node"
-echo "Chain spec location: /tmp/flarechain-mainnet-v108-raw.json"
-ls -lh /opt/etrid-build/05-multichain/flare-chain/target/release/flarechain-node
-ls -lh /tmp/flarechain-mainnet-v108-raw.json
+echo "Binary location: /opt/etrid-build/05-multichain/primearc-core/target/release/primearc-node"
+echo "Chain spec location: /tmp/primearc-mainnet-raw.json"
+ls -lh /opt/etrid-build/05-multichain/primearc-core/target/release/primearc-node
+ls -lh /tmp/primearc-mainnet-raw.json
 EOF
 
 echo ""

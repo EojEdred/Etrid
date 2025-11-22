@@ -1,7 +1,7 @@
-//! FlareChain Node Library
+//! Primearc Core Chain Node Library
 //!
 //! This library exports the ASF consensus service for use by the unified ËTRID binary.
-//! FlareChain uses FODDoS ASF consensus (PPFA block production + hybrid GRANDPA finality).
+//! Primearc Core Chain uses FODDoS ASF consensus (PPFA block production + hybrid GRANDPA finality).
 
 #[path = "chain-spec.rs"]
 pub mod chain_spec;
@@ -29,7 +29,7 @@ pub mod asf_telemetry;
 pub fn new_full(
     config: sc_service::Configuration,
 ) -> Result<sc_service::TaskManager, sc_service::error::Error> {
-    log::info!("🔥 Starting FlareChain node in PURE ASF mode (v108)");
+    log::info!("🔥 Starting Primearc Core Chain node in PURE ASF mode (v108)");
     log::info!("   Block Production: PPFA (ASF)");
     log::info!("   Finality: ASF Finality Gadget (pure)");
     asf_service::new_full(config)
@@ -73,7 +73,7 @@ mod cli {
 
     impl SubstrateCli for Cli {
         fn impl_name() -> String {
-            "Ëtrid FlareChain Node".into()
+            "Ëtrid Primearc Core Chain Node".into()
         }
 
         fn impl_version() -> String {

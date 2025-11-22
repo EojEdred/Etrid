@@ -12,7 +12,7 @@ echo ""
 for VM in "${VMS[@]}"; do
     echo "─── $VM ───"
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "root@$VM" \
-        'journalctl -u flarechain-validator -n 3 --no-pager | tail -1' 2>/dev/null | \
+        'journalctl -u primearc-validator -n 3 --no-pager | tail -1' 2>/dev/null | \
         grep -oE "(best: #[0-9]+|finalized #[0-9]+|peers\))" || echo "  No data"
     echo ""
 done

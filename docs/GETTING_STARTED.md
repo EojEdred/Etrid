@@ -258,7 +258,7 @@ sudo mv etrid-linux-x86_64 /usr/local/bin/etrid
 
 ```bash
 # Start node
-./target/release/etrid --chain flarechain-mainnet --validator --name "My Validator"
+./target/release/etrid --chain primearc-mainnet --validator --name "My Validator"
 
 # In another terminal, generate keys
 curl -H "Content-Type: application/json" \
@@ -292,7 +292,7 @@ Minimum stake: **100,000 ÉTR** (100M ÉTR with 12 decimals)
 ```bash
 # Start validator node (use systemd for production)
 ./target/release/etrid \
-  --chain flarechain-mainnet \
+  --chain primearc-mainnet \
   --validator \
   --name "My Validator" \
   --base-path /data/etrid \
@@ -330,7 +330,7 @@ sudo systemctl restart etrid-validator
 **Backup session keys:**
 ```bash
 # Backup keys directory
-tar -czf etrid-keys-backup-$(date +%Y%m%d).tar.gz /data/etrid/chains/flarechain/keystore
+tar -czf etrid-keys-backup-$(date +%Y%m%d).tar.gz /data/etrid/chains/primearc/keystore
 ```
 
 **Monitor rewards:**

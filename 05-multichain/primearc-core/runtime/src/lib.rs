@@ -5,7 +5,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-// EVM moved to ETH-PBC - FlareChain is pure coordination layer
+// EVM moved to ETH-PBC - Primearc Core is pure coordination layer
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ASF CONSENSUS MODULES (Phase 1-2: Runtime Integration)

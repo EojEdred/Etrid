@@ -549,7 +549,7 @@ Actual Bonus = 54.79 × 1.0 × 0.9 = 49.31 ÉTR/day
 - **Influence**: 9% of total voting power
 - **Responsibility**: Vote on all proposals, break ties
 
-#### Tier 2: Validators (21 Flare Nodes + 104 Collators = 125 total)
+#### Tier 2: Validators (21 Primearc Core Validators + 104 PBC Collators = 125 total)
 - **Weight**: 125 votes (1 vote each)
 - **Influence**: ~12% of total voting power
 - **Responsibility**: Technical review, block production
@@ -676,7 +676,7 @@ Emergency Quorum (10%): 5M ÉTR must vote
 | Time | Category | Amount (ÉTR) | Recipients | Purpose |
 |------|----------|--------------|------------|---------|
 | 00:01 | Voters | 2,740 | ~1,000 | Consensus Day participation |
-| 04:01 | Flare Nodes | 4,110 | 21 | Relay chain validation |
+| 04:01 | Primearc Core Validators | 4,110 | 21 | Relay chain validation |
 | 06:01 | Validity Nodes | 4,109 | 104 | PBC collation |
 | 08:01 | Stakers | 10,959 | Variable | Long-term holders |
 | 12:01 | Directors | 5,479 | 9 | Governance leadership |
@@ -705,18 +705,18 @@ Operations (5%):       548 ÉTR/day = 200K ÉTR/year
 
 #### 30% Validators (8,219 ÉTR/day)
 
-**Flare Nodes (15%)**: 4,110 ÉTR/day ÷ 21 validators = **195.71 ÉTR/day per validator**
+**Primearc Core Validators (15%)**: 4,110 ÉTR/day ÷ 21 validators = **195.71 ÉTR/day per validator**
 
 **Validity Nodes (15%)**: 4,109 ÉTR/day ÷ 104 collators = **39.51 ÉTR/day per collator**
 
 **Why Different Amounts?**
-- Flare Nodes secure entire relay chain (higher responsibility)
+- Primearc Core Validators secure entire relay chain (higher responsibility)
 - Validity Nodes collate individual PBCs (lower responsibility)
-- Ratio: ~5:1 (Flare:Validity)
+- Ratio: ~5:1 (Primearc Core:Validity)
 
 **Annual Validator Rewards**:
 ```
-Flare Node: 195.71 ÉTR/day × 365 = 71,434 ÉTR/year
+Primearc Core Validator: 195.71 ÉTR/day × 365 = 71,434 ÉTR/year
 Validity Node: 39.51 ÉTR/day × 365 = 14,421 ÉTR/year
 ```
 
@@ -812,7 +812,7 @@ pub fn calculate_coinage_multiplier(stake_duration_days: u64) -> u32 {
 
 **Example**:
 ```
-Flare Node Daily Reward: 195.71 ÉTR
+Primearc Core Validator Daily Reward: 195.71 ÉTR
 
 Scenario 1: Missed 10 blocks
 Penalty: 195.71 × 0.1% × 10 = 1.96 ÉTR

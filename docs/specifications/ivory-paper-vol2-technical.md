@@ -1478,7 +1478,7 @@ pub fn execute_distribution(
         });
     }
 
-    // Check if it's time for flare nodes distribution (04:01)
+    // Check if it's time for Primearc Core Validators distribution (04:01)
     if (hour, minute) == times.flare_nodes {
         let amount = (schedule.total_daily * schedule.flare_nodes_pct as u128) / 10000;
         distributions.push(Distribution {

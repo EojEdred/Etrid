@@ -1,0 +1,24 @@
+// Documentation for V26 SessionKeys Integration
+//
+// This file documents the SessionKeys query methods added in V26
+// to fix signature verification failures.
+//
+// Methods added to AsfApi trait (in asf_apis.rs):
+// 1. fn get_validator_asf_key(account_id: ValidatorId) -> Option<Vec<u8>>;
+// 2. fn get_all_validator_asf_keys() -> Vec<(ValidatorId, Vec<u8>)>;
+//
+// These query pallet_session::NextKeys storage to retrieve ASF public keys
+// published by validators via session.setKeys() extrinsic.
+//
+// Implementation approach for V26:
+// Since asf_apis.rs uses decl_runtime_apis! which conflicts with the main
+// impl_runtime_apis! block, we have two options:
+//
+// Option A (Proper): Move asf_apis.rs to a separate runtime-api crate
+// Option B (Quick): Use direct RPC state queries
+//
+// For V26, we use Option B to unblock development.
+// The node-side code will query session storage directly:
+//   api.storage().fetch(&pallet_session::NextKeys::<Runtime>::hashed_key_for(account_id))
+//
+// Future TODO: Create proper runtime-api crate structure for V27+

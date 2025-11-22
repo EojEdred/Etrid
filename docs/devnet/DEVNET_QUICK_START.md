@@ -83,7 +83,7 @@ curl -s http://<IP>:9944 \
 ### SSH Access
 ```bash
 ssh -i ~/.ssh/etrid_vm1 <user>@<IP>
-journalctl -u flarechain-devnet -f
+journalctl -u primearc-devnet -f
 ```
 
 ---

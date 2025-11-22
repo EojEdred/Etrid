@@ -29,7 +29,7 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 
 Ëtrid is a next-generation multichain blockchain platform built on Substrate that implements:
 
-- **FlareChain Relay Chain**: Main chain using Ascending Scale of Finality (ASF) consensus
+- **Primearc Core Relay Chain**: Main chain using Ascending Scale of Finality (ASF) consensus
 - **13 Partition Burst Chains (PBCs)**: Specialized chains for cross-chain asset bridges
 - **Lightning-Bloc Layer 2**: Payment channel network for instant transactions
 - **ËtwasmVM**: Custom WebAssembly runtime with reentrancy protection
@@ -46,7 +46,7 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 | 02 | OpenDID | Identity system (human + AI) | `02-open-did/`, `pallets/pallet-did-registry/` |
 | 03 | Security | Cryptographic primitives | `03-security/` |
 | 04 | Accounts | Account types + social recovery | `04-accounts/` |
-| 05 | Multichain | FlareChain + 13 PBCs + bridges | `05-multichain/` |
+| 05 | Multichain | Primearc Core + 13 PBCs + bridges | `05-multichain/` |
 | 06 | Native Currency | ÉTR, EDSC, VMw tokens | `06-native-currency/` |
 | 07 | Transactions | Ed25519 + HTLCs + smart/regular | `07-transactions/` |
 | 08 | ËtwasmVM | WebAssembly runtime | `08-etwasm-vm/` |
@@ -75,7 +75,7 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │              FlareChain (Relay Chain)                      │  │
+│  │              Primearc Core (Relay Chain)                   │  │
 │  │  - ASF Consensus (Ascending Scale of Finality)                 │  │
 │  │  - Validator Set Management                                │  │
 │  │  - Cross-Chain Message Routing                             │  │
@@ -139,8 +139,8 @@ Welcome to the Ëtrid blockchain platform developer guide! This comprehensive gu
 - `pallet-xcm-bridge`: Cross-chain messaging
 
 **Runtime Integration**:
-Each chain (FlareChain + 13 PBCs) has its own runtime that combines relevant pallets:
-- FlareChain: Full feature set (governance, staking, consensus)
+Each chain (Primearc Core + 13 PBCs) has its own runtime that combines relevant pallets:
+- Primearc Core: Full feature set (governance, staking, consensus)
 - PBCs: Specialized runtimes (e.g., BTC-PBC focuses on Bitcoin bridge)
 
 ### Consensus Mechanism
@@ -163,8 +163,8 @@ Each chain (FlareChain + 13 PBCs) has its own runtime that combines relevant pal
 
 **Cross-Chain Communication**:
 - XCM (Cross-Consensus Message) format
-- State checkpoints from PBCs to FlareChain
-- Message routing through FlareChain
+- State checkpoints from PBCs to Primearc Core
+- Message routing through Primearc Core
 - Multi-sig bridge custodians for security
 
 ---
@@ -331,13 +331,13 @@ git checkout -b feature/my-feature
 
 **Note**: Due to Polkadot SDK dependency stabilization, some builds may require specific steps. See `KNOWN_ISSUES.md` for current status.
 
-**Build FlareChain**:
+**Build Primearc Core**:
 ```bash
-# Build FlareChain runtime (WASM)
-cargo build --release -p flare-chain-runtime
+# Build Primearc Core runtime (WASM)
+cargo build --release -p primearc-core-runtime
 
-# Build FlareChain node binary
-cargo build --release -p flare-chain-node
+# Build Primearc Core node binary
+cargo build --release -p primearc-core-node
 ```
 
 **Build Specific PBC**:
@@ -391,8 +391,8 @@ cargo tarpaulin --workspace --out Html
 #### Single Node (Development Mode)
 
 ```bash
-# Run FlareChain in dev mode
-./target/release/flare-chain-node \
+# Run Primearc Core in dev mode
+./target/release/primearc-core-node \
   --dev \
   --tmp \
   --rpc-cors all \
@@ -1002,7 +1002,7 @@ fn cannot_vote_after_deadline() {
 
 ### Integration with Runtime
 
-Add to `/05-multichain/flare-chain/runtime/Cargo.toml`:
+Add to `/05-multichain/primearc-core/runtime/Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -1015,7 +1015,7 @@ std = [
 ]
 ```
 
-Add to `/05-multichain/flare-chain/runtime/src/lib.rs`:
+Add to `/05-multichain/primearc-core/runtime/src/lib.rs`:
 
 ```rust
 // Configure the voting pallet
@@ -2453,13 +2453,13 @@ impl<T: Config> Pallet<T> {
 Run node with logging:
 
 ```bash
-RUST_LOG=debug ./target/release/flare-chain-node --dev
+RUST_LOG=debug ./target/release/primearc-core-node --dev
 
 # Filter specific pallet
-RUST_LOG=pallet_voting=debug ./target/release/flare-chain-node --dev
+RUST_LOG=pallet_voting=debug ./target/release/primearc-core-node --dev
 
 # Multiple targets
-RUST_LOG=pallet_voting=debug,runtime=info ./target/release/flare-chain-node --dev
+RUST_LOG=pallet_voting=debug,runtime=info ./target/release/primearc-core-node --dev
 ```
 
 #### Browser DevTools
@@ -2517,7 +2517,7 @@ curl -H "Content-Type: application/json" \
   http://localhost:9933
 
 # Check CORS settings
-./target/release/flare-chain-node --dev --rpc-cors all --ws-external
+./target/release/primearc-core-node --dev --rpc-cors all --ws-external
 ```
 
 **Issue**: Pallet not found in runtime
@@ -2989,7 +2989,7 @@ All PRs must include tests:
 
 This developer guide provides a comprehensive foundation for building on Ëtrid. Key takeaways:
 
-1. **Architecture**: Understand FlareChain + 13 PBCs + Lightning-Bloc Layer 2
+1. **Architecture**: Understand Primearc Core + 13 PBCs + Lightning-Bloc Layer 2
 2. **Pallets**: Build modular blockchain logic with FRAME
 3. **DApps**: Use JavaScript SDK to create user-facing applications
 4. **Smart Contracts**: Write ink! contracts for advanced logic

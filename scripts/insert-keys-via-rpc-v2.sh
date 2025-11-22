@@ -68,13 +68,13 @@ for i in "${!VMS[@]}"; do
     echo "VM $((i+1)): $VM -> Inserting key for validator $VALIDATOR_ID"
 
     # Stop the validator first
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl stop flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl stop primearc-validator' 2>/dev/null
 
     # Clear old keystore files
     ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'rm -rf /var/lib/etrid/chains/flarechain_mainnet_v1/keystore/*' 2>/dev/null
 
     # Start the validator
-    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl start flarechain-validator' 2>/dev/null
+    ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no root@$VM 'systemctl start primearc-validator' 2>/dev/null
 
     # Wait for node to start and RPC to be ready
     sleep 3
