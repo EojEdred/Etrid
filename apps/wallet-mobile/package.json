@@ -1,0 +1,31 @@
+{
+  "name": "etrid-wallet-mobile",
+  "version": "1.0.0",
+  "description": "Etrid Mobile Wallet - Asset Generation and Management",
+  "private": true,
+  "scripts": {
+    "generate:assets": "node scripts/generate-assets.js",
+    "generate:pwa": "pwa-asset-generator assets/logo.svg etrid-wallet/public/icons --icon-only --padding '20%' --background '#1a0033'",
+    "generate:splash": "pwa-asset-generator assets/logo.svg etrid-wallet/public/splash --splash-only --background '#1a0033'",
+    "verify:assets": "node scripts/verify-assets.js",
+    "optimize:images": "npx imagemin 'etrid-wallet/public/**/*.png' --out-dir=etrid-wallet/public/",
+    "postinstall": "echo '\n✅ Asset generation tools installed!\nRun: npm run generate:assets\n'"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.0",
+    "pwa-asset-generator": "^6.3.1"
+  },
+  "keywords": [
+    "etrid",
+    "wallet",
+    "defi",
+    "crypto",
+    "blockchain",
+    "mobile",
+    "pwa",
+    "icons",
+    "assets"
+  ],
+  "author": "Etrid Team",
+  "license": "MIT"
+}

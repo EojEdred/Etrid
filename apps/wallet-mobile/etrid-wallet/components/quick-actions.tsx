@@ -1,23 +1,27 @@
 "use client"
 
-import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, Lock } from "lucide-react"
+import { ArrowUpRight, ArrowDownLeft, Target, Wallet } from "lucide-react"
 
 interface QuickActionsProps {
   onSend?: () => void
   onReceive?: () => void
+  onSavings?: () => void
+  onLending?: () => void
 }
 
 const actions = [
   { icon: ArrowUpRight, label: "Send", color: "text-accent", action: "send" },
   { icon: ArrowDownLeft, label: "Receive", color: "text-success", action: "receive" },
-  { icon: ArrowLeftRight, label: "Swap", color: "text-warning", action: "swap" },
-  { icon: Lock, label: "Stake", color: "text-primary", action: "stake" },
+  { icon: Target, label: "Savings", color: "text-purple-500", action: "savings" },
+  { icon: Wallet, label: "Lend", color: "text-warning", action: "lending" },
 ]
 
-export function QuickActions({ onSend, onReceive }: QuickActionsProps) {
+export function QuickActions({ onSend, onReceive, onSavings, onLending }: QuickActionsProps) {
   const handleClick = (action: string) => {
     if (action === "send" && onSend) onSend()
     if (action === "receive" && onReceive) onReceive()
+    if (action === "savings" && onSavings) onSavings()
+    if (action === "lending" && onLending) onLending()
   }
 
   return (
