@@ -91,7 +91,7 @@ Voting power = 1,000 × 1.10 × 1.06 = 1,166
 ### Requirements
 
 - Minimum stake: **128 ËTR**
-- Must serve as OD Flare Nodes (Operational Director Flare Nodes)
+- Must serve as OD Primearc Validators (Operational Director Primearc Validators)
 - Active participation in network operations
 
 ### Election Process

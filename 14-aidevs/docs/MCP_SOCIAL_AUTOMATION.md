@@ -58,7 +58,7 @@ Create a **fully autonomous social media system** where AI Devs:
 
 ### 1. Blockchain Event Monitor
 
-**Purpose:** Watch FlareChain for events that should trigger social media posts
+**Purpose:** Watch Primearc Core Chain for events that should trigger social media posts
 
 **Monitored Events:**
 - New blocks (every 100 blocks → stats update)
@@ -814,7 +814,7 @@ twitter:
 ```yaml
 # /ai-devs/social/config/connectors/blockchain.yaml
 blockchain_monitor:
-  name: "FlareChain Event Monitor"
+  name: "Primearc Core Chain Event Monitor"
   type: "blockchain"
 
   connection:

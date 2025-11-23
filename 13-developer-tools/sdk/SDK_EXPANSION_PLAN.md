@@ -43,7 +43,7 @@
 ## Expansion Scope
 
 ### Part 1: Complete Python SDK Core (7 wrappers)
-Implement the remaining core FlareChain wrappers:
+Implement the remaining core Primearc Core Chain wrappers:
 
 1. **EtwasmVMWrapper** (~250 lines)
    - `upload_code()`, `instantiate()`, `deploy_contract()`
@@ -107,11 +107,11 @@ Support for AI Compute PBC's GPU marketplace:
 **Total**: ~630 lines
 
 ### Part 3: Add ETH PBC Precompiles (1 wrapper)
-Ethereum-compatible interactions with FlareChain:
+Ethereum-compatible interactions with Primearc Core Chain:
 
 10. **ETHPBCPrecompileWrapper** (~400 lines)
     - `wrap_eth()` / `unwrap_eth()` - Native ETH wrapping (0x803)
-    - `get_oracle_price()` - FlareChain oracle access (0x800)
+    - `get_oracle_price()` - Primearc Core Chain oracle access (0x800)
     - `governance_vote()` - Vote from ETH PBC (0x801)
     - `stake_from_eth_pbc()` - Stake via precompile (0x802)
     - `bridge_to_flarechain()` - Bridge assets (0x804)
@@ -156,7 +156,7 @@ Bridge to Hyperledger Fabric networks:
 **Estimated Time**: 6-8 hours for complete implementation
 
 ### Breakdown by Category:
-- **FlareChain Core**: 10 wrappers (2,484 lines) - 2 done, 8 remaining
+- **Primearc Core Chain Core**: 10 wrappers (2,484 lines) - 2 done, 8 remaining
 - **GPU/AI Compute**: 2 wrappers (630 lines)
 - **ETH PBC**: 1 wrapper (400 lines)
 - **Hardware**: 1 wrapper (300 lines)
@@ -202,7 +202,7 @@ User App
    ↓
 Python/Rust SDK GPURegistryWrapper
    ↓
-FlareChain RPC
+Primearc Core Chain RPC
    ↓
 XCM Message to AI Compute PBC
    ↓
@@ -219,9 +219,9 @@ Call Precompile (0x800-0x806)
    ↓
 Frontier EVM → Substrate Runtime
    ↓
-XCM Message to FlareChain
+XCM Message to Primearc Core Chain
    ↓
-FlareChain Pallet (Oracle/Governance/Staking)
+Primearc Core Chain Pallet (Oracle/Governance/Staking)
    ↓
 Response via XCM
    ↓
@@ -242,7 +242,7 @@ Sign Transaction
    ↓
 Return Signature to SDK
    ↓
-Submit to FlareChain
+Submit to Primearc Core Chain
 ```
 
 ### Hyperledger Integration Flow
@@ -272,7 +272,7 @@ Lock/Unlock Assets
 
 1. **AI/ML Engineers**: Rent GPU compute via Python/Rust SDK
 2. **DeFi Developers**: Use oracles, vaults, staking from any language
-3. **Ethereum Devs**: Call FlareChain features from Solidity
+3. **Ethereum Devs**: Call Primearc Core Chain features from Solidity
 4. **Enterprise**: Bridge to Hyperledger Fabric networks
 5. **Security-Conscious**: Use Ledger hardware wallets
 
@@ -358,7 +358,7 @@ Lock/Unlock Assets
 
 ## Questions to Consider
 
-1. **GPU Integration**: Should GPU wrappers support both FlareChain (XCM) and direct AI Compute PBC connection?
+1. **GPU Integration**: Should GPU wrappers support both Primearc Core Chain (XCM) and direct AI Compute PBC connection?
 2. **Hyperledger**: Which Fabric version to target? (2.x recommended)
 3. **Ledger**: Support Ledger Nano S Plus, Nano X, or both?
 4. **ETH PBC**: Should we create a separate npm package `@etrid/eth-pbc-sdk` for Solidity integration?

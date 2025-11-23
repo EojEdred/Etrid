@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the integration of ËTRID's custom ASF (Ascending Scale of Finality) consensus modules into the FlareChain node service layer.
+This document describes the integration of ËTRID's custom ASF (Ascending Scale of Finality) consensus modules into the Primearc Core Chain node service layer.
 
 ## What Was Built
 
@@ -11,7 +11,7 @@ This document describes the integration of ËTRID's custom ASF (Ascending Scale 
 A complete service integration module that:
 
 - **Replaces AURA with ASF PPFA**: Custom block production using Proposing Panel for Attestation
-- **Hybrid Finality**: Runs ASF Finality Gadget alongside GRANDPA during transition
+- **Hybrid Finality**: Runs ASF Finality Gadget alongside ASF during transition
 - **Validator Management**: Integrates committee coordination and health monitoring
 - **Full Service Pattern**: Follows Substrate's `new_partial()` and `new_full()` architecture
 
@@ -31,7 +31,7 @@ Exported the new `asf_service` module for use by the node binary.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    FlareChain Node                          │
+│                    Primearc Core Chain Node                          │
 ├─────────────────────────────────────────────────────────────┤
 │  ASF Block Production (PPFA)                                │
 │    ├─ Proposer selection (block-production)                 │
@@ -43,7 +43,7 @@ Exported the new `asf_service` module for use by the node binary.
 │    │   ├─ Pre-commitment                                    │
 │    │   ├─ Commitment                                        │
 │    │   └─ Finality                                          │
-│    └─ GRANDPA (traditional, transitional)                   │
+│    └─ ASF (traditional, transitional)                   │
 ├─────────────────────────────────────────────────────────────┤
 │  Validator Management                                       │
 │    ├─ Committee management (PPFA panels)                    │
@@ -68,7 +68,7 @@ Exported the new `asf_service` module for use by the node binary.
 
 ### Hybrid Finality Approach
 - **ASF Finality Gadget**: 3-level finality (Pre-commit → Commit → Finalized)
-- **GRANDPA**: Traditional finality during transition
+- **ASF**: Traditional finality during transition
 - Both run in parallel for maximum compatibility
 
 ### Validator Management
@@ -93,7 +93,7 @@ AsfParams {
 
 ## Usage
 
-### Using Standard Service (AURA + GRANDPA)
+### Using Standard Service (AURA + ASF)
 ```rust
 use service::new_full;
 let task_manager = new_full(config)?;
@@ -123,7 +123,7 @@ let task_manager = new_full_with_params(config, params)?;
 ### ✅ Completed
 - [x] Service structure and type definitions
 - [x] Import queue with ASF verifier trait
-- [x] Hybrid GRANDPA integration
+- [x] Hybrid ASF integration
 - [x] Configuration parameters
 - [x] Comprehensive documentation and comments
 - [x] Cargo.toml dependencies
@@ -147,7 +147,7 @@ The service is designed to compile with `polkadot-stable2506`.
 
 1. **Fix Workspace**: Remove missing member references from root `Cargo.toml`
 2. **Implement Workers**: Replace placeholder tasks with actual ASF implementations
-3. **Add Runtime APIs**: Extend FlareChain runtime with ASF-specific APIs
+3. **Add Runtime APIs**: Extend Primearc Core Chain runtime with ASF-specific APIs
 4. **Testing**: Create integration tests for ASF consensus
 5. **Network Protocol**: Add ASF gossip protocols for committee coordination
 6. **Benchmarking**: Measure ASF performance vs AURA
@@ -168,4 +168,4 @@ The service is designed to compile with `polkadot-stable2506`.
 
 **Created**: 2025-10-16  
 **Author**: Claude Code (Anthropic)  
-**Target**: ËTRID FlareChain polkadot-stable2506
+**Target**: ËTRID Primearc Core Chain polkadot-stable2506

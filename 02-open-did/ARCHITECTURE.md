@@ -34,7 +34,7 @@ OpenDID provides a W3C DID-compliant decentralized identity system for the Ëtri
 │                          ↓                                   │
 └──────────────────────────┼───────────────────────────────────┘
                            ↓
-                  FlareChain Runtime
+                  Primearc Core Chain Runtime
                   (Substrate Pallets)
 ```
 
@@ -266,7 +266,7 @@ pub mod pallet {
 - Verification methods
 
 ### Layer 2: Storage Layer
-- On-chain registry (FlareChain)
+- On-chain registry (Primearc Core Chain)
 - DID document storage
 - Access control
 - Version history
@@ -376,12 +376,12 @@ let attestation = Attestation {
 aidid_registry.attest_model(&aidid, attestation).await?;
 ```
 
-## Integration with FlareChain
+## Integration with Primearc Core Chain
 
 ### Substrate Pallet Integration
 
 ```rust
-// In FlareChain runtime
+// In Primearc Core Chain runtime
 impl pallet_did_registry::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type MaxDocumentSize = ConstU32<10240>;
@@ -487,7 +487,7 @@ cargo test --test aidid_integration
 
 ## Known Issues
 
-1. **Runtime Integration Pending** - AIDID pallet needs FlareChain runtime integration
+1. **Runtime Integration Pending** - AIDID pallet needs Primearc Core Chain runtime integration
 2. **HTTP Resolver** - External HTTP DID resolution not yet implemented
 3. **DID Deactivation** - Deactivation logic needs enhancement
 4. **Cache Eviction** - LRU cache eviction policy needs tuning
@@ -501,8 +501,8 @@ cargo test --test aidid_integration
 - [x] AIDID specification
 
 ### Phase 2: Runtime Integration (🟡 In Progress)
-- [ ] Integrate DID registry pallet to FlareChain
-- [ ] Integrate AIDID pallet to FlareChain
+- [ ] Integrate DID registry pallet to Primearc Core Chain
+- [ ] Integrate AIDID pallet to Primearc Core Chain
 - [ ] On-chain tests
 - [ ] RPC endpoints
 

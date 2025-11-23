@@ -298,7 +298,7 @@ python3 main.py
 **Expected Output:**
 ```
 🚀 Governance AI skill starting...
-✅ Connected to FlareChain: ws://localhost:9944
+✅ Connected to Primearc Core Chain: ws://localhost:9944
 🔍 Analyzing governance needs...
 Found 1 governance needs
 📝 Generating treasury proposal...
@@ -330,9 +330,9 @@ Found 1 governance needs
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  FlareChain Validator Node (Port 30333)             │
+│  Primearc Core Chain Validator Node (Port 30333)             │
 │  - Block production (AURA)                           │
-│  - Finality voting (GRANDPA)                         │
+│  - Finality voting (ASF)                         │
 │  - ASF consensus (ASFK)                              │
 └─────────────────┬────────────────────────────────────┘
                   │ WebSocket RPC (Port 9944)
@@ -468,7 +468,7 @@ curl -sSL https://raw.githubusercontent.com/etrid/etrid/main/install-ai-devs.sh 
 
 **Phase 2 Tasks (When Ready):**
 1. Implement pallet-ai-agents in Rust
-2. Add to FlareChain runtime
+2. Add to Primearc Core Chain runtime
 3. Submit runtime upgrade proposal
 4. Deploy via forkless upgrade
 
@@ -477,7 +477,7 @@ curl -sSL https://raw.githubusercontent.com/etrid/etrid/main/install-ai-devs.sh 
 ## Questions?
 
 All code is production-ready and tested locally. The skills can run immediately with:
-- FlareChain repo at `/opt/etrid`
+- Primearc Core Chain repo at `/opt/etrid`
 - Validator RPC at `ws://localhost:9944`
 - Ollama installed (or API keys for Claude/GPT-4)
 

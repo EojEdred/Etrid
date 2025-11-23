@@ -58,7 +58,7 @@ The 13-clients component democratizes access to Etrid Protocol by providing:
                             ▼
                  ┌──────────────────────┐
                  │   ETRID BLOCKCHAIN   │
-                 │   - FlareChain       │
+                 │   - Primearc Core Chain       │
                  │   - PBC Chains       │
                  │   - RPC Endpoints    │
                  └──────────────────────┘

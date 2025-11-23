@@ -1,4 +1,4 @@
-# 🚀 FlareChain Mainnet Genesis - Implementation Guide
+# 🚀 Primearc Core Chain Mainnet Genesis - Implementation Guide
 
 **Date:** October 24, 2025
 **Status:** 🟡 READY TO IMPLEMENT
@@ -42,7 +42,7 @@
 
 ✅ Token distribution amounts (based on your tokenomics)
 ✅ 7 Foundation validators (100M ETR stake each)
-✅ 7 GRANDPA authorities
+✅ 7 ASF authorities
 ✅ 6-second block time
 ✅ Foundation multisig as sudo key
 
@@ -69,8 +69,8 @@ All placeholder addresses with real ones:
   "grandpa": {
     "authorities": [
       // REPLACE THESE with real Ed25519 public keys ↓
-      ["GRANDPA_KEY_1_ED25519_HERE", 1],
-      ["GRANDPA_KEY_2_ED25519_HERE", 1],
+      ["ASF_KEY_1_ED25519_HERE", 1],
+      ["ASF_KEY_2_ED25519_HERE", 1],
       ...
     ]
   },
@@ -133,11 +133,11 @@ for i in {1..7}; do
 done
 ```
 
-**Generate GRANDPA Keys (Ed25519):**
+**Generate ASF Keys (Ed25519):**
 ```bash
-# Generate 7 GRANDPA finality keys
+# Generate 7 BFT checkpoint finality and ASF certificates keys
 for i in {1..7}; do
-    echo "=== Generating GRANDPA Key $i ==="
+    echo "=== Generating ASF Key $i ==="
     subkey generate --scheme Ed25519 --network substrate --output-type json > grandpa_key_$i.json
     cat grandpa_key_$i.json
     echo ""
@@ -250,13 +250,13 @@ Replace ALL placeholder text with real addresses from your key generation:
   },
   "grandpa": {
     "authorities": [
-      ["5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu", 1],  // GRANDPA Key 1
-      ["5GoNkf6WdbxCFnPdAnYYQyCjAKPJgLNxXwPjwTh6DGg6gN3E", 1],  // GRANDPA Key 2
-      ["5Fe3jZRbKes6aeuQ6HkcTvQeNhkkRPTXBwmNkuAPoimGEv45", 1],  // GRANDPA Key 3
-      ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 1],  // GRANDPA Key 4
-      ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 1],  // GRANDPA Key 5
-      ["5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL", 1],  // GRANDPA Key 6
-      ["5FfBQ3kwXrbdyoqLPvcXRp7ikWydXawpNs2Ceu3WwFdhZ8W4", 1]   // GRANDPA Key 7
+      ["5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu", 1],  // ASF Key 1
+      ["5GoNkf6WdbxCFnPdAnYYQyCjAKPJgLNxXwPjwTh6DGg6gN3E", 1],  // ASF Key 2
+      ["5Fe3jZRbKes6aeuQ6HkcTvQeNhkkRPTXBwmNkuAPoimGEv45", 1],  // ASF Key 3
+      ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 1],  // ASF Key 4
+      ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 1],  // ASF Key 5
+      ["5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL", 1],  // ASF Key 6
+      ["5FfBQ3kwXrbdyoqLPvcXRp7ikWydXawpNs2Ceu3WwFdhZ8W4", 1]   // ASF Key 7
     ]
   },
   "consensus": {
@@ -365,7 +365,7 @@ cat flarechain-spec.json | jq '.genesis.runtimeGenesis.patch.balances.balances |
 cat flarechain-spec.json | jq '.genesis.runtimeGenesis.patch.consensus.validators | length'
 # Should show: 7
 
-# Count GRANDPA authorities
+# Count ASF authorities
 cat flarechain-spec.json | jq '.genesis.runtimeGenesis.patch.grandpa.authorities | length'
 # Should show: 7
 ```
@@ -382,7 +382,7 @@ Before deploying to mainnet, verify:
 - [ ] Multisig threshold set (5-of-7 recommended)
 - [ ] All multisig signers identified and keys secured
 - [ ] Validator keys generated with HSM or air-gapped system
-- [ ] GRANDPA keys generated securely (Ed25519)
+- [ ] ASF keys generated securely (Ed25519)
 - [ ] All private keys backed up in multiple secure locations
 - [ ] Key recovery procedures documented
 - [ ] Key access logged and monitored
@@ -394,7 +394,7 @@ Before deploying to mainnet, verify:
 - [ ] All allocations match tokenomics document
 - [ ] No typos in addresses (double-check!)
 - [ ] Validator stakes configured: 100M ÉTR each
-- [ ] GRANDPA authorities configured: 7 total
+- [ ] ASF authorities configured: 7 total
 - [ ] Sudo key set to Foundation multisig
 - [ ] Block time confirmed: 6 seconds
 
@@ -405,7 +405,7 @@ Before deploying to mainnet, verify:
 - [ ] Test node started with chain spec
 - [ ] Genesis block created successfully
 - [ ] Validators can sign blocks
-- [ ] GRANDPA finality works
+- [ ] BFT checkpoint finality and ASF certificates works
 - [ ] Balance transfers work
 - [ ] Multisig transactions work
 
@@ -421,7 +421,7 @@ Before deploying to mainnet, verify:
 
 ## 📊 Mainnet vs Testnet Comparison
 
-| Parameter | Ember Testnet | FlareChain Mainnet |
+| Parameter | Ember Testnet | Primearc Core Chain Mainnet |
 |-----------|---------------|-------------------|
 | **Chain ID** | `ember_testnet` | `flarechain` |
 | **Token Symbol** | `ETR` | `ÉTR` |
@@ -483,8 +483,8 @@ Your tokenomics mentions "3-year linear vesting" for Foundation/Team allocation 
 
 Your tokenomics includes EDSC stablecoin (1B cap), but:
 
-- ⚠️ **Not included in FlareChain genesis**
-- EDSC is a separate token (not part of FlareChain genesis state)
+- ⚠️ **Not included in Primearc Core Chain genesis**
+- EDSC is a separate token (not part of Primearc Core Chain genesis state)
 - EDSC mint/burn handled by separate bridge/oracle pallets
 
 **This is correct** - EDSC minting happens post-genesis through Proof-of-Reserve mechanism.
@@ -543,7 +543,7 @@ cargo build --release --locked
 - 1 Foundation multisig (DAO Treasury + Sudo)
 - 6 pool management accounts (LP, Vesting, Expansion, Founders, Circulating)
 - 7 validator stash accounts
-- 7 GRANDPA authority keys (Ed25519)
+- 7 ASF authority keys (Ed25519)
 
 ---
 

@@ -15,7 +15,7 @@ A comprehensive, production-ready smart contract deployment system that leverage
 │   │   ├── EDSC.sol                    ← Stablecoin for bridges
 │   │   └── TokenMessenger.sol          ← Bridge messaging (3-of-5 oracles)
 │   ├── bridges/
-│   │   └── ETHPBCBridgeAdapter.sol     ← MasterChef ↔ FlareChain bridge
+│   │   └── ETHPBCBridgeAdapter.sol     ← MasterChef ↔ Primearc Core Chain bridge
 │   └── defi/
 │       └── MasterChef.sol              ← Yield farming contract
 │
@@ -70,7 +70,7 @@ A comprehensive, production-ready smart contract deployment system that leverage
 - Owner controls
 
 **ETHPBCBridgeAdapter.sol** (352 lines)
-- Connect MasterChef to FlareChain
+- Connect MasterChef to Primearc Core Chain
 - Harvest and bridge in one transaction
 - EDSC integration
 - Attestation verification

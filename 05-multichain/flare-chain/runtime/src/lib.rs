@@ -112,6 +112,11 @@ impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// NODE AUTHORIZATION HELPER MODULE
+// ═══════════════════════════════════════════════════════════════════════════════
+mod node_authorization_helper;
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // GENESIS MESSAGE - EMBEDDED IN RUNTIME WASM (Bitcoin-style Easter Egg)
 // ═══════════════════════════════════════════════════════════════════════════════
 /// "The Ëtrid Network - First pure ASF blockchain - Built by Eoj - November 2025"
@@ -367,6 +372,28 @@ impl pallet_multisig::Config for Runtime {
 // Treasury PalletId is defined later with the custom treasury configuration
 
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NODE AUTHORIZATION PALLET (Peer Whitelisting)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+use sp_core::OpaquePeerId as PeerId;
+
+parameter_types! {
+    pub const MaxWellKnownNodes: u32 = 100; // Maximum whitelisted nodes
+    pub const MaxPeerIdLength: u32 = 128; // Maximum PeerId length in bytes
+}
+
+impl pallet_node_authorization::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxWellKnownNodes = MaxWellKnownNodes;
+    type MaxPeerIdLength = MaxPeerIdLength;
+    type AddOrigin = EnsureRoot<AccountId>; // Only root/governance can add nodes
+    type RemoveOrigin = EnsureRoot<AccountId>; // Only root/governance can remove nodes
+    type SwapOrigin = EnsureRoot<AccountId>; // Only root/governance can swap nodes
+    type ResetOrigin = EnsureRoot<AccountId>; // Only root/governance can reset
+    type WeightInfo = ();
+}
 
 // ========================================
 // ËTRID CUSTOM PALLETS CONFIGURATION
@@ -1183,6 +1210,7 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
+        NodeAuthorization: pallet_node_authorization,
 
         // EVM moved to ETH-PBC - FlareChain stays pure
 

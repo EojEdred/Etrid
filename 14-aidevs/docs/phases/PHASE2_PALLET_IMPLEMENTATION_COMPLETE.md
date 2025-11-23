@@ -6,7 +6,7 @@
 
 ## Summary
 
-Phase 2 is complete! We've created the full `pallet-ai-agents` Substrate pallet that enables on-chain registration and management of AI agents on FlareChain.
+Phase 2 is complete! We've created the full `pallet-ai-agents` Substrate pallet that enables on-chain registration and management of AI agents on Primearc Core Chain.
 
 ---
 
@@ -258,7 +258,7 @@ parameter_types! {
 
 ---
 
-## Integration with FlareChain Runtime
+## Integration with Primearc Core Chain Runtime
 
 ### Cargo.toml Changes
 

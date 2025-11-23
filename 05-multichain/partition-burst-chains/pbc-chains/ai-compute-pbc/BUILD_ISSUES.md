@@ -6,7 +6,7 @@ The AI Compute PBC workspace has been successfully sandboxed with its own `Cargo
 
 **Build Status**: BLOCKED by aidid builder pattern inconsistencies
 
-**FlareChain Status**: ✅ BUILDING - Root workspace eth-pbc conflicts resolved
+**Primearc Core Chain Status**: ✅ BUILDING - Root workspace eth-pbc conflicts resolved
 
 **Latest Update**:
 - ✅ Fixed MaxEncodedLen imports (ConstU32 from frame_support)
@@ -105,13 +105,13 @@ error[E0277]: the trait bound `types::Permission: DecodeWithMemTracking` is not 
 
 **Architecture**: YES ✓
 - Partition Burst Chain (PBC) design is correct
-- Independent runtime, only checkpoint submissions to FlareChain
+- Independent runtime, only checkpoint submissions to Primearc Core Chain
 - XCM integration properly configured
 
 **Integration**: YES ✓
 - Uses Etrid primitives (etrid-primitives, pallet-accounts)
 - AIDID integration for model registry
-- Compatible with FlareChain relay
+- Compatible with Primearc Core Chain relay
 
 **Compilation**: NO ✗ (fixable)
 - 2 runtime Config implementation bugs (missing types)
@@ -119,7 +119,7 @@ error[E0277]: the trait bound `types::Permission: DecodeWithMemTracking` is not 
 
 **Deployment**: UNKNOWN
 - Would need to test collator binary
-- Would need to verify XCM channels work with FlareChain
+- Would need to verify XCM channels work with Primearc Core Chain
 - Would need genesis config for initial validators
 
 ## Recommendation

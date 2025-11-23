@@ -40,7 +40,7 @@ getWrapRate() -> uint256    // Get conversion rate
 **Why Novel:**
 - ❌ Traditional: Pay gas for WETH.deposit()/withdraw()
 - ✅ Etrid: Zero gas, atomic via precompile
-- ✅ Integrated with FlareChain bridge
+- ✅ Integrated with Primearc Core Chain bridge
 - ✅ No smart contract risk (native runtime)
 
 ### 3. Updated Precompile Registry
@@ -79,7 +79,7 @@ Now supports **11 precompiles** total:
 |---------|----------|----------|--------|------|-------------|
 | EVM Compatible | ✅ | ✅ | ⚠️ | ✅ | ✅ |
 | Multi-Chain Bridge | ❌ | ❌ | ❌ | ❌ | **✅ 14 chains** |
-| Built-in Oracle | ❌ | ❌ | ❌ | ❌ | **✅ FlareChain** |
+| Built-in Oracle | ❌ | ❌ | ❌ | ❌ | **✅ Primearc Core Chain** |
 | MEV Protection | ❌ | ❌ | ⚠️ | ❌ | **✅ Fair ordering** |
 | Cross-Chain Swaps | ❌ | ❌ | ❌ | ❌ | **✅ Atomic** |
 | Multi-Chain Collateral | ❌ | ❌ | ❌ | ❌ | **✅ 14 assets** |
@@ -125,7 +125,7 @@ if (ethPrice > 3000e18) {
 
 ### 3. Cross-Chain Governance
 ```solidity
-// Vote on FlareChain proposals from ETH PBC
+// Vote on Primearc Core Chain proposals from ETH PBC
 gov.submitProposal("Enable Feature X", "Details...");
 gov.voteOnProposal(42, true); // Vote YES
 ```
@@ -161,7 +161,7 @@ Standard Ethereum Precompiles:
 
 Etrid Core Precompiles:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-0x800 - Oracle (FlareChain price feeds)
+0x800 - Oracle (Primearc Core Chain price feeds)
 0x801 - Governance (Cross-chain voting)
 0x802 - Staking (Validator queries)
 0x803 - Native ETH Wrapping ⭐ NEW!
@@ -191,11 +191,11 @@ Planned Precompiles:
 
 ### 2. **Zero-Cost Oracle Access**
 - No Chainlink fees
-- FlareChain consensus provides trustless prices
+- Primearc Core Chain consensus provides trustless prices
 - Real-time data from 14 blockchains
 
 ### 3. **Built-in MEV Protection**
-- Fair transaction ordering via FlareChain
+- Fair transaction ordering via Primearc Core Chain
 - No front-running possible
 - MEV revenue goes to stakers
 
@@ -333,7 +333,7 @@ ETH PBC Documentation
 
 ### 3. **Built-in Oracle** (Exists ✅)
 **Problem:** Chainlink costs gas, single point of failure
-**Solution:** Free FlareChain consensus oracle
+**Solution:** Free Primearc Core Chain consensus oracle
 
 ### 4. **Fair Ordering** (Designed 📋)
 **Problem:** MEV costs users $500M+ annually
@@ -359,7 +359,7 @@ Traditional L2:           ETH PBC:
 └────┬─────┘             └────┬─────┘
      │                        │
 ┌────▼─────┐             ┌────▼─────┐
-│ Ethereum │             │FlareChain│
+│ Ethereum │             │Primearc Core Chain│
 └──────────┘             └────┬─────┘
                               │
                     ┌─────────┴─────────┐
@@ -390,7 +390,7 @@ Traditional L2:           ETH PBC:
 ╠══════════════════════════════════════════════════════════╣
 ║                                                          ║
 ║  ✅ Native ETH Wrapping (0x803)                          ║
-║  ✅ FlareChain Oracle (0x800)                            ║
+║  ✅ Primearc Core Chain Oracle (0x800)                            ║
 ║  ✅ Cross-Chain Governance (0x801)                       ║
 ║  ✅ Validator Staking (0x802)                            ║
 ║  ✅ Lightning Channels (0x808)                           ║

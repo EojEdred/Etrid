@@ -1,4 +1,4 @@
-# Phase 4: GRANDPA Removal - Quick Start Guide
+# Phase 4: ASF Removal - Quick Start Guide
 
 **For**: Eoj / ËTRID Development Team
 **Date**: 2025-11-15
@@ -18,9 +18,9 @@
 
 ## TL;DR - What Is This?
 
-Phase 4 removes GRANDPA finality from ËTRID FlareChain, transitioning to pure ASF consensus.
+Phase 4 removes BFT checkpoint finality and ASF certificates from ËTRID Primearc Core Chain, transitioning to pure ASF consensus.
 
-**Current**: Runtime v106 with GRANDPA + ASF
+**Current**: Runtime v106 with ASF + ASF
 **After**: Runtime v108 with ASF only
 
 ## Files Created (8 Total)
@@ -37,16 +37,16 @@ Phase 4 removes GRANDPA finality from ËTRID FlareChain, transitioning to pure A
 ## 30-Second Overview
 
 **What Gets Removed**:
-- All GRANDPA code (~150 lines)
-- 6 GRANDPA dependencies
-- GRANDPA from SessionKeys
-- GRANDPA finality gadget
+- All ASF code (~150 lines)
+- 6 ASF dependencies
+- ASF from SessionKeys
+- BFT checkpoint finality and ASF certificates gadget
 
 **What Stays**:
 - ASF consensus (Adaptive Scale of Finality)
 - All validators (21 nodes)
 - All account balances
-- All pallets except GRANDPA
+- All pallets except ASF
 
 **Impact**:
 - Runtime version: 106 → 108
@@ -65,7 +65,7 @@ cd /Users/macbook/Desktop/etrid/09-consensus/asf-algorithm
 This will:
 1. Check you're on v106
 2. Backup all files (timestamped)
-3. Remove GRANDPA automatically
+3. Remove ASF automatically
 4. Update to v108
 5. Verify changes
 6. Optionally build & test
@@ -114,10 +114,10 @@ grep -c "grandpa" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime
 ## What Changed?
 
 ### Runtime (lib.rs)
-- Removed GRANDPA import
+- Removed ASF import
 - Updated SessionKeys: `{grandpa}` → `{asf}`
 - Bumped version: 106 → 108
-- Removed ~150 lines of GRANDPA code
+- Removed ~150 lines of ASF code
 
 ### Runtime Cargo.toml
 - Removed: `pallet-grandpa`
@@ -140,7 +140,7 @@ New file: `mainnet_asf_only.json`
 **Verified**:
 - ✓ Valid JSON format
 - ✓ 21 validators present
-- ✓ 0 GRANDPA references
+- ✓ 0 ASF references
 - ✓ All balances preserved
 
 ## Build & Deploy
@@ -171,9 +171,9 @@ cargo build --release
 A: Yes. All validators must upgrade to v108 simultaneously.
 
 **Q: Can we rollback if needed?**
-A: Yes. Run `./rollback_to_v106.sh` to restore GRANDPA.
+A: Yes. Run `./rollback_to_v106.sh` to restore ASF.
 
-**Q: What happens to GRANDPA keys?**
+**Q: What happens to ASF keys?**
 A: They're no longer needed. Validators only need ASF keys.
 
 **Q: Does this affect existing balances?**
@@ -218,7 +218,7 @@ Post-Migration:
 
 ## One-Line Summary
 
-**Phase 4 removes GRANDPA, transitions to pure ASF consensus, v106 → v108.**
+**Phase 4 removes ASF, transitions to pure ASF consensus, v106 → v108.**
 
 ---
 

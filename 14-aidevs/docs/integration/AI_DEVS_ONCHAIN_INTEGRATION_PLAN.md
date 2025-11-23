@@ -1,17 +1,17 @@
 # AI Devs On-Chain Integration Plan
-## Fully Integrated AI Agents for FlareChain Validators
+## Fully Integrated AI Agents for Primearc Core Chain Validators
 
 **Created:** November 4, 2025
-**Goal:** Make AI Devs a standard part of every FlareChain validator node stack
+**Goal:** Make AI Devs a standard part of every Primearc Core Chain validator node stack
 **Timeline:** 4-6 weeks for MVP, 3 months for full deployment
 
 ---
 
 ## 🎯 Vision
 
-**Every FlareChain validator runs their own AI Devs instance:**
+**Every Primearc Core Chain validator runs their own AI Devs instance:**
 - Autonomous monitoring of their node
-- Auto-compile FlareChain updates
+- Auto-compile Primearc Core Chain updates
 - Generate governance proposals
 - Security auditing
 - Economic analysis
@@ -31,9 +31,9 @@ AI Devs:
 ├─ Deployment: Manual Docker Compose
 └─ On-chain: No connection
 
-FlareChain:
+Primearc Core Chain:
 ├─ Validators: 16/21 active
-├─ Consensus: Working (ASF + GRANDPA)
+├─ Consensus: Working (ASF + ASF)
 ├─ Block Height: ~7,000+
 └─ AI Integration: None
 ```
@@ -48,7 +48,7 @@ AI Devs:
 ├─ Deployment: One-command validator add-on
 └─ On-chain: DID-based agent registration
 
-FlareChain:
+Primearc Core Chain:
 ├─ Validators: 21/21 active (each with AI Devs)
 ├─ AI Pallet: On-chain agent registry
 ├─ AI Network: 21 distributed AI agents
@@ -61,7 +61,7 @@ FlareChain:
 
 ### Layer 1: Blockchain Integration
 
-**New FlareChain Pallet: `pallet-ai-agents`**
+**New Primearc Core Chain Pallet: `pallet-ai-agents`**
 
 ```rust
 // Substrate pallet for AI agent registration and coordination
@@ -130,9 +130,9 @@ pub enum AgentAction {
 ├─────────────────────────────────────────────────┤
 │                                                  │
 │  ┌──────────────────────────────────────────┐  │
-│  │  FlareChain Node (flarechain-validator)  │  │
+│  │  Primearc Core Chain Node (flarechain-validator)  │  │
 │  │  - Block production (AURA)                │  │
-│  │  - Finality voting (GRANDPA + ASF)        │  │
+│  │  - Finality voting (ASF + ASF)        │  │
 │  │  - RPC: ws://localhost:9944               │  │
 │  └──────────────────────────────────────────┘  │
 │           ↕ WebSocket RPC                       │
@@ -178,7 +178,7 @@ Validator 1 (Gizzi)          Validator 2 (Azure-VM1)      Validator 3 (AuditDev)
 ...                          ...                          ...
         ↓                            ↓                            ↓
     ────────────────────────────────────────────────────────────────
-                         FlareChain Blockchain
+                         Primearc Core Chain Blockchain
                       (pallet-ai-agents registry)
     ────────────────────────────────────────────────────────────────
                                   ↓
@@ -211,7 +211,7 @@ import json
 
 async def execute(context, parameters):
     """
-    Compiles FlareChain from source
+    Compiles Primearc Core Chain from source
     Returns: build status, errors, warnings
     """
     # 1. Check for code changes
@@ -279,7 +279,7 @@ async def execute(context, parameters):
 
     # 2. Ask Claude to draft proposal
     prompt = f"""
-    You are a FlareChain governance AI.
+    You are a Primearc Core Chain governance AI.
 
     Current state:
     - Treasury: {chain_state['treasury_balance']} ETR
@@ -436,7 +436,7 @@ async def execute(context, parameters):
 
 ### Phase 2: On-Chain Pallet Development (1.5 weeks)
 
-**Add `pallet-ai-agents` to FlareChain runtime:**
+**Add `pallet-ai-agents` to Primearc Core Chain runtime:**
 
 ```bash
 cd ~/Desktop/etrid/05-multichain/flare-chain
@@ -671,12 +671,12 @@ cargo build --release
 
 ```bash
 #!/bin/bash
-# AI Devs Installer for FlareChain Validators
+# AI Devs Installer for Primearc Core Chain Validators
 # Usage: curl -sSL https://raw.githubusercontent.com/etrid/etrid/main/install-ai-devs.sh | bash
 
 set -e
 
-echo "🤖 Installing AI Devs for FlareChain Validator..."
+echo "🤖 Installing AI Devs for Primearc Core Chain Validator..."
 
 # 1. Detect validator setup
 VALIDATOR_HOME=$(eval echo ~$(whoami))
@@ -763,7 +763,7 @@ echo "✅ Checking health..."
 curl -s http://localhost:4000/health | jq . || echo "⚠️ AI Devs not responding yet (give it a minute)"
 
 # 8. Register agents on-chain
-echo "📝 Registering AI agents on FlareChain..."
+echo "📝 Registering AI agents on Primearc Core Chain..."
 
 # Create registration script
 cat > register-agents.sh << 'REGISTER_EOF'
@@ -996,6 +996,6 @@ curl -X POST localhost:4000/execute \
 
 ---
 
-**This plan transforms AI Devs from a prototype to production infrastructure integrated into every FlareChain validator! 🤖🚀**
+**This plan transforms AI Devs from a prototype to production infrastructure integrated into every Primearc Core Chain validator! 🤖🚀**
 
 Let me know which phase you want to start with!

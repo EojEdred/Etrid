@@ -1,18 +1,18 @@
 # ETH PBC - EDSC Bridge Integration
 
 **Date**: November 2, 2025
-**Purpose**: Enable cross-chain reward transfers between ETH PBC and FlareChain via EDSC
+**Purpose**: Enable cross-chain reward transfers between ETH PBC and Primearc Core Chain via EDSC
 
 ---
 
 ## Overview
 
-This integration allows users who stake LP tokens on ETH PBC's MasterChef contract to bridge their ETR rewards to FlareChain using the EDSC (Ëtrid Decentralized Stablecoin) burn-and-mint bridge mechanism.
+This integration allows users who stake LP tokens on ETH PBC's MasterChef contract to bridge their ETR rewards to Primearc Core Chain using the EDSC (Ëtrid Decentralized Stablecoin) burn-and-mint bridge mechanism.
 
 ### Architecture
 
 ```
-ETH PBC (EVM Chain)          EDSC Bridge Network          FlareChain (Substrate)
+ETH PBC (EVM Chain)          EDSC Bridge Network          Primearc Core Chain (Substrate)
 ┌─────────────────┐         ┌────────────────┐          ┌──────────────────┐
 │                 │         │                │          │                  │
 │  MasterChef     │         │  TokenMessenger│          │  EDSC Pallet     │
@@ -44,18 +44,18 @@ ETH PBC (EVM Chain)          EDSC Bridge Network          FlareChain (Substrate)
 #### User Functions
 
 **bridgeRewards(uint256 amount, bytes32 destinationAddress)**
-- Bridge ETR rewards from ETH PBC to FlareChain
+- Bridge ETR rewards from ETH PBC to Primearc Core Chain
 - Burns EDSC equivalent on ETH PBC
-- Mints EDSC on FlareChain at destination address
+- Mints EDSC on Primearc Core Chain at destination address
 - Returns: `transferId` for tracking
 
-**harvestAndBridge(uint256 poolId, bool bridgeToFlareChain, bytes32 destinationAddress)**
+**harvestAndBridge(uint256 poolId, bool bridgeToPrimearc Core Chain, bytes32 destinationAddress)**
 - Harvest MasterChef rewards
-- Optionally bridge them to FlareChain in one transaction
+- Optionally bridge them to Primearc Core Chain in one transaction
 - Convenience function for seamless UX
 
 **receiveRewards(address recipient, uint256 amount, bytes32 transferId, bytes attestation)**
-- Receive bridged rewards on ETH PBC (from FlareChain)
+- Receive bridged rewards on ETH PBC (from Primearc Core Chain)
 - Requires 3-of-5 multisig attestation
 - Mints EDSC tokens to recipient
 
@@ -66,8 +66,8 @@ ETH PBC (EVM Chain)          EDSC Bridge Network          FlareChain (Substrate)
 
 ### Events
 
-- `RewardBridged` - Emitted when rewards are sent to FlareChain
-- `RewardReceived` - Emitted when rewards arrive from FlareChain
+- `RewardBridged` - Emitted when rewards are sent to Primearc Core Chain
+- `RewardReceived` - Emitted when rewards arrive from Primearc Core Chain
 
 ---
 
@@ -108,8 +108,8 @@ npx hardhat run deploy-eth-pbc-bridge.ts --network eth-pbc
 3. **Test Bridge Flow**
    - Stake LP tokens on MasterChef
    - Earn ETR rewards
-   - Bridge rewards to FlareChain
-   - Verify receipt on FlareChain
+   - Bridge rewards to Primearc Core Chain
+   - Verify receipt on Primearc Core Chain
 
 ---
 
@@ -142,7 +142,7 @@ npx hardhat run deploy-eth-pbc-bridge.ts --network eth-pbc
 
 ## Cross-Chain Flow
 
-### ETH PBC → FlareChain
+### ETH PBC → Primearc Core Chain
 
 1. User has ETR rewards in wallet (from MasterChef)
 2. User calls `bridgeRewards(amount, flareChainAddress)`
@@ -151,12 +151,12 @@ npx hardhat run deploy-eth-pbc-bridge.ts --network eth-pbc
 5. EDSC burned on ETH PBC
 6. Oracle network observes burn event
 7. 3 of 5 oracles sign attestation
-8. EDSC minted on FlareChain to destination address
+8. EDSC minted on Primearc Core Chain to destination address
 
-### FlareChain → ETH PBC
+### Primearc Core Chain → ETH PBC
 
-1. User initiates transfer on FlareChain
-2. EDSC burned on FlareChain
+1. User initiates transfer on Primearc Core Chain
+2. EDSC burned on Primearc Core Chain
 3. Oracle network observes burn event
 4. 3 of 5 oracles create attestation
 5. User (or relayer) calls `receiveRewards()` on ETH PBC
@@ -176,7 +176,7 @@ MasterChef.harvest(poolId);
 // Option 2: Harvest and bridge in one transaction
 BridgeAdapter.harvestAndBridge(
     poolId,
-    true,                    // bridge to FlareChain
+    true,                    // bridge to Primearc Core Chain
     flareChainAddress        // destination
 );
 ```
@@ -188,7 +188,7 @@ BridgeAdapter.harvestAndBridge(
 ### Chain IDs
 
 - **ETH PBC**: 8888 (update after genesis)
-- **FlareChain Domain**: 1 (EDSC bridge domain ID)
+- **Primearc Core Chain Domain**: 1 (EDSC bridge domain ID)
 
 ### Contract Addresses
 
@@ -233,8 +233,8 @@ npx hardhat test test/ETHPBCBridgeAdapter.test.ts
    - Stake LP tokens
    - Wait for rewards to accrue
    - Harvest rewards
-   - Bridge to FlareChain
-   - Verify receipt on FlareChain
+   - Bridge to Primearc Core Chain
+   - Verify receipt on Primearc Core Chain
    - Bridge back to ETH PBC
    - Verify receipt on ETH PBC
 
@@ -281,8 +281,8 @@ BridgeAdapter.on("RewardReceived", (user, amount, transferId) => {
 
 ### Metrics
 
-- Total volume bridged (ETH PBC → FlareChain)
-- Total volume bridged (FlareChain → ETH PBC)
+- Total volume bridged (ETH PBC → Primearc Core Chain)
+- Total volume bridged (Primearc Core Chain → ETH PBC)
 - Average bridge time
 - Failed transfers
 - Oracle uptime

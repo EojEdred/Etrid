@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide explains the vesting configuration for FlareChain mainnet genesis, including how team allocation (375M ÉTR) is distributed with vesting schedules.
+This guide explains the vesting configuration for Primearc Core Chain mainnet genesis, including how team allocation (375M ÉTR) is distributed with vesting schedules.
 
 ---
 
@@ -216,7 +216,7 @@ impl pallet_vesting::Config for Runtime {
 1. **Replace Placeholder Addresses**
    - Generate secure addresses for all team members
    - Generate validator stash addresses
-   - Generate GRANDPA authority keys
+   - Generate ASF authority keys
    - Generate foundation multisig address
 
 2. **Build Final Chain Spec**

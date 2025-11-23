@@ -8,7 +8,7 @@ This guide explains how the new unified deployment system integrates with ETH PB
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      FlareChain                              │
+│                      Primearc Core Chain                              │
 │                   (Substrate Layer)                          │
 │  • Native ETR token                                          │
 │  • Bridge pallets (12 chains)                                │
@@ -43,12 +43,12 @@ This guide explains how the new unified deployment system integrates with ETH PB
 
 ## Integration Points
 
-### 1. ETH PBC ↔ FlareChain Bridge
+### 1. ETH PBC ↔ Primearc Core Chain Bridge
 
 **Current Status**: Bridge operators configured, 12 bridge pallets active
 
 **How it works**:
-- FlareChain bridge pallets lock native ETR
+- Primearc Core Chain bridge pallets lock native ETR
 - Bridge operator relays proof to ETH PBC
 - ETH PBC bridge adapter mints WrappedETR
 - Reverse flow: burn WrappedETR → unlock native ETR
@@ -85,14 +85,14 @@ This guide explains how the new unified deployment system integrates with ETH PB
 - Users provide LP tokens (e.g., wETR/EDSC pair)
 - Stake LP tokens in MasterChef pools
 - Earn ETR rewards per block
-- Harvest rewards → keep on ETH PBC or bridge to FlareChain
+- Harvest rewards → keep on ETH PBC or bridge to Primearc Core Chain
 
 **Integration with Bridge**:
 ```solidity
 // Harvest and bridge in one transaction
 bridgeAdapter.harvestAndBridge(
   poolId: 0,
-  bridgeToFlareChain: true,
+  bridgeToPrimearc Core Chain: true,
   destinationAddress: bytes32(substrate_account)
 )
 ```
@@ -104,7 +104,7 @@ bridgeAdapter.harvestAndBridge(
 ### Phase 1: Core Infrastructure (Current State)
 
 ✅ **Completed**:
-- FlareChain running with bridge pallets
+- Primearc Core Chain running with bridge pallets
 - RPC node operational: `163.192.125.23:9944`
 - Bridge operator account funded and configured
 - All 12 bridge pallets have operators set
@@ -164,11 +164,11 @@ npx hardhat run scripts/configure-oracles.js --network ethereum
 ### Phase 5: Integration Testing
 
 **Test flow**:
-1. Bridge ETR from FlareChain → ETH PBC
+1. Bridge ETR from Primearc Core Chain → ETH PBC
 2. Provide liquidity on ETH PBC DEX
 3. Stake LP tokens in MasterChef
 4. Harvest rewards
-5. Bridge rewards back to FlareChain
+5. Bridge rewards back to Primearc Core Chain
 
 ## Technical Improvements Over Previous System
 
@@ -228,8 +228,8 @@ interface IERC20 {
 
 ### Example 1: Stake and Earn
 
-1. User bridges 1000 ETR from FlareChain → ETH PBC
-   - Lock 1000 ETR on FlareChain
+1. User bridges 1000 ETR from Primearc Core Chain → ETH PBC
+   - Lock 1000 ETR on Primearc Core Chain
    - Mint 1000 wETR on ETH PBC
 
 2. User provides liquidity on ETH PBC DEX
@@ -262,7 +262,7 @@ interface IERC20 {
 
 ### Health Checks
 
-**FlareChain**:
+**Primearc Core Chain**:
 ```bash
 curl -X POST http://163.192.125.23:9944 \
   -H "Content-Type: application/json" \

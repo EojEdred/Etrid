@@ -1,10 +1,10 @@
 # Pallet ASF (Ascending Scale of Finality)
 
-Production-ready Substrate pallet that integrates the ASF consensus algorithm into the FlareChain runtime.
+Production-ready Substrate pallet that integrates the ASF consensus algorithm into the Primearc Core Chain runtime.
 
 ## Overview
 
-This pallet wraps the `asf-algorithm` crate to provide runtime storage, callable functions, and hooks for managing the ASF consensus protocol on FlareChain.
+This pallet wraps the `asf-algorithm` crate to provide runtime storage, callable functions, and hooks for managing the ASF consensus protocol on Primearc Core Chain.
 
 ### Features
 
@@ -268,7 +268,7 @@ pub trait Config: frame_system::Config {
 
 ## Runtime Integration
 
-Add to FlareChain runtime's `Cargo.toml`:
+Add to Primearc Core Chain runtime's `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -395,7 +395,7 @@ See the main ËTRID repository for contribution guidelines.
 
 ## Next Steps
 
-1. **Integrate with FlareChain Runtime**: Add pallet to `runtime/src/lib.rs`
+1. **Integrate with Primearc Core Chain Runtime**: Add pallet to `runtime/src/lib.rs`
 2. **Connect SlashHandler**: Link to `pallet-etrid-staking`
 3. **Connect FinalityNotifier**: Link to `finality-gadget`
 4. **Add Runtime API**: Expose consensus state queries

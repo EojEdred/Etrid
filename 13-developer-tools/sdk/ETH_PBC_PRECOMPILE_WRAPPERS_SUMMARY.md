@@ -8,17 +8,17 @@
 
 ## Overview
 
-Successfully implemented comprehensive SDK wrappers for all 7 ETH PBC (Ethereum Partition Burst Chain) precompiles across Python, Rust, and JavaScript/TypeScript. These wrappers enable developers to seamlessly access FlareChain features from EVM smart contracts.
+Successfully implemented comprehensive SDK wrappers for all 7 ETH PBC (Ethereum Partition Burst Chain) precompiles across Python, Rust, and JavaScript/TypeScript. These wrappers enable developers to seamlessly access Primearc Core Chain features from EVM smart contracts.
 
 ## Precompile Addresses
 
 | Address | Name | Description |
 |---------|------|-------------|
-| **0x800** | Oracle | FlareChain price feeds (zero-cost oracle access) |
+| **0x800** | Oracle | Primearc Core Chain price feeds (zero-cost oracle access) |
 | **0x801** | Governance | Cross-chain governance voting |
 | **0x802** | Staking | Validator and staking queries |
 | **0x803** | Native ETH Wrap | Zero-fee ETH <-> wETH conversion |
-| **0x804** | XCM Bridge | Cross-chain transfers to FlareChain |
+| **0x804** | XCM Bridge | Cross-chain transfers to Primearc Core Chain |
 | **0x805** | Token Registry | Auto-discover registered tokens |
 | **0x806** | State Proof | Ethereum state verification |
 
@@ -33,7 +33,7 @@ Successfully implemented comprehensive SDK wrappers for all 7 ETH PBC (Ethereum 
 
 #### Features Implemented:
 - **Oracle (0x800)**
-  - `get_oracle_price(symbol, quote)` - Get price from FlareChain oracle
+  - `get_oracle_price(symbol, quote)` - Get price from Primearc Core Chain oracle
   - `get_oracle_twap(pair, window)` - Time-weighted average price (planned)
   - `get_oracle_last_update(symbol)` - Last update timestamp
 
@@ -56,8 +56,8 @@ Successfully implemented comprehensive SDK wrappers for all 7 ETH PBC (Ethereum 
   - `get_wrap_rate()` - Current wrap rate
 
 - **XCM Bridge (0x804)**
-  - `bridge_to_flarechain(amount)` - Bridge to FlareChain (planned)
-  - `bridge_from_flarechain(amount)` - Bridge from FlareChain (planned)
+  - `bridge_to_flarechain(amount)` - Bridge to Primearc Core Chain (planned)
+  - `bridge_from_flarechain(amount)` - Bridge from Primearc Core Chain (planned)
 
 - **Token Registry (0x805)**
   - `get_token_info(token_address)` - Get registered token metadata
@@ -190,8 +190,8 @@ Successfully implemented comprehensive SDK wrappers for all 7 ETH PBC (Ethereum 
    - `getWrapRate()` → uint256
 
 5. **IEtridBridge.sol** (104 lines)
-   - `bridgeToFlareChain(uint256 amount)` → bytes32
-   - `bridgeFromFlareChain(bytes32 messageId)`
+   - `bridgeToPrimearc Core Chain(uint256 amount)` → bytes32
+   - `bridgeFromPrimearc Core Chain(bytes32 messageId)`
    - `getBridgeStatus(bytes32 messageId)` → uint8
    - Events: `BridgeInitiated`, `BridgeCompleted`
 
@@ -273,7 +273,7 @@ Address: 0x...
 Chain ID: 1337
 
 ============================================================
-1. ORACLE - FlareChain Price Feeds (FREE!)
+1. ORACLE - Primearc Core Chain Price Feeds (FREE!)
 ============================================================
 
 BTC/USD: $50000.00
@@ -324,7 +324,7 @@ Price age: 120 seconds (2 minutes)
 
 ### 1. **Free Oracle Access (0x800)**
 - **Traditional:** Pay Chainlink fees per query (~0.1 ETH/query)
-- **Etrid:** Zero cost, data from FlareChain consensus
+- **Etrid:** Zero cost, data from Primearc Core Chain consensus
 - **Impact:** DeFi protocols can query prices continuously without cost concerns
 
 ### 2. **Zero-Fee ETH Wrapping (0x803)**
@@ -335,7 +335,7 @@ Price age: 120 seconds (2 minutes)
 ### 3. **Cross-Chain Governance (0x801)**
 - **Traditional:** Separate governance per chain
 - **Etrid:** Unified governance across all 14 chains
-- **Impact:** ETH PBC users participate in FlareChain decisions
+- **Impact:** ETH PBC users participate in Primearc Core Chain decisions
 
 ### 4. **Multi-Chain Collateral (0x802 + 0x800)**
 - **Traditional:** Single-chain collateral only
@@ -361,7 +361,7 @@ Price age: 120 seconds (2 minutes)
 
 ## Technical Architecture
 
-### Precompile → XCM → FlareChain Flow
+### Precompile → XCM → Primearc Core Chain Flow
 
 ```
 ETH PBC Smart Contract
@@ -372,7 +372,7 @@ ETH PBC Smart Contract
         ↓
     Cross-Consensus Message
         ↓
-    FlareChain Pallet
+    Primearc Core Chain Pallet
         ↓
     Oracle / Governance / Staking Data
         ↓
@@ -384,7 +384,7 @@ ETH PBC Smart Contract
 ```
 
 ### Security Model
-- **Oracle:** Data from 100+ FlareChain validators via ASF consensus
+- **Oracle:** Data from 100+ Primearc Core Chain validators via ASF consensus
 - **Governance:** Weighted voting based on ETR stake
 - **Staking:** Read-only queries, no security risk
 - **Wrapping:** Precompile manages reserve pool
@@ -547,7 +547,7 @@ contract PriceTracker {
 
 ### For Developers
 - **3 SDKs:** Python, Rust, JavaScript - choose your language
-- **7 Precompiles:** Access FlareChain from EVM contracts
+- **7 Precompiles:** Access Primearc Core Chain from EVM contracts
 - **Zero Learning Curve:** Standard Web3 APIs (web3.py, ethers-rs, ethers.js)
 - **Novel Features:** Oracle, governance, multi-chain collateral
 
@@ -555,7 +555,7 @@ contract PriceTracker {
 - **Lower Costs:** Free oracle queries, zero-fee wrapping
 - **Better UX:** Instant cross-chain operations
 - **More Options:** Use any asset as collateral
-- **Higher Security:** FlareChain's 100+ validator consensus
+- **Higher Security:** Primearc Core Chain's 100+ validator consensus
 
 ### For DeFi Protocols
 - **10x Capital Efficiency:** Multi-chain collateral

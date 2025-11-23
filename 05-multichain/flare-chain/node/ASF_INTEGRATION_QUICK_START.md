@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide helps developers integrate and use the ASF consensus RPC and telemetry features in FlareChain.
+This guide helps developers integrate and use the ASF consensus RPC and telemetry features in Primearc Core Chain.
 
 ---
 
@@ -386,7 +386,7 @@ scrape_configs:
 
 ## Development Workflow
 
-### Running FlareChain with ASF
+### Running Primearc Core Chain with ASF
 
 **1. Build the node:**
 
@@ -637,7 +637,7 @@ if event_buffer.len() >= 100 || time_since_last_emit > 10_000 {
 ## References
 
 - **ASF Algorithm:** `/Users/macbook/Desktop/etrid/09-consensus/asf-algorithm/`
-- **FlareChain Node:** `/Users/macbook/Desktop/etrid/05-multichain/flare-chain/node/`
+- **Primearc Core Chain Node:** `/Users/macbook/Desktop/etrid/05-multichain/flare-chain/node/`
 - **Implementation Report:** `/Users/macbook/Desktop/etrid/09-consensus/asf-algorithm/ASF_SERVICE_IMPLEMENTATION_REPORT.md`
 - **Ivory Papers:** (link to consensus specification)
 

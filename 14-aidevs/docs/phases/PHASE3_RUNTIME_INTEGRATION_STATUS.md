@@ -93,7 +93,7 @@ but `sp-api-proc-macro` does not have that feature.
 ```
 
 **Root Cause:**
-The pallet was originally created with `frame-benchmarking v28.0.0` which has different version requirements than the rest of the FlareChain runtime.
+The pallet was originally created with `frame-benchmarking v28.0.0` which has different version requirements than the rest of the Primearc Core Chain runtime.
 
 **Attempted Fix:**
 Removed `frame-benchmarking` dependency completely from pallet (benchmarking can be added later).
@@ -104,7 +104,7 @@ Removed `frame-benchmarking` dependency completely from pallet (benchmarking can
 
 ### Option 1: Match Substrate Versions (Recommended)
 
-Check what Substrate/Polkadot SDK version FlareChain runtime uses:
+Check what Substrate/Polkadot SDK version Primearc Core Chain runtime uses:
 
 ```bash
 # Check runtime's Substrate version

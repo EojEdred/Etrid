@@ -345,7 +345,7 @@
    - Who should have access? (Eoj only, or multiple admins?)
 
 3. **On-Chain Registration:**
-   - Which chain to register DIDs on? (FlareChain testnet, dev chain, or wait for Ember?)
+   - Which chain to register DIDs on? (Primearc Core Chain testnet, dev chain, or wait for Ember?)
    - Should we deploy a local dev chain for testing first?
 
 4. **Web Interface Priority:**

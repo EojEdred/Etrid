@@ -13,7 +13,7 @@
 
 - **13 Core Components:** All at 100% Alpha completion
 - **Consensus:** Ascending Scale of Finality (ASF) + PPFA proposer selection
-- **Architecture:** FlareChain relay chain + 13 Partition Burst Chains (PBCs)
+- **Architecture:** Primearc Core Chain relay chain + 13 Partition Burst Chains (PBCs)
 - **Tokens:** ÉTR (native coin) + ËDSC (dollar-pegged stablecoin)
 - **Smart Contracts:** ËtwasmVM (WebAssembly) with reentrancy protection
 - **Identity:** OpenDID + AIDID (world's first AI DID standard)
@@ -35,7 +35,7 @@
 ├── 02-open-did/            # Identity (OpenDID + AIDID)
 ├── 03-security/            # Post-quantum cryptography
 ├── 04-accounts/            # Account types + social recovery
-├── 05-multichain/          # FlareChain + 13 PBCs + bridges
+├── 05-multichain/          # Primearc Core Chain + 13 PBCs + bridges
 ├── 06-native-currency/     # ÉTR, ËDSC, VMw tokens
 ├── 07-transactions/        # Transaction system + Lightning-Bloc
 ├── 08-etwasm-vm/           # WebAssembly smart contracts
@@ -82,7 +82,7 @@
 2. **OpenDID** - Decentralized identity + AIDID for AI agents
 3. **Security** - Post-quantum cryptography (Ed25519 + SPHINCS+)
 4. **Accounts** - Multi-signature + social recovery
-5. **Multichain** - FlareChain + 13 PBCs
+5. **Multichain** - Primearc Core Chain + 13 PBCs
 6. **Native Currency** - ÉTR (coin) + ËDSC (stablecoin) + VMw (gas)
 7. **Transactions** - Ed25519 signatures + HTLCs
 8. **ËtwasmVM** - WebAssembly with reentrancy protection
@@ -158,7 +158,7 @@ cd tests/property-based && PROPTEST_CASES=5000 cargo test --release
 
 ### Node Operations
 ```bash
-# Run FlareChain validator (dev mode)
+# Run Primearc Core Chain validator (dev mode)
 ./target/release/etrid --chain flare --validator --dev
 
 # Run PBC collator (e.g., BTC)

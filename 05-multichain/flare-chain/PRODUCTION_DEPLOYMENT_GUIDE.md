@@ -1,4 +1,4 @@
-# FlareChain Production Deployment Guide
+# Primearc Core Chain Production Deployment Guide
 
 **Date**: 2025-11-11
 **Version**: 1.0
@@ -21,18 +21,18 @@
 
 ## Overview
 
-This guide covers the deployment of FlareChain mainnet with the GRANDPA finality fix. The fix ensures:
+This guide covers the deployment of Primearc Core Chain mainnet with the BFT checkpoint finality and ASF certificates fix. The fix ensures:
 
 - ✅ ValidatorCommittee is populated at genesis (21 validators)
-- ✅ ASF loads GRANDPA keys correctly
-- ✅ GRANDPA finality progresses beyond block #0
-- ✅ Hybrid ASF + GRANDPA finality working
+- ✅ ASF loads ASF keys correctly
+- ✅ BFT checkpoint finality and ASF certificates progresses beyond block #0
+- ✅ Hybrid ASF + BFT checkpoint finality and ASF certificates working
 
 ### Architecture
 
-**Consensus Mechanism**: Hybrid ASF + GRANDPA
+**Consensus Mechanism**: Hybrid ASF + ASF
 - **Block Production**: AURA (6-second slots) with ASF PPFA coordination
-- **Finality**: ASF pre-commitment + GRANDPA finalization
+- **Finality**: ASF pre-commitment + ASF finalization
 - **Committee Size**: 21 validators
 - **Epoch Duration**: 2400 blocks (~4 hours)
 
@@ -53,7 +53,7 @@ This guide covers the deployment of FlareChain mainnet with the GRANDPA finality
 - Rust 1.70+ (for building from source)
 - `flarechain-node` binary (release build)
 - Chain spec: `chainspec-mainnet.json`
-- Validator keys (GRANDPA + AURA)
+- Validator keys (ASF + AURA)
 
 ---
 
@@ -135,7 +135,7 @@ Generate validator keys on each validator:
 # Generate AURA session key (Sr25519)
 flarechain-node key generate --scheme sr25519 --output-type json
 
-# Generate GRANDPA session key (Ed25519)
+# Generate ASF session key (Ed25519)
 flarechain-node key generate --scheme ed25519 --output-type json
 ```
 
@@ -157,7 +157,7 @@ flarechain-node key insert \
   --suri "<secret-seed>" \
   --key-type aura
 
-# Insert GRANDPA key
+# Insert ASF key
 flarechain-node key insert \
   --base-path /opt/flarechain/data \
   --chain /opt/flarechain/chainspec-mainnet.json \
@@ -172,7 +172,7 @@ Verify keys are inserted:
 ls /opt/flarechain/data/chains/flarechain_mainnet/keystore/
 ```
 
-You should see two files (AURA and GRANDPA keys).
+You should see two files (AURA and ASF keys).
 
 ---
 
@@ -184,7 +184,7 @@ Create `/etc/systemd/system/flarechain-validator.service`:
 
 ```ini
 [Unit]
-Description=FlareChain Validator Node
+Description=Primearc Core Chain Validator Node
 After=network.target
 
 [Service]
@@ -236,12 +236,12 @@ sudo journalctl -u flarechain-validator -f
 ✅ Loaded 21 committee members from runtime at block 0x...
 👥 Initializing ASF Validator Management
 ✅ Loaded 21 validators from genesis ValidatorCommittee
-✅ ASF FlareChain node started successfully
+✅ ASF Primearc Core Chain node started successfully
    - Block Production: ASF PPFA (slot_duration: 6000ms)
-   - Finality: Hybrid (ASF + GRANDPA)
+   - Finality: Hybrid (ASF + ASF)
    - Committee Size: 21
    - Epoch Duration: 2400 blocks
-🔑 ASF using GRANDPA key from keystore: <key>
+🔑 ASF using ASF key from keystore: <key>
 ```
 
 ### 4. Network Bootstrap
@@ -278,7 +278,7 @@ curl -H "Content-Type: application/json" \
 
 ### 2. Finality Verification
 
-**Critical Check**: Verify GRANDPA finality is progressing
+**Critical Check**: Verify BFT checkpoint finality and ASF certificates is progressing
 
 ```bash
 # Check finalized block
@@ -383,7 +383,7 @@ sudo journalctl -u flarechain-validator -f | grep -E "(ASF|PPFA|pre-commit|commi
 ### Issue: Keys Not Loading
 
 **Symptoms**:
-- "No GRANDPA key found in keystore"
+- "No ASF key found in keystore"
 - ASF doesn't initialize
 
 **Solutions**:
@@ -393,7 +393,7 @@ sudo journalctl -u flarechain-validator -f | grep -E "(ASF|PPFA|pre-commit|commi
    ls /opt/flarechain/data/chains/flarechain_mainnet/keystore/
    ```
 
-2. Check key type is correct (Ed25519 for GRANDPA, Sr25519 for AURA)
+2. Check key type is correct (Ed25519 for ASF, Sr25519 for AURA)
 
 3. Re-insert keys with correct scheme:
    ```bash
@@ -519,8 +519,8 @@ sudo journalctl -u flarechain-validator -f
 ## Support and Resources
 
 **Documentation**:
-- FlareChain Architecture: `/docs/architecture.md`
-- GRANDPA Fix Details: `/tmp/FINAL_TEST_SUMMARY.md`
+- Primearc Core Chain Architecture: `/docs/architecture.md`
+- ASF Fix Details: `/tmp/FINAL_TEST_SUMMARY.md`
 - ValidatorCommittee Fix: `/tmp/VALIDATOR_COMMITTEE_FIX_COMPLETE.md`
 
 **Logs**:
@@ -542,7 +542,7 @@ Use this checklist to ensure a complete deployment:
 - [ ] Build node binary with release profile
 - [ ] Generate production chain spec with `--chain flarechain`
 - [ ] Verify chain spec has 182 storage keys
-- [ ] Generate validator keys (AURA + GRANDPA) for each validator
+- [ ] Generate validator keys (AURA + ASF) for each validator
 - [ ] Securely store secret seeds offline
 
 ### Deployment
@@ -560,12 +560,12 @@ Use this checklist to ensure a complete deployment:
 - [ ] Verify they connect to each other
 - [ ] Start remaining 16 validators
 - [ ] Monitor all nodes for "Loaded 21 validators" message
-- [ ] Verify ASF loads GRANDPA keys
+- [ ] Verify ASF loads ASF keys
 
 ### Verification
 
 - [ ] Check block production starts (after quorum reached)
-- [ ] Verify GRANDPA finality progresses beyond #0
+- [ ] Verify BFT checkpoint finality and ASF certificates progresses beyond #0
 - [ ] Monitor finality lag stays <10 blocks
 - [ ] Check all validators are connected (peer count)
 - [ ] Verify telemetry reporting works
@@ -582,17 +582,17 @@ Use this checklist to ensure a complete deployment:
 
 ## Conclusion
 
-This deployment guide covers all aspects of deploying FlareChain mainnet with the GRANDPA finality fix. The fix ensures:
+This deployment guide covers all aspects of deploying Primearc Core Chain mainnet with the BFT checkpoint finality and ASF certificates fix. The fix ensures:
 
 1. ✅ **ValidatorCommittee Populated**: 21 validators loaded at genesis
-2. ✅ **ASF Key Loading**: Correctly loads GRANDPA keys from keystores
-3. ✅ **GRANDPA Finality**: Finalizes blocks beyond genesis block #0
+2. ✅ **ASF Key Loading**: Correctly loads ASF keys from keystores
+3. ✅ **ASF Finality**: Finalizes blocks beyond genesis block #0
 4. ✅ **Production Ready**: Tested with 2-validator local testnet
 
-When deployed with 21 validators, FlareChain will:
+When deployed with 21 validators, Primearc Core Chain will:
 - Produce blocks every 6 seconds using AURA + ASF PPFA
 - Pre-commit blocks through ASF with 2/3+ quorum
-- Finalize blocks with GRANDPA
+- Finalize blocks with ASF
 - Maintain a finality lag of 2-5 blocks
 
 **The fix is production-ready.** 🚀

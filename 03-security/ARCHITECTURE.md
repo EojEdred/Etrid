@@ -41,7 +41,7 @@ The Security layer provides cryptographic primitives, key management, and future
 └───────────────────────────────┼──────────────────────────────┘
                                 ↓
                         All Ëtrid Components
-              (FlareChain, PBCs, P2P, Accounts, etc.)
+              (Primearc Core Chain, PBCs, P2P, Accounts, etc.)
 ```
 
 ## Components

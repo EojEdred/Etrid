@@ -104,7 +104,7 @@ For each existing bridge pallet, follow the guide:
 
 ### Deployment
 - [ ] Build runtime: `cd 05-multichain/flare-chain/node && cargo build --release`
-- [ ] Perform runtime upgrade on FlareChain
+- [ ] Perform runtime upgrade on Primearc Core Chain
 - [ ] Set lock account: `etrLock.setLockAccount(COMMUNITY_LP_POOL_ADDRESS)`
 - [ ] Verify pallet accessible: Check Polkadot.js Apps → Developer → Extrinsics → etrLock
 
@@ -122,14 +122,14 @@ For each existing bridge pallet, follow the guide:
 
 ### Before EtrLock:
 ```
-FlareChain: 2.521B ETR
+Primearc Core Chain: 2.521B ETR
 External chains: 0 ETR
 Total: 2.521B ETR ✅
 ```
 
 ### After Bridging 300K ETR:
 ```
-FlareChain:
+Primearc Core Chain:
   - Circulating: 2,520,700,000 ETR
   - Locked (EtrLock): 300,000 ETR
   - Total: 2.521B ETR ✅

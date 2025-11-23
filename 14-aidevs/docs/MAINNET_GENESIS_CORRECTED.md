@@ -53,7 +53,7 @@
 
 ```json
 {
-  "name": "Ëtrid FlareChain",
+  "name": "Ëtrid Primearc Core Chain",
   "id": "flarechain",
   "chainType": "Live",
   "protocolId": "flarechain",
@@ -166,7 +166,7 @@ From `/docs/TOKEN_ALLOCATION_FOR_LIQUIDITY.md`:
 5. **Founders Pool** (your address or multisig)
 6. **Initial Circulating** (exchange/distribution address)
 7. **7 Validator Stash Addresses**
-8. **7 GRANDPA Authority Keys** (Ed25519 public keys)
+8. **7 ASF Authority Keys** (Ed25519 public keys)
 
 **Total:** 13+ addresses needed
 
@@ -270,7 +270,7 @@ Smallest unit: 0.000000000001 ÉTR (1 picoÉTR)
 
 ## 💡 Key Differences: Testnet vs Mainnet
 
-| Parameter | Ember Testnet | FlareChain Mainnet |
+| Parameter | Ember Testnet | Primearc Core Chain Mainnet |
 |-----------|---------------|-------------------|
 | **Decimals** | 12 | 12 ✅ (now matches!) |
 | **Symbol** | ETR | ÉTR |

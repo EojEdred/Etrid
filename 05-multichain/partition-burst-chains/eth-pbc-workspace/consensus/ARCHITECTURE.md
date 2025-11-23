@@ -115,7 +115,7 @@ The ASF (Adaptive Stake-Weighted Finality) consensus system is Ëtrid's custom B
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    External Integrations                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  • FlareChain (Root Chain)     • PBC Chains (12 Side Chains)       │
+│  • Primearc Core Chain (Root Chain)     • PBC Chains (12 Side Chains)       │
 │  • Staking Pallet              • Governance Pallet                  │
 │  • Bridge Infrastructure       • Network Layer (P2P)                │
 └─────────────────────────────────────────────────────────────────────┘
@@ -897,7 +897,7 @@ Block B enters consensus at epoch E:
 ├─────────────────────────────────────────────┤
 │ • Network-wide propagation continues        │
 │ • PBC validators issue certificates         │
-│ • FlareChain validators attest              │
+│ • Primearc Core Chain validators attest              │
 │ Finality Level: 2 (Moderate)               │
 │ Security: Can withstand major forks         │
 └─────────────────────────────────────────────┘
@@ -1023,10 +1023,10 @@ pub enum SlashableOffense {
 
 ## Integration Points
 
-### 1. FlareChain Integration
+### 1. Primearc Core Chain Integration
 ```text
 ┌──────────────┐              ┌──────────────┐
-│  FlareChain  │─────────────▶│  ASF Engine  │
+│  Primearc Core Chain  │─────────────▶│  ASF Engine  │
 │  (Root)      │              │  (Consensus) │
 └──────────────┘              └──────────────┘
        │                             │
@@ -1039,8 +1039,8 @@ pub enum SlashableOffense {
 ```
 
 **Interaction**:
-- FlareChain validators participate in ASF committee
-- FlareChain issues finality certificates for PBC blocks
+- Primearc Core Chain validators participate in ASF committee
+- Primearc Core Chain issues finality certificates for PBC blocks
 - State roots aggregated from all PBCs
 - Cross-chain message routing
 
@@ -1069,7 +1069,7 @@ pub enum SlashableOffense {
 - Each PBC uses ASF for local consensus
 - ValidityNodes validate PBC blocks
 - Certificates aggregate across PBCs
-- FlareChain collects finality proofs
+- Primearc Core Chain collects finality proofs
 
 ### 3. Staking Pallet Integration
 ```rust

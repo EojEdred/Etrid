@@ -8,7 +8,7 @@
 
 ### Hierarchical DID Structure
 
-Every FlareChain validator gets a unique DID that's registered on-chain, and their AI agents get sub-DIDs.
+Every Primearc Core Chain validator gets a unique DID that's registered on-chain, and their AI agents get sub-DIDs.
 
 **Role-Based Naming Convention:**
 
@@ -400,7 +400,7 @@ def get_agent_dids(account_id: str) -> list:
 
 ### Can We Deploy Without Taking Chain Down?
 
-**✅ YES** - FlareChain supports **forkless runtime upgrades** and **rolling validator deployments**.
+**✅ YES** - Primearc Core Chain supports **forkless runtime upgrades** and **rolling validator deployments**.
 
 ### Phase-by-Phase Deployment
 
@@ -474,7 +474,7 @@ curl -X POST http://gizzi-validator:9944 \
 
 **During Runtime Upgrade:**
 - ✅ Validators keep producing blocks
-- ✅ Finality continues (GRANDPA + ASF)
+- ✅ Finality continues (ASF + ASF)
 - ✅ Users can submit transactions
 - ✅ New pallet available immediately after upgrade
 - ✅ Old state preserved (no migration needed for new pallet)

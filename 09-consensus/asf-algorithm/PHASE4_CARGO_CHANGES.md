@@ -1,4 +1,4 @@
-# Phase 4: GRANDPA Removal - Cargo.toml Changes
+# Phase 4: ASF Removal - Cargo.toml Changes
 
 **Status**: PREPARED - DO NOT APPLY YET
 
@@ -60,7 +60,7 @@ Total: 6 dependency removals across 2 files
 ## Verification Commands
 
 ```bash
-# After changes, verify no GRANDPA references remain:
+# After changes, verify no ASF references remain:
 cd /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime
 grep -i "grandpa" Cargo.toml
 # Should return: No matches
@@ -74,6 +74,6 @@ grep -i "grandpa" Cargo.toml
 
 Removing these dependencies will:
 - Reduce binary size by ~2-3MB
-- Remove GRANDPA finality gadget from runtime
+- Remove BFT checkpoint finality and ASF certificates gadget from runtime
 - Simplify session key management (ASF-only)
 - Clean up unused consensus code paths

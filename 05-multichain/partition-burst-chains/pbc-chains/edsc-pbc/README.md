@@ -10,7 +10,7 @@ EDSC-PBC is the 13th PBC in the Ëtrid multichain, responsible for:
 - Multi-path redemption engine
 - TWAP oracle aggregation
 - Circuit breakers and safety controls
-- Checkpoint synchronization with FlareChain
+- Checkpoint synchronization with Primearc Core Chain
 
 ## Architecture
 
@@ -23,7 +23,7 @@ PBC-EDSC (This Chain)
 ├─ pallet-edsc-checkpoint      # State commits to main chain
 └─ pallet-circuit-breaker      # Safety controls
 
-FlareChain (Main Chain)
+Primearc Core Chain (Main Chain)
 ├─ pallet-reserve-vault        # On-chain collateral storage
 ├─ pallet-custodian-registry   # Off-chain reserve agents
 ├─ pallet-reserve-oracle       # Aggregate reserve reporting
@@ -86,7 +86,7 @@ cargo build --release -p edsc-pbc-collator
     --port 30343 \
     --relay-chain-rpc-url ws://127.0.0.1:9944
 
-# With FlareChain relay
+# With Primearc Core Chain relay
 ./target/release/edsc-pbc-collator \
     --collator \
     --base-path /tmp/edsc-pbc \

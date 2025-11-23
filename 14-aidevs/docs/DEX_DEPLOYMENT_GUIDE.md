@@ -45,7 +45,7 @@ BRIDGE_CONTRACT=your_bridge_address_here
 **Features:**
 - ERC-20 standard compliance
 - Bridge-controlled minting (only bridge can mint)
-- Burnable (for bridging back to FlareChain)
+- Burnable (for bridging back to Primearc Core Chain)
 - Pausable (emergency circuit breaker)
 - 18 decimals (ERC-20 standard)
 
@@ -347,14 +347,14 @@ await raydium.clmm.addLiquidity({
 
 ## Part 3: Bridge Integration
 
-### FlareChain ↔ BSC Bridge
+### Primearc Core Chain ↔ BSC Bridge
 
 **Requirements:**
 1. Bridge relayer infrastructure (already in pallets)
 2. Oracle for price feeds
 3. Validator committee signing
 
-**Configuration on FlareChain:**
+**Configuration on Primearc Core Chain:**
 ```rust
 // In runtime configuration
 impl bnb_bridge::Config for Runtime {
@@ -375,7 +375,7 @@ await etrToken.grantRole(
 );
 ```
 
-### FlareChain ↔ Solana Bridge
+### Primearc Core Chain ↔ Solana Bridge
 
 **Using Solana bridge pallet:**
 ```rust
@@ -519,7 +519,7 @@ const farm = await raydium.farm.create({
 - [ ] Create PancakeSwap ÉTR-BNB pool
 - [ ] Add initial liquidity (100M ÉTR)
 - [ ] Set up LP rewards (MasterChef or custom)
-- [ ] Test bridge BSC ↔ FlareChain
+- [ ] Test bridge BSC ↔ Primearc Core Chain
 
 ### Solana Deployment
 - [ ] Create SPL token mint
@@ -527,7 +527,7 @@ const farm = await raydium.farm.create({
 - [ ] Create Raydium ÉTR-SOL pool
 - [ ] Add initial liquidity (100M ÉTR)
 - [ ] Set up LP rewards (Raydium Farms)
-- [ ] Test bridge Solana ↔ FlareChain
+- [ ] Test bridge Solana ↔ Primearc Core Chain
 
 ### Post-Deployment
 - [ ] Submit to CoinGecko

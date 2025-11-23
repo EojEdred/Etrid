@@ -1,11 +1,11 @@
-# Phase 4: GRANDPA Removal - lib.rs Changes
+# Phase 4: ASF Removal - lib.rs Changes
 
 **Status**: PREPARED - DO NOT APPLY YET
 **File**: `/Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime/src/lib.rs`
 
 ## Changes to Apply
 
-### 1. Remove GRANDPA Import (Line 11)
+### 1. Remove ASF Import (Line 11)
 ```rust
 // REMOVE THIS LINE:
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
@@ -37,11 +37,11 @@ spec_version: 106,
 spec_version: 108,
 ```
 
-### 4. Remove GRANDPA Migration Code (Lines 100-210)
+### 4. Remove ASF Migration Code (Lines 100-210)
 ```rust
 // DELETE ENTIRE SECTION:
 // ═══════════════════════════════════════════════════════════════════════════════
-// RUNTIME UPGRADE MIGRATION v106: Fix GRANDPA Committee Formation
+// RUNTIME UPGRADE MIGRATION v106: Fix ASF Committee Formation
 // ═══════════════════════════════════════════════════════════════════════════════
 pub mod migrations {
     // ... entire migration module
@@ -77,7 +77,7 @@ migrations::FixGrandpaCommitteeV106,
 (),  // No migrations needed for v108
 ```
 
-### 8. Remove GRANDPA Runtime API (Lines 1475-1500)
+### 8. Remove ASF Runtime API (Lines 1475-1500)
 ```rust
 // DELETE ENTIRE IMPL BLOCK:
 impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {

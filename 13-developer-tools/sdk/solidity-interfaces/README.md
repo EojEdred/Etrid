@@ -1,20 +1,20 @@
 # Etrid ETH PBC Precompile Solidity Interfaces
 
-Solidity interfaces for accessing FlareChain features from ETH PBC (Ethereum Partition Burst Chain) smart contracts.
+Solidity interfaces for accessing Primearc Core Chain features from ETH PBC (Ethereum Partition Burst Chain) smart contracts.
 
 ## Overview
 
-ETH PBC provides 7 custom precompiled contracts that enable EVM contracts to interact with FlareChain functionality via XCM (Cross-Consensus Messaging). These precompiles unlock novel features not available on traditional Ethereum L2s.
+ETH PBC provides 7 custom precompiled contracts that enable EVM contracts to interact with Primearc Core Chain functionality via XCM (Cross-Consensus Messaging). These precompiles unlock novel features not available on traditional Ethereum L2s.
 
 ## Precompile Addresses
 
 | Address | Interface | Description |
 |---------|-----------|-------------|
-| `0x800` | `IEtridOracle` | FlareChain price feeds (free oracle access) |
+| `0x800` | `IEtridOracle` | Primearc Core Chain price feeds (free oracle access) |
 | `0x801` | `IEtridGovernance` | Cross-chain governance voting |
 | `0x802` | `IEtridStaking` | Validator and staking queries |
 | `0x803` | `IEtridNativeETH` | Zero-fee ETH wrapping |
-| `0x804` | `IEtridBridge` | XCM bridge to FlareChain |
+| `0x804` | `IEtridBridge` | XCM bridge to Primearc Core Chain |
 | `0x805` | `IEtridTokenRegistry` | Auto-discover Ethereum tokens |
 | `0x806` | `IEtridStateProof` | Verify Ethereum state trustlessly |
 
@@ -57,7 +57,7 @@ import "etrid-solidity-interfaces/IEtridOracle.sol";
 
 ### 1. Oracle - Free Price Feeds
 
-**Novel Feature:** Zero-cost oracle queries via FlareChain consensus. No Chainlink fees!
+**Novel Feature:** Zero-cost oracle queries via Primearc Core Chain consensus. No Chainlink fees!
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -72,7 +72,7 @@ contract DynamicPricingNFT {
 
     /**
      * @notice NFT price adjusts based on ETH/USD price
-     * @dev Uses FlareChain oracle - zero gas for price query
+     * @dev Uses Primearc Core Chain oracle - zero gas for price query
      */
     function getMintPrice() public view returns (uint256) {
         // Get ETH price in USD (scaled by 1e18)
@@ -123,7 +123,7 @@ contract MultiAssetPricing {
 
 ### 2. Governance - Cross-Chain Voting
 
-**Novel Feature:** Participate in FlareChain governance from ETH PBC contracts.
+**Novel Feature:** Participate in Primearc Core Chain governance from ETH PBC contracts.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -131,14 +131,14 @@ pragma solidity ^0.8.0;
 
 import "./IEtridGovernance.sol";
 
-contract DAOWithFlareChainGovernance {
+contract DAOWithPrimearc Core ChainGovernance {
     IEtridGovernance constant GOV = IEtridGovernance(0x0000000000000000000000000000000000000801);
 
     mapping(address => bool) public members;
     uint256 public memberCount;
 
     /**
-     * @notice DAO members can submit proposals to FlareChain governance
+     * @notice DAO members can submit proposals to Primearc Core Chain governance
      * @dev Proposal costs are subsidized by DAO treasury
      */
     function submitDAOProposal(string memory title, string memory description)
@@ -147,14 +147,14 @@ contract DAOWithFlareChainGovernance {
     {
         require(members[msg.sender], "Not a DAO member");
 
-        // Submit to FlareChain governance via XCM
+        // Submit to Primearc Core Chain governance via XCM
         proposalId = GOV.submitProposal(title, description);
 
         emit ProposalSubmitted(msg.sender, proposalId, title);
     }
 
     /**
-     * @notice Members vote on FlareChain proposals
+     * @notice Members vote on Primearc Core Chain proposals
      */
     function voteOnProposal(uint256 proposalId, bool support) public {
         require(members[msg.sender], "Not a DAO member");
@@ -184,7 +184,7 @@ contract DAOWithFlareChainGovernance {
 
 ### 3. Staking - Validator Transparency
 
-**Novel Feature:** Access L1 (FlareChain) staking data from L2 (ETH PBC).
+**Novel Feature:** Access L1 (Primearc Core Chain) staking data from L2 (ETH PBC).
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -293,7 +293,7 @@ contract GasFreeWrapper {
 
 ### 5. XCM Bridge - Cross-Chain Transfers
 
-**Novel Feature:** Atomic cross-chain transfers to FlareChain.
+**Novel Feature:** Atomic cross-chain transfers to Primearc Core Chain.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -307,13 +307,13 @@ contract CrossChainVault {
     mapping(bytes32 => bool) public pendingBridges;
 
     /**
-     * @notice Deposit and bridge to FlareChain
+     * @notice Deposit and bridge to Primearc Core Chain
      */
     function depositAndBridge(uint256 amount) public payable {
         require(msg.value == amount, "Incorrect value");
 
-        // Bridge to FlareChain via XCM
-        bytes32 messageId = BRIDGE.bridgeToFlareChain{value: amount}(amount);
+        // Bridge to Primearc Core Chain via XCM
+        bytes32 messageId = BRIDGE.bridgeToPrimearc Core Chain{value: amount}(amount);
 
         pendingBridges[messageId] = true;
         emit BridgeInitiated(msg.sender, amount, messageId);
@@ -335,7 +335,7 @@ contract CrossChainVault {
      * @notice Get total liquidity locked in bridge
      */
     function getTotalBridgedLiquidity() public view returns (uint256) {
-        return BRIDGE.getTotalBridgedToFlareChain();
+        return BRIDGE.getTotalBridgedToPrimearc Core Chain();
     }
 
     event BridgeInitiated(address indexed user, uint256 amount, bytes32 messageId);
@@ -507,7 +507,7 @@ contract MultiChainCollateralLending {
     function getCollateralValue(address user) public view returns (uint256 valueUSD) {
         Position memory pos = positions[user];
 
-        // Get prices from FlareChain oracle (free!)
+        // Get prices from Primearc Core Chain oracle (free!)
         uint256 btcPriceUSD = ORACLE.getPrice(bytes32("BTC"), bytes32("USD"));
         uint256 solPriceUSD = ORACLE.getPrice(bytes32("SOL"), bytes32("USD"));
 
@@ -634,8 +634,8 @@ A: No, these precompiles only exist on ETH PBC. On Ethereum mainnet, these addre
 **Q: Are there any security audits?**
 A: Precompile implementations will be audited before mainnet launch. Use on testnet only for now.
 
-**Q: What happens if FlareChain is down?**
-A: Cached oracle data remains available. New XCM messages will queue until FlareChain recovers.
+**Q: What happens if Primearc Core Chain is down?**
+A: Cached oracle data remains available. New XCM messages will queue until Primearc Core Chain recovers.
 
 ---
 

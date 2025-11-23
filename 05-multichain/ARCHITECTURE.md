@@ -11,7 +11,7 @@
 
 1. [Overview](#overview)
 2. [Architecture Hierarchy](#architecture-hierarchy)
-3. [FlareChain (Main Chain)](#flarechain-main-chain)
+3. [Primearc Core Chain (Main Chain)](#flarechain-main-chain)
 4. [Partition Burst Chains (PBCs)](#partition-burst-chains-pbcs)
 5. [Bridge Protocols](#bridge-protocols)
 6. [EDSC Bridge (Phase 3 CCTP)](#edsc-bridge-phase-3-cctp)
@@ -32,7 +32,7 @@
 
 The **05-multichain** component is the **core infrastructure** of the Ëtrid Protocol, implementing a hierarchical multi-chain architecture with:
 
-- **1 FlareChain** (main relay chain) - State aggregation & consensus
+- **1 Primearc Core Chain** (main relay chain) - State aggregation & consensus
 - **13 Partition Burst Chains (PBCs)** - Asset-specific sidechains
 - **12 External Bridge Protocols** - Cross-chain connectivity
 - **1 EDSC Bridge** - Native stablecoin bridge (CCTP-style)
@@ -54,8 +54,8 @@ The **05-multichain** component is the **core infrastructure** of the Ëtrid Pro
 ```
 05-multichain/
 ├── flare-chain/                    # Main relay chain
-│   ├── runtime/                    # FlareChain runtime (986 lines)
-│   ├── node/                       # FlareChain node + ASF service
+│   ├── runtime/                    # Primearc Core Chain runtime (986 lines)
+│   ├── node/                       # Primearc Core Chain node + ASF service
 │   └── ASF_INTEGRATION.md          # ASF consensus integration guide
 │
 ├── partition-burst-chains/         # 13 PBC chains
@@ -98,7 +98,7 @@ The **05-multichain** component is the **core infrastructure** of the Ëtrid Pro
 │   └── src/
 │       ├── lib.rs                 # Core primitives (9,532 bytes)
 │       ├── vmw.rs                 # VMw gas metering
-│       ├── flare_chain_blocks.rs  # FlareChain block types
+│       ├── flare_chain_blocks.rs  # Primearc Core Chain block types
 │       └── pbc_blocks.rs          # PBC block types
 │
 └── lightning-bloc-networks/       # Cross-chain payment channels
@@ -139,8 +139,8 @@ The **05-multichain** component is the **core infrastructure** of the Ëtrid Pro
 │  │  - Asset-specific logic (BTC, ETH, DOGE, etc.)            │   │
 │  │  - WASM runtime (471-485KB compressed)                    │   │
 │  │  - Collator node (47MB binary)                            │   │
-│  │  - Connects to FlareChain relay                           │   │
-│  │  - Reports state to FlareChain                            │   │
+│  │  - Connects to Primearc Core Chain relay                           │   │
+│  │  - Reports state to Primearc Core Chain                            │   │
 │  └────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -168,7 +168,7 @@ The **05-multichain** component is the **core infrastructure** of the Ëtrid Pro
 ### Data Flow
 
 ```
-External Chain → Bridge Pallet → PBC Runtime → Collator → FlareChain → State Aggregation
+External Chain → Bridge Pallet → PBC Runtime → Collator → Primearc Core Chain → State Aggregation
      ▲                                                                        │
      └────────────────────────────────────────────────────────────────────────┘
                            Cross-chain Message Response
@@ -176,11 +176,11 @@ External Chain → Bridge Pallet → PBC Runtime → Collator → FlareChain →
 
 ---
 
-## FlareChain (Main Chain)
+## Primearc Core Chain (Main Chain)
 
 ### Purpose
 
-FlareChain is the **main relay chain** that:
+Primearc Core Chain is the **main relay chain** that:
 - Aggregates state from all 13 PBCs
 - Provides consensus via ASF (Ascending Scale of Finality)
 - Manages cross-chain message routing
@@ -257,7 +257,7 @@ MAXIMUM_BLOCK_LENGTH: 5 MB
 - RPC endpoints (HTTP + WebSocket)
 - P2P networking (libp2p - transitioning to DETR P2P)
 - Block production (AURA - transitioning to ASF PPFA)
-- Finality gadget (GRANDPA + ASF hybrid)
+- Finality gadget (ASF + ASF hybrid)
 - Telemetry & metrics
 
 **Services**:
@@ -270,7 +270,7 @@ new_light()    // Light client
 // ASF service (asf_service.rs) - 705 lines
 new_full_with_params(AsfParams)
 - ASF block production (PPFA)
-- Hybrid finality (ASF + GRANDPA)
+- Hybrid finality (ASF + ASF)
 - Validator management
 - Committee coordination
 ```
@@ -281,7 +281,7 @@ new_full_with_params(AsfParams)
 
 **Architecture**:
 ```
-FlareChain Node
+Primearc Core Chain Node
 ├─ ASF Block Production (PPFA)
 │   ├─ Proposer selection (block-production crate)
 │   ├─ Block authoring (Queen/Ant blocks)
@@ -292,7 +292,7 @@ FlareChain Node
 │   │   ├─ Pre-commitment
 │   │   ├─ Commitment
 │   │   └─ Finality
-│   └─ GRANDPA (traditional, transitional)
+│   └─ ASF (traditional, transitional)
 │
 └─ Validator Management
     ├─ Committee management (PPFA panels)
@@ -312,7 +312,7 @@ AsfParams {
 ```
 
 **Consensus Mechanism**:
-- **Current**: AURA (round-robin block production) + GRANDPA (finality)
+- **Current**: AURA (round-robin block production) + ASF (finality)
 - **Target**: ASF PPFA (Proposing Panel for Attestation) + ASF Finality Gadget
 - **Transition**: Hybrid mode running both systems in parallel
 
@@ -333,9 +333,9 @@ validator-management  # Committee management
 ### Overview
 
 **PBCs** are asset-specific sidechains that handle transactions for individual cryptocurrencies. Each PBC:
-- Connects to FlareChain as a parachain/collator
+- Connects to Primearc Core Chain as a parachain/collator
 - Maintains its own state for one asset type
-- Reports state updates to FlareChain
+- Reports state updates to Primearc Core Chain
 - Enables asset-specific optimizations
 
 ### PBC List (13 Total)
@@ -416,16 +416,16 @@ use btc_pbc_runtime::Runtime;
 
 fn main() {
     // 1. Parse CLI args
-    // 2. Connect to FlareChain relay via --relay-chain-rpc
+    // 2. Connect to Primearc Core Chain relay via --relay-chain-rpc
     // 3. Start collation service
     // 4. Produce PBC blocks
-    // 5. Submit to FlareChain
+    // 5. Submit to Primearc Core Chain
 }
 ```
 
 **Startup Example**:
 ```bash
-# Start FlareChain relay
+# Start Primearc Core Chain relay
 ./flarechain-node --chain chain-specs/flarechain-shared.json --alice --validator
 
 # Start BTC PBC collator
@@ -581,9 +581,9 @@ MaxDepositAmount: 10 BTC (1,000,000,000 satoshi)
 DailyWithdrawalLimit: 100 BTC per bridge
 ```
 
-### Bridge Integration in FlareChain
+### Bridge Integration in Primearc Core Chain
 
-All 12 bridge pallets are integrated into FlareChain runtime:
+All 12 bridge pallets are integrated into Primearc Core Chain runtime:
 
 ```rust
 // flare-chain/runtime/Cargo.toml
@@ -600,7 +600,7 @@ construct_runtime! {
 }
 ```
 
-**Note**: Bridge pallets are in FlareChain runtime, NOT in individual PBC runtimes. PBCs connect to FlareChain to access bridge functionality.
+**Note**: Bridge pallets are in Primearc Core Chain runtime, NOT in individual PBC runtimes. PBCs connect to Primearc Core Chain to access bridge functionality.
 
 ---
 
@@ -977,7 +977,7 @@ Per-Wallet Limits:
 |------|------|---------|
 | lib.rs | 9,532 bytes | Core primitives exports |
 | vmw.rs | 5,058 bytes | VMw gas metering types |
-| flare_chain_blocks.rs | 7,911 bytes | FlareChain block structures |
+| flare_chain_blocks.rs | 7,911 bytes | Primearc Core Chain block structures |
 | pbc_blocks.rs | 12,707 bytes | PBC block structures |
 
 ### Key Types
@@ -1004,10 +1004,10 @@ pub const MAX_BLOCK_VMW: Vmw = 10_000_000;  // 10M VMw per block
 pub const MAX_TX_VMW: Vmw = 1_000_000;      // 1M VMw per transaction
 ```
 
-**FlareChain Block Types**:
+**Primearc Core Chain Block Types**:
 ```rust
 // flare_chain_blocks.rs
-pub struct FlareChainBlock<Header, Extrinsics> {
+pub struct Primearc Core ChainBlock<Header, Extrinsics> {
     pub header: Header,
     pub extrinsics: Extrinsics,
     pub pbc_state_roots: Vec<H256>,  // State roots from all PBCs
@@ -1027,7 +1027,7 @@ pub struct AggregatedState {
 pub struct PbcBlock<Header, Extrinsics> {
     pub header: Header,
     pub extrinsics: Extrinsics,
-    pub relay_parent: H256,  // FlareChain block hash
+    pub relay_parent: H256,  // Primearc Core Chain block hash
     pub bridge_messages: Vec<BridgeMessage>,
 }
 
@@ -1039,7 +1039,7 @@ pub struct BridgeMessage {
 }
 
 pub enum ChainId {
-    FlareChain,
+    Primearc Core Chain,
     BtcPbc,
     EthPbc,
     // ... (11 more)
@@ -1074,7 +1074,7 @@ std = [
 ]
 ```
 
-**Usage**: Shared across FlareChain, all 13 PBCs, and bridge pallets.
+**Usage**: Shared across Primearc Core Chain, all 13 PBCs, and bridge pallets.
 
 ---
 
@@ -1143,16 +1143,16 @@ dispute_channel(channel_id, proof)
 
 ## State Aggregation Mechanism
 
-### How FlareChain Aggregates PBC State
+### How Primearc Core Chain Aggregates PBC State
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     FlareChain Block N                      │
+│                     Primearc Core Chain Block N                      │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  Header:                                              │  │
 │  │    - Block number: N                                  │  │
 │  │    - Parent hash: H(N-1)                              │  │
-│  │    - State root: Root(FlareChain + 13 PBC roots)      │  │
+│  │    - State root: Root(Primearc Core Chain + 13 PBC roots)      │  │
 │  │                                                        │  │
 │  │  PBC State Roots (13 entries):                        │  │
 │  │    - BTC-PBC:  0x1234...  (block height: 45678)       │  │
@@ -1177,7 +1177,7 @@ ETH-PBC Block 89012 → State Root: 0x5678...
 ...
 ```
 
-**Step 2**: Collators submit state roots to FlareChain
+**Step 2**: Collators submit state roots to Primearc Core Chain
 ```rust
 // PBC collator code
 fn submit_state_to_relay(state_root: H256, block_height: u64) {
@@ -1189,9 +1189,9 @@ fn submit_state_to_relay(state_root: H256, block_height: u64) {
 }
 ```
 
-**Step 3**: FlareChain validator includes PBC states in block
+**Step 3**: Primearc Core Chain validator includes PBC states in block
 ```rust
-// FlareChain runtime
+// Primearc Core Chain runtime
 fn on_initialize(block_number: BlockNumber) {
     let pbc_states = collect_pbc_state_updates();
 
@@ -1200,14 +1200,14 @@ fn on_initialize(block_number: BlockNumber) {
         verify_pbc_state_transition(pbc_id, state_root, height);
     }
 
-    // Aggregate into FlareChain state
+    // Aggregate into Primearc Core Chain state
     update_aggregated_state(pbc_states);
 }
 ```
 
-**Step 4**: FlareChain finalizes with aggregated state
+**Step 4**: Primearc Core Chain finalizes with aggregated state
 ```
-FlareChain Block N finalized → All 13 PBC states at block N finalized
+Primearc Core Chain Block N finalized → All 13 PBC states at block N finalized
 ```
 
 ### State Verification
@@ -1237,7 +1237,7 @@ fn verify_pbc_state_transition(
 
 ### Cross-PBC Queries
 
-Users can query state across all PBCs from FlareChain:
+Users can query state across all PBCs from Primearc Core Chain:
 
 ```rust
 // Query BTC balance across all chains
@@ -1260,15 +1260,15 @@ let btc_balance = flarechain_api.get_cross_chain_balance(
 
 ### XCM (Cross-Consensus Messaging)
 
-Ëtrid uses **XCM** (Polkadot's cross-chain messaging format) for communication between FlareChain and PBCs.
+Ëtrid uses **XCM** (Polkadot's cross-chain messaging format) for communication between Primearc Core Chain and PBCs.
 
 ### Message Flow
 
-**Scenario**: Transfer 1 BTC from BTC-PBC to FlareChain
+**Scenario**: Transfer 1 BTC from BTC-PBC to Primearc Core Chain
 
 ```
 ┌───────────────┐                  ┌───────────────┐
-│   BTC-PBC     │                  │  FlareChain   │
+│   BTC-PBC     │                  │  Primearc Core Chain   │
 └───────────────┘                  └───────────────┘
         │                                  │
         │ 1. User calls transfer()         │
@@ -1277,7 +1277,7 @@ let btc_balance = flarechain_api.get_cross_chain_balance(
         │    - Withdraw 1 BTC              │
         │    - Deposit to AccountId        │
         │                                  │
-        │ 2. FlareChain validates          │
+        │ 2. Primearc Core Chain validates          │
         │◄─────────────────────────────────┤
         │    XCM Response:                 │
         │    - Message accepted            │
@@ -1285,7 +1285,7 @@ let btc_balance = flarechain_api.get_cross_chain_balance(
         │                                  │
         │ 3. BTC-PBC locks 1 BTC           │
         │                                  │
-        │ 4. FlareChain mints 1 BTC equiv  │
+        │ 4. Primearc Core Chain mints 1 BTC equiv  │
         │                                  │
         │ 5. Confirmation                  │
         │◄─────────────────────────────────┤
@@ -1329,9 +1329,9 @@ let message = Xcm(vec![
 
 ### pallet-xcm-bridge
 
-**Location**: `/pallets/pallet-xcm-bridge/` (referenced in FlareChain runtime)
+**Location**: `/pallets/pallet-xcm-bridge/` (referenced in Primearc Core Chain runtime)
 
-**Purpose**: Handles XCM message routing between FlareChain and PBCs
+**Purpose**: Handles XCM message routing between Primearc Core Chain and PBCs
 
 ```rust
 #[pallet::call]
@@ -1468,15 +1468,15 @@ if market_price > $1.02:
 
 ### Block Production
 
-**FlareChain**:
+**Primearc Core Chain**:
 - Block time: 6 seconds
 - Finality time: ~18-30 seconds (ASF 3-level)
 - TPS capacity: ~500-1000 TPS (estimated)
 - Block size limit: 5 MB
 
 **PBCs** (each):
-- Block time: 12 seconds (slower than FlareChain)
-- Finality time: Inherits from FlareChain (~30s)
+- Block time: 12 seconds (slower than Primearc Core Chain)
+- Finality time: Inherits from Primearc Core Chain (~30s)
 - TPS capacity: ~100-200 TPS per PBC
 - Block size limit: 3 MB
 
@@ -1487,7 +1487,7 @@ if market_price > $1.02:
 
 ### Resource Usage
 
-**FlareChain Validator**:
+**Primearc Core Chain Validator**:
 ```
 CPU: 4-8 cores actively used
 RAM: 16-32 GB (state database + cache)
@@ -1520,7 +1520,7 @@ Relayer Service:
 
 ### Storage Growth
 
-**FlareChain**:
+**Primearc Core Chain**:
 - State size: ~10 GB initially
 - Growth rate: ~50 GB/year
 - Pruning: Available after 256 blocks (30 minutes)
@@ -1531,7 +1531,7 @@ Relayer Service:
 - Pruning: Available after 256 blocks
 
 **Total System**:
-- Initial storage: ~40 GB (FlareChain + 13 PBCs)
+- Initial storage: ~40 GB (Primearc Core Chain + 13 PBCs)
 - Annual growth: ~180 GB/year
 - Pruned nodes: ~50 GB maintained
 
@@ -1608,7 +1608,7 @@ type EthPbcRuntime = PbcRuntime<EthereumBridge>;
 - Create `pbc-chains/edsc-pbc/` directory structure
 - Implement EDSC-PBC runtime (similar to other PBCs)
 - Build collator binary
-- Integrate with FlareChain
+- Integrate with Primearc Core Chain
 
 **Effort**: 1 week
 **Priority**: High (blocks EDSC Phase 3 completion)
@@ -1627,7 +1627,7 @@ type EthPbcRuntime = PbcRuntime<EthereumBridge>;
 - ❌ Finality gadget worker pending
 - ❌ Validator management worker pending
 
-**Impact**: FlareChain currently uses AURA + GRANDPA (traditional Substrate consensus).
+**Impact**: Primearc Core Chain currently uses AURA + ASF (traditional Substrate consensus).
 
 **Effort**: 2-3 weeks
 **Priority**: High (core feature)
@@ -1737,11 +1737,11 @@ mod tests {
 
 **9. DETR P2P Not Integrated**
 
-**Problem**: FlareChain uses libp2p (default Substrate), not DETR P2P.
+**Problem**: Primearc Core Chain uses libp2p (default Substrate), not DETR P2P.
 
 **Impact**: Missing Ëtrid-specific P2P features (S/Kademlia, AEComms).
 
-**Solution**: Integrate `/01-detr-p2p/` into FlareChain node.
+**Solution**: Integrate `/01-detr-p2p/` into Primearc Core Chain node.
 
 **Effort**: 3-4 weeks
 **Priority**: Medium (Phase 3-4 feature)
@@ -1768,54 +1768,54 @@ mod tests {
 **09-consensus** (ASF Consensus):
 ```
 09-consensus/asf-algorithm → 05-multichain/flare-chain/node/src/asf_service.rs
-09-consensus/block-production → FlareChain block authoring
-09-consensus/finality-gadget → FlareChain finality
-09-consensus/validator-management → FlareChain validator registry
+09-consensus/block-production → Primearc Core Chain block authoring
+09-consensus/finality-gadget → Primearc Core Chain finality
+09-consensus/validator-management → Primearc Core Chain validator registry
 ```
 
 **04-accounts** (Account System):
 ```
-04-accounts/pallet → FlareChain runtime
+04-accounts/pallet → Primearc Core Chain runtime
 Account types (EBCA, RCA, SSCA) → Used in all bridge pallets
 DID system → Used for validator identity
 ```
 
 **06-native-currency** (ËTR/ETD Tokens):
 ```
-06-native-currency/pallet → FlareChain runtime
+06-native-currency/pallet → Primearc Core Chain runtime
 ËTR token → Used for staking, fees
 ETD stablecoin → Used alongside EDSC
 ```
 
 **07-transaction** (Transaction System):
 ```
-07-transaction/pallet → FlareChain runtime
+07-transaction/pallet → Primearc Core Chain runtime
 5 TX types → Includes LightningBloc cross-chain transactions
 ```
 
 **08-etwasm-vm** (Smart Contracts):
 ```
-08-etwasm-vm/pallet → FlareChain runtime
+08-etwasm-vm/pallet → Primearc Core Chain runtime
 WASM contracts → Can call bridge pallets
 ```
 
 **10-foundation** (Governance):
 ```
-10-foundation/pallet → FlareChain runtime
+10-foundation/pallet → Primearc Core Chain runtime
 Governance → Controls bridge authorities, EDSC parameters
 Consensus Day → Minting, proposals, voting
 ```
 
 **01-detr-p2p** (P2P Networking):
 ```
-01-detr-p2p/ → (Future) FlareChain node networking
+01-detr-p2p/ → (Future) Primearc Core Chain node networking
 S/Kademlia → Secure peer discovery
 AEComms → Encrypted TCP communication
 ```
 
 **pallets/** (Additional Pallets):
 ```
-pallets/pallet-xcm-bridge → FlareChain runtime (cross-chain messaging)
+pallets/pallet-xcm-bridge → Primearc Core Chain runtime (cross-chain messaging)
 pallets/pallet-reserve-vault → (Future) EDSC reserve backing
 pallets/pallet-custodian-registry → (Future) EDSC off-chain reserves
 ```
@@ -1824,7 +1824,7 @@ pallets/pallet-custodian-registry → (Future) EDSC off-chain reserves
 
 **apps/wallet-web** (Web Wallet):
 ```typescript
-// Connect to FlareChain
+// Connect to Primearc Core Chain
 const api = await ApiPromise.create({
     provider: new WsProvider('ws://localhost:9944')
 });
@@ -1852,7 +1852,7 @@ final ethBalance = await api.query.ethPbc.balances(accountId);
 
 **services/attestation-service** (EDSC Bridge):
 ```typescript
-// Monitor FlareChain events
+// Monitor Primearc Core Chain events
 api.query.system.events((events) => {
     events.forEach(({ event }) => {
         if (event.method === 'BurnAndSend') {
@@ -1877,12 +1877,12 @@ IEDSCTokenMessenger(messenger).burnAndSendTo(
 
 ## Build System & Deployment
 
-### Building FlareChain
+### Building Primearc Core Chain
 
 **Location**: `/05-multichain/flare-chain/`
 
 ```bash
-# Build FlareChain node
+# Build Primearc Core Chain node
 cd /Users/macbook/Desktop/etrid/05-multichain/flare-chain
 cargo build --release
 
@@ -1920,7 +1920,7 @@ cargo build --release -p btc-pbc-collator
 
 ### Chain Spec Generation
 
-**FlareChain**:
+**Primearc Core Chain**:
 ```bash
 ./target/release/flarechain-node build-spec --chain dev > flarechain-dev.json
 ./target/release/flarechain-node build-spec --chain dev --raw > flarechain-dev-raw.json
@@ -1933,7 +1933,7 @@ cargo build --release -p btc-pbc-collator
 
 **Shared Chain Spec** (for multi-node testing):
 ```bash
-# FlareChain shared spec for all PBCs to connect
+# Primearc Core Chain shared spec for all PBCs to connect
 ./target/release/flarechain-node build-spec --chain local > chain-specs/flarechain-shared.json
 ```
 
@@ -1944,7 +1944,7 @@ cargo build --release -p btc-pbc-collator
 #### 1. Single-Node Development
 
 ```bash
-# Start FlareChain in dev mode
+# Start Primearc Core Chain in dev mode
 ./target/release/flarechain-node --dev --tmp
 
 # Access
@@ -1976,10 +1976,10 @@ cargo build --release -p btc-pbc-collator
   --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/<Alice's peer ID>
 ```
 
-#### 3. FlareChain + PBC Collators
+#### 3. Primearc Core Chain + PBC Collators
 
 ```bash
-# 1. Start FlareChain relay
+# 1. Start Primearc Core Chain relay
 ./target/release/flarechain-node \
   --chain chain-specs/flarechain-shared.json \
   --alice --validator
@@ -2007,9 +2007,9 @@ cargo build --release -p btc-pbc-collator
 
 ```bash
 #!/bin/bash
-# Starts FlareChain + all 12 PBC collators
+# Starts Primearc Core Chain + all 12 PBC collators
 
-# Start FlareChain
+# Start Primearc Core Chain
 ./target/release/flarechain-node --chain chain-specs/flarechain-shared.json --alice --validator &
 
 # Start all PBCs
@@ -2021,7 +2021,7 @@ done
 sleep 30
 
 # Health check
-curl http://localhost:9933/health  # FlareChain
+curl http://localhost:9933/health  # Primearc Core Chain
 curl http://localhost:9945/health  # BTC-PBC
 # ... etc
 ```
@@ -2037,7 +2037,7 @@ curl http://localhost:9945/health  # BTC-PBC
 docker-compose -f docker-compose.bridge.yml up
 
 # Includes:
-# - FlareChain node
+# - Primearc Core Chain node
 # - Ethereum Hardhat node
 # - 3 attestation services
 # - 1 relayer service
@@ -2055,7 +2055,7 @@ docker-compose -f docker-compose.bridge.yml up
 | Script | Purpose | Status |
 |--------|---------|--------|
 | test_all_chain_specs.sh | Verify chain spec generation (all 12 PBCs) | ✅ Created |
-| test_bridge_basic.sh | Test FlareChain + BTC PBC bridge | ✅ Created |
+| test_bridge_basic.sh | Test Primearc Core Chain + BTC PBC bridge | ✅ Created |
 | test_full_multichain.sh | Test all 13 chains simultaneously | ✅ Created |
 
 **Usage**:
@@ -2206,7 +2206,7 @@ docker-compose -f docker-compose.bridge.yml up
 
 The **05-multichain** component is the **largest and most complex** part of Ëtrid, comprising:
 
-- **FlareChain**: Main relay chain with ASF consensus
+- **Primearc Core Chain**: Main relay chain with ASF consensus
 - **13 PBCs**: Asset-specific sidechains
 - **12 External Bridges**: Cross-chain connectivity
 - **1 EDSC Bridge**: Native stablecoin (CCTP-style)
@@ -2223,7 +2223,7 @@ The **05-multichain** component is the **largest and most complex** part of Ëtr
 - All 12 PBC collators operational (47MB each)
 - All WASM runtimes built (471-485KB each)
 - GenesisBuilder API implemented across all chains
-- Bridge pallets integrated into FlareChain
+- Bridge pallets integrated into Primearc Core Chain
 - EDSC bridge core pallets complete
 
 **Known Issues**:
@@ -2250,7 +2250,7 @@ The **05-multichain** component is the **largest and most complex** part of Ëtr
 ---
 
 **References**:
-- FlareChain ASF Integration: `flare-chain/ASF_INTEGRATION.md`
+- Primearc Core Chain ASF Integration: `flare-chain/ASF_INTEGRATION.md`
 - EDSC Bridge README: `bridge-protocols/edsc-bridge/README.md`
 - EDSC Status Report: `/EDSC_BRIDGE_STATUS.md`
 - Project History: `/PROJECT_HISTORY.md`

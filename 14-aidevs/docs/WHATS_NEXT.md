@@ -9,11 +9,11 @@
 ## 🎯 Immediate Next Steps (Session 3 - This Week)
 
 ### 1. On-Chain DID Registration (30 minutes)
-**What:** Register all 15 DIDs on FlareChain via OpenDID pallet
+**What:** Register all 15 DIDs on Primearc Core Chain via OpenDID pallet
 
 **Steps:**
 ```bash
-# Start FlareChain node (if not running)
+# Start Primearc Core Chain node (if not running)
 cd /path/to/flarechain
 ./target/release/node-template --dev
 

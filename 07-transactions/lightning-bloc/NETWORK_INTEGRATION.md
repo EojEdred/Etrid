@@ -2,13 +2,13 @@
 
 ## Overview
 
-This guide explains how to integrate Lightning Bloc payment channels and routing with the Etrid blockchain infrastructure, including FlareChain and Partition Burst Chains (PBCs).
+This guide explains how to integrate Lightning Bloc payment channels and routing with the Etrid blockchain infrastructure, including Primearc Core Chain and Partition Burst Chains (PBCs).
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      FlareChain (Main Chain)                 │
+│                      Primearc Core Chain (Main Chain)                 │
 │  - Channel state anchoring                                   │
 │  - Dispute resolution                                        │
 │  - Settlement layer                                          │
@@ -32,9 +32,9 @@ This guide explains how to integrate Lightning Bloc payment channels and routing
 
 ## Integration Layers
 
-### 1. On-Chain Layer (FlareChain)
+### 1. On-Chain Layer (Primearc Core Chain)
 
-Channel state is anchored on FlareChain for security and dispute resolution.
+Channel state is anchored on Primearc Core Chain for security and dispute resolution.
 
 #### Opening a Channel On-Chain
 
@@ -42,7 +42,7 @@ Channel state is anchored on FlareChain for security and dispute resolution.
 use sp_runtime::AccountId32;
 use frame_support::traits::Currency;
 
-// In FlareChain runtime
+// In Primearc Core Chain runtime
 pub fn open_lightning_channel(
     origin: OriginFor<T>,
     counterparty: T::AccountId,
@@ -330,7 +330,7 @@ impl LightningBlocNetwork {
         balance_a: u128,
         balance_b: u128,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        // Submit extrinsic to FlareChain
+        // Submit extrinsic to Primearc Core Chain
         // Returns transaction hash
         Ok(format!("0x{}", hex::encode(channel_id)))
     }
@@ -624,7 +624,7 @@ fn setup_mesh_network() -> Router {
 
 ## Complete Integration Example
 
-Here's a full example showing Lightning Bloc integration with FlareChain:
+Here's a full example showing Lightning Bloc integration with Primearc Core Chain:
 
 ```rust
 use etrid_lightning_bloc::{LightningBloc, PaymentChannel, NetworkGraph, Router, ChannelEdge};
@@ -638,15 +638,15 @@ pub struct LightningBlocService {
     router: Router,
 
     // On-chain tracking
-    chain_api: FlareChainAPI,
+    chain_api: Primearc Core ChainAPI,
 }
 
 // Pseudo-code for on-chain API
-pub struct FlareChainAPI {
+pub struct Primearc Core ChainAPI {
     endpoint: String,
 }
 
-impl FlareChainAPI {
+impl Primearc Core ChainAPI {
     pub fn open_channel(
         &self,
         from: AccountId32,
@@ -654,7 +654,7 @@ impl FlareChainAPI {
         balance_from: u128,
         balance_to: u128,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        // Submit extrinsic to FlareChain
+        // Submit extrinsic to Primearc Core Chain
         Ok("channel-id".to_string())
     }
 
@@ -674,7 +674,7 @@ impl LightningBlocService {
         Self {
             bloc: LightningBloc::new(),
             router: Router::new(NetworkGraph::new()),
-            chain_api: FlareChainAPI { endpoint: chain_endpoint },
+            chain_api: Primearc Core ChainAPI { endpoint: chain_endpoint },
         }
     }
 
@@ -969,7 +969,7 @@ pub struct ChannelHealth {
 - Lightning Bloc Core: `07-transactions/lightning-bloc/src/lib.rs`
 - Routing Protocol: `07-transactions/lightning-bloc/src/routing.rs`
 - Routing Guide: `07-transactions/lightning-bloc/ROUTING_GUIDE.md`
-- FlareChain Runtime: `05-multichain/flare-chain/runtime/`
+- Primearc Core Chain Runtime: `05-multichain/flare-chain/runtime/`
 - PBC Chains: `05-multichain/partition-burst-chains/pbc-chains/`
 
 ---

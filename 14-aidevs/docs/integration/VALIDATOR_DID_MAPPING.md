@@ -1,4 +1,4 @@
-# FlareChain Validator DID Mapping
+# Primearc Core Chain Validator DID Mapping
 
 ## Date: November 4, 2025
 
@@ -160,7 +160,7 @@ ValidityNodes handle specialized blockchain operations: security, consensus, bri
 ### 3. ConsensusDev
 **DID:** `did:etrid:validitynode-consensusdev`
 
-**Specialization:** Consensus algorithm development (ASF, GRANDPA, PPFA)
+**Specialization:** Consensus algorithm development (ASF, ASF, PPFA)
 
 **AI Agents:** (6 standard agents)
 
@@ -477,5 +477,5 @@ ValidityNodes (16)
 
 **Total Network Capacity:**
 - 21 validators × 6 AI agents = **126 autonomous AI agents**
-- All working together for FlareChain operations
+- All working together for Primearc Core Chain operations
 - Zero human intervention for routine tasks

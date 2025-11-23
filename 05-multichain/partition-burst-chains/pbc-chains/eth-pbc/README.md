@@ -15,10 +15,10 @@ This creates a version conflict that cannot be resolved in the main workspace. T
 ### ⚠️ This is NOT a Chain Fork
 
 This workspace is **purely for compilation**. The resulting binary:
-- ✅ Connects to the same FlareChain relay
+- ✅ Connects to the same Primearc Core Chain relay
 - ✅ Uses the same ASF consensus algorithm
 - ✅ Participates in the same multichain network
-- ✅ Submits state roots to FlareChain like all other PBCs
+- ✅ Submits state roots to Primearc Core Chain like all other PBCs
 - ✅ Uses the same genesis and validators
 
 **The blockchain doesn't know the difference!**

@@ -1,4 +1,4 @@
-# Phase 4: GRANDPA Removal - Documentation Index
+# Phase 4: ASF Removal - Documentation Index
 
 **Prepared**: 2025-11-15
 **Status**: Ready for Execution
@@ -47,10 +47,10 @@ ASF-only genesis with:
 ## What Phase 4 Does
 
 **Removes**:
-- All GRANDPA finality code (~150 lines)
-- 6 GRANDPA dependencies
-- GRANDPA from SessionKeys
-- GRANDPA Runtime API
+- All BFT checkpoint finality and ASF certificates code (~150 lines)
+- 6 ASF dependencies
+- ASF from SessionKeys
+- ASF Runtime API
 
 **Updates**:
 - Runtime version: 106 → 108
@@ -58,7 +58,7 @@ ASF-only genesis with:
 - Binary size: -2 to -3 MB
 
 **Result**:
-Pure ASF consensus - no more GRANDPA!
+Pure ASF consensus - no more ASF!
 
 ## File Structure
 
@@ -126,7 +126,7 @@ Phase 4 succeeds when:
 - ✓ Runtime v108 compiles
 - ✓ Node starts correctly
 - ✓ ASF consensus produces blocks
-- ✓ Finality works without GRANDPA
+- ✓ Finality works without ASF
 - ✓ All validators online
 - ✓ Network stable for 7 days
 
@@ -152,7 +152,7 @@ cd /Users/macbook/Desktop/etrid/09-consensus/asf-algorithm
 # Verify current version
 grep "spec_version:" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime/src/lib.rs | head -1
 
-# Check for GRANDPA
+# Check for ASF
 grep -c "grandpa" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime/Cargo.toml
 ```
 

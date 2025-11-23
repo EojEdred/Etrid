@@ -1,0 +1,313 @@
+{
+  "chain": "\u00cbtrid Primearc Core Mainnet (formerly FlareChain)",
+  "network_id": "flarechain_mainnet",
+  "total_validators": 21,
+  "generated_date": "2025-11-22",
+  "description": "Real validator data from running chain - Genesis hardcoded addresses",
+  "validators": {
+    "director_0_eoj": {
+      "name": "Eoj (Founder & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 0,
+      "account": "5Dd8AjjuwKDP8P8sDguiiNKfADAXrACramNbWvLcdLEpGaPJ",
+      "stake": "128 \u00cbTR",
+      "public_ip": "157.173.200.86",
+      "tailscale_ip": "100.93.43.18",
+      "tailscale_hostname": "vmi2896906",
+      "session_keys": {
+        "asfk": "TBD - From chain",
+        "notes": "ASF consensus key for checkpoint signatures"
+      },
+      "notes": "Primary founder, runs main governance node"
+    },
+    "director_1_gizzi": {
+      "name": "Gizzi (CTO & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 1,
+      "account": "5HYpUK51E1BzhEfiRikhjkNivJiw2WAEG5Uxsrbj5ZE669EM",
+      "stake": "128 \u00cbTR",
+      "public_ip": "64.181.215.19",
+      "tailscale_ip": "100.96.84.69",
+      "tailscale_hostname": "gizzi-io-validator",
+      "session_keys": {
+        "asfk": "TBD - Query from running node",
+        "notes": "Bootnode peer: /ip4/64.181.215.19/tcp/30333/p2p/12D3KooWPyfp2DECPKTmJ1AhxB6midHnp7wYTP15vBAxbTewxaq1"
+      },
+      "notes": "CTO, runs bootnode and oracle infrastructure"
+    },
+    "director_2_audit_dev": {
+      "name": "Audit Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 2,
+      "account": "5DLWfsK2jUGX5A6SZUqPjNYNgn4fZPTzc5PSjVR1fa3k65QY",
+      "stake": "128 \u00cbTR",
+      "public_ip": "80.190.82.185",
+      "tailscale_ip": "100.71.127.127",
+      "tailscale_hostname": "vmi2896907",
+      "did": "did:etrid:audit-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "AI Dev for security auditing and code review"
+    },
+    "director_3_security_dev": {
+      "name": "Security Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 3,
+      "account": "5HRMNRrTr6ahy5TPzC3YndWnGLSQQEuYYxLQbw2zv6M6HVWR",
+      "stake": "128 \u00cbTR",
+      "public_ip": "80.190.82.184",
+      "tailscale_ip": "100.68.185.50",
+      "tailscale_hostname": "vmi2896908",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "Security-focused development and infrastructure"
+    },
+    "director_4_governance_dev": {
+      "name": "Governance Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 4,
+      "account": "5DJj4b331JKDTuwQegXSEVFC2yPjtJBW1QW4tBRBsnC9Bxgb",
+      "stake": "128 \u00cbTR",
+      "public_ip": "80.190.82.183",
+      "tailscale_ip": "100.70.73.10",
+      "tailscale_hostname": "vmi2896909",
+      "did": "did:etrid:governance-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "Governance proposals, voting mechanisms, DAO coordination"
+    },
+    "director_5_oracle_dev": {
+      "name": "Oracle Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 5,
+      "account": "5Hb2ySKHArSwzoAY9JHsXWBNMGW33q23Hmrr39JzGjm1xDwj",
+      "stake": "128 \u00cbTR",
+      "public_ip": "154.12.250.17",
+      "tailscale_ip": "100.88.104.58",
+      "tailscale_hostname": "vmi2896910",
+      "did": "did:etrid:oracle-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "Oracle infrastructure, price feeds, external data"
+    },
+    "director_6_consensus_dev": {
+      "name": "Consensus Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 6,
+      "account": "5CvjTcBhW1Vy3GUA5GwpLEm47Jhkjco5rFFd82oQY7sjwfeg",
+      "stake": "128 \u00cbTR",
+      "public_ip": "154.12.250.15",
+      "tailscale_ip": "100.117.43.53",
+      "tailscale_hostname": "vmi2896911",
+      "did": "did:etrid:consensus-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "ASF consensus development, validator management"
+    },
+    "director_7_economics_dev": {
+      "name": "Economics Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 7,
+      "account": "5GEn5LgTjEo6bBevEdL3ArZu8RBHNP4tj1pwEewxW4DkrTpC",
+      "stake": "128 \u00cbTR",
+      "public_ip": "157.173.200.84",
+      "tailscale_ip": "100.109.252.56",
+      "tailscale_hostname": "vmi2896914",
+      "did": "did:etrid:economics-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "Tokenomics, economic modeling, treasury management"
+    },
+    "director_8_compiler_dev": {
+      "name": "Compiler Dev (AI Dev & Director)",
+      "role": "DecentralizedDirector",
+      "validator_id": 8,
+      "account": "5EtWzCvcDMkjhpjbn51QWZNyNJZBeJCbyr8hRdBHqYmanx2N",
+      "stake": "128 \u00cbTR",
+      "public_ip": "157.173.200.81",
+      "tailscale_ip": "100.80.84.82",
+      "tailscale_hostname": "vmi2896915",
+      "did": "did:etrid:compiler-dev01",
+      "session_keys": {
+        "asfk": "TBD"
+      },
+      "notes": "Compiler development, runtime optimization, WASM"
+    },
+    "validator_9": {
+      "name": "Validator 9",
+      "role": "ValidityNode",
+      "validator_id": 9,
+      "account": "5GNeSkpUXSJNcoKQ6NPy6DY8V2K3vQ8SyYCMUvMjCqDpQ69A",
+      "stake": "128 \u00cbTR",
+      "public_ip": "80.190.82.186",
+      "tailscale_ip": "100.125.251.60",
+      "session_keys": {
+        "asfk": "0x384a80f6b1c16fd5f8df53458f9f6ec577e3c199f9af8d84bc5f3c9e3e841f7e"
+      },
+      "tailscale_hostname": "vmi2896923"
+    },
+    "validator_10": {
+      "name": "Validator 10",
+      "role": "ValidityNode",
+      "validator_id": 10,
+      "account": "5Fe51zdxgJUKPUTP8d27BWjExvXy7nJtDNGxLHuvSwLpHh6t",
+      "stake": "128 \u00cbTR",
+      "public_ip": "85.239.239.194",
+      "session_keys": {
+        "asfk": "0xf29e4e1cfc2867fcda12ac9b190bea017868a0d1f3f7d5cc59af6c7d3ce6c45c"
+      },
+      "tailscale_ip": "100.74.204.23",
+      "tailscale_hostname": "vmi2896924"
+    },
+    "validator_11": {
+      "name": "Validator 11",
+      "role": "ValidityNode",
+      "validator_id": 11,
+      "account": "5HorBaFUN3euUtbMoJ9abaJXD9Vrh2bEZZPTRHQ2cR4asjdw",
+      "stake": "128 \u00cbTR",
+      "public_ip": "85.239.239.193",
+      "session_keys": {
+        "asfk": "0x2627aa12b4ab2d8d6e82c259b186efb3071e50fac11b28605d8a310dc5688758"
+      },
+      "tailscale_ip": "100.124.117.73",
+      "tailscale_hostname": "vmi2896925"
+    },
+    "validator_12": {
+      "name": "Validator 12",
+      "role": "ValidityNode",
+      "validator_id": 12,
+      "account": "5D4fJFLvKgJsKgKuMSQchbbk7eSVRuV9tjH4cryGLw41rQee",
+      "stake": "128 \u00cbTR",
+      "public_ip": "85.239.239.189",
+      "session_keys": {
+        "asfk": "0xf44ee1c6da7cf209998874f2fa612e75de439afb385625281e123ec8b15ea42f"
+      },
+      "tailscale_ip": "100.89.102.75",
+      "tailscale_hostname": "vmi2897381"
+    },
+    "validator_13": {
+      "name": "Validator 13",
+      "role": "ValidityNode",
+      "validator_id": 13,
+      "account": "5E4fkrBAzq2gu1eD4Y69ZPt5z4hwYPeXy3B8FLGSqTd7UcFb",
+      "stake": "128 \u00cbTR",
+      "public_ip": "85.239.239.188",
+      "session_keys": {
+        "asfk": "0xb89f96a7d5dcff24aec4fee55507d2436e036cb6b4fd63016f7605dafdc41f42"
+      },
+      "tailscale_ip": "100.74.84.28",
+      "tailscale_hostname": "vmi2897382"
+    },
+    "validator_14": {
+      "name": "Validator 14",
+      "role": "ValidityNode",
+      "validator_id": 14,
+      "account": "5GpgRaZ4c76yr2jZSRu83QJtjNZ9axMqqxBCMoVDUWWM9gTw",
+      "stake": "128 \u00cbTR",
+      "public_ip": "154.12.250.18",
+      "session_keys": {
+        "asfk": "0x7cefa78d24e90d0e0823afce3cbb57f065f3bdabe8cb94c2f1168582f7a77958"
+      },
+      "tailscale_ip": "100.71.242.104",
+      "tailscale_hostname": "vmi2897383"
+    },
+    "validator_15": {
+      "name": "Validator 15",
+      "role": "ValidityNode",
+      "validator_id": 15,
+      "account": "5H3QBgqSns8gFGB5z29dShVP3zZKUZEH6GXwGbZsjzB71DAD",
+      "stake": "128 \u00cbTR",
+      "public_ip": "157.173.200.80",
+      "tailscale_ip": "100.125.147.88",
+      "tailscale_hostname": "vmi2896916"
+    },
+    "validator_16": {
+      "name": "Validator 16",
+      "role": "ValidityNode",
+      "validator_id": 16,
+      "account": "5Fe8qeBDV4UA7rZbnDvApEK6MEXjwLuZGGMQEt7bt5T7QLNp",
+      "stake": "128 \u00cbTR",
+      "public_ip": "158.220.83.146",
+      "tailscale_ip": "100.86.111.37",
+      "tailscale_hostname": "vmi2896917"
+    },
+    "validator_17": {
+      "name": "Validator 17",
+      "role": "ValidityNode",
+      "validator_id": 17,
+      "account": "5EvpwRqgQDadmzFfpBbeXvytpN8KCz4MeF1GEpHi1ZJzdNmb",
+      "stake": "128 \u00cbTR",
+      "public_ip": "154.12.249.223",
+      "tailscale_ip": "100.95.0.72",
+      "tailscale_hostname": "vmi2896918"
+    },
+    "validator_18": {
+      "name": "Validator 18",
+      "role": "ValidityNode",
+      "validator_id": 18,
+      "account": "5DCh2DVsHpaRYAJwBsSCY1nq5B7QFVvgGDQewV5HNWdo1fZh",
+      "stake": "128 \u00cbTR",
+      "public_ip": "154.12.249.182",
+      "tailscale_ip": "100.113.226.111",
+      "tailscale_hostname": "vmi2896921"
+    },
+    "validator_19": {
+      "name": "Validator 19",
+      "role": "ValidityNode",
+      "validator_id": 19,
+      "account": "5DjuqRVBudCW3mTbT11heC6oL27p4SfBnmZ8AjRoaphd1rfJ",
+      "stake": "128 \u00cbTR",
+      "public_ip": "129.80.122.34",
+      "session_keys": {
+        "asfk": "0x6464343965626537303963383164666335623035343639666366366437373262"
+      },
+      "tailscale_ip": "100.102.128.51",
+      "tailscale_hostname": "vmi2897384"
+    },
+    "validator_20": {
+      "name": "Validator 20",
+      "role": "ValidityNode",
+      "validator_id": 20,
+      "account": "5C52tPf6hbN3VFFmLMaxFn9uoYt931No8hB6x8C8XcyjBoGP",
+      "stake": "128 \u00cbTR",
+      "public_ip": "85.239.239.190",
+      "tailscale_ip": "100.114.244.62",
+      "tailscale_hostname": "vmi2896922"
+    }
+  },
+  "director_summary": {
+    "total_directors": 9,
+    "quorum_required": 6,
+    "roles": {
+      "eoj": "Founder & CEO",
+      "gizzi": "CTO & Infrastructure",
+      "audit-dev": "Security Auditing",
+      "security-dev": "Infrastructure Security",
+      "governance-dev": "DAO Governance",
+      "oracle-dev": "Oracle & Price Feeds",
+      "consensus-dev": "ASF Consensus",
+      "economics-dev": "Tokenomics",
+      "compiler-dev": "Runtime & Compiler"
+    }
+  },
+  "network_info": {
+    "asf_quorum": "15+ signatures (out of 21)",
+    "current_status": "20/21 validators signing",
+    "finality_level": "Moderate",
+    "bootnode": "/ip4/64.181.215.19/tcp/30333/p2p/12D3KooWPyfp2DECPKTmJ1AhxB6midHnp7wYTP15vBAxbTewxaq1"
+  },
+  "notes": [
+    "This file contains REAL data from the running Primearc Core Mainnet",
+    "Genesis addresses are hardcoded in flarechain_mainnet_v1_pure_asf.json",
+    "TBD fields need to be filled from live chain queries and Tailscale",
+    "Session keys (asfk) are ASF consensus keys for checkpoint BFT",
+    "Directors 0-8 have governance powers (6/9 quorum for emergency actions)",
+    "Validators 9-20 are regular ValidityNodes (consensus only, no governance)"
+  ]
+}

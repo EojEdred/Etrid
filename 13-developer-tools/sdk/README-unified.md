@@ -33,7 +33,7 @@ etrid-sdk = { version = "0.1.0", features = ["wallet"] }
 - `identity` - OpenDID
 - `security` - Cryptography
 - `vm` - ETWASM smart contracts
-- `multichain` - FlareChain + PBCs
+- `multichain` - Primearc Core Chain + PBCs
 - `bridges` - Cross-chain protocols
 
 ### Convenience Bundles
@@ -82,7 +82,7 @@ use etrid_sdk::consensus::Validator;
 use etrid_sdk::staking::Role;
 
 fn start_validator(account: &Account, stake: u128) {
-    // Register as Flare Node
+    // Register as Primearc Validator
     Validator::register(account, stake, Role::FlareNode);
 }
 ```

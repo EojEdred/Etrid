@@ -43,7 +43,7 @@ The Accounts component provides comprehensive account management functionality f
 │                         │                                    │
 └─────────────────────────┼────────────────────────────────────┘
                           ↓
-               FlareChain Runtime
+               Primearc Core Chain Runtime
             (Substrate Frame System)
 ```
 
@@ -63,7 +63,7 @@ Defines the five account types from the Ivory Paper specification, manages accou
 | Type | Abbreviation | Purpose | Example |
 |------|--------------|---------|---------|
 | External Blockchain Account | EBCA | Represents non-Ëtrid keypairs (Bitcoin, Ethereum, etc.) | External wallet addresses |
-| Root Chain Account | RCA | Main FlareChain account | Primary user accounts |
+| Root Chain Account | RCA | Main Primearc Core Chain account | Primary user accounts |
 | Root Chain Withdrawal Account | RCWA | Withdrawal from RCA | Linked withdrawal addresses |
 | Side Chain Account | SCA | PBC partition chain account | Chain-specific accounts (1-12) |
 | Smart Side Chain Account | SSCA | Smart contract account | Contract execution accounts |

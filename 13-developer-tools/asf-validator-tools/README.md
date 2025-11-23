@@ -85,7 +85,7 @@ asf-keygen export --keyfile validator.key --format json --output exported.json
 # Import from mnemonic
 asf-keygen import --data "word1 word2 ... word24" --format mnemonic --output imported.key
 
-# Generate complete session keys (AURA + GRANDPA)
+# Generate complete session keys (AURA + ASF)
 asf-keygen generate-session --output-dir ./session-keys --name validator-1
 ```
 

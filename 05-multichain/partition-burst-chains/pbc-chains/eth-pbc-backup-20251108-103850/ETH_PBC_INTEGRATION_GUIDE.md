@@ -64,8 +64,8 @@ wrapper.unwrap(0.5 ether);
 - ❌ Traditional: Pay gas for WETH deposit/withdraw
 - ✅ Etrid: Zero gas, instant conversion via precompile
 
-### 2. FlareChain Oracle (0x800) 🔮
-**Real-time price feeds from FlareChain**
+### 2. Primearc Core Chain Oracle (0x800) 🔮
+**Real-time price feeds from Primearc Core Chain**
 
 ```solidity
 IEtridOracle oracle = IEtridOracle(0x0000000000000000000000000000000000000800);
@@ -79,10 +79,10 @@ uint256 ethPrice = oracle.getPrice("ETH", "USD");
 
 **Why it's novel:**
 - ❌ Traditional: Use Chainlink (costs gas, potential manipulation)
-- ✅ Etrid: Free oracle access via FlareChain consensus
+- ✅ Etrid: Free oracle access via Primearc Core Chain consensus
 
 ### 3. Cross-Chain Governance (0x801) 🗳️
-**Participate in FlareChain governance from ETH PBC**
+**Participate in Primearc Core Chain governance from ETH PBC**
 
 ```solidity
 IEtridGovernance gov = IEtridGovernance(0x0000000000000000000000000000000000000801);
@@ -102,7 +102,7 @@ gov.voteOnProposal(proposalId, true); // Vote YES
 - ✅ Etrid: Unified governance across all 14 chains
 
 ### 4. Validator Staking Info (0x802) 🔐
-**Query FlareChain validator data**
+**Query Primearc Core Chain validator data**
 
 ```solidity
 IEtridStaking staking = IEtridStaking(0x0000000000000000000000000000000000000802);
@@ -160,7 +160,7 @@ lightning.closeChannel(channelId);
 
 | Address | Name | Description |
 |---------|------|-------------|
-| `0x800` | **Oracle** | FlareChain price feeds |
+| `0x800` | **Oracle** | Primearc Core Chain price feeds |
 | `0x801` | **Governance** | Cross-chain voting |
 | `0x802` | **Staking** | Validator queries |
 | `0x803` | **Native ETH Wrap** | Instant ETH <-> wETH |
@@ -371,7 +371,7 @@ WS:    wss://eth-pbc.etrid.org
 **A:** Yes, 100%. Any Solidity contract that works on Ethereum will work on ETH PBC.
 
 ### Q: What's the difference from other L2s?
-**A:** ETH PBC has native integration with 13 other blockchains via FlareChain. You can:
+**A:** ETH PBC has native integration with 13 other blockchains via Primearc Core Chain. You can:
 - Use BTC, SOL, XRP as collateral in DeFi
 - Access price feeds without oracles
 - Vote on governance from ETH contracts
@@ -384,7 +384,7 @@ WS:    wss://eth-pbc.etrid.org
 **A:** Yes, but much lower than Ethereum mainnet. Gas is paid in ETR (Etrid native token) or any bridged token.
 
 ### Q: Is it secure?
-**A:** ETH PBC inherits security from FlareChain's ASF consensus with 100+ validators. All code will be audited before mainnet launch.
+**A:** ETH PBC inherits security from Primearc Core Chain's ASF consensus with 100+ validators. All code will be audited before mainnet launch.
 
 ### Q: Can I use Metamask?
 **A:** Yes! Just add ETH PBC as a custom network:
@@ -396,7 +396,7 @@ Currency Symbol: ETR
 ```
 
 ### Q: How fast are transactions?
-**A:** Sub-second finality via FlareChain consensus. Typically 2-3 seconds for full confirmation.
+**A:** Sub-second finality via Primearc Core Chain consensus. Typically 2-3 seconds for full confirmation.
 
 ### Q: What's the TPS limit?
 **A:** ETH PBC can handle 5,000+ TPS. Combined with Lightning channels (0x808), over 1M TPS.
@@ -418,7 +418,7 @@ Currency Symbol: ETR
 | Feature | Traditional L2 | ETH PBC |
 |---------|----------------|---------|
 | **Bridge** | ETH only | 14 chains |
-| **Oracle** | External (Chainlink) | Built-in (FlareChain) |
+| **Oracle** | External (Chainlink) | Built-in (Primearc Core Chain) |
 | **Governance** | Separate | Unified multi-chain |
 | **Collateral** | Single-chain | Cross-chain |
 | **MEV Protection** | Limited | Fair ordering built-in |

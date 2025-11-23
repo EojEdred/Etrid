@@ -34,7 +34,7 @@ Before setting up a validator, ensure you have:
 
 #### 1. Generate Validator Keys
 
-Generate AURA and GRANDPA session keys:
+Generate AURA and ASF session keys:
 
 ```bash
 # Create a secure directory for keys
@@ -67,7 +67,7 @@ etrid-node key insert \
   --key-type aura \
   --scheme sr25519
 
-# Insert GRANDPA key
+# Insert ASF key
 etrid-node key insert \
   --base-path /var/lib/etrid \
   --chain /etc/etrid/chainspec.json \
@@ -115,7 +115,7 @@ asf-stake status \
 ËTRID ASF validators use multiple key types:
 
 1. **AURA Key (sr25519)** - For block production
-2. **GRANDPA Key (ed25519)** - For finality voting
+2. **ASF Key (ed25519)** - For finality voting
 3. **Controller Key (sr25519)** - For staking operations
 4. **Stash Key (sr25519)** - For holding staked funds
 

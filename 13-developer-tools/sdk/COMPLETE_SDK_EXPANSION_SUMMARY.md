@@ -38,7 +38,7 @@ Ending with:
 
 ### Python SDK Expansion (7,597 lines, 20 files)
 
-**8 Core FlareChain Wrappers** (3,707 lines):
+**8 Core Primearc Core Chain Wrappers** (3,707 lines):
 1. ✅ EtwasmVMWrapper (481 lines) - WebAssembly contracts
 2. ✅ AIDidWrapper (502 lines) - AI identity standard
 3. ✅ BridgeWrapper (370 lines) - 13-chain bridge
@@ -152,16 +152,16 @@ Ending with:
 - ËDSC token staking mechanism
 
 ### 2. Ethereum L2 Integration (ETH PBC)
-**What**: Solidity smart contracts can call FlareChain features
+**What**: Solidity smart contracts can call Primearc Core Chain features
 **How**: 7 precompiles at addresses 0x800-0x806
 **Use Cases**:
-- DeFi protocols using FlareChain oracles (no Chainlink needed)
+- DeFi protocols using Primearc Core Chain oracles (no Chainlink needed)
 - Cross-chain DAO governance
 - Zero-fee ETH wrapping
 - Ethereum state verification
 
 **Key Features**:
-- Oracle (0x800): Free price feeds from FlareChain
+- Oracle (0x800): Free price feeds from Primearc Core Chain
 - Governance (0x801): Vote on proposals from Solidity
 - Staking (0x802): Stake from ETH PBC addresses
 - Native ETH Wrap (0x803): Zero-gas instant wrapping
@@ -239,7 +239,7 @@ Ending with:
 
 | Feature | JavaScript | Python | Rust | Solidity |
 |---------|-----------|--------|------|----------|
-| FlareChain Core | ✅ | ✅ | ✅ | N/A |
+| Primearc Core Chain Core | ✅ | ✅ | ✅ | N/A |
 | GPU Marketplace | ✅ | ✅ | ✅ | N/A |
 | ETH PBC Precompiles | ✅ | ✅ | ✅ | ✅ (7 interfaces) |
 | Ledger Hardware | ❌ | ✅ | ✅ | N/A |
@@ -293,8 +293,8 @@ uint256 btcPrice = oracle.getPrice("BTC/USD");
 - **Global marketplace**: Access GPUs worldwide
 
 ### DeFi Development
-- **Ethereum L2 oracles**: Use FlareChain price feeds from Solidity
-- **Cross-chain governance**: Vote on FlareChain from ETH PBC
+- **Ethereum L2 oracles**: Use Primearc Core Chain price feeds from Solidity
+- **Cross-chain governance**: Vote on Primearc Core Chain from ETH PBC
 - **Zero-fee wrapping**: Native ETH wrap precompile
 - **Collateralized lending**: Reserve vaults with health factors
 

@@ -12,7 +12,7 @@
 This document outlines the complete infrastructure deployment plan for the **Ëtrid Protocol Ember Testnet**, a Layer 0 multichain blockchain with 13 E³20 components operating across Partition Burst Chains (PBCs).
 
 ### Infrastructure Overview
-- **3 Validator Nodes** (FlareChain relay chain)
+- **3 Validator Nodes** (Primearc Core Chain relay chain)
 - **13 Collator Nodes** (one per E³20 component/PBC)
 - **1 Archive Node** (full historical data)
 - **1 Block Explorer** (web interface)
@@ -35,7 +35,7 @@ This document outlines the complete infrastructure deployment plan for the **Ët
 
 ### 1.1 Validator Nodes (3 nodes)
 
-**Purpose:** Secure the FlareChain relay chain through consensus participation
+**Purpose:** Secure the Primearc Core Chain relay chain through consensus participation
 
 **Hardware Specifications:**
 - **CPU:** 8 physical cores @ 3.4 GHz+
@@ -352,7 +352,7 @@ This document outlines the complete infrastructure deployment plan for the **Ët
         └────────────────┼────────────────┘
                          │
               ┌──────────▼──────────┐
-              │   FlareChain        │
+              │   Primearc Core Chain        │
               │   Relay Chain       │
               └──────────┬──────────┘
                          │
@@ -510,7 +510,7 @@ This document outlines the complete infrastructure deployment plan for the **Ët
 ### Phase 2: Node Deployment (Weeks 3-4)
 
 **Week 3:**
-- [ ] Compile Ëtrid FlareChain binary (release build with optimizations)
+- [ ] Compile Ëtrid Primearc Core Chain binary (release build with optimizations)
 - [ ] Deploy validator nodes:
   - [ ] Validator 1 (Germany) - with session keys
   - [ ] Validator 2 (Finland) - with session keys
@@ -760,7 +760,7 @@ This document outlines the complete infrastructure deployment plan for the **Ët
 
 - Provision and secure all servers
 - Deploy initial validator nodes
-- Begin testing FlareChain relay chain
+- Begin testing Primearc Core Chain relay chain
 - Set up monitoring infrastructure
 
 ### Medium-Term (Weeks 3-6)
@@ -780,7 +780,7 @@ This document outlines the complete infrastructure deployment plan for the **Ët
 - **Collator:** Node that produces blocks for a parachain/PBC
 - **PBC:** Partition Burst Chain (Ëtrid's parachain implementation for E³20 components)
 - **PoV:** Proof-of-Validity (parachain block submitted to validators)
-- **Relay Chain:** FlareChain (Ëtrid's Layer 0 coordination chain)
+- **Relay Chain:** Primearc Core Chain (Ëtrid's Layer 0 coordination chain)
 - **E³20:** Ëtrid Enhanced Ethereum (13 core protocol components)
 
 ### B. Reference Links

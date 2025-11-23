@@ -292,7 +292,7 @@ docker stats ai-devs-orchestrator --no-stream
 
 ### Short-Term Actions (Next 2 Weeks)
 1. **Connect to Ëtrid Node**
-   - Start FlareChain node
+   - Start Primearc Core Chain node
    - Update blockchain_client to connect
    - Test on-chain queries
 

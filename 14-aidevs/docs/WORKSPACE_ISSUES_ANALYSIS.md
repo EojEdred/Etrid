@@ -138,7 +138,7 @@ Verify all PBC runtime paths exist:
 - trx-pbc/runtime
 - ada-pbc/runtime
 
-### 3. FlareChain Node
+### 3. Primearc Core Chain Node
 Check `05-multichain/flare-chain/node` exists
 
 ---
@@ -147,7 +147,7 @@ Check `05-multichain/flare-chain/node` exists
 
 1. ✅ Create stub `pallet-lightning-channels`
 2. ✅ Verify workspace builds successfully
-3. ✅ Build FlareChain runtime WASM with AI agents
+3. ✅ Build Primearc Core Chain runtime WASM with AI agents
 4. 📋 Test on local devnet
 5. 📋 Deploy to testnet
 

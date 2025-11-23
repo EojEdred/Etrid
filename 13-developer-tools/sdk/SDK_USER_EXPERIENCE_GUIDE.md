@@ -126,13 +126,13 @@ async function connectLedger() {
 
 ### 4. **Real-Time Price Feeds in DeFi Apps** 📊
 **Without SDK**: Pay Chainlink, complex oracle setup, trust issues
-**With SDK**: Free, instant, reliable prices from FlareChain
+**With SDK**: Free, instant, reliable prices from Primearc Core Chain
 
 **Implementation**:
 ```javascript
 // In your DeFi lending app
 async function calculateLoanLimit(collateralAmount, collateralAsset) {
-  // Get real-time price (FREE via FlareChain oracle)
+  // Get real-time price (FREE via Primearc Core Chain oracle)
   const price = await oracle.getPrice(`${collateralAsset}/USD`);
 
   // Get TWAP to prevent flash loan attacks

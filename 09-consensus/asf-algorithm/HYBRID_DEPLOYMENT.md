@@ -1,13 +1,13 @@
-# Phase 2: Hybrid Deployment - ËTRID FlareChain ASF Consensus
+# Phase 2: Hybrid Deployment - ËTRID Primearc Core Chain ASF Consensus
 
 ## Overview
 
-Phase 2 implements a **hybrid consensus mode** that allows gradual migration from traditional Substrate consensus (AURA + GRANDPA) to the full ASF (Ascending Scale of Finality) consensus system.
+Phase 2 implements a **hybrid consensus mode** that allows gradual migration from traditional Substrate consensus (AURA + ASF) to the full ASF (Ascending Scale of Finality) consensus system.
 
 This hybrid approach provides:
 - **Dual finality mechanisms** running in parallel
 - **PPFA block production** replacing AURA
-- **GRANDPA fallback** for safety during transition
+- **ASF fallback** for safety during transition
 - **Seamless migration path** with zero downtime
 
 ## Architecture
@@ -16,7 +16,7 @@ This hybrid approach provides:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    FlareChain Node                          │
+│                    Primearc Core Chain Node                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  Block Production Layer (--enable-asf flag)                 │
@@ -28,7 +28,7 @@ This hybrid approach provides:
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Hybrid Finality (when ASF enabled)                 │   │
 │  │  ┌──────────────┐    ┌──────────────────────────┐  │   │
-│  │  │   GRANDPA    │ +  │  ASF Finality Gadget     │  │   │
+│  │  │   ASF    │ +  │  ASF Finality Gadget     │  │   │
 │  │  │  (Fallback)  │    │  (Primary, with 5 levels)│  │   │
 │  │  └──────────────┘    └──────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────┘   │
@@ -37,7 +37,7 @@ This hybrid approach provides:
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Legacy Finality (when ASF disabled)                │   │
 │  │  ┌──────────────┐                                   │   │
-│  │  │   GRANDPA    │                                   │   │
+│  │  │   ASF    │                                   │   │
 │  │  │    (Only)    │                                   │   │
 │  │  └──────────────┘                                   │   │
 │  └─────────────────────────────────────────────────────┘   │
@@ -55,7 +55,7 @@ This hybrid genesis preset includes:
 
 - **balances**: Token distribution across all accounts
 - **sudo**: Sudo key for governance
-- **grandpa**: GRANDPA authorities (21 validators) for fallback finality
+- **grandpa**: ASF authorities (21 validators) for fallback finality
 - **consensus**: Legacy consensus pallet configuration
 - **session**: Session keys configuration
 - **validatorCommittee**: ASF validator committee with stake and PPFA weights
@@ -90,7 +90,7 @@ This hybrid genesis preset includes:
 
 **Key Fields:**
 - `enabled`: Activates ASF consensus components
-- `hybridMode`: Runs both GRANDPA and ASF finality in parallel
+- `hybridMode`: Runs both ASF and ASF finality in parallel
 - `initialCommittee`: 21 validators with ASF public keys and PPFA weights
 - `ppfaWeight`: Priority weight for block production (0-2)
   - Weight 2: High-priority validators (3 validators)
@@ -103,7 +103,7 @@ This hybrid genesis preset includes:
 **File:** `/Users/macbook/Desktop/etrid/05-multichain/flare-chain/node/src/lib.rs`
 
 **Changes:**
-- Uncommented `pub mod service` for legacy GRANDPA service
+- Uncommented `pub mod service` for legacy ASF service
 - Added `new_full()` function with hybrid mode routing
 - Added `new_partial()` function for partial components
 - Routing logic based on `enable_asf` flag
@@ -116,10 +116,10 @@ pub fn new_full<N>(
     enable_asf: bool,
 ) -> Result<TaskManager, ServiceError> {
     if config.role.is_authority() && enable_asf {
-        log::info!("🔥 Starting FlareChain node in ASF HYBRID mode");
+        log::info!("🔥 Starting Primearc Core Chain node in ASF HYBRID mode");
         asf_service::new_full::<N>(config)
     } else {
-        log::info!("🔗 Starting FlareChain node in GRANDPA LEGACY mode");
+        log::info!("🔗 Starting Primearc Core Chain node in ASF LEGACY mode");
         service::new_full::<N>(config)
     }
 }
@@ -143,7 +143,7 @@ pub enable_asf: bool,
 # Start in ASF hybrid mode
 ./flare-chain --enable-asf --validator --chain mainnet_hybrid
 
-# Start in legacy GRANDPA mode (default)
+# Start in legacy ASF mode (default)
 ./flare-chain --validator --chain mainnet_hybrid
 ```
 
@@ -153,7 +153,7 @@ pub enable_asf: bool,
 
 **Features:**
 - Automated validator network setup (configurable count)
-- Dual finality monitoring (GRANDPA + ASF)
+- Dual finality monitoring (ASF + ASF)
 - Real-time consensus status display
 - Performance metrics collection
 - Detailed test reports
@@ -206,16 +206,16 @@ Look for these log messages:
 
 **ASF Hybrid Mode:**
 ```
-🔥 Starting FlareChain node in ASF HYBRID mode
+🔥 Starting Primearc Core Chain node in ASF HYBRID mode
    Block Production: PPFA (ASF)
-   Finality: GRANDPA + ASF Finality Gadget (dual)
+   Finality: ASF + ASF Finality Gadget (dual)
 ```
 
 **Legacy Mode:**
 ```
-🔗 Starting FlareChain node in GRANDPA LEGACY mode
+🔗 Starting Primearc Core Chain node in ASF LEGACY mode
    Block Production: AURA
-   Finality: GRANDPA only
+   Finality: ASF only
 ```
 
 ### Testing Hybrid Deployment
@@ -231,7 +231,7 @@ cd /Users/macbook/Desktop/etrid/09-consensus/asf-algorithm
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
-  ËTRID FlareChain - Hybrid Consensus Mode Test (Phase 2)
+  ËTRID Primearc Core Chain - Hybrid Consensus Mode Test (Phase 2)
 ═══════════════════════════════════════════════════════════════════════════════
 
 Configuration:
@@ -241,7 +241,7 @@ Configuration:
 
 Consensus Mode:
   Block Production:  🔥 PPFA (ASF)
-  Finality:          🔗 GRANDPA + ASF Finality Gadget (dual)
+  Finality:          🔗 ASF + ASF Finality Gadget (dual)
 ```
 
 #### Monitor Dashboard
@@ -255,7 +255,7 @@ Time remaining: 245s
 📦 Block Production (PPFA):
   Best Block:        #127
 
-🔗 GRANDPA Finality:
+🔗 ASF Finality:
   Finalized Head:    0x3f2a1b4c5d6e7f...
 
 🔥 ASF Finality Status:
@@ -292,7 +292,7 @@ The hybrid genesis assigns different PPFA weights to validators:
 ### Phase 2.1: Initial Hybrid Deployment
 
 1. **Deploy with ASF disabled** (default mode)
-2. **Validators run in GRANDPA-only mode**
+2. **Validators run in ASF-only mode**
 3. **Network stabilizes with traditional consensus**
 
 ### Phase 2.2: Gradual ASF Activation
@@ -305,13 +305,13 @@ The hybrid genesis assigns different PPFA weights to validators:
 ### Phase 2.3: Full Hybrid Operation
 
 1. **All validators enable ASF**
-2. **GRANDPA runs as fallback**
+2. **ASF runs as fallback**
 3. **ASF finality gadget becomes primary**
 4. **Network gains 5-level finality confidence**
 
 ### Phase 3: ASF-Only Mode (Future)
 
-1. **Remove GRANDPA dependency** (after testing period)
+1. **Remove ASF dependency** (after testing period)
 2. **Pure ASF consensus**
 3. **Full FODDoS benefits realized**
 
@@ -321,9 +321,9 @@ The hybrid genesis assigns different PPFA weights to validators:
 
 The hybrid mode provides enhanced safety:
 
-1. **GRANDPA Fallback**: If ASF finality stalls, GRANDPA continues finalizing
+1. **ASF Fallback**: If ASF finality stalls, ASF continues finalizing
 2. **ASF Primary**: ASF finality gadget provides ascending confidence levels
-3. **Conflict Resolution**: In case of disagreement, GRANDPA finality prevails
+3. **Conflict Resolution**: In case of disagreement, BFT checkpoint finality and ASF certificates prevails
 4. **Automatic Recovery**: ASF resumes when network conditions improve
 
 ### Monitoring Points
@@ -331,7 +331,7 @@ The hybrid mode provides enhanced safety:
 Watch these metrics during hybrid operation:
 
 - **PPFA block production rate**: Should match AURA rate (~6s per block)
-- **GRANDPA finalization**: Should continue normally
+- **ASF finalization**: Should continue normally
 - **ASF certificate generation**: Should accumulate for each finalized block
 - **Finality level progression**: Should reach Irreversible (level 4) within minutes
 - **Node synchronization**: All nodes should agree on finalized head
@@ -342,7 +342,7 @@ Watch these metrics during hybrid operation:
 
 **Symptoms:**
 - No "ASF HYBRID mode" message in logs
-- GRANDPA LEGACY mode runs instead
+- ASF LEGACY mode runs instead
 
 **Solutions:**
 1. Check `--enable-asf` flag is present
@@ -352,11 +352,11 @@ Watch these metrics during hybrid operation:
 ### Dual Finality Conflict
 
 **Symptoms:**
-- GRANDPA and ASF disagree on finalized head
+- ASF and ASF disagree on finalized head
 - Warning messages about finality conflict
 
 **Solutions:**
-1. ASF finality gadget will automatically align with GRANDPA
+1. ASF finality gadget will automatically align with ASF
 2. Check validator connectivity (ASF requires good P2P connectivity)
 3. Verify validator has correct ASF keys in keystore
 
@@ -381,7 +381,7 @@ Watch these metrics during hybrid operation:
 
 ### Finality (Dual)
 
-- **GRANDPA Finality**: ~10-20 blocks lag (traditional)
+- **ASF Finality**: ~10-20 blocks lag (traditional)
 - **ASF Finality Levels**:
   - Level 0 (None): 0-9 certificates
   - Level 1 (Weak): 10-19 certificates (~1-2 minutes)
@@ -391,7 +391,7 @@ Watch these metrics during hybrid operation:
 
 ### Resource Usage
 
-- **CPU**: +15-20% over GRANDPA-only mode (ASF finality gadget)
+- **CPU**: +15-20% over ASF-only mode (ASF finality gadget)
 - **Memory**: +200-300 MB (certificate storage)
 - **Network**: +10-15% (ASF vote messages)
 - **Disk I/O**: Minimal increase
@@ -403,7 +403,7 @@ After successful Phase 2 deployment:
 1. **Monitor hybrid performance** for 1-2 weeks
 2. **Collect ASF finality metrics**
 3. **Optimize PPFA rotation parameters** based on data
-4. **Plan Phase 3**: Pure ASF mode (remove GRANDPA dependency)
+4. **Plan Phase 3**: Pure ASF mode (remove ASF dependency)
 5. **Implement advanced features**:
    - Dynamic committee rotation
    - Slashing for ASF violations
@@ -419,4 +419,4 @@ For issues or questions about hybrid deployment:
 
 ---
 
-**Generated for ËTRID FlareChain Phase 2 (Hybrid Deployment)**
+**Generated for ËTRID Primearc Core Chain Phase 2 (Hybrid Deployment)**

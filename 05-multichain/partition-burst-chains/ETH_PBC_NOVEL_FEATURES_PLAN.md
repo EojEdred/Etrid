@@ -2,7 +2,7 @@
 
 **Date:** November 7, 2025
 **Status:** Planning Phase
-**Goal:** Make ETH PBC a first-class Ethereum Layer 2 with unique FlareChain integration
+**Goal:** Make ETH PBC a first-class Ethereum Layer 2 with unique Primearc Core Chain integration
 
 ---
 
@@ -12,12 +12,12 @@
 1. **EVM Runtime** - Full Frontier EVM support (stable2506)
 2. **EIP-7702 Support** - Authorization lists for account abstraction
 3. **Custom Precompiles** (0x800-0x808):
-   - `0x800` - Oracle (FlareChain price feeds)
+   - `0x800` - Oracle (Primearc Core Chain price feeds)
    - `0x801` - Governance (Cross-chain voting)
    - `0x802` - Staking (Validator queries)
    - `0x808` - Lightning Channels
 4. **Ethereum Bridge Pallet** - ETH & ERC-20 bridging
-5. **XCM Integration** - Cross-chain messaging to FlareChain
+5. **XCM Integration** - Cross-chain messaging to Primearc Core Chain
 6. **Solidity Interfaces** - Developer-friendly APIs
 
 ### 🎯 Novel Features to Implement
@@ -117,7 +117,7 @@ interface IEtridTokenRegistry {
 ## Phase 2: MEV Protection & Transaction Privacy
 
 ### 2.1 Fair Ordering Service (FOS)
-**Novel Feature:** Built-in MEV protection via FlareChain consensus
+**Novel Feature:** Built-in MEV protection via Primearc Core Chain consensus
 
 ```solidity
 // Precompile: 0x0000000000000000000000000000000000000806
@@ -138,7 +138,7 @@ interface IEtridFairOrdering {
 ```
 
 **Implementation:**
-- FlareChain ASF consensus orders transactions fairly
+- Primearc Core Chain ASF consensus orders transactions fairly
 - No front-running possible across PBC validators
 - Transparent MEV extraction goes to stakers
 
@@ -217,7 +217,7 @@ interface IEtridCrossChainSwap {
 
 **Why Novel:**
 - No need for external DEX aggregators
-- FlareChain routes swaps across all 14 PBCs
+- Primearc Core Chain routes swaps across all 14 PBCs
 - Atomic execution prevents partial failures
 - Best-price routing built-in
 
@@ -252,7 +252,7 @@ interface IEtridCollateral {
 **Why Novel:**
 - Traditional DeFi: single-chain collateral only
 - Etrid: Use BTC + ETH + SOL all as collateral simultaneously
-- FlareChain aggregates valuations via oracles
+- Primearc Core Chain aggregates valuations via oracles
 - Unprecedented capital efficiency
 
 ---
@@ -283,7 +283,7 @@ interface IEtridGasToken {
 **Why Novel:**
 - Users can pay gas in USDC, DAI, USDT, etc.
 - No need to hold native ETH for gas
-- FlareChain oracle provides instant conversion rates
+- Primearc Core Chain oracle provides instant conversion rates
 
 ### 4.2 Smart Contract Aliasing
 **Novel Feature:** Use same Ethereum mainnet contract address on ETH PBC
@@ -349,7 +349,7 @@ interface IEtridBlobDA {
 - Contract verification
 - Transaction history
 - Token tracking
-- FlareChain integration status
+- Primearc Core Chain integration status
 - Cross-PBC transaction tracing
 
 ### 5.3 Example DApps
@@ -417,7 +417,7 @@ ETH PBC Contract
     ↓ (precompile call)
 Runtime Precompile
     ↓ (xcm::send)
-FlareChain
+Primearc Core Chain
     ↓ (process & respond)
 ETH PBC Runtime
     ↓ (callback)
@@ -432,7 +432,7 @@ Contract (emit event)
 |---------|---------------|----------|----------|--------|------|
 | **EVM Compatible** | ✅ Full | ✅ Full | ✅ Full | ⚠️ zkEVM | ✅ Full |
 | **Multi-Chain Bridge** | ✅ 14 chains | ❌ ETH only | ❌ ETH only | ❌ ETH only | ❌ ETH only |
-| **FlareChain Oracle** | ✅ Built-in | ❌ External | ❌ External | ❌ External | ❌ External |
+| **Primearc Core Chain Oracle** | ✅ Built-in | ❌ External | ❌ External | ❌ External | ❌ External |
 | **MEV Protection** | ✅ Fair ordering | ❌ | ❌ | ⚠️ Sequencer | ❌ |
 | **Cross-PBC Swaps** | ✅ Atomic | ❌ | ❌ | ❌ | ❌ |
 | **Multi-Chain Collateral** | ✅ 14 assets | ❌ | ❌ | ❌ | ❌ |

@@ -19,6 +19,6 @@ This directory contains the smart contract code for the Ëtrid Protocol Charter,
 
 ## Integration
 
-The legal charter will be deployed as an immutable smart contract on FlareChain, providing transparent, on-chain governance for the Ëtrid Foundation.
+The legal charter will be deployed as an immutable smart contract on Primearc Core Chain, providing transparent, on-chain governance for the Ëtrid Foundation.
 
 

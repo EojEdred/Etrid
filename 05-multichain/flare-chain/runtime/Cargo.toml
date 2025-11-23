@@ -123,6 +123,7 @@ pallet-vesting = { git = "https://github.com/paritytech/polkadot-sdk", tag = "po
 pallet-multisig = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-treasury = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 pallet-insecure-randomness-collective-flip = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+pallet-node-authorization = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
 
 # Benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false, optional = true }
@@ -269,6 +270,7 @@ std = [
     "pallet-multisig/std",
     "pallet-treasury/std",
     "pallet-insecure-randomness-collective-flip/std",
+    "pallet-node-authorization/std",
     "sp-api/std",
     "sp-arithmetic/std",
     "sp-block-builder/std",

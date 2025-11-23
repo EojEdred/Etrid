@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API documentation for all public modules
 - Integration tests with production scenarios
 - Security model documentation
-- GRANDPA migration guide
+- ASF migration guide
 
 ---
 

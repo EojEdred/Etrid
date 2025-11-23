@@ -14,7 +14,7 @@ This repository contains all smart contracts for Ëtrid's multi-chain infrastruc
 ## Architecture
 
 ```
-FlareChain (Substrate) ← Native ETR
+Primearc Core Chain (Substrate) ← Native ETR
     ↕
 ETH PBC (EVM) ← MasterChef + Bridge
     ↕
@@ -169,7 +169,7 @@ Yield farming contract for LP token staking.
 - Owner controls
 
 ### ETHPBCBridgeAdapter.sol
-Bridge adapter connecting MasterChef rewards to FlareChain.
+Bridge adapter connecting MasterChef rewards to Primearc Core Chain.
 
 **Features:**
 - Harvest and bridge in one transaction

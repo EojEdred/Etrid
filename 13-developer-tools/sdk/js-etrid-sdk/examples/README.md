@@ -106,7 +106,7 @@ npx ts-node examples/vault-lending.ts
 
 **Option 1: Local Development Node**
 ```bash
-# Run local FlareChain node
+# Run local Primearc Core Chain node
 ./flarechain --dev --ws-port 9944
 ```
 

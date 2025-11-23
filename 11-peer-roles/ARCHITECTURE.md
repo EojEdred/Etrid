@@ -29,7 +29,7 @@ The Peer Roles & Staking system implements Ëtrid's multi-tiered identity and va
 
 ### Key Features
 
-- **Five-Tier Peer System**: Common → Staking Common → Validity Node → Flare Node → Director
+- **Five-Tier Peer System**: Common → Staking Common → Validity Node → Primearc Validator → Director
 - **Stake-Based Progression**: Higher stake unlocks greater responsibilities and rewards
 - **Dynamic Role Assignment**: Validators can upgrade/downgrade based on stake
 - **Economic Security**: Slashing for misbehavior protects network integrity
@@ -90,7 +90,7 @@ The Peer Roles & Staking system implements Ëtrid's multi-tiered identity and va
 │  ├──────────────────────────────────────────────────────────────┤  │
 │  │                                                              │  │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │  │
-│  │  │ Flare Nodes │  │  Validity   │  │ Decentralzd │         │  │
+│  │  │ Primearc Validators │  │  Validity   │  │ Decentralzd │         │  │
 │  │  │   (Root)    │  │   Nodes     │  │  Directors  │         │  │
 │  │  │             │  │   (PBCs)    │  │ (Governance)│         │  │
 │  │  ├─────────────┤  ├─────────────┤  ├─────────────┤         │  │
@@ -307,7 +307,7 @@ pub mod defaults {
     /// 1 ËTR in smallest unit (18 decimals)
     pub const MIN_STAKE_COMMON: u128 = 1_000_000_000_000_000_000_000;
 
-    /// 64 ËTR (Validity/Flare Nodes)
+    /// 64 ËTR (Validity/Primearc Validators)
     pub const MIN_STAKE_VALIDITY: u128 = 64_000_000_000_000_000_000_000;
     pub const MIN_STAKE_FLARE: u128 = 64_000_000_000_000_000_000_000;
 
@@ -566,7 +566,7 @@ impl<T: Config> RoleInterface<T::AccountId, BalanceOf<T>> for Pallet<T> {
 | **Common Peer** | 0 ËTR | No | No | No | No | No |
 | **Staking Common** | 1+ ËTR | No | Vote only | No | No | Minimal |
 | **Validity Node** | 64+ ËTR | Yes (PBCs) | Vote + propose | Yes | No | Medium |
-| **Flare Node** | 64+ ËTR | Yes (Root) | Vote + propose | No | Yes | High |
+| **Primearc Validator** | 64+ ËTR | Yes (Root) | Vote + propose | No | Yes | High |
 | **Director** | 128+ ËTR | Yes (All) | Full powers | Yes | Yes | Highest |
 
 ### Tier Progression
@@ -601,11 +601,11 @@ impl<T: Config> RoleInterface<T::AccountId, BalanceOf<T>> for Pallet<T> {
 │  │ • Vote + create proposals                     │    │
 │  └───────────────────────────────────────────────┘    │
 │                     ↓ (Parallel to Tier 2)            │
-│  Tier 2: Flare Node (Root Validator)                  │
+│  Tier 2: Primearc Validator (Root Validator)                  │
 │  ┌───────────────────────────────────────────────┐    │
 │  │ Stake: 64+ ËTR                                │    │
 │  │ Capabilities:                                 │    │
-│  │ • Validate FlareChain blocks                  │    │
+│  │ • Validate Primearc Core Chain blocks                  │    │
 │  │ • Aggregate PBC state roots                   │    │
 │  │ • Participate in ASF consensus (Root)         │    │
 │  │ • Coordinate cross-chain messages             │    │
@@ -617,7 +617,7 @@ impl<T: Config> RoleInterface<T::AccountId, BalanceOf<T>> for Pallet<T> {
 │  ┌───────────────────────────────────────────────┐    │
 │  │ Stake: 128+ ËTR                               │    │
 │  │ Capabilities:                                 │    │
-│  │ • All Validity Node + Flare Node powers       │    │
+│  │ • All Validity Node + Primearc Validator powers       │    │
 │  │ • Emergency governance actions                │    │
 │  │ • Fast-track proposals                        │    │
 │  │ • Treasury management approval                │    │
@@ -735,7 +735,7 @@ fn verify_minimum_stake(
 - Common Peer: **0 ËTR** (no stake)
 - Staking Common: **1 ËTR** = 1,000,000,000,000,000,000,000 wei
 - Validity Node: **64 ËTR** = 64,000,000,000,000,000,000,000 wei
-- Flare Node: **64 ËTR** = 64,000,000,000,000,000,000,000 wei
+- Primearc Validator: **64 ËTR** = 64,000,000,000,000,000,000,000 wei
 - Director: **128 ËTR** = 128,000,000,000,000,000,000,000 wei
 
 ---
@@ -914,9 +914,9 @@ fn assign_validators_to_pbcs(
 
 ---
 
-### 2. Flare Nodes (Root Chain Validators)
+### 2. Primearc Validators (Root Chain Validators)
 
-**Purpose**: Validate FlareChain (root chain) and aggregate PBC state.
+**Purpose**: Validate Primearc Core Chain (root chain) and aggregate PBC state.
 
 #### Core Responsibilities
 
@@ -955,13 +955,13 @@ pub trait FlareNodeApi<AccountId> {
                      │
                      ▼
    ┌─────────────────────────────────┐
-   │     Flare Node Aggregates       │
+   │     Primearc Validator Aggregates       │
    │  Merkle Root = MR(R₁, R₂, ...) │
    └─────────────────────────────────┘
                      │
                      ▼
    ┌─────────────────────────────────┐
-   │      FlareChain Block           │
+   │      Primearc Core Chain Block           │
    │  Header includes aggregated MR  │
    │  Proves all PBC states          │
    └─────────────────────────────────┘

@@ -48,7 +48,7 @@ The Native Currency component implements Ëtrid's three-token economic system: �
 │                               ↓                              │
 └───────────────────────────────┼──────────────────────────────┘
                                 ↓
-                      FlareChain Runtime
+                      Primearc Core Chain Runtime
                    (Substrate Frame System)
 ```
 

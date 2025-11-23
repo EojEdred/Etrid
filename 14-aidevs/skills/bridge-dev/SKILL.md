@@ -1,6 +1,6 @@
 ---
 name: "bridge-dev"
-description: "AI Developer optimized for multi-chain bridges (FlareChain ↔ Partition Burst Chains)"
+description: "AI Developer optimized for multi-chain bridges (Primearc Core Chain ↔ Partition Burst Chains)"
 language: "Rust"
 capabilities:
   - Scaffold pallet-bridge for cross-chain transfer

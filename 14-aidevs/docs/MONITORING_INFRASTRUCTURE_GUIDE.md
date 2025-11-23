@@ -2,7 +2,7 @@
 
 **Date:** October 25, 2025
 **Status:** 📋 Implementation guide ready
-**Purpose:** Set up production monitoring for Ëtrid FlareChain
+**Purpose:** Set up production monitoring for Ëtrid Primearc Core Chain
 
 ---
 
@@ -313,7 +313,7 @@ Create `/etc/grafana/dashboards/etrid-mainnet.json`:
 ```json
 {
   "dashboard": {
-    "title": "Ëtrid FlareChain Mainnet",
+    "title": "Ëtrid Primearc Core Chain Mainnet",
     "panels": [
       {
         "title": "Block Height",

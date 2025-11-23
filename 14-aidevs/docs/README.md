@@ -84,7 +84,7 @@ docker compose up -d
 ```
 
 This starts:
-- **etrid-node**: FlareChain blockchain node
+- **etrid-node**: Primearc Core Chain blockchain node
 - **ai-devs**: MCP orchestrator (FastAPI)
 - **vectordb**: Qdrant for AI memory
 - **notion-sync**: Governance docs sync

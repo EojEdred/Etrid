@@ -1,4 +1,4 @@
-# 🚀 FlareChain Mainnet Genesis Planning Guide
+# 🚀 Primearc Core Chain Mainnet Genesis Planning Guide
 
 **Date:** October 24, 2025
 **Status:** 📋 PLANNING PHASE
@@ -10,7 +10,7 @@
 
 ### Current Status
 
-| Aspect | Ember Testnet | FlareChain Mainnet |
+| Aspect | Ember Testnet | Primearc Core Chain Mainnet |
 |--------|---------------|-------------------|
 | **Chain ID** | `ember_testnet` | `flarechain` |
 | **Protocol ID** | `ember` | `flarechain` |
@@ -100,7 +100,7 @@ Example Distribution:
 }
 ```
 
-#### GRANDPA Finality Authorities
+#### ASF Finality Authorities
 - **Minimum:** 4 for proper Byzantine fault tolerance
 - **Recommended:** 7-10 for mainnet
 - **Keys:** Must be Ed25519 keys, securely generated
@@ -268,7 +268,7 @@ subkey generate --scheme Sr25519 --network substrate
 # For each validator, generate:
 # - Controller account (Sr25519)
 # - Stash account (Sr25519)
-# - Session keys (Sr25519 for BABE/AURA, Ed25519 for GRANDPA)
+# - Session keys (Sr25519 for BABE/AURA, Ed25519 for ASF)
 ```
 
 ### Step 3: Create Mainnet Genesis Preset
@@ -290,11 +290,11 @@ subkey generate --scheme Sr25519 --network substrate
   },
   "grandpa": {
     "authorities": [
-      ["YOUR_GRANDPA_KEY_1", 1],
-      ["YOUR_GRANDPA_KEY_2", 1],
-      ["YOUR_GRANDPA_KEY_3", 1],
-      ["YOUR_GRANDPA_KEY_4", 1],
-      ["YOUR_GRANDPA_KEY_5", 1]
+      ["YOUR_ASF_KEY_1", 1],
+      ["YOUR_ASF_KEY_2", 1],
+      ["YOUR_ASF_KEY_3", 1],
+      ["YOUR_ASF_KEY_4", 1],
+      ["YOUR_ASF_KEY_5", 1]
     ]
   },
   "consensus": {
@@ -352,7 +352,7 @@ fn preset_names() -> Vec<sp_genesis_builder::PresetId> {
 Add mainnet config function:
 
 ```rust
-/// FlareChain mainnet config (production)
+/// Primearc Core Chain mainnet config (production)
 pub fn mainnet_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Mainnet wasm not available".to_string())?;
 
@@ -360,7 +360,7 @@ pub fn mainnet_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("Ëtrid FlareChain")
+    .with_name("Ëtrid Primearc Core Chain")
     .with_id("flarechain")
     .with_chain_type(ChainType::Live)
     .with_protocol_id("flarechain")
@@ -423,7 +423,7 @@ Before mainnet launch, verify:
 - [ ] All test accounts removed (no Alice, Bob, Charlie, etc.)
 - [ ] Foundation multisig configured and tested
 - [ ] Validator keys generated securely (HSM or air-gapped)
-- [ ] GRANDPA keys generated securely
+- [ ] ASF keys generated securely
 - [ ] All keys backed up in multiple secure locations
 - [ ] Key recovery process documented and tested
 
@@ -434,7 +434,7 @@ Before mainnet launch, verify:
 - [ ] Initial distribution matches tokenomics document
 - [ ] All allocation addresses verified (no typos!)
 - [ ] Validator stakes configured correctly
-- [ ] GRANDPA authorities configured correctly
+- [ ] ASF authorities configured correctly
 - [ ] Sudo configuration decided (enabled/disabled)
 
 ### Runtime Configuration
@@ -547,7 +547,7 @@ Before mainnet launch, verify:
 
 ## 💡 Key Differences: Testnet vs Mainnet
 
-| Aspect | Testnet (Ember) | Mainnet (FlareChain) |
+| Aspect | Testnet (Ember) | Mainnet (Primearc Core Chain) |
 |--------|-----------------|----------------------|
 | **Purpose** | Testing, experimentation | Production, real value |
 | **Keys** | Test keys (Alice, Bob) | Secure HSM keys |

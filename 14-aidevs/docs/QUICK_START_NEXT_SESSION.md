@@ -58,7 +58,7 @@ spl-token mint <MINT_ADDRESS> 250000000000000000
 
 ### Option 2: Build & Deploy Mainnet
 
-**Build FlareChain runtime:**
+**Build Primearc Core Chain runtime:**
 ```bash
 cd /Users/macbook/Desktop/etrid
 
@@ -78,7 +78,7 @@ cat flarechain-mainnet-raw.json | grep -A 5 '"vesting"'
 - [ ] Foundation multisig address
 - [ ] Team member addresses (10)
 - [ ] Validator stash addresses (7)
-- [ ] GRANDPA authority keys (7)
+- [ ] ASF authority keys (7)
 - [ ] Bridge contract addresses
 
 ### Option 3: Continue Feature Development
@@ -138,7 +138,7 @@ cargo check
 
 ### Token Economics
 - **Total supply:** 2,500,000,000 ÉTR
-- **Decimals:** 12 (FlareChain), 18 (BSC/Ethereum)
+- **Decimals:** 12 (Primearc Core Chain), 18 (BSC/Ethereum)
 - **Distribution:** Aligned with TOKEN_ALLOCATION_FOR_LIQUIDITY.md ✅
 
 ### Team Vesting
@@ -203,7 +203,7 @@ npx hardhat verify --network bsc <TOKEN_ADDRESS> "Etrid Coin" "ÉTR"
 ### Immediate (This Week)
 1. **Replace genesis placeholders** with real addresses
 2. **Deploy tokens to DEX testnets** (BSC Testnet, Solana Devnet)
-3. **Test bridge functionality** (BSC ↔ FlareChain)
+3. **Test bridge functionality** (BSC ↔ Primearc Core Chain)
 
 ### Short-term (Next 2 Weeks)
 1. **Complete EDSC oracle integration**

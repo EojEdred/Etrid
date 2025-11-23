@@ -131,7 +131,7 @@ nano .env
 ```
 
 **Required credentials:**
-- `BLOCKCHAIN_WS_URL` - FlareChain WebSocket URL
+- `BLOCKCHAIN_WS_URL` - Primearc Core Chain WebSocket URL
 - `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_SECRET`
 - `ANTHROPIC_API_KEY` - Claude API key
 
@@ -168,7 +168,7 @@ python workflows/governance_monitor.py --mode stream
 ### Prerequisites
 
 - **Python 3.10+**
-- **FlareChain Node** (or access to public RPC)
+- **Primearc Core Chain Node** (or access to public RPC)
 - **Twitter Developer Account** (Free tier sufficient)
 - **Anthropic API Key** (Claude access)
 
@@ -206,7 +206,7 @@ pip install -r requirements.txt
 
 **Option A: Local Node (Development)**
 ```bash
-# Start FlareChain node
+# Start Primearc Core Chain node
 cd /path/to/flarechain
 ./target/release/node-template --dev
 

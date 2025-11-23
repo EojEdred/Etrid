@@ -373,7 +373,7 @@ Upload these to your website or IPFS:
 {
   "name": "Etrid Coin (Solana)",
   "symbol": "ÉTR",
-  "description": "Etrid's native token on Solana, bridged from FlareChain via E³20 protocol",
+  "description": "Etrid's native token on Solana, bridged from Primearc Core Chain via E³20 protocol",
   "image": "https://etrid.com/assets/etr-logo.png",
   "external_url": "https://etrid.com",
   "properties": {
@@ -486,7 +486,7 @@ The SOL-PBC (Solana Partition Burst Chain) on Ëtrid monitors Solana for bridge 
 #### Architecture
 
 ```
-Ëtrid FlareChain
+Ëtrid Primearc Core Chain
     ↓
 SOL-PBC (Collator)
     ↓
@@ -544,7 +544,7 @@ class SolanaBridgeAdapter {
       etrMint,
       async (logs, context) => {
         // Parse BridgeBurn events from logs
-        // Trigger release on Ëtrid FlareChain
+        // Trigger release on Ëtrid Primearc Core Chain
         console.log("🔥 Burn event detected:", logs);
       },
       "confirmed"

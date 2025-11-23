@@ -6,7 +6,7 @@ This strategy leverages ETH PBC's full Frontier EVM integration to deploy smart 
 ## Architecture
 
 ```
-FlareChain (Substrate)
+Primearc Core Chain (Substrate)
     ↕ (Bridge Pallets)
 ETH PBC (EVM) ← MasterChef + Bridge Adapter
     ↕ (EDSC Bridge)
@@ -18,8 +18,8 @@ ETH PBC (EVM) ← MasterChef + Bridge Adapter
 ### Phase 1: Core Token Contracts
 Deploy foundational token contracts needed for the entire ecosystem:
 
-1. **ETR Token** (Native on FlareChain, wrapped elsewhere)
-   - FlareChain: Native token (already exists)
+1. **ETR Token** (Native on Primearc Core Chain, wrapped elsewhere)
+   - Primearc Core Chain: Native token (already exists)
    - ETH PBC: WrappedETR (ERC20)
    - External chains: WrappedETR (ERC20) on each
 

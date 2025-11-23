@@ -53,14 +53,14 @@ This document describes the advanced features that give Ëtrid's AI Compute Netw
 - ✅ Trust score calculation (0-100)
 
 ### 7. XCM Integration (`runtime/src/xcm_config.rs`)
-- ✅ Cross-chain messaging with FlareChain
+- ✅ Cross-chain messaging with Primearc Core Chain
 - ✅ Checkpoint submission every 256 blocks
 - ✅ ËDSC/ËTRD asset transfers
 - ✅ Sovereign parachain architecture
 
 ### 8. Full Collator Node (`collator/src/`)
 - ✅ Aura consensus (block production)
-- ✅ GRANDPA finality
+- ✅ BFT checkpoint finality and ASF certificates
 - ✅ RPC endpoints
 - ✅ Prometheus metrics
 - ✅ Telemetry integration

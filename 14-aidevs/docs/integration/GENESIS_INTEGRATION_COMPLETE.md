@@ -1,4 +1,4 @@
-# ✅ FlareChain Genesis Integration - COMPLETE
+# ✅ Primearc Core Chain Genesis Integration - COMPLETE
 
 **Date:** October 24, 2025
 **Status:** 🟢 **READY FOR DEPLOYMENT**
@@ -24,7 +24,7 @@
   - Faucet accounts: 100-200M ETR each
   - **Total supply:** ~2B ETR
 
-- **GRANDPA Authorities:** 3 finality authorities
+- **ASF Authorities:** 3 finality authorities
 - **Sudo Key:** Foundation-controlled (for testnet governance)
 - **Block Time:** 6 seconds (6000ms slot duration)
 
@@ -98,14 +98,14 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 
 **File:** `src/main.rs`
 
-**Updated load_spec() to use FlareChain specs:**
+**Updated load_spec() to use Primearc Core Chain specs:**
 ```rust
 fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
     let chain_type = ChainType::from_str(&self.chain)?;
 
     match chain_type {
         ChainType::Flare => {
-            log::info!("Loading FlareChain specification: {}", id);
+            log::info!("Loading Primearc Core Chain specification: {}", id);
             Ok(match id {
                 "dev" => Box::new(flare_chain_node::chain_spec::development_config()?),
                 "local" => Box::new(flare_chain_node::chain_spec::local_testnet_config()?),
@@ -178,14 +178,14 @@ fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> 
 
 1. **First attempt:** Failed (compilation error - wrong Properties import)
 2. **Second attempt:** Succeeded (1 minute)
-3. **Final build:** Succeeded (20 seconds - integrated FlareChain specs)
+3. **Final build:** Succeeded (20 seconds - integrated Primearc Core Chain specs)
 
 ### Files Modified: 4
 
 1. `05-multichain/flare-chain/runtime/presets/ember_testnet.json` (created)
 2. `05-multichain/flare-chain/runtime/src/lib.rs` (updated get_preset + preset_names)
 3. `05-multichain/flare-chain/node/src/chain-spec.rs` (fixed Properties import)
-4. `src/main.rs` (integrated FlareChain chain specs)
+4. `src/main.rs` (integrated Primearc Core Chain chain specs)
 
 ---
 
@@ -263,7 +263,7 @@ tail -f /tmp/substrate*/chains/ember_testnet/network/p2p.log
 
 **Total:** ~2B ETR initial supply
 
-### GRANDPA Finality Authorities
+### ASF Finality Authorities
 
 | Authority | Weight |
 |-----------|--------|
@@ -278,7 +278,7 @@ tail -f /tmp/substrate*/chains/ember_testnet/network/p2p.log
 - [x] Genesis preset file created
 - [x] Runtime loads ember_testnet preset
 - [x] Chain spec recognizes "staging" and "ember" IDs
-- [x] Main binary integrates FlareChain specs
+- [x] Main binary integrates Primearc Core Chain specs
 - [x] Binary builds successfully
 - [x] Chain specification generates without errors
 - [x] RAW chain spec created for deployment

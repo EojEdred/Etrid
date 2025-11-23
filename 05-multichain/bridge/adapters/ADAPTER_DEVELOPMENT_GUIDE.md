@@ -56,7 +56,7 @@
 **Pattern**: Deploy ERC-20 wrapper → Connect to existing ETH-PBC bridge
 
 ```
-Ëtrid FlareChain
+Ëtrid Primearc Core Chain
     ↓
 ETH-PBC (Ethereum bridge)
     ↓ (reuse)
@@ -100,7 +100,7 @@ Exchange Platform (market creation, orderbook, trading)
 **Pattern**: Native token program → Existing PBC bridge → DEX integration
 
 ```
-Ëtrid FlareChain
+Ëtrid Primearc Core Chain
     ↓
 Chain-Specific PBC (SOL-PBC, etc.)
     ↓
@@ -327,11 +327,11 @@ ts-node deploy-tokens.ts
 
 Test full bridge flow:
 
-1. Lock ÉTR on Ëtrid FlareChain
+1. Lock ÉTR on Ëtrid Primearc Core Chain
 2. Mint ÉTR.avax on Avalanche (via adapter)
 3. Swap on Trader Joe
 4. Burn ÉTR.avax
-5. Release ÉTR on FlareChain
+5. Release ÉTR on Primearc Core Chain
 
 ### 4. Mainnet Dry Run
 

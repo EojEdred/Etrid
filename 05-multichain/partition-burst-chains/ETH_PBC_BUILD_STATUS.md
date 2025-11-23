@@ -88,7 +88,7 @@ cargo build --release --target x86_64-unknown-linux-gnu -p eth-pbc-collator
    - Processes Ethereum-compatible transactions via Frontier EVM
    - Produces blocks using ASF consensus algorithm
    - Syncs with other nodes in the network
-   - Submits state roots to FlareChain relay chain
+   - Submits state roots to Primearc Core Chain relay chain
 
 2. **ASF Consensus**
    - Custom Adaptive Stake-weighted Finality consensus
@@ -178,4 +178,4 @@ All Polkadot SDK dependencies use stable2506:
 2. ✅ Binary verified on remote VMs
 3. ⏭ Deploy to production collator nodes
 4. ⏭ Test Ethereum compatibility
-5. ⏭ Connect to FlareChain relay
+5. ⏭ Connect to Primearc Core Chain relay

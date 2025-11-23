@@ -1,12 +1,12 @@
-# Phase 4: GRANDPA Removal - Rollback Plan
+# Phase 4: ASF Removal - Rollback Plan
 
 **Document Status**: READY
 **Created**: 2025-11-15
-**Runtime Versions**: v108 (ASF-only) → v106 (GRANDPA+ASF)
+**Runtime Versions**: v108 (ASF-only) → v106 (ASF+ASF)
 
 ## Overview
 
-This document provides complete rollback procedures if Phase 4 (GRANDPA removal) needs to be reverted for any reason.
+This document provides complete rollback procedures if Phase 4 (ASF removal) needs to be reverted for any reason.
 
 ## When to Rollback
 
@@ -67,7 +67,7 @@ cd "$NODE_DIR"
 cargo clean
 cargo build --release
 
-echo "Rollback complete! Runtime v106 restored with GRANDPA."
+echo "Rollback complete! Runtime v106 restored with ASF."
 ```
 
 Save as: `/Users/macbook/Desktop/etrid/09-consensus/asf-algorithm/rollback_to_v106.sh`
@@ -96,7 +96,7 @@ cd /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime
 cp /path/to/backup/runtime-Cargo.toml.v106.backup-TIMESTAMP Cargo.toml
 ```
 
-Verify GRANDPA dependencies exist:
+Verify ASF dependencies exist:
 ```bash
 grep "pallet-grandpa" Cargo.toml
 # Expected: pallet-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", ...
@@ -141,7 +141,7 @@ cd /Users/macbook/Desktop/etrid/05-multichain/flare-chain/node
 ./target/release/flarechain-node build-spec --chain flarechain_mainnet_asf > chainspec-v106.json
 ```
 
-Verify GRANDPA section exists:
+Verify ASF section exists:
 ```bash
 grep "grandpa" chainspec-v106.json
 # Should show grandpa authorities
@@ -173,7 +173,7 @@ grep "spec_version:" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runt
 # Expected: spec_version: 106
 ```
 
-### 2. GRANDPA Dependencies Present
+### 2. ASF Dependencies Present
 
 ```bash
 # Runtime Cargo.toml
@@ -185,7 +185,7 @@ grep -c "grandpa" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/node/Ca
 # Expected: 2 (sc-consensus-grandpa, sp-consensus-grandpa)
 ```
 
-### 3. SessionKeys Includes GRANDPA
+### 3. SessionKeys Includes ASF
 
 ```bash
 grep -A 3 "impl_opaque_keys!" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime/src/lib.rs
@@ -209,7 +209,7 @@ cargo check --release
 
 ### 5. Runtime API Test
 
-Check that GRANDPA runtime API exists:
+Check that ASF runtime API exists:
 ```bash
 grep -A 10 "impl sp_consensus_grandpa::GrandpaApi" /Users/macbook/Desktop/etrid/05-multichain/flare-chain/runtime/src/lib.rs
 # Expected: Full implementation visible
@@ -257,7 +257,7 @@ If rollback is needed in production (validators already upgraded to v108):
 
 6. **Monitor Consensus**
    ```bash
-   # Check GRANDPA is finalizing blocks
+   # Check ASF is finalizing blocks
    journalctl -u flarechain-validator -f | grep -i "grandpa\|finalized"
    ```
 
@@ -349,7 +349,7 @@ To avoid needing rollback:
 - [ ] Restore runtime Cargo.toml from backup
 - [ ] Restore node Cargo.toml from backup
 - [ ] Verify runtime version shows 106
-- [ ] Verify GRANDPA dependencies present
+- [ ] Verify ASF dependencies present
 - [ ] Clean build artifacts
 - [ ] Rebuild runtime (cargo build --release)
 - [ ] Rebuild node (cargo build --release)
@@ -357,7 +357,7 @@ To avoid needing rollback:
 - [ ] Regenerate chainspec (if needed)
 - [ ] Deploy restored binary to validators (if production)
 - [ ] Restart validator nodes
-- [ ] Monitor GRANDPA finalization
+- [ ] Monitor ASF finalization
 - [ ] Verify network health
 - [ ] Document incident
 - [ ] Plan improved migration

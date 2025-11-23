@@ -13,7 +13,7 @@ Successfully implemented comprehensive Ledger Hardware Wallet and Hyperledger Fa
 1. **Hardware wallet security** - Secure transaction signing with Ledger devices
 2. **Enterprise blockchain bridging** - Cross-ledger asset transfers with Hyperledger Fabric
 3. **Multi-language support** - Full implementations in Python and Rust
-4. **Runtime integration** - FlareChain pallet for on-chain bridge logic
+4. **Runtime integration** - Primearc Core Chain pallet for on-chain bridge logic
 
 **Total Implementation:** 3,370 lines of production code across 7 files
 
@@ -159,7 +159,7 @@ sha2 = "0.10"
 
 ---
 
-## Part 3: FlareChain Pallet
+## Part 3: Primearc Core Chain Pallet
 
 ### 3.1 Hyperledger Bridge Pallet
 
@@ -251,7 +251,7 @@ Full Substrate pallet implementation for managing bridge operations on-chain.
 3. **Address Verification** - Display address on device for user confirmation
 4. **Public Key Extraction** - Get Ed25519 public key
 5. **Transaction Signing** - Sign balance transfer with device
-6. **FlareChain Submission** - Submit signed transaction to network
+6. **Primearc Core Chain Submission** - Submit signed transaction to network
 
 #### User Experience:
 ```
@@ -274,7 +274,7 @@ Full Substrate pallet implementation for managing bridge operations on-chain.
     ✓ Transaction signed!
     ✓ Signature: 0xabcd...
 
-[6] Submitting transaction to FlareChain...
+[6] Submitting transaction to Primearc Core Chain...
     ✓ Transaction submitted!
     ✓ Transaction hash: 0x5678...
 ```
@@ -353,7 +353,7 @@ Full Substrate pallet implementation for managing bridge operations on-chain.
 | 2 | Python Hyperledger Wrapper | `python-etrid-sdk/etrid_sdk/wrappers/hyperledger_bridge.py` | 680 | ✅ |
 | 3 | Rust Ledger Wrapper | `rust-etrid-sdk/src/wrappers/ledger_hardware.rs` | 495 | ✅ |
 | 4 | Rust Hyperledger Wrapper | `rust-etrid-sdk/src/wrappers/hyperledger_bridge.rs` | 651 | ✅ |
-| 5 | FlareChain Pallet | `runtime/flare-chain/src/pallets/hyperledger-bridge/lib.rs` | 603 | ✅ |
+| 5 | Primearc Core Chain Pallet | `runtime/flare-chain/src/pallets/hyperledger-bridge/lib.rs` | 603 | ✅ |
 | 6 | Ledger Example | `python-etrid-sdk/examples/ledger_signing.py` | 182 | ✅ |
 | 7 | Bridge Example | `python-etrid-sdk/examples/hyperledger_bridge.py` | 267 | ✅ |
 | 8 | Requirements Updated | `python-etrid-sdk/requirements.txt` | ✅ | ✅ |
@@ -563,7 +563,7 @@ if verified:
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│                          Ëtrid FlareChain                             │
+│                          Ëtrid Primearc Core Chain                             │
 │  ┌─────────────────────────────────────────────────────────────────┐ │
 │  │          Hyperledger Bridge Pallet                               │ │
 │  │  Storage:                                                         │ │
@@ -918,7 +918,7 @@ rand = "0.8"
 Successfully implemented comprehensive Ledger Hardware Wallet and Hyperledger Fabric Bridge integrations for the Ëtrid SDK ecosystem. The implementation includes:
 
 ✅ **4 SDK Wrappers** (Python + Rust for Ledger and Hyperledger)
-✅ **1 Runtime Pallet** (FlareChain hyperledger-bridge)
+✅ **1 Runtime Pallet** (Primearc Core Chain hyperledger-bridge)
 ✅ **2 Example Applications** (Ledger signing + Bridge operations)
 ✅ **Full Documentation** (This summary + inline code documentation)
 ✅ **Dependency Management** (requirements.txt + Cargo.toml updated)

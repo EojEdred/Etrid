@@ -6,7 +6,7 @@ This guide shows how to integrate all PBC bridges with the shared `pallet-etr-lo
 
 When a user wants to bridge ETR to an external chain:
 1. Bridge pallet calls `pallet_etr_lock::lock_for_bridge()`
-2. ETR is locked on FlareChain
+2. ETR is locked on Primearc Core Chain
 3. Bridge emits event for relayer
 4. Relayer mints wrapped ETR on external chain
 
@@ -143,7 +143,7 @@ Use these ChainId variants from `pallet_etr_lock::ChainId`:
 
 /// Bridge ETR tokens to Ethereum
 ///
-/// Locks ETR on FlareChain and emits event for relayer to mint on Ethereum
+/// Locks ETR on Primearc Core Chain and emits event for relayer to mint on Ethereum
 #[pallet::call_index(10)] // Use next available index
 #[pallet::weight(150_000)]
 pub fn bridge_etr_to_ethereum(
@@ -176,7 +176,7 @@ pub fn bridge_etr_to_ethereum(
 
 /// Process ETR burn from Ethereum (called by relayer)
 ///
-/// Unlocks ETR on FlareChain when wrapped ETR is burned on Ethereum
+/// Unlocks ETR on Primearc Core Chain when wrapped ETR is burned on Ethereum
 #[pallet::call_index(11)]
 #[pallet::weight(150_000)]
 pub fn process_etr_burn_from_ethereum(

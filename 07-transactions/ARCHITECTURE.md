@@ -349,7 +349,7 @@ Lightning Bloc is Ëtrid's Layer 2 payment channel protocol enabling instant, lo
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                  FlareChain (Layer 1)                      │
+│                  Primearc Core Chain (Layer 1)                      │
 │  - Channel state anchoring                                 │
 │  - Dispute resolution                                      │
 │  - Settlement finality                                     │
@@ -765,10 +765,10 @@ let channel = pallet_transaction::LightningBlocChannels::<T>::get(channel_id);
 
 ## Integration
 
-### With FlareChain Runtime
+### With Primearc Core Chain Runtime
 
 ```rust
-// In FlareChain runtime configuration
+// In Primearc Core Chain runtime configuration
 impl pallet_transaction::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
 }
@@ -814,10 +814,10 @@ Lightning Bloc channels operate across PBC chains:
 
 ```rust
 // Cross-chain payment flow
-1. Open channel on FlareChain (anchor)
+1. Open channel on Primearc Core Chain (anchor)
 2. Execute payments off-chain on PBC
 3. Update channel state
-4. Settle on FlareChain when closing
+4. Settle on Primearc Core Chain when closing
 ```
 
 ### Cross-Chain Bridge Integration

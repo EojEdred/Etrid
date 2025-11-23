@@ -273,10 +273,10 @@ pub trait Config: frame_system::Config {
 - **Voting Power**: Proportional to stake (higher weight)
 - **Privileges**: All Staking Peer privileges + participate in consensus
 
-#### 4. Flare Nodes
+#### 4. Primearc Validators
 - **Stake Required**: 64+ ËTR
 - **Voting Power**: Proportional to stake (higher weight)
-- **Privileges**: All Validity Node privileges + FlareChain operations
+- **Privileges**: All Validity Node privileges + Primearc Core Chain operations
 
 #### 5. Decentralized Directors
 - **Stake Required**: 128+ ËTR

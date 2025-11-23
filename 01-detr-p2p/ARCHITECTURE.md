@@ -46,7 +46,7 @@ The DETR P2P layer provides secure, distributed peer-to-peer networking infrastr
 │                       ↓                                     │
 └───────────────────────┼─────────────────────────────────────┘
                         ↓
-              Substrate/FlareChain
+              Substrate/Primearc Core Chain
               Network Interface
 ```
 
@@ -403,7 +403,7 @@ impl NetworkService for DetrP2P {
 }
 ```
 
-### With FlareChain
+### With Primearc Core Chain
 - Consensus messages
 - Block propagation
 - Transaction broadcasting
