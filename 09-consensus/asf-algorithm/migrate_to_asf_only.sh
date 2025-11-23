@@ -3,7 +3,7 @@
 # ËTRID Phase 4: GRANDPA Removal Migration Script
 # ════════════════════════════════════════════════════════════════════════════
 #
-# Purpose: Automate the complete removal of GRANDPA from FlareChain runtime
+# Purpose: Automate the complete removal of GRANDPA from Primearc Core runtime
 # Status: READY FOR EXECUTION (after review)
 # Runtime Version: v106 → v108
 #
@@ -264,7 +264,7 @@ echo -e "${YELLOW}Next Steps:${NC}"
 echo "  1. Review changes: git diff"
 echo "  2. Build runtime: cd $RUNTIME_DIR && cargo build --release"
 echo "  3. Build node: cd $NODE_DIR && cargo build --release"
-echo "  4. Generate chainspec: flarechain-node build-spec --chain mainnet_asf_only > chainspec.json"
+echo "  4. Generate chainspec: primearc-core-node build-spec --chain mainnet_asf_only > chainspec.json"
 echo "  5. Test locally before deploying"
 echo ""
 echo -e "${YELLOW}Rollback:${NC}"

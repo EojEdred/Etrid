@@ -33,12 +33,10 @@ sp-version = { workspace = true }
 
 # Substrate Primitives - explicit git dependencies
 sp-arithmetic = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sp-consensus-grandpa = { workspace = true }
 sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf", default-features = false }
 sp-genesis-builder = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # FRAME pallets - explicit git dependencies
-pallet-grandpa = { workspace = true }
 pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 pallet-sudo = { workspace = true }
@@ -81,7 +79,6 @@ std = [
     "sp-api/std",
     "sp-arithmetic/std",
     "sp-block-builder/std",
-    "sp-consensus-grandpa/std",
     "sp-consensus-asf/std",
     "sp-core/std",
     "sp-inherents/std",
@@ -92,7 +89,6 @@ std = [
     "sp-transaction-pool/std",
     "sp-version/std",
     "sp-genesis-builder/std",
-    "pallet-grandpa/std",
     "pallet-insecure-randomness-collective-flip/std",
     "pallet-balances/std",
     "pallet-sudo/std",

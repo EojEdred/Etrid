@@ -25,7 +25,7 @@ parameter_types! {
 	pub const MaxPayloadSize: u32 = 1024;
 	pub const MessageTimeout: u64 = 100;
 	pub const MaxPendingMessages: u32 = 100;
-	pub const ChainIdentifier: crate::ChainId = crate::ChainId::FlareChain;
+	pub const ChainIdentifier: crate::ChainId = crate::ChainId::PrimearcCore;
 }
 
 impl crate::Config for Test {

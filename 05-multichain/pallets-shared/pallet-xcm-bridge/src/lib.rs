@@ -6,7 +6,7 @@
 //!
 //! This pallet acts as the bridge between Substrate runtime pallets and the DETRP2P
 //! peer-to-peer networking layer. It enables:
-//! - Checkpoint synchronization from FlareChain to PBC-EDSC
+//! - Checkpoint synchronization from Primearc Core Chain to PBC-EDSC
 //! - Reserve data propagation
 //! - Cross-chain governance messages
 //! - Event notifications between chains
@@ -14,7 +14,7 @@
 //! ## Message Flow
 //!
 //! ```
-//! FlareChain Reserve Oracle
+//! Primearc Core Chain Reserve Oracle
 //!     │
 //!     ├─ 1. Create checkpoint
 //!     └─ 2. Call xcm_bridge::send_checkpoint()
@@ -58,8 +58,8 @@ pub mod pallet {
 	/// Chain identifier
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 	pub enum ChainId {
-		/// FlareChain (main chain)
-		FlareChain,
+		/// Primearc Core Chain (main chain)
+		PrimearcCore,
 		/// PBC-EDSC (dedicated EDSC chain)
 		PbcEdsc,
 		/// Other PBC chains
@@ -68,7 +68,7 @@ pub mod pallet {
 
 	impl Default for ChainId {
 		fn default() -> Self {
-			ChainId::FlareChain
+			ChainId::PrimearcCore
 		}
 	}
 
@@ -76,7 +76,7 @@ pub mod pallet {
 		/// Convert ChainId to u8 for event emission
 		pub fn to_u8(&self) -> u8 {
 			match self {
-				ChainId::FlareChain => 0,
+				ChainId::PrimearcCore => 0,
 				ChainId::PbcEdsc => 1,
 				ChainId::Other(_) => 2,
 			}
@@ -85,7 +85,7 @@ pub mod pallet {
 		/// Get chain ID value (for Other variant)
 		pub fn chain_value(&self) -> u32 {
 			match self {
-				ChainId::FlareChain => 0,
+				ChainId::PrimearcCore => 0,
 				ChainId::PbcEdsc => 1,
 				ChainId::Other(id) => *id,
 			}
@@ -357,7 +357,7 @@ pub mod pallet {
 
 			// Reconstruct destination ChainId
 			let destination = if destination_chain == 0 {
-				ChainId::FlareChain
+				ChainId::PrimearcCore
 			} else if destination_chain == 1 {
 				ChainId::PbcEdsc
 			} else {
@@ -419,7 +419,7 @@ pub mod pallet {
 
 			// Reconstruct source ChainId
 			let source = if source_chain == 0 {
-				ChainId::FlareChain
+				ChainId::PrimearcCore
 			} else if source_chain == 1 {
 				ChainId::PbcEdsc
 			} else {

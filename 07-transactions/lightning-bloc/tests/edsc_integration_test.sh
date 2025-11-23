@@ -31,7 +31,7 @@ echo "Test 1: Deploy EDSC-PBC Collator"
 echo "  Starting EDSC-PBC collator on port 8012..."
 # In real implementation, start the collator here
 echo "  ✓ EDSC-PBC collator started"
-echo "  ✓ Connected to FlareChain relay"
+echo "  ✓ Connected to Primearc Core relay"
 echo ""
 
 # Test 2: Mint EDSC tokens
@@ -91,7 +91,7 @@ echo "  Total EDSC supply: 400 EDSC"
 echo "  Total backing value: $650"
 echo "  Collateralization ratio: 162.5%"
 echo "  ✓ Over-collateralized (>150% required)"
-echo "  ✓ Proof-of-reserves anchor to FlareChain verified"
+echo "  ✓ Proof-of-reserves anchor to Primearc Core verified"
 echo ""
 
 # Test 8: Oracle price feed
@@ -121,7 +121,7 @@ echo ""
 echo "Test 10: Cross-Chain State Checkpoint"
 echo "  EDSC-PBC block #1000"
 echo "  State root: 0x1234...abcd"
-echo "  ✓ Checkpoint submitted to FlareChain"
+echo "  ✓ Checkpoint submitted to Primearc Core"
 echo "  ✓ State verified on relay chain"
 echo ""
 

@@ -206,11 +206,11 @@ echo -e "${YELLOW}Step 7: Final Verification${NC}"
 echo "---------------------------"
 
 # Check binary exists
-if [ -f "$NODE_DIR/target/release/flarechain-node" ]; then
+if [ -f "$NODE_DIR/target/release/primearc-core-node" ]; then
     echo -e "${GREEN}✓ Node binary exists${NC}"
 
     # Get runtime version from binary
-    BINARY_VERSION=$("$NODE_DIR/target/release/flarechain-node" --version 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || echo "unknown")
+    BINARY_VERSION=$("$NODE_DIR/target/release/primearc-core-node" --version 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1 || echo "unknown")
     echo -e "Binary version: ${BLUE}$BINARY_VERSION${NC}"
 else
     echo -e "${RED}ERROR: Node binary not found${NC}"
@@ -238,7 +238,7 @@ echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo "  1. Test the v106 binary:"
 echo "     cd $NODE_DIR"
-echo "     ./target/release/flarechain-node --dev --tmp"
+echo "     ./target/release/primearc-core-node --dev --tmp"
 echo ""
 echo "  2. Verify GRANDPA finality:"
 echo "     # Check logs for GRANDPA messages"

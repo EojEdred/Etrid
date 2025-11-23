@@ -25,7 +25,7 @@ data:
   rpc_url: "https://ai-compute-pbc.etrid.network:9944"
   websocket_url: "wss://ai-compute-pbc.etrid.network:9944"
 
-  # FlareChain relay endpoints (for XCM checkpointing)
+  # Primearc Core relay endpoints (for XCM checkpointing)
   flarechain_rpc_url: "https://flarechain.etrid.network:9944"
   flarechain_websocket_url: "wss://flarechain.etrid.network:9944"
 

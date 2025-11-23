@@ -323,8 +323,8 @@ where
     };
 
     // Check if we have this key in the keystore
-    // We use the AURA key type for validator keys (standard in Substrate)
-    let key_type = sp_core::crypto::key_types::AURA;
+    // We use the ASF key type for validator keys
+    let key_type = sp_core::crypto::KeyTypeId(*b"asf!");
 
     // has_keys returns a bool, not a Future, so no .await
     if keystore.has_keys(&[(public_key.to_raw_vec(), key_type)]) {

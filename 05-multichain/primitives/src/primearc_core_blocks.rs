@@ -1,8 +1,8 @@
-//! FlareChain Block Structures (From Ëtrid Ivory Papers)
+//! Primearc Core Chain Block Structures (From Ëtrid Ivory Papers)
 //!
-//! FlareChain stores aggregated transactions using Patricia Merkle Trees.
+//! Primearc Core Chain stores aggregated transactions using Patricia Merkle Trees.
 //! It stores the world state of the Ëtrid Multichain - specifically,
-//! hashes of Partitioned Burst Chain block headers aggregated into a Flare Chain block.
+//! hashes of Partitioned Burst Chain block headers aggregated into a Primearc Core Chain block.
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -14,13 +14,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{AccountId, BlockNumber, Hash, VMw};
 
-/// FlareChain ID (1M/4q/F from Ivory Papers)
-pub const FLARE_CHAIN_ID: &str = "1M/4q/F";
+/// Primearc Core Chain ID (1M/4q/F from Ivory Papers)
+pub const PRIMEARC_CORE_CHAIN_ID: &str = "1M/4q/F";
 
-/// FlareChain Block Header
-/// 
+/// Primearc Core Chain Block Header
+///
 /// Structure from Ivory Papers:
-/// - Chain ID – Identifier of the Flare Chain (1M/4q/F)
+/// - Chain ID – Identifier of the Primearc Core Chain (1M/4q/F)
 /// - PPFA – Proposing Panel for Attestation Epoch rotation
 /// - PPFA Index – Index of selected Validity Node for attestation
 /// - Parent Root – Keccak-256 hash of previous block's root node
@@ -30,7 +30,7 @@ pub const FLARE_CHAIN_ID: &str = "1M/4q/F";
 /// - Timestamp – Epoch Unix time when block was virtualized
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct FlareChainHeader {
+pub struct PrimearcCoreHeader {
     /// Chain ID (1M/4q/F)
     pub chain_id: Vec<u8>,
     
@@ -59,10 +59,10 @@ pub struct FlareChainHeader {
     pub number: BlockNumber,
 }
 
-impl Default for FlareChainHeader {
+impl Default for PrimearcCoreHeader {
     fn default() -> Self {
         Self {
-            chain_id: FLARE_CHAIN_ID.as_bytes().to_vec(),
+            chain_id: PRIMEARC_CORE_CHAIN_ID.as_bytes().to_vec(),
             ppfa_epoch: 0,
             ppfa_index: 0,
             parent_root: Hash::default(),
@@ -75,20 +75,20 @@ impl Default for FlareChainHeader {
     }
 }
 
-/// FlareChain Block Body
+/// Primearc Core Chain Block Body
 ///
 /// Structure from Ivory Papers:
-/// - Block Signature – Decentralized Director Flare Node Attestation Certificate
+/// - Block Signature – Decentralized Director Primearc Core Node Attestation Certificate
 /// - PBC Data – Partitioned Burst Chain data
 /// - Trunk – Arbitrary block-related data (up to 32 bytes)
-/// - Flare Penalty List – Penalized Flare Nodes
+/// - Primearc Core Penalty List – Penalized Primearc Core Nodes
 /// - Validity Penalty List – Penalized Validity Nodes
 /// - Attestations List – Attestations within the block
 /// - Stake List – Stake deposits within the block
 /// - Exited Node List – Nodes with exited status
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct FlareChainBody {
+pub struct PrimearcCoreBody {
     /// Block Signature - Decentralized Director attestation certificate
     pub block_signature: Option<Vec<u8>>,
     
@@ -97,9 +97,9 @@ pub struct FlareChainBody {
     
     /// Trunk - Arbitrary block-related data (up to 32 bytes)
     pub trunk: [u8; 32],
-    
-    /// Flare Penalty List - Penalized Flare Nodes
-    pub flare_penalty_list: Vec<PenalizedNode>,
+
+    /// Primearc Core Penalty List - Penalized Primearc Core Nodes
+    pub primearc_core_penalty_list: Vec<PenalizedNode>,
     
     /// Validity Penalty List - Penalized Validity Nodes
     pub validity_penalty_list: Vec<PenalizedNode>,
@@ -114,13 +114,13 @@ pub struct FlareChainBody {
     pub exited_node_list: Vec<AccountId>,
 }
 
-impl Default for FlareChainBody {
+impl Default for PrimearcCoreBody {
     fn default() -> Self {
         Self {
             block_signature: None,
             pbc_data: Vec::new(),
             trunk: [0u8; 32],
-            flare_penalty_list: Vec::new(),
+            primearc_core_penalty_list: Vec::new(),
             validity_penalty_list: Vec::new(),
             attestations_list: Vec::new(),
             stake_list: Vec::new(),
@@ -129,7 +129,7 @@ impl Default for FlareChainBody {
     }
 }
 
-/// PBC State Submission (part of FlareChain body)
+/// PBC State Submission (part of Primearc Core Chain body)
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct PbcStateSubmission {
@@ -197,20 +197,20 @@ pub struct StakeDeposit {
     pub timestamp: u64,
 }
 
-/// Complete FlareChain Block
+/// Complete Primearc Core Chain Block
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct FlareChainBlock {
+pub struct PrimearcCoreBlock {
     /// Block header
-    pub header: FlareChainHeader,
-    
+    pub header: PrimearcCoreHeader,
+
     /// Block body
-    pub body: FlareChainBody,
+    pub body: PrimearcCoreBody,
 }
 
-impl FlareChainBlock {
-    /// Create new FlareChain block
-    pub fn new(header: FlareChainHeader, body: FlareChainBody) -> Self {
+impl PrimearcCoreBlock {
+    /// Create new Primearc Core Chain block
+    pub fn new(header: PrimearcCoreHeader, body: PrimearcCoreBody) -> Self {
         Self { header, body }
     }
     
@@ -245,18 +245,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn flare_chain_header_default_works() {
-        let header = FlareChainHeader::default();
-        assert_eq!(header.chain_id, FLARE_CHAIN_ID.as_bytes());
+    fn primearc_core_header_default_works() {
+        let header = PrimearcCoreHeader::default();
+        assert_eq!(header.chain_id, PRIMEARC_CORE_CHAIN_ID.as_bytes());
         assert_eq!(header.vm_wattage_limit.get(), 30_000_000);
     }
 
     #[test]
-    fn flare_chain_block_creation_works() {
-        let header = FlareChainHeader::default();
-        let body = FlareChainBody::default();
-        let block = FlareChainBlock::new(header, body);
-        
+    fn primearc_core_block_creation_works() {
+        let header = PrimearcCoreHeader::default();
+        let body = PrimearcCoreBody::default();
+        let block = PrimearcCoreBlock::new(header, body);
+
         assert_eq!(block.number(), 0);
         assert_eq!(block.pbc_count(), 0);
     }

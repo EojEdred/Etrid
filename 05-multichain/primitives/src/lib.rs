@@ -9,7 +9,7 @@
 //! - Chain identification types
 //! - Cross-chain messaging primitives
 //! - VMw (VM Watts) computation metering
-//! - FlareChain block structures
+//! - Primearc Core Chain block structures
 //! - PBC block structures with Ants support
 
 use codec::{Decode, Encode};
@@ -30,8 +30,8 @@ use serde::{Deserialize, Serialize};
 /// VM Watts (VMw) - Virtual Machine computation units
 pub mod vmw;
 
-/// FlareChain block structures
-pub mod flare_chain_blocks;
+/// Primearc Core Chain block structures
+pub mod primearc_core_blocks;
 
 /// PBC (Partitioned Burst Chain) block structures
 pub mod pbc_blocks;
@@ -43,10 +43,10 @@ pub mod pbc_blocks;
 // Re-export VMw types
 pub use vmw::{BlockVMwLimit, VMw, VMwMetering, VMwPrice};
 
-// Re-export FlareChain types
-pub use flare_chain_blocks::{
-    AttestationRecord, FlareChainBlock, FlareChainBody, FlareChainHeader, PbcStateSubmission,
-    PenalizedNode, StakeDeposit, FLARE_CHAIN_ID,
+// Re-export Primearc Core Chain types
+pub use primearc_core_blocks::{
+    AttestationRecord, PrimearcCoreBlock, PrimearcCoreBody, PrimearcCoreHeader, PbcStateSubmission,
+    PenalizedNode, StakeDeposit, PRIMEARC_CORE_CHAIN_ID,
 };
 
 // Re-export PBC types
@@ -110,22 +110,22 @@ pub type BlockId = sp_runtime::generic::BlockId<Block>;
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum ChainId {
-    /// FlareChain (root chain)
-    Flare,
+    /// Primearc Core Chain (root chain)
+    PrimearcCore,
     /// Partitioned Burst Chain with ID
     Pbc(u8),
 }
 
 impl Default for ChainId {
     fn default() -> Self {
-        Self::Flare
+        Self::PrimearcCore
     }
 }
 
 impl ChainId {
-    /// Check if this is FlareChain
-    pub fn is_flare(&self) -> bool {
-        matches!(self, ChainId::Flare)
+    /// Check if this is Primearc Core Chain
+    pub fn is_primearc_core(&self) -> bool {
+        matches!(self, ChainId::PrimearcCore)
     }
 
     /// Check if this is a PBC
@@ -176,7 +176,7 @@ impl Default for TokenType {
 // CROSS-CHAIN MESSAGING
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// Cross-chain message between PBCs and FlareChain
+/// Cross-chain message between PBCs and Primearc Core Chain
 #[derive(Clone, Encode, Decode, Eq, PartialEq, TypeInfo, Debug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CrossChainMessage {
@@ -190,7 +190,7 @@ pub struct CrossChainMessage {
     pub payload: sp_std::vec::Vec<u8>,
 }
 
-/// PBC state root for FlareChain aggregation
+/// PBC state root for Primearc Core Chain aggregation
 #[derive(Clone, Encode, Decode, Eq, PartialEq, TypeInfo, Debug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct PbcStateRoot {
@@ -224,7 +224,7 @@ pub struct PbcStateRoot {
 pub enum AccountType {
     /// External Blockchain Account (non-Ëtrid key pairs)
     Ebca,
-    /// Root Chain Account (FlareChain account)
+    /// Root Chain Account (Primearc Core Chain account)
     Rca,
     /// Root Chain Withdrawal Account (withdrawal-only)
     Rcwa,
@@ -250,12 +250,12 @@ mod tests {
 
     #[test]
     fn chain_id_works() {
-        let flare = ChainId::Flare;
-        assert!(flare.is_flare());
-        assert!(!flare.is_pbc());
+        let primearc_core = ChainId::PrimearcCore;
+        assert!(primearc_core.is_primearc_core());
+        assert!(!primearc_core.is_pbc());
 
         let pbc = ChainId::Pbc(1);
-        assert!(!pbc.is_flare());
+        assert!(!pbc.is_primearc_core());
         assert!(pbc.is_pbc());
         assert_eq!(pbc.pbc_id(), Some(1));
     }

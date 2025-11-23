@@ -79,7 +79,7 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            pub grandpa: Grandpa,
+            // ASF manages consensus internally - no session keys needed
         }
     }
 }
@@ -192,21 +192,6 @@ impl frame_system::Config for Runtime {
 }
 
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
-
-
-
-impl pallet_grandpa::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-
-    type WeightInfo = ();
-    type MaxAuthorities = ConstU32<32>;
-    type MaxSetIdSessionEntries = ConstU64<0>;
-    type MaxNominators = ConstU32<0>;
-
-    type KeyOwnerProof = sp_core::Void;
-    type EquivocationReportSystem = ();
-}
-
 impl pallet_timestamp::Config for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
@@ -349,8 +334,6 @@ construct_runtime!(
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
-        
-        Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
@@ -454,33 +437,6 @@ impl_runtime_apis! {
             encoded: Vec<u8>,
         ) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
             opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
-        }
-    }
-
-    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-            Grandpa::grandpa_authorities()
-        }
-
-        fn current_set_id() -> sp_consensus_grandpa::SetId {
-            Grandpa::current_set_id()
-        }
-
-        fn submit_report_equivocation_unsigned_extrinsic(
-            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
-                <Block as BlockT>::Hash,
-                NumberFor<Block>,
-            >,
-            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
-        ) -> Option<()> {
-            None
-        }
-
-        fn generate_key_ownership_proof(
-            _set_id: sp_consensus_grandpa::SetId,
-            _authority_id: sp_consensus_grandpa::AuthorityId,
-        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-            None
         }
     }
 

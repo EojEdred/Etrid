@@ -1,6 +1,6 @@
 #!/bin/bash
 # Lightning Bloc Testnet Deployment Script
-# Deploys a test network with FlareChain + 3 Lightning nodes
+# Deploys a test network with Primearc Core + 3 Lightning nodes
 
 set -e
 
@@ -23,9 +23,9 @@ NC='\033[0m' # No Color
 
 # Check prerequisites
 echo "Step 1: Checking prerequisites..."
-if [ ! -f "./target/release/flarechain-node" ]; then
-    echo "❌ FlareChain node binary not found"
-    echo "Run: cargo build --release -p flarechain-node"
+if [ ! -f "./target/release/primearc-core-node" ]; then
+    echo "❌ Primearc Core node binary not found"
+    echo "Run: cargo build --release -p primearc-core-node"
     exit 1
 fi
 
@@ -47,16 +47,16 @@ echo ""
 cleanup() {
     echo ""
     echo "Cleaning up processes..."
-    pkill -f flarechain-node 2>/dev/null || true
+    pkill -f primearc-core-node 2>/dev/null || true
     pkill -f lightning-node 2>/dev/null || true
     echo "✅ Cleanup complete"
 }
 
 trap cleanup EXIT INT TERM
 
-# Step 3: Start FlareChain (Settlement Layer)
-echo "Step 3: Starting FlareChain settlement layer..."
-./target/release/flarechain-node \
+# Step 3: Start Primearc Core (Settlement Layer)
+echo "Step 3: Starting Primearc Core settlement layer..."
+./target/release/primearc-core-node \
     --dev \
     --base-path "$TESTNET_DIR/data/flarechain" \
     --rpc-port $FLARE_PORT \
@@ -67,23 +67,23 @@ echo "Step 3: Starting FlareChain settlement layer..."
     > "$TESTNET_DIR/logs/flarechain.log" 2>&1 &
 
 FLARE_PID=$!
-echo -e "${GREEN}✓${NC} FlareChain started (PID: $FLARE_PID)"
+echo -e "${GREEN}✓${NC} Primearc Core started (PID: $FLARE_PID)"
 echo "  RPC: ws://127.0.0.1:$FLARE_PORT"
 echo "  Log: $TESTNET_DIR/logs/flarechain.log"
 echo ""
 
-# Wait for FlareChain to initialize
-echo "Waiting for FlareChain to initialize (10 seconds)..."
+# Wait for Primearc Core to initialize
+echo "Waiting for Primearc Core to initialize (10 seconds)..."
 sleep 10
 
-# Check if FlareChain is running
+# Check if Primearc Core is running
 if ! ps -p $FLARE_PID > /dev/null; then
-    echo "❌ FlareChain failed to start"
+    echo "❌ Primearc Core failed to start"
     cat "$TESTNET_DIR/logs/flarechain.log" | tail -20
     exit 1
 fi
 
-echo -e "${GREEN}✓${NC} FlareChain is running"
+echo -e "${GREEN}✓${NC} Primearc Core is running"
 echo ""
 
 # Step 4: Initialize Lightning Network Topology
@@ -92,7 +92,7 @@ cat > "$TESTNET_DIR/network-topology.json" <<EOF
 {
   "network": "Lightning Bloc Testnet",
   "settlement_chain": {
-    "name": "FlareChain",
+    "name": "Primearc Core",
     "endpoint": "ws://127.0.0.1:$FLARE_PORT"
   },
   "nodes": [
@@ -199,7 +199,7 @@ echo "Network Topology:"
 echo "  Alice <--10,000 ETR--> Bob <--15,000 ETR--> Charlie"
 echo ""
 echo "Settlement Layer:"
-echo "  FlareChain: ws://127.0.0.1:$FLARE_PORT"
+echo "  Primearc Core: ws://127.0.0.1:$FLARE_PORT"
 echo ""
 echo "Lightning Nodes:"
 echo "  Alice:   ws://127.0.0.1:$NODE_A_PORT (pending)"
