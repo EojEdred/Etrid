@@ -29,7 +29,7 @@ sc-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkad
 sc-service = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # ËTRID Node Libraries
-flare_chain_node = { package = "flarechain-node", path = "05-multichain/flare-chain/node" }
+primearc_core_node = { package = "primearc-core-node", path = "05-multichain/primearc-core/node" }
 
 [workspace]
 resolver = "2"
@@ -73,9 +73,9 @@ members = [
     # ═════════════════════════════════════════════════════════════════════════════
     # 05 - Multichain Layer (Substrate-based)
     # ═════════════════════════════════════════════════════════════════════════════
-    "05-multichain/flare-chain/runtime",                # Flare Chain runtime
-    "05-multichain/flare-chain/runtime/pallets/pallet-asf", # ASF consensus pallet
-    "05-multichain/flare-chain/node",                   # Flare Chain node
+    "05-multichain/primearc-core/runtime",                # Primearc Core Chain runtime
+    "05-multichain/primearc-core/runtime/pallets/pallet-asf", # ASF consensus pallet
+    "05-multichain/primearc-core/node",                   # Primearc Core Chain node
     "05-multichain/primitives",                         # Multichain primitives
     "05-multichain/partition-burst-chains/pbc-common",  # PBC common runtime code (NEW - shared)
     "05-multichain/partition-burst-chains/pbc-runtime", # PBC runtime
@@ -185,7 +185,7 @@ members = [
     "11-peer-roles/staking/types",                      # Staking type definitions
     "11-peer-roles/staking/pallet",                     # Staking pallet
     "11-peer-roles/decentralized-directors",            # Decentralized directors
-    "11-peer-roles/flare-nodes",                        # Flare nodes (root-chain validators)
+    "11-peer-roles/primearc-core-nodes",                        # Primearc Core nodes (root-chain validators)
     "11-peer-roles/validity-nodes",                     # Validity nodes (PBC validators)
 
     # ═════════════════════════════════════════════════════════════════════════════
