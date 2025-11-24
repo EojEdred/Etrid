@@ -9,13 +9,16 @@ use tokio::sync::{Mutex, RwLock};
 use tokio::time::{Instant, Duration, interval};
 use serde::{Serialize, Deserialize};
 use codec::{Encode, Decode};
+use sp_core::crypto::AccountId32;
 
 // ============================================================================
 // CORE TYPES
 // ============================================================================
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
-pub struct ValidatorId(pub u32);
+// V9 FIX: Use full 32-byte AccountId32 instead of 4-byte u32 to prevent validator ID collisions
+// This allows all validators to have unique identities instead of only 2^32 possible IDs
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
+pub struct ValidatorId(pub AccountId32);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
 pub struct BlockHash([u8; 32]);
@@ -173,17 +176,23 @@ impl VoteCollector {
 
         block_votes.push((vote.validator_id, vote.signature));
 
-        // V8 DIAGNOSTIC: Log vote distribution to diagnose quorum issues
+        // V9 DIAGNOSTIC: Log vote distribution to diagnose quorum issues
         let vote_count = block_votes.len() as u32;
         let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
             vote.block_hash.0[0], vote.block_hash.0[1],
             vote.block_hash.0[30], vote.block_hash.0[31]);
 
+        // V9 FIX: Display first 8 bytes of AccountId32 for readability
+        let validator_id_bytes = vote.validator_id.0.as_ref();
+        let validator_id_short = format!("{:02x}{:02x}{:02x}{:02x}..{:02x}{:02x}{:02x}{:02x}",
+            validator_id_bytes[0], validator_id_bytes[1], validator_id_bytes[2], validator_id_bytes[3],
+            validator_id_bytes[28], validator_id_bytes[29], validator_id_bytes[30], validator_id_bytes[31]);
+
         tracing::info!(
             "📊 Vote added: view={:?}, block={}, validator={}, votes={}/{} (quorum={})",
             vote.view,
             block_hash_short,
-            vote.validator_id.0,
+            validator_id_short,
             vote_count,
             self.max_validators,
             self.quorum_threshold
@@ -339,7 +348,7 @@ impl ViewChangeTimer {
 
         NewViewMessage {
             new_view,
-            sender: ValidatorId(0), // Will be set by caller
+            sender: ValidatorId(AccountId32::new([0u8; 32])), // V9: Placeholder, will be set by caller
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -610,14 +619,13 @@ impl FinalityGadget {
     // ========== CONSENSUS OPERATIONS ==========
 
     pub async fn propose_block(&mut self, block_hash: BlockHash) -> Result<Vote, String> {
-        // V7 TEMPORARY FIX: Use dummy signature to unblock finality
+        // V9 TEMPORARY FIX: Use dummy signature to unblock finality
         // TODO: Implement proper Sr25519 signing with validator keystore
         let dummy_signature = {
             let mut sig = Vec::with_capacity(64);
-            // Create deterministic signature from validator_id + block_hash for uniqueness
-            sig.extend_from_slice(&self.validator_id.0.to_le_bytes());
-            sig.extend_from_slice(&block_hash.0[0..28]); // 4 + 28 = 32 bytes
-            sig.extend_from_slice(&block_hash.0[0..32]); // Total 64 bytes (Sr25519 signature size)
+            // V9: Create deterministic signature from full AccountId32 + block_hash for uniqueness
+            sig.extend_from_slice(self.validator_id.0.as_ref()); // 32 bytes from AccountId32
+            sig.extend_from_slice(&block_hash.0[0..32]); // + 32 bytes from block_hash = 64 bytes total
             sig
         };
 
@@ -737,7 +745,7 @@ mod tests {
         let mut collector = VoteCollector::new(3);
 
         let vote1 = Vote {
-            validator_id: ValidatorId(0),
+            validator_id: ValidatorId(AccountId32::new([0u8; 32])),
             view: View(0),
             block_hash: BlockHash([0u8; 32]),
             signature: vec![1, 2, 3],
@@ -745,7 +753,7 @@ mod tests {
         };
 
         let vote2 = Vote {
-            validator_id: ValidatorId(1),
+            validator_id: ValidatorId(AccountId32::new([1u8; 32])),
             view: View(0),
             block_hash: BlockHash([0u8; 32]),
             signature: vec![4, 5, 6],
@@ -820,10 +828,10 @@ mod tests {
     #[tokio::test]
     async fn test_finality_gadget_vote_flow() {
         let bridge = Arc::new(MockNetworkBridge);
-        let mut gadget = FinalityGadget::new(ValidatorId(0), 3, bridge);
+        let mut gadget = FinalityGadget::new(ValidatorId(AccountId32::new([0u8; 32])), 3, bridge);
 
         let vote = Vote {
-            validator_id: ValidatorId(1),
+            validator_id: ValidatorId(AccountId32::new([1u8; 32])),
             view: View(0),
             block_hash: BlockHash([0u8; 32]),
             signature: vec![1, 2, 3],

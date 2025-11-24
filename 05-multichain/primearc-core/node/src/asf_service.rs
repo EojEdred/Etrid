@@ -1400,7 +1400,7 @@ pub fn new_full_with_params(
         let validator_id = {
             if role.is_authority() {
                 // Load ASF validator key from keystore
-                use sp_core::crypto::KeyTypeId;
+                use sp_core::crypto::{KeyTypeId, AccountId32};
                 const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
 
                 let keystore = keystore_container.keystore();
@@ -1408,39 +1408,33 @@ pub fn new_full_with_params(
 
                 match asf_keys.first() {
                     Some(public_key) => {
-                        // Convert Sr25519 public key (32 bytes) to u32 validator ID
-                        // Use first 4 bytes of the public key as the validator ID
+                        // V9 FIX: Use FULL 32-byte Sr25519 public key as AccountId32
+                        // This prevents validator ID collisions that occurred with 4-byte u32
+                        let account_id = AccountId32::from(public_key.clone());
                         let key_bytes = public_key.as_ref() as &[u8];
-                        let validator_id_u32 = u32::from_le_bytes([
-                            key_bytes[0],
-                            key_bytes[1],
-                            key_bytes[2],
-                            key_bytes[3],
-                        ]);
 
                         log::info!(
                             "🔑 ASF Finality Gadget using validator key from keystore: {}",
                             hex::encode(key_bytes)
                         );
                         log::info!(
-                            "🆔 Derived ASF validator ID: {} (from first 4 bytes: {:02x}{:02x}{:02x}{:02x})",
-                            validator_id_u32,
-                            key_bytes[0], key_bytes[1], key_bytes[2], key_bytes[3]
+                            "🆔 ASF Validator AccountId32: {} (full 32 bytes - no collisions!)",
+                            hex::encode(account_id.as_ref())
                         );
 
-                        finality_gadget::ValidatorId(validator_id_u32)
+                        finality_gadget::ValidatorId(account_id)
                     }
                     None => {
                         log::warn!(
                             "⚠️  No ASF key found in keystore for Finality Gadget. \
                              Using observer mode (non-validator)."
                         );
-                        finality_gadget::ValidatorId(u32::MAX) // Non-validator observer
+                        finality_gadget::ValidatorId(AccountId32::new([0xFFu8; 32])) // Non-validator observer
                     }
                 }
             } else {
                 // Non-authority nodes are observers
-                finality_gadget::ValidatorId(u32::MAX)
+                finality_gadget::ValidatorId(AccountId32::new([0xFFu8; 32]))
             }
         };
 
