@@ -49,7 +49,7 @@
 - ✅ Status updates periodically
 
 #### TC-CS-004: Network Type Display
-- ✅ FlareChain shows "Relay Chain" badge
+- ✅ Primearc Core Chain shows "Relay Chain" badge
 - ✅ PBCs show "Partition Burst Chain" type
 - ✅ Decimals display correctly for each chain
 - ✅ Color coding matches chain configuration
@@ -61,7 +61,7 @@
 - ✅ Correct symbol displayed with balance
 
 #### TC-CS-006: Filtering
-- ✅ `filterRelay={true}` shows only FlareChain
+- ✅ `filterRelay={true}` shows only Primearc Core Chain
 - ✅ `filterParachains={true}` shows only PBCs
 - ✅ No filter shows all 13 chains
 - ✅ Filtered list updates dropdown correctly
@@ -344,13 +344,13 @@
 ### 7. Multi-Chain Integration Tests
 
 #### TC-MC-001: Chain Switching
-- ✅ Switch from FlareChain to BTC-PBC
+- ✅ Switch from Primearc Core Chain to BTC-PBC
 - ✅ Switch from ETH-PBC to BNB-PBC
-- ✅ Switch back to FlareChain
+- ✅ Switch back to Primearc Core Chain
 - ✅ UI updates correctly each time
 
 #### TC-MC-002: Token List Updates
-- ✅ FlareChain shows only ETR
+- ✅ Primearc Core Chain shows only ETR
 - ✅ ETH-PBC shows ETH + ERC-20 tokens
 - ✅ BNB-PBC shows BNB + BEP-20 tokens
 - ✅ Other chains show native only
@@ -380,7 +380,7 @@
 ### 8. Complete Transaction Flow Tests
 
 #### TC-FL-001: Simple Transfer Flow
-1. ✅ Select chain (FlareChain)
+1. ✅ Select chain (Primearc Core Chain)
 2. ✅ Select token (ETR)
 3. ✅ Enter recipient address
 4. ✅ Enter amount (10 ETR)
@@ -402,7 +402,7 @@
 8. ✅ Transaction submitted
 
 #### TC-FL-003: Batch Transfer Flow
-1. ✅ Select chain (FlareChain)
+1. ✅ Select chain (Primearc Core Chain)
 2. ✅ Add 5 recipients
 3. ✅ Enter amounts for each
 4. ✅ Review total amount

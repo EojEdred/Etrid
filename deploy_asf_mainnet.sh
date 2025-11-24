@@ -1,13 +1,13 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════════════════════
-# FlareChain ASF Mainnet Deployment Script
+# Primearc Core ASF Mainnet Deployment Script
 # ═══════════════════════════════════════════════════════════════════════════════
 #
 # This script deploys the Pure ASF mainnet configuration to all 20 validators
 #
 # Prerequisites:
 # 1. etrid binary built (./target/release/etrid)
-# 2. ASF raw chainspec generated (./flarechain_production_raw.json)
+# 2. ASF raw chainspec generated (./primearc_core_production_raw.json)
 # 3. SSH access to all validator servers
 #
 # Usage:
@@ -26,10 +26,10 @@ NC='\033[0m' # No Color
 
 # Configuration
 BINARY_PATH="./target/release/etrid"
-CHAINSPEC_PATH="./flarechain_production_raw.json"
+CHAINSPEC_PATH="./primearc_core_production_raw.json"
 REMOTE_USER="ubuntu"
 REMOTE_BINARY_PATH="/usr/local/bin/etrid"
-REMOTE_CHAINSPEC_PATH="/etc/etrid/flarechain_production.json"
+REMOTE_CHAINSPEC_PATH="/etc/etrid/primearc_core_production.json"
 REMOTE_BASE_PATH="/var/lib/etrid"
 
 # Validator server IPs (update these with your actual IPs)
@@ -57,7 +57,7 @@ VALIDATORS=(
 )
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}    FlareChain Pure ASF Mainnet Deployment${NC}"
+echo -e "${BLUE}    Primearc Core Pure ASF Mainnet Deployment${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
@@ -118,9 +118,9 @@ deploy_to_validator() {
     # 3. Execute remote deployment
     ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$ip" << 'ENDSSH'
         # Stop old node
-        echo "  Stopping old flarechain-node..."
-        sudo systemctl stop flarechain-node 2>/dev/null || true
-        sudo pkill -9 flarechain-node 2>/dev/null || true
+        echo "  Stopping old primearc-core-node..."
+        sudo systemctl stop primearc-core-node 2>/dev/null || true
+        sudo pkill -9 primearc-core-node 2>/dev/null || true
 
         # Install new binary
         echo "  Installing etrid binary..."
@@ -130,7 +130,7 @@ deploy_to_validator() {
         # Install chainspec
         echo "  Installing chainspec..."
         sudo mkdir -p /etc/etrid
-        sudo mv /tmp/chainspec.json /etc/etrid/flarechain_production.json
+        sudo mv /tmp/chainspec.json /etc/etrid/primearc_core_production.json
 
         # Backup old database (optional)
         echo "  Backing up old database..."
@@ -147,7 +147,7 @@ deploy_to_validator() {
         echo "  Updating systemd service..."
         sudo tee /etc/systemd/system/etrid-validator.service > /dev/null <<EOF
 [Unit]
-Description=Etrid FlareChain Validator (Pure ASF)
+Description=Etrid Primearc Core Validator (Pure ASF)
 After=network.target
 Wants=network-online.target
 
@@ -156,7 +156,7 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/var/lib/etrid
 ExecStart=/usr/local/bin/etrid \\
-  --chain /etc/etrid/flarechain_production.json \\
+  --chain /etc/etrid/primearc_core_production.json \\
   --validator \\
   --base-path /var/lib/etrid \\
   --port 30333 \\
@@ -164,7 +164,7 @@ ExecStart=/usr/local/bin/etrid \\
   --prometheus-port 9615 \\
   --prometheus-external \\
   --node-key \$(cat /etc/etrid/node-key.secret) \\
-  --name "FlareChain-Validator-\$(hostname)" \\
+  --name "Primearc-Core-Validator-\$(hostname)" \\
   --rpc-cors all \\
   --unsafe-rpc-external
 

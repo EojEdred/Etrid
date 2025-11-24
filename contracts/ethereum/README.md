@@ -5,7 +5,7 @@ Smart contracts for listing ÉTR and EDSC on Ethereum and other EVM chains.
 ## 📦 Contracts
 
 ### 1. **ETRToken.sol** - Wrapped ÉTR (ÉTR.e)
-Canonical Ethereum representation of native ÉTR from Ëtrid FlareChain.
+Canonical Ethereum representation of native ÉTR from Ëtrid Primearc Core Chain.
 
 **Features:**
 - ERC-20 compliant with Burnable, Permit (EIP-2612)
@@ -41,7 +41,7 @@ Fiat-pegged stablecoin (1 EDSC = $1.00 USD) with Authorized Participants framewo
 ---
 
 ### 3. **EtridBridge.sol** - Cross-Chain Bridge
-Orchestrates lock/mint and burn/release mechanics between Ëtrid FlareChain and Ethereum.
+Orchestrates lock/mint and burn/release mechanics between Ëtrid Primearc Core Chain and Ethereum.
 
 **Architecture:**
 - **Lock/Mint:** User locks ÉTR/EDSC on Ëtrid → Bridge mints ÉTR.e/EDSC.e on Ethereum
@@ -148,7 +148,7 @@ npm run node scripts/create-uniswap-pools.js
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Ëtrid FlareChain                       │
+│                  Ëtrid Primearc Core Chain                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
 │  │   Native     │  │   Native     │  │   Bridge     │ │
 │  │     ÉTR      │  │    EDSC      │  │   Manager    │ │

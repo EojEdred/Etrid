@@ -25,16 +25,20 @@ collator_test_results.txt
 # Backup files
 *.bak
 *.bak2
+*.backup
+*.old
 *~
 
 # Frontend build artifacts
 .next/
 dist/
 build/
+.build/
 out/
 .cache/
 .vite/
 .turbo/
+.cxx/
 
 # IDE and editor files
 .vscode/
@@ -173,10 +177,13 @@ ai-monitoring/GLOBAL_MEMORY.md
 etrid-monitoring-package.tar.gz
 
 # Python cache
+__pycache__/
+**/__pycache__/
 ai-monitoring/__pycache__/
 ai-monitoring/**/__pycache__/
 *.pyc
 *.pyo
+*.pyd
 .aider*
 
 # Bitwarden import files (personal use only)

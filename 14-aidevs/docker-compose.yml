@@ -1,5 +1,5 @@
 services:
-  # Ëtrid Node (FlareChain) - Commented out for initial testing
+  # Ëtrid Node (Primearc Core) - Commented out for initial testing
   # Uncomment when you have the etrid binary built
   # etrid-node:
   #   image: etrid/node:latest

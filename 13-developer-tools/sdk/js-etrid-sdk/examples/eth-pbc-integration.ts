@@ -9,7 +9,7 @@
  * - Zero-fee ETH wrapping
  * - Cross-chain governance voting
  * - Validator staking queries
- * - XCM bridging to FlareChain
+ * - XCM bridging to Primearc Core Chain
  * - Token registry auto-discovery
  * - Ethereum state proof verification
  *
@@ -39,7 +39,7 @@ async function main() {
 
   // ========== 1. Oracle - Get Prices ==========
   console.log('\n' + '='.repeat(60));
-  console.log('1. ORACLE - FlareChain Price Feeds (FREE!)');
+  console.log('1. ORACLE - Primearc Core Chain Price Feeds (FREE!)');
   console.log('='.repeat(60));
 
   try {
@@ -106,7 +106,7 @@ async function main() {
 
   // ========== 3. Governance - Cross-Chain Voting ==========
   console.log('\n' + '='.repeat(60));
-  console.log('3. GOVERNANCE - Participate in FlareChain Governance');
+  console.log('3. GOVERNANCE - Participate in Primearc Core Chain Governance');
   console.log('='.repeat(60));
 
   try {
@@ -142,7 +142,7 @@ async function main() {
 
   // ========== 4. Staking - Validator Queries ==========
   console.log('\n' + '='.repeat(60));
-  console.log('4. STAKING - FlareChain Validator Information');
+  console.log('4. STAKING - Primearc Core Chain Validator Information');
   console.log('='.repeat(60));
 
   try {

@@ -20,7 +20,7 @@
 
 Ëtrid is a next-generation blockchain multichain that implements:
 
-- **🔗 Multichain Architecture**: FlareChain relay chain + 13 Partition Burst Chains (PBCs)
+- **🔗 Multichain Architecture**: Primearc Core Chain relay chain + 13 Partition Burst Chains (PBCs)
 - **⚡ Ascending Scale of Finality (ASF)**: Novel consensus combining stake-weighted voting with coinage
 - **🗳️ Consensus Day Governance**: Annual on-chain voting for fiscal policy and network upgrades
 - **💰 Dual Token System**: ÉTR (native coin) + ËDSC (dollar-pegged stablecoin)
@@ -41,7 +41,7 @@ The **Essential Elements to Operate (E³20)** protocol defines 13 core component
 | 02 | **OpenDID** | Self-sovereign identity + **AIDID** 🌟 | 🟢 **Alpha Complete** | 100% |
 | 03 | **Security** | Post-quantum encryption | 🟢 **Alpha Complete** | 100% |
 | 04 | **Accounts** | Account types + Social Recovery | 🟢 **Alpha Complete** | 100% |
-| 05 | **Multichain** | FlareChain + 13 PBCs + Bridges | 🟢 **Alpha Complete** | 100% |
+| 05 | **Multichain** | Primearc Core Chain + 13 PBCs + Bridges | 🟢 **Alpha Complete** | 100% |
 | 06 | **Native Currency** | ÉTR, ËDSC, VMw tokens | 🟢 **Alpha Complete** | 100% |
 | 07 | **Transactions** | Ed25519 + HTLCs + Regular/Smart | 🟢 **Alpha Complete** | 100% |
 | 08 | **ËtwasmVM** | WebAssembly runtime + Reentrancy Protection | 🟢 **Alpha Complete** | 100% |
@@ -73,8 +73,8 @@ make all      # Build, test, and generate docs
 # Build the unified node binary
 cargo build --release --bin etrid
 
-# Run Ember development node (FlareChain validator)
-./target/release/etrid --chain flare --validator --dev
+# Run Ember development node (Primearc Core Chain validator)
+./target/release/etrid --chain primearc-core --validator --dev
 
 # Or use make
 make dev
@@ -127,7 +127,7 @@ cat docs/API_REFERENCE.md       # API documentation
 **Ember** is Ëtrid's public incentivized testnet, launching in Q1 2026.
 
 ### Ember Features
-- **FlareChain Validators:** Stake-weighted ASF consensus
+- **Primearc Core Chain Validators:** Stake-weighted ASF consensus
 - **13 PBC Collators:** Full multichain functionality
 - **Faucet:** Test ÉTR tokens for developers
 - **Incentives:** Rewards for active participation
@@ -218,7 +218,7 @@ cat docs/API_REFERENCE.md       # API documentation
 
 ## 🔗 Multichain Architecture
 
-### FlareChain (Relay Chain)
+### Primearc Core Chain (Relay Chain)
 - **Consensus:** Ascending Scale of Finality (ASF)
 - **Block Time:** ~6 seconds
 - **Finality:** <100 blocks
@@ -257,7 +257,7 @@ Each PBC specializes in bridging a specific external blockchain:
 - **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Complete development guide
 - **[API Reference](docs/API_REFERENCE.md)** - API documentation
 - **[Architecture](docs/architecture.md)** - System architecture
-- **[EVM Architecture](docs/technical/EVM_ARCHITECTURE.md)** - EVM on ETH-PBC (not FlareChain)
+- **[EVM Architecture](docs/technical/EVM_ARCHITECTURE.md)** - EVM on ETH-PBC (not Primearc Core Chain)
 - **[Custom Precompiles Guide](docs/technical/CUSTOM_PRECOMPILES_GUIDE.md)** - Oracle, Governance, Staking precompiles
 - **[Ivory Paper](docs/specifications/ivory-paper.md)** - Complete protocol specification
 
@@ -278,7 +278,7 @@ etrid/
 ├── 02-open-did/            # Identity system (OpenDID + AIDID)
 ├── 03-security/            # Cryptographic primitives
 ├── 04-accounts/            # Account types + social recovery
-├── 05-multichain/          # FlareChain + 13 PBCs + bridges
+├── 05-multichain/          # Primearc Core Chain + 13 PBCs + bridges
 ├── 06-native-currency/     # ÉTR, ËDSC, VMw tokens
 ├── 07-transactions/        # Transaction system
 ├── 08-etwasm-vm/           # WebAssembly smart contracts
@@ -335,7 +335,7 @@ cd tests/property-based && PROPTEST_CASES=5000 cargo test --release
 make dev
 
 # Method 2: Direct binary
-./target/release/etrid --chain flare --validator --dev --tmp
+./target/release/etrid --chain primearc-core --validator --dev --tmp
 
 # Method 3: Using script
 ./scripts/start-testnet.sh

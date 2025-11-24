@@ -13,7 +13,7 @@ Production-ready iOS and Android mobile applications for the Ëtrid blockchain e
 - **Deep Linking** - Universal links and app schemes
 
 ### DeFi Features
-- Multi-chain wallet (FlareChain, EDSC-PBC)
+- Multi-chain wallet (Primearc Core Chain, EDSC-PBC)
 - Send/Receive tokens (ÉTR, EDSC)
 - NFT Gallery & Marketplace
 - Trading & Swaps

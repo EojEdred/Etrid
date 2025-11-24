@@ -126,7 +126,7 @@ describe('DistributionPayWrapper', () => {
             const amounts: Record<string, string> = {
               [DistributionCategory.Stakers]: (50n * 10n**18n).toString(),
               [DistributionCategory.Voters]: (10n * 10n**18n).toString(),
-              [DistributionCategory.FlareNodes]: '0',
+              [DistributionCategory.PrimearcCoreNodes]: '0',
               [DistributionCategory.ValidityNodes]: '0',
               [DistributionCategory.Directors]: '0',
             };
@@ -166,7 +166,7 @@ describe('DistributionPayWrapper', () => {
         nextDistribution: Date.now() + 3600000,
         categoryAllocations: {
           [DistributionCategory.Voters]: (2740n * 10n**18n).toString(),
-          [DistributionCategory.FlareNodes]: (4110n * 10n**18n).toString(),
+          [DistributionCategory.PrimearcCoreNodes]: (4110n * 10n**18n).toString(),
           [DistributionCategory.ValidityNodes]: (4110n * 10n**18n).toString(),
           [DistributionCategory.Stakers]: (10959n * 10n**18n).toString(),
           [DistributionCategory.Directors]: (5479n * 10n**18n).toString(),

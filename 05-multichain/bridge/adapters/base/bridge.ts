@@ -1,7 +1,7 @@
 /**
  * Base L2 Bridge Adapter
- * 
- * Monitors Ëtrid FlareChain for lock events and mints tokens on Base.
+ *
+ * Monitors Ëtrid Primearc Core Chain for lock events and mints tokens on Base.
  * Monitors Base for burn events and releases tokens on Ëtrid.
  */
 
@@ -71,7 +71,7 @@ class BaseBridgeAdapter {
     // Connect to Ëtrid
     const provider = new WsProvider(this.config.etridWsUrl);
     this.etridApi = await ApiPromise.create({ provider });
-    console.log('✅ Connected to Ëtrid FlareChain');
+    console.log('✅ Connected to Ëtrid Primearc Core Chain');
 
     // Connect to Base
     const network = await this.baseProvider.getNetwork();

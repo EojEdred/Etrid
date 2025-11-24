@@ -101,7 +101,7 @@ All files are located in: `/Users/macbook/Desktop/etrid/apps/wallet-web/etrid-cr
 ### Transaction Types
 
 #### 1. Transfer
-- Multi-chain support (FlareChain + 12 PBCs)
+- Multi-chain support (Primearc Core Chain + 12 PBCs)
 - Recipient address validation (Substrate format)
 - Amount validation with balance checking
 - Optional memo field

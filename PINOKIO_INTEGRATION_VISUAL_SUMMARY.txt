@@ -1,0 +1,445 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                   PINOKIO INTEGRATION GAME PLAN                              ║
+║                         VISUAL SUMMARY                                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📅 Date: November 22, 2025
+🎯 Goal: Unify Pinokio + Monitoring + Governance into ONE system
+⏱️ Time: ~10.5 hours (3 sessions)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## CURRENT STATE: TWO POWERFUL SYSTEMS
+
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────┐
+│  PINOKIO SETUP (Existing)           │  │  MONITORING & GOVERNANCE (New)      │
+│  Built by: Claude Code Browser      │  │  Built by: Claude Code Desktop      │
+├─────────────────────────────────────┤  ├─────────────────────────────────────┤
+│                                     │  │                                     │
+│  ✅ 21 Validator CLI Manager        │  │  ✅ Prometheus + Grafana           │
+│  ✅ AI-Powered Monitoring           │  │  ✅ Network Telemetry              │
+│  ✅ 5 Web UIs Launcher              │  │  ✅ Snapshot Governance UI         │
+│  ✅ Unified Pinokio Interface       │  │  ✅ Wallet Governance Page         │
+│                                     │  │  ✅ Integration Architecture       │
+│  Services:                          │  │                                     │
+│  • Lightning Landing → :3000        │  │  Services:                          │
+│  • MasterChef → :3001               │  │  • Prometheus → :9090              │
+│  • Validator Dashboard → :3002      │  │  • Grafana → :3000 ⚠️ CONFLICT    │
+│  • Watchtower → :3003               │  │  • Network Telemetry → :8080       │
+│  • Wallet Web → :3004               │  │  • Governance UI → :8082           │
+│                                     │  │  • Validator Dashboard → :3002 ⚠️  │
+│  Tools:                             │  │  • Watchtower → :3003 ⚠️           │
+│  • validator-cli.js                 │  │  • Wallet → :3000/gov ⚠️           │
+│  • ai-validator-monitor.js          │  │                                     │
+│  • 16/21 validators accessible      │  │                                     │
+│                                     │  │                                     │
+└─────────────────────────────────────┘  └─────────────────────────────────────┘
+                    │                                    │
+                    └────────────┬───────────────────────┘
+                                 │
+                                 │ INTEGRATION NEEDED
+                                 ▼
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                    UNIFIED PINOKIO ECOSYSTEM                                ┃
+┃                   (One Interface for Everything)                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## PORT CONFLICT RESOLUTION
+
+   Before:                                After:
+
+   Port 3000:                             Port 3000: Lightning Landing ✅
+   • Lightning Landing                    Port 3001: MasterChef ✅
+   • Grafana ⚠️ CONFLICT                 Port 3002: Validator Dashboard ✅
+   • Wallet ⚠️ CONFLICT                  Port 3003: Watchtower Monitor ✅
+                                          Port 3004: Wallet Web ✅
+   Port 3002:                             Port 8080: Network Telemetry ✅
+   • Validator Dashboard (both) ⚠️       Port 8082: Governance UI ✅
+                                          Port 9090: Prometheus ✅
+   Port 3003:                             Port 3100: Grafana ✅ (MOVED!)
+   • Watchtower (both) ⚠️
+
+   Solution:
+   ✅ Move Grafana: 3000 → 3100
+   ✅ Use single Validator Dashboard on :3002
+   ✅ Use single Watchtower on :3003
+   ✅ Wallet stays on :3004 (governance at /governance route)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## UNIFIED ARCHITECTURE
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                    PINOKIO UNIFIED CONTROL CENTER                         ┃
+┃                  npm run start:all (ONE COMMAND!)                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+     │
+     ├──────────────────────┬──────────────────────┬────────────────────────┐
+     │                      │                      │                        │
+     ▼                      ▼                      ▼                        ▼
+┌──────────┐         ┌──────────┐         ┌──────────┐            ┌──────────┐
+│  WEB UIs │         │MONITORING│         │GOVERNANCE│            │VALIDATOR │
+│          │         │          │         │          │            │  TOOLS   │
+│ 5 Apps   │         │ 4 Systems│         │ 2 UIs    │            │21 Nodes  │
+└──────────┘         └──────────┘         └──────────┘            └──────────┘
+     │                      │                      │                        │
+     │                      │                      │                        │
+     ▼                      ▼                      ▼                        ▼
+┌──────────┐         ┌──────────┐         ┌──────────┐            ┌──────────┐
+│:3000     │         │:9090     │         │:8082     │            │validator │
+│Lightning │         │Prometheus│         │Snapshot  │            │-cli.js   │
+├──────────┤         ├──────────┤         ├──────────┤            ├──────────┤
+│:3001     │         │:3100     │         │:3004/gov │            │ai-monitor│
+│MasterChef│         │Grafana   │         │Wallet    │            │.js       │
+├──────────┤         ├──────────┤         ├──────────┤            ├──────────┤
+│:3002     │         │:8080     │         │Directors │            │director  │
+│Validator │         │Telemetry │         │Dashboard │            │-tools.js │
+├──────────┤         ├──────────┤         └──────────┘            ├──────────┤
+│:3003     │         │Alerting  │                                 │prometheus│
+│Watchtower│         │Rules     │                                 │-integr.js│
+├──────────┤         └──────────┘                                 └──────────┘
+│:3004     │
+│Wallet    │
+└──────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 7-PHASE INTEGRATION ROADMAP
+
+Phase 1: Port Conflict Resolution (30 min) 🔴 CRITICAL
+┌────────────────────────────────────────────────────────┐
+│ • Move Grafana from :3000 to :3100                     │
+│ • Update all Grafana references in docs               │
+│ • Verify no duplicate apps                            │
+│ • Test all services can run simultaneously            │
+└────────────────────────────────────────────────────────┘
+
+Phase 2: Integrate Monitoring into Pinokio (2 hours) 🔴 CRITICAL
+┌────────────────────────────────────────────────────────┐
+│ • Add Prometheus to pinokio/index.js                   │
+│ • Add Grafana to pinokio/index.js                      │
+│ • Add Network Telemetry to pinokio/index.js            │
+│ • Create npm scripts for monitoring                    │
+│ • Test: npm run monitor:all                            │
+└────────────────────────────────────────────────────────┘
+
+Phase 3: Integrate Governance UIs (1 hour) 🟠 HIGH
+┌────────────────────────────────────────────────────────┐
+│ • Add Snapshot UI to pinokio/index.js                  │
+│ • Add wallet governance routes                         │
+│ • Create npm scripts: gov:snapshot, gov:wallet         │
+│ • Test: npm run gov:all                                │
+└────────────────────────────────────────────────────────┘
+
+Phase 4: Connect Prometheus to Validator CLI (3 hours) 🟠 HIGH
+┌────────────────────────────────────────────────────────┐
+│ • Create prometheus-integration.js                     │
+│ • Enhance ai-validator-monitor.js with Prometheus      │
+│ • Create unified-health-dashboard.js                   │
+│ • Combine SSH + Prometheus + AI data                   │
+│ • Test enhanced monitoring                             │
+└────────────────────────────────────────────────────────┘
+
+Phase 5: Enhanced Pinokio Menu (1 hour) 🟡 MEDIUM
+┌────────────────────────────────────────────────────────┐
+│ • Create interactive TUI dashboard.js                  │
+│ • Show real-time service status                        │
+│ • Add quick action menu                                │
+│ • Test: npm run dashboard                              │
+└────────────────────────────────────────────────────────┘
+
+Phase 6: Director Dashboard (2 hours) 🟡 MEDIUM
+┌────────────────────────────────────────────────────────┐
+│ • Create /app/governance/directors/page.tsx            │
+│ • Build director-tools.js CLI                          │
+│ • Emergency proposal workflow                          │
+│ • Multi-sig approval (6/9 quorum)                      │
+│ • Test with director accounts                          │
+└────────────────────────────────────────────────────────┘
+
+Phase 7: Testing & Documentation (1 hour) 🔴 CRITICAL
+┌────────────────────────────────────────────────────────┐
+│ • End-to-end testing all services                      │
+│ • Update all documentation                             │
+│ • Create quick reference card                          │
+│ • Write troubleshooting guide                          │
+│ • Final integration test                               │
+└────────────────────────────────────────────────────────┘
+
+Total Time: ~10.5 hours
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## KEY ENHANCEMENTS
+
+🔧 Prometheus + Validator CLI Integration:
+
+   Before:                          After:
+
+   SSH Metrics:                     Combined Metrics:
+   • Disk usage                     • SSH metrics (disk, uptime, service)
+   • Memory usage                   • Prometheus metrics (block height,
+   • Service status                     peers, memory, finalization)
+   • Basic health                   • AI analysis (smart recommendations)
+                                    • Unified health score (0-100)
+
+   Example:
+   $ npm run validator:monitor
+
+   OLD OUTPUT:                      NEW OUTPUT:
+   Validator #7                     Validator #7: Compiler Dev
+   Status: Running                  Status: 🟢 Running (Health: 95/100)
+   Memory: 26%                      Peers: 8 | Block: #12,450
+                                    Memory: 26.3% | Disk: 45%
+                                    Finalization: 3 blocks behind
+                                    💡 Recommendation: Health excellent
+
+🤖 AI Monitoring Enhanced:
+
+   OLD: SSH-only metrics
+   NEW: SSH + Prometheus + Network telemetry
+
+   Reports now include:
+   • Block synchronization status
+   • Peer connectivity (from Prometheus)
+   • Finalization lag
+   • Transaction throughput
+   • Network-wide health scoring
+
+🗳️ Complete Governance:
+
+   Integration:
+   Snapshot UI ←→ Wallet Governance ←→ On-chain Pallets
+
+   Features:
+   • Off-chain voting (Snapshot)
+   • User-friendly interface (Wallet)
+   • On-chain execution (Governance pallet)
+   • Director tools (Emergency proposals)
+   • Consensus Day interface
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## AFTER INTEGRATION: ONE-COMMAND ECOSYSTEM
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  $ cd ~/Desktop/etrid/pinokio                                       │
+│  $ npm run start:all                                                │
+│                                                                      │
+│  🚀 Starting Ëtrid Complete Suite...                                │
+│                                                                      │
+│  [✓] Lightning Landing       → http://localhost:3000                │
+│  [✓] MasterChef Dashboard    → http://localhost:3001                │
+│  [✓] Validator Dashboard     → http://localhost:3002                │
+│  [✓] Watchtower Monitor      → http://localhost:3003                │
+│  [✓] Wallet Web              → http://localhost:3004                │
+│  [✓] Network Telemetry       → http://localhost:8080                │
+│  [✓] Governance UI           → http://localhost:8082                │
+│  [✓] Prometheus              → http://localhost:9090                │
+│  [✓] Grafana                 → http://localhost:3100                │
+│                                                                      │
+│  🤖 AI Validator Monitoring started (every 10 minutes)              │
+│                                                                      │
+│  📊 All systems operational!                                        │
+│                                                                      │
+│  Quick commands:                                                    │
+│  • npm run dashboard         → Open interactive dashboard           │
+│  • npm run validator:watch   → Continuous validator monitoring      │
+│  • npm run status            → Check all service status             │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## NPM SCRIPTS AFTER INTEGRATION
+
+Service Management:
+  npm run start:all         # 🚀 Start entire Ëtrid ecosystem
+  npm run stop:all          # 🛑 Stop everything
+  npm run status            # 📊 Check all service status
+  npm run dashboard         # 📺 Interactive TUI dashboard
+
+Web UIs:
+  npm run web:build         # 🔨 Build all web UIs
+  npm run web:start         # 🌐 Start all web UIs
+  npm run web:stop          # 🛑 Stop all web UIs
+  npm run web:status        # ✅ Check web UI status
+
+Monitoring:
+  npm run monitor:prometheus # 🔬 Start Prometheus
+  npm run monitor:grafana    # 📈 Start Grafana
+  npm run monitor:telemetry  # 🌍 Start Network Telemetry
+  npm run monitor:all        # 📊 Start all monitoring
+  npm run monitor:stop       # 🛑 Stop all monitoring
+
+Governance:
+  npm run gov:snapshot      # 🗳️ Start Snapshot UI
+  npm run gov:wallet        # 💼 Start Wallet governance
+  npm run gov:directors     # 👥 Director dashboard
+  npm run gov:all           # 🗳️ Start all governance UIs
+
+Validator Tools:
+  npm run validator:list    # 📋 List all 21 validators
+  npm run validator:status  # 💚 Check all statuses
+  npm run validator:monitor # 🤖 Run AI monitoring once
+  npm run validator:watch   # 🔄 Continuous monitoring (daemon)
+  npm run validator:health  # 📊 Unified health dashboard
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## FILES TO CREATE/MODIFY
+
+NEW FILES:
+  /pinokio/prometheus-integration.js     # Prometheus connector
+  /pinokio/unified-health-dashboard.js   # Combined health view
+  /pinokio/director-tools.js             # Director CLI tools
+  /pinokio/dashboard.js                  # Interactive TUI
+
+MODIFIED FILES:
+  /pinokio/index.js                      # Add monitoring & governance
+  /pinokio/ai-validator-monitor.js       # Enhance with Prometheus
+  /pinokio/package.json                  # Add new npm scripts
+  /pinokio/README.md                     # Update documentation
+  /monitoring/docker-compose.yml         # Change Grafana port to 3100
+
+DOCUMENTATION:
+  /PINOKIO_INTEGRATION_GAME_PLAN.md      # This plan (700+ lines)
+  /pinokio/COMPLETE_INTEGRATION_GUIDE.md # Step-by-step guide
+  /pinokio/QUICK_REFERENCE.md            # Command cheat sheet
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## INTEGRATION BENEFITS
+
+┌──────────────────────────────┬────────────────────────────────────┐
+│ BEFORE                       │ AFTER                              │
+├──────────────────────────────┼────────────────────────────────────┤
+│ ❌ 9 separate services       │ ✅ ONE command: npm run start:all  │
+│ ❌ Manual startup each       │ ✅ Automatic startup all           │
+│ ❌ Port conflicts            │ ✅ No conflicts (resolved)         │
+│ ❌ SSH metrics only          │ ✅ SSH + Prometheus + AI           │
+│ ❌ No unified dashboard      │ ✅ Interactive TUI dashboard       │
+│ ❌ Separate governance       │ ✅ Integrated (Snapshot + Wallet)  │
+│ ❌ No director tools         │ ✅ Director CLI + dashboard        │
+│ ❌ Complex troubleshooting   │ ✅ Easy debugging via dashboard    │
+│ ❌ Inconsistent monitoring   │ ✅ Unified health scoring          │
+│ ❌ Manual report generation  │ ✅ Automated AI reports            │
+└──────────────────────────────┴────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## SUCCESS CRITERIA
+
+Integration is COMPLETE when:
+
+  ✅ Single command starts all 9 services (npm run start:all)
+  ✅ All services accessible on correct ports (no conflicts)
+  ✅ Prometheus scraping metrics from all 21 validators
+  ✅ Grafana showing PrimeArc Core Chain dashboard
+  ✅ AI monitoring combines SSH + Prometheus data
+  ✅ Validator CLI can access all 16 SSH-enabled validators
+  ✅ Snapshot UI connected to PrimeArc RPC nodes
+  ✅ Wallet governance page showing proposals
+  ✅ Director dashboard functional for 9 directors
+  ✅ Interactive TUI dashboard showing real-time status
+  ✅ Complete documentation with troubleshooting guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## QUICK START (AFTER INTEGRATION)
+
+cd ~/Desktop/etrid/pinokio
+
+# Install dependencies (first time only)
+npm install
+
+# Start everything
+npm run start:all
+
+# Open interactive dashboard
+npm run dashboard
+
+# Monitor validators continuously
+npm run validator:watch
+
+# Access services in browser:
+# • Lightning:    http://localhost:3000
+# • MasterChef:   http://localhost:3001
+# • Validator:    http://localhost:3002
+# • Watchtower:   http://localhost:3003
+# • Wallet:       http://localhost:3004
+# • Telemetry:    http://localhost:8080
+# • Governance:   http://localhost:8082
+# • Prometheus:   http://localhost:9090
+# • Grafana:      http://localhost:3100
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## RECOMMENDED EXECUTION PLAN
+
+SESSION 1 (2.5 hours) - Foundation
+├─ Phase 1: Port Conflict Resolution (30 min)
+└─ Phase 2: Integrate Monitoring (2 hours)
+
+SESSION 2 (4 hours) - Advanced Features
+├─ Phase 3: Integrate Governance (1 hour)
+└─ Phase 4: Prometheus + CLI Integration (3 hours)
+
+SESSION 3 (4 hours) - Polish & Deploy
+├─ Phase 5: Enhanced Pinokio Menu (1 hour)
+├─ Phase 6: Director Dashboard (2 hours)
+└─ Phase 7: Testing & Documentation (1 hour)
+
+TOTAL: 3 sessions, ~10.5 hours
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## DOCUMENTATION AVAILABLE
+
+📄 PINOKIO_INTEGRATION_GAME_PLAN.md (this file)
+   • Complete integration strategy
+   • 7-phase roadmap with detailed tasks
+   • Port conflict resolution
+   • Architecture diagrams
+   • npm scripts reference
+   • Success criteria
+   • Risk mitigation
+
+📄 UNIFIED_MONITORING_AND_GOVERNANCE_INTEGRATION.md
+   • 14 comprehensive sections
+   • Monitoring systems deep dive
+   • Governance architecture
+   • Testing & validation
+   • Troubleshooting guide
+
+📄 QUICK_START_MONITORING_GOVERNANCE.md
+   • Quick commands reference
+   • How to start everything
+   • Integration benefits
+   • Next steps
+
+All documentation located in: /Users/macbook/Desktop/etrid/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ready to start? Begin with:
+
+cd ~/Desktop/etrid
+cat PINOKIO_INTEGRATION_GAME_PLAN.md
+
+Or jump straight to Phase 1:
+
+cd ~/Desktop/etrid/monitoring
+# Edit docker-compose.yml: Change Grafana port 3000 → 3100
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Generated: November 22, 2025
+For: Eoj / Ëtrid Protocol Team
+By: Claude Code
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║            PINOKIO INTEGRATION: READY TO EXECUTE! 🚀                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝

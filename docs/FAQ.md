@@ -4,7 +4,7 @@
 
 ### What is ËTRID?
 
-ËTRID is a next-generation blockchain platform that connects 13 major blockchains (Bitcoin, Ethereum, Solana, etc.) through specialized Partition Burst Chains (PBCs). It combines the security of a main relay chain (FlareChain) with the scalability of Layer 2 solutions (Lightning Bloc) to achieve **171,000+ TPS** total network capacity.
+ËTRID is a next-generation blockchain platform that connects 13 major blockchains (Bitcoin, Ethereum, Solana, etc.) through specialized Partition Burst Chains (PBCs). It combines the security of a main core chain (Primearc Core Chain) with the scalability of Layer 2 solutions (Lightning Bloc) to achieve **171,000+ TPS** total network capacity.
 
 ---
 
@@ -14,25 +14,25 @@ It depends on which layer you use:
 
 - **Lightning Bloc (Layer 3)**: ~100ms (instant, off-chain)
 - **PBCs (Layer 2)**: ~2 seconds (optimistic finality)
-- **FlareChain (Layer 1)**: ~24 seconds (GRANDPA finality)
+- **Primearc Core Chain (Layer 1)**: ~24 seconds (BFT checkpoint finality and ASF certificates)
 
-For everyday payments, Lightning Bloc provides instant confirmation. For final settlement on the main chain, it takes approximately 56 minutes from Lightning → PBC → FlareChain.
+For everyday payments, Lightning Bloc provides instant confirmation. For final settlement on the main chain, it takes approximately 56 minutes from Lightning → PBC → Primearc Core Chain.
 
 ---
 
-### What's the difference between FlareChain, PBCs, and Lightning Bloc?
+### What's the difference between Primearc Core Chain, PBCs, and Lightning Bloc?
 
-**FlareChain (Layer 1 - Relay Chain)**
+**Primearc Core Chain (Layer 1 - Relay Chain)**
 - The main chain that coordinates everything
 - 1,000 TPS capacity
-- GRANDPA finality (absolute security)
+- BFT checkpoint finality and ASF certificates (absolute security)
 - Stores only checkpoint data (32 bytes per PBC)
 - Run by Directors 1-5
 
 **Partition Burst Chains (Layer 2 - Sidechains)**
 - 14 specialized chains for different asset types
 - 5,000 TPS per chain = 70,000 TPS total
-- Checkpoint to FlareChain every 256 blocks (~51 minutes)
+- Checkpoint to Primearc Core Chain every 256 blocks (~51 minutes)
 - Run by Validators 6-21
 
 **Lightning Bloc (Layer 3 - Payment Channels)**
@@ -43,7 +43,7 @@ For everyday payments, Lightning Bloc provides instant confirmation. For final s
 - Batch settlements to PBCs every 5 minutes
 
 **Flame Analogy:**
-- 🔵 **FlareChain** = Blue flame core (2,600°F) - Hottest, most secure, maximum finality
+- 🔵 **Primearc Core Chain** = Blue flame core (2,600°F) - Hottest, most secure, maximum finality
 - 🔶 **PBCs** = Orange middle flame (1,800-2,100°F) - High energy, burst throughput
 - ⚡ **Lightning** = Yellow outer flame (1,200-1,800°F) - Fastest reach, instant transactions
 
@@ -53,7 +53,7 @@ For everyday payments, Lightning Bloc provides instant confirmation. For final s
 
 Like a natural flame, ËTRID has three distinct layers that get hotter toward the center:
 
-🔵 **Blue Core (FlareChain):** The hottest part of a flame (2,600°F), representing maximum security and finality. Just as blue flames indicate complete combustion, FlareChain provides absolute consensus via GRANDPA. This is where the most critical operations happen - governance, validator coordination, and final checkpoints.
+🔵 **Blue Core (Primearc Core Chain):** The hottest part of a flame (2,600°F), representing maximum security and finality. Just as blue flames indicate complete combustion, Primearc Core Chain provides absolute consensus via ASF. This is where the most critical operations happen - governance, validator coordination, and final checkpoints.
 
 🔶 **Orange Ring (PBCs):** The middle flame (1,800-2,100°F), where most of the throughput happens. PBCs "burst" with activity, processing 70,000 TPS across 13 specialized chains. Like the orange zone of a flame that produces the most visible light and heat, PBCs handle the bulk of network transactions.
 
@@ -85,7 +85,7 @@ Like a natural flame, ËTRID has three distinct layers that get hotter toward th
 - You're interacting with smart contracts
 - You're bridging assets from other chains
 
-**Use FlareChain when:**
+**Use Primearc Core Chain when:**
 - You need absolute, irreversible finality
 - You're participating in governance
 - You're staking/unstaking ÉTR
@@ -101,7 +101,7 @@ Each layer serves a specific purpose:
 
 1. **Lightning Bloc** batches thousands of off-chain transactions
 2. **PBCs** receive batch settlements and execute smart contracts
-3. **FlareChain** stores PBC checkpoints for final verification
+3. **Primearc Core Chain** stores PBC checkpoints for final verification
 
 **Data Flow:**
 ```
@@ -109,12 +109,12 @@ Lightning Transaction (Layer 3)
     ↓ (5 minutes or 1,000 transactions)
 Batch Settlement to PBC (Layer 2)
     ↓ (256 blocks = ~51 minutes)
-Checkpoint to FlareChain (Layer 1)
+Checkpoint to Primearc Core Chain (Layer 1)
     ↓ (2 blocks = 24 seconds)
-GRANDPA Finality ✅
+ASF Finality ✅
 ```
 
-Total time: **~56 minutes** from Lightning to final FlareChain settlement.
+Total time: **~56 minutes** from Lightning to final Primearc Core Chain settlement.
 
 ---
 
@@ -140,7 +140,7 @@ It depends on what "final" means:
 | **Instant (Lightning)** | ~100ms | Cryptographic (off-chain) |
 | **Optimistic (PBC)** | ~2 seconds | Economic (fraud proofs) |
 | **Economic (Checkpoint)** | ~51 minutes | Multi-validator consensus |
-| **Absolute (GRANDPA)** | ~56 minutes | Byzantine fault tolerance |
+| **Absolute (ASF)** | ~56 minutes | Byzantine fault tolerance |
 
 For everyday transactions, **optimistic finality (~2 seconds)** is sufficient. For large settlements, wait for **absolute finality (~56 minutes)**.
 
@@ -148,7 +148,7 @@ For everyday transactions, **optimistic finality (~2 seconds)** is sufficient. F
 
 ### What are PBC checkpoints?
 
-Every 256 blocks (~51 minutes), each PBC submits a **checkpoint** to FlareChain:
+Every 256 blocks (~51 minutes), each PBC submits a **checkpoint** to Primearc Core Chain:
 
 **Checkpoint contains:**
 - Merkle root of entire PBC state (32 bytes)
@@ -157,12 +157,12 @@ Every 256 blocks (~51 minutes), each PBC submits a **checkpoint** to FlareChain:
 - Timestamp
 
 **Why this matters:**
-- FlareChain doesn't store full PBC data (too large)
+- Primearc Core Chain doesn't store full PBC data (too large)
 - Directors can verify any PBC state using Merkle proofs
 - Fraud proofs protect against invalid checkpoints
 - 7-day challenge period for disputes
 
-**Storage efficiency:** Instead of storing terabytes of PBC data, FlareChain stores only 32 bytes per PBC per checkpoint.
+**Storage efficiency:** Instead of storing terabytes of PBC data, Primearc Core Chain stores only 32 bytes per PBC per checkpoint.
 
 ---
 
@@ -170,8 +170,8 @@ Every 256 blocks (~51 minutes), each PBC submits a **checkpoint** to FlareChain:
 
 There are two types of validators:
 
-**Flare Nodes (Directors 1-5)**
-- Run FlareChain validators
+**Primearc Validators (Directors 1-5)**
+- Run Primearc Core Chain validators
 - Verify PBC checkpoints
 - Coordinate governance
 - Minimum stake: 128 ÉTR
@@ -180,12 +180,12 @@ There are two types of validators:
 **Validity Nodes (Validators 6-21)**
 - Run PBC validators
 - Calculate state Merkle roots
-- Submit checkpoints to FlareChain
+- Submit checkpoints to Primearc Core Chain
 - Process Lightning settlements
 - Minimum stake: 64 ÉTR
 - Hardware: 2-core CPU, 8 GB RAM, 100 GB SSD
 
-**Key principle:** Only Decentralized Directors can be Flare Nodes. This prevents centralization and ensures governance accountability.
+**Key principle:** Only Decentralized Directors can be Primearc Validators. This prevents centralization and ensures governance accountability.
 
 ---
 
@@ -197,7 +197,7 @@ A Merkle proof lets you verify data without downloading the entire dataset.
 ```
 User asks: "What's Alice's balance on PBC-EDSC?"
 
-[1] Get FlareChain checkpoint
+[1] Get Primearc Core Chain checkpoint
     State root: 0xabc123...
 
 [2] Request proof from PBC node
@@ -250,8 +250,8 @@ An annual democratic event (December 1st each year) where ÉTR holders vote on:
 
 Yes, with multiple layers of security:
 
-**Layer 1 (FlareChain):**
-- GRANDPA finality (Byzantine fault tolerant)
+**Layer 1 (Primearc Core Chain):**
+- BFT checkpoint finality and ASF certificates (Byzantine fault tolerant)
 - Requires 67% honest validators
 - Audited codebase
 
@@ -267,7 +267,7 @@ Yes, with multiple layers of security:
 - 7-day dispute window
 
 **Economic security:** To attack ËTRID, an adversary would need to:
-1. Control 67% of FlareChain validators (very expensive)
+1. Control 67% of Primearc Core Chain validators (very expensive)
 2. Control 5/8 of PBC validators (slashing risk)
 3. Evade watchtower network (cryptographically infeasible)
 
@@ -275,7 +275,7 @@ Yes, with multiple layers of security:
 
 ### What if a PBC stops submitting checkpoints?
 
-FlareChain monitors checkpoint liveness:
+Primearc Core Chain monitors checkpoint liveness:
 
 ```
 No checkpoint for 512 blocks (102 minutes)
@@ -287,7 +287,7 @@ Action: Freeze PBC (stop new transactions)
 Users: Emergency withdrawals using last checkpoint
 ```
 
-Your funds are always recoverable using the last known checkpoint stored on FlareChain.
+Your funds are always recoverable using the last known checkpoint stored on Primearc Core Chain.
 
 ---
 
@@ -302,7 +302,7 @@ Fraud proofs protect against invalid checkpoints:
     ↓
 [3] Submit fraud proof with Merkle evidence
     ↓
-[4] FlareChain verifies fraud proof
+[4] Primearc Core Chain verifies fraud proof
     ↓
 [5] Slash malicious collator (10,000 ÉTR penalty)
     ↓
@@ -323,7 +323,7 @@ By distributing work across three optimized layers:
 
 | Layer | Capacity | Method |
 |-------|----------|--------|
-| **Layer 1** | 1,000 TPS | FlareChain main chain |
+| **Layer 1** | 1,000 TPS | Primearc Core Chain main chain |
 | **Layer 2** | 70,000 TPS | 14 PBCs × 5,000 TPS each |
 | **Layer 3** | 100,000+ TPS | Off-chain Lightning channels |
 | **Total** | **171,000+ TPS** | Combined capacity |
@@ -366,7 +366,7 @@ Yes, by adding more PBCs:
 - **Current:** 14 PBCs × 5,000 TPS = 70,000 TPS
 - **Future:** 50 PBCs × 5,000 TPS = 250,000 TPS
 
-Each new PBC adds ~5,000 TPS to the network. FlareChain can support hundreds of PBCs since it only stores 32-byte checkpoints.
+Each new PBC adds ~5,000 TPS to the network. Primearc Core Chain can support hundreds of PBCs since it only stores 32-byte checkpoints.
 
 ---
 

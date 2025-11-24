@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-10-22
 
 ### Added
-- FlareChain relay chain with ASF consensus
+- Primearc Core Chain relay chain with ASF consensus
 - 13 Partition Burst Chains (PBCs) for cross-chain interoperability
 - Lightning-Bloc Layer 2 payment channels
 - 8 custom pallets:

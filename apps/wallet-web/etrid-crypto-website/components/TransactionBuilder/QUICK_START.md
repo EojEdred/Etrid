@@ -195,7 +195,7 @@ Chains are configured in `/lib/polkadot/chains.ts`:
 export const CHAINS: Record<ChainId, ChainConfig> = {
   flarechain: {
     id: 'flarechain',
-    name: 'FlareChain',
+    name: 'Primearc Core Chain',
     symbol: 'ÉTR',
     decimals: 12,
     rpc: 'ws://localhost:9944',  // Update for production

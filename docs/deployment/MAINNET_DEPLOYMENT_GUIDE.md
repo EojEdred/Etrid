@@ -1,4 +1,4 @@
-# Ëtrid FlareChain Mainnet Deployment Guide
+# Ëtrid Primearc Core Chain Mainnet Deployment Guide
 
 **Purpose:** Coordinate deployment of mainnet across all 21 validator VMs
 
@@ -6,7 +6,7 @@
 
 ## 🎯 Overview
 
-Mainnet requires **at least 15 out of 21 validators** online to achieve consensus (>2/3 GRANDPA threshold). This guide covers synchronized deployment to all validator VMs.
+Mainnet requires **at least 15 out of 21 validators** online to achieve consensus (>2/3 ASF threshold). This guide covers synchronized deployment to all validator VMs.
 
 ---
 
@@ -26,14 +26,14 @@ Mainnet requires **at least 15 out of 21 validators** online to achieve consensu
 
 ```bash
 # Copy genesis config to runtime presets
-cp flarechain_mainnet_genesis.json 05-multichain/flare-chain/runtime/presets/flarechain_mainnet.json
+cp flarechain_mainnet_genesis.json 05-multichain/primearc-core-chain/runtime/presets/flarechain_mainnet.json
 ```
 
 ### Step 1.2: Build Mainnet Binary
 
 ```bash
 # Build release binary (takes 15-30 minutes)
-cd 05-multichain/flare-chain/node
+cd 05-multichain/primearc-core-chain/node
 cargo build --release --locked
 
 # Verify binary
@@ -151,7 +151,7 @@ echo "Inserting session keys for Validator $VALIDATOR_NUM on $VM_ADDRESS"
 
 # Extract keys from JSON (using jq on local machine)
 AURA_SEED=$(jq -r ".validators[$((VALIDATOR_NUM-1))].sessionKeys.auraSeed" "$KEYS_FILE")
-GRANDPA_SEED=$(jq -r ".validators[$((VALIDATOR_NUM-1))].sessionKeys.grandpaSeed" "$KEYS_FILE")
+ASF_SEED=$(jq -r ".validators[$((VALIDATOR_NUM-1))].sessionKeys.grandpaSeed" "$KEYS_FILE")
 ASF_SEED=$(jq -r ".validators[$((VALIDATOR_NUM-1))].asfKeys.secretSeed" "$KEYS_FILE")
 
 echo "Extracted keys for Validator $VALIDATOR_NUM"
@@ -166,12 +166,12 @@ ssh -i ~/.ssh/gizzi-validator "$VM_ADDRESS" bash << EOSSH
     --suri "$AURA_SEED" \
     --key-type aura
 
-  echo "Inserting GRANDPA key..."
+  echo "Inserting ASF key..."
   /usr/local/bin/flarechain-node key insert \
     --base-path /var/lib/etrid \
     --chain /home/ubuntu/mainnet-deployment-package/flarechain-mainnet-raw.json \
     --scheme Ed25519 \
-    --suri "$GRANDPA_SEED" \
+    --suri "$ASF_SEED" \
     --key-type gran
 
   echo "Inserting ASF key..."
@@ -230,7 +230,7 @@ cat > create-validator-service.sh << 'EOF'
 
 sudo tee /etc/systemd/system/flarechain-validator.service > /dev/null << 'EOSVC'
 [Unit]
-Description=Ëtrid FlareChain Mainnet Validator
+Description=Ëtrid Primearc Core Chain Mainnet Validator
 After=network-online.target
 Wants=network-online.target
 

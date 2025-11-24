@@ -3,7 +3,7 @@
  *
  * Manages the daily distribution of 27,397 ÉTR across 5 categories:
  * - Voters: 10% (2,740 ÉTR/day)
- * - Flare Nodes: 15% (4,110 ÉTR/day)
+ * - Primearc Core Nodes: 15% (4,110 ÉTR/day)
  * - Validity Nodes: 15% (4,110 ÉTR/day)
  * - Stakers: 40% (10,959 ÉTR/day)
  * - Directors: 20% (5,479 ÉTR/day)
@@ -19,8 +19,8 @@ import { TransactionError } from '../errors/EtridErrors';
 export enum DistributionCategory {
   /** Voters (10% = 2,740 ÉTR/day) */
   Voters = 'Voters',
-  /** FlareChain validator nodes (15% = 4,110 ÉTR/day) */
-  FlareNodes = 'FlareNodes',
+  /** Primearc Core Chain validator nodes (15% = 4,110 ÉTR/day) */
+  PrimearcCoreNodes = 'PrimearcCoreNodes',
   /** PBC validator nodes (15% = 4,110 ÉTR/day) */
   ValidityNodes = 'ValidityNodes',
   /** Token stakers (40% = 10,959 ÉTR/day) */
@@ -288,7 +288,7 @@ export class DistributionPayWrapper {
 
       // Get category percentages
       const votersPct = await this.api.query.distributionPay.votersPercentage();
-      const flareNodesPct = await this.api.query.distributionPay.flareNodesPercentage();
+      const primearcCoreNodesPct = await this.api.query.distributionPay.primearcCoreNodesPercentage();
       const validityNodesPct = await this.api.query.distributionPay.validityNodesPercentage();
       const stakersPct = await this.api.query.distributionPay.stakersPercentage();
       const directorsPct = await this.api.query.distributionPay.directorsPercentage();
@@ -305,9 +305,9 @@ export class DistributionPayWrapper {
           amountPerParticipant: 0n,
         },
         {
-          category: DistributionCategory.FlareNodes,
-          percentage: flareNodesPct.toNumber(),
-          dailyAmount: (totalDailyBN * BigInt(flareNodesPct.toNumber())) / 10000n,
+          category: DistributionCategory.PrimearcCoreNodes,
+          percentage: primearcCoreNodesPct.toNumber(),
+          dailyAmount: (totalDailyBN * BigInt(primearcCoreNodesPct.toNumber())) / 10000n,
           participantCount: 0,
           amountPerParticipant: 0n,
         },
@@ -388,7 +388,7 @@ export class DistributionPayWrapper {
       let totalClaimed = 0n;
       const byCategory: Record<DistributionCategory, bigint> = {
         [DistributionCategory.Voters]: 0n,
-        [DistributionCategory.FlareNodes]: 0n,
+        [DistributionCategory.PrimearcCoreNodes]: 0n,
         [DistributionCategory.ValidityNodes]: 0n,
         [DistributionCategory.Stakers]: 0n,
         [DistributionCategory.Directors]: 0n,
@@ -469,7 +469,7 @@ export class DistributionPayWrapper {
             estimatedAmount = (categoryAlloc.dailyAmount * myStakeAmount) / totalStakeAmount;
           }
         }
-      } else if (category === DistributionCategory.FlareNodes || category === DistributionCategory.ValidityNodes) {
+      } else if (category === DistributionCategory.PrimearcCoreNodes || category === DistributionCategory.ValidityNodes) {
         // Check if validator
         const validators = await this.api.query.session.validators();
         const isValidator = validators.some(v => v.toString() === address);
@@ -542,7 +542,7 @@ export class DistributionPayWrapper {
           const nominators = await this.api.query.staking.nominators(address);
           return nominators.isSome;
         }
-        case DistributionCategory.FlareNodes:
+        case DistributionCategory.PrimearcCoreNodes:
         case DistributionCategory.ValidityNodes: {
           const validators = await this.api.query.session.validators();
           return validators.some(v => v.toString() === address);

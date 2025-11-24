@@ -2,15 +2,15 @@
 
 ## Overview
 
-This guide covers testing the XCM integration between FlareChain and ETH-PBC, including custom EVM precompiles that enable Solidity contracts to access FlareChain services via XCM.
+This guide covers testing the XCM integration between Primearc Core Chain and ETH-PBC, including custom EVM precompiles that enable Solidity contracts to access Primearc Core Chain services via XCM.
 
 ## Quick Start
 
 ### Prerequisites
 
 - ✅ Zombienet installed (`bin/zombienet`)
-- ✅ Polkadot relay chain binary (`bin/polkadot`)
-- ✅ FlareChain node binary (`target/release/flarechain-node`)
+- ✅ Polkadot core chain binary (`bin/polkadot`)
+- ✅ Primearc Core Chain node binary (`target/release/flarechain-node`)
 - ⚠️ ETH-PBC node binary (see "Building ETH-PBC Node" below)
 
 ### Setup
@@ -101,16 +101,16 @@ fc-storage = { git = "https://github.com/paritytech/frontier", branch = "polkado
 eth-pbc-runtime = { path = "../runtime" }
 EOF
 
-# Copy main.rs from FlareChain or solochain template
+# Copy main.rs from Primearc Core Chain or solochain template
 # (Adapt for ETH-PBC with Frontier support)
 
 # Build
 cargo build --release
 ```
 
-### Option B: Use FlareChain Node as Template (Simpler)
+### Option B: Use Primearc Core Chain Node as Template (Simpler)
 
-For initial testing, you can temporarily use FlareChain node with ETH-PBC runtime:
+For initial testing, you can temporarily use Primearc Core Chain node with ETH-PBC runtime:
 
 ```bash
 # Symlink for testing
@@ -129,9 +129,9 @@ ln -s flarechain-node eth-pbc-node
 
 This will start:
 - **Relay Chain (Rococo Local)**: 2 validators (Alice, Bob)
-- **FlareChain Parachain (2000)**: 2 collators
+- **Primearc Core Chain Parachain (2000)**: 2 collators
 - **ETH-PBC Parachain (2001)**: 2 collators
-- **HRMP Channels**: Bidirectional between FlareChain ↔ ETH-PBC
+- **HRMP Channels**: Bidirectional between Primearc Core Chain ↔ ETH-PBC
 
 ### Connection Endpoints
 
@@ -139,8 +139,8 @@ This will start:
 |---|---|---|
 | Relay Chain (Alice) | ws://localhost:9944 | http://localhost:9933 |
 | Relay Chain (Bob) | ws://localhost:9945 | http://localhost:9934 |
-| FlareChain Collator 1 | ws://localhost:9946 | http://localhost:9935 |
-| FlareChain Collator 2 | ws://localhost:9947 | http://localhost:9936 |
+| Primearc Core Chain Collator 1 | ws://localhost:9946 | http://localhost:9935 |
+| Primearc Core Chain Collator 2 | ws://localhost:9947 | http://localhost:9936 |
 | ETH-PBC Collator 1 | ws://localhost:9948 | http://localhost:9937 |
 | ETH-PBC Collator 2 | ws://localhost:9949 | http://localhost:9938 |
 
@@ -221,7 +221,7 @@ This script tests:
 - Fast testing without network dependencies
 
 **In Production Mode** (with HRMP channels):
-- Precompiles trigger XCM messages to FlareChain
+- Precompiles trigger XCM messages to Primearc Core Chain
 - Response cached for subsequent calls
 - 2-4 block latency for first query
 - Subsequent queries use cached data
@@ -230,13 +230,13 @@ This script tests:
 
 ### Using Polkadot.js Apps
 
-1. Connect to relay chain: https://polkadot.js.org/apps/?rpc=ws://localhost:9944
+1. Connect to core chain: https://polkadot.js.org/apps/?rpc=ws://localhost:9944
 2. Navigate to **Network > Parachains**
 3. Monitor HRMP channels and message queue
 
 ### Using Subscan (for testnet/mainnet)
 
-- FlareChain: (URL TBD)
+- Primearc Core Chain: (URL TBD)
 - ETH-PBC: (URL TBD)
 
 ### Logs
@@ -244,10 +244,10 @@ This script tests:
 Zombienet outputs logs to console. Watch for:
 
 ```
-[ETH-PBC] XCM message sent to FlareChain: QueryOracle(BTC/ETH)
-[FlareChain] Received XCM query from ETH-PBC
-[FlareChain] Oracle price: BTC = 50000 ETH
-[FlareChain] Sending XCM response to ETH-PBC
+[ETH-PBC] XCM message sent to Primearc Core Chain: QueryOracle(BTC/ETH)
+[Primearc Core Chain] Received XCM query from ETH-PBC
+[Primearc Core Chain] Oracle price: BTC = 50000 ETH
+[Primearc Core Chain] Sending XCM response to ETH-PBC
 [ETH-PBC] XCM response received, caching result
 ```
 

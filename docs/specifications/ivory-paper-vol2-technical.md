@@ -1377,7 +1377,7 @@ pub struct DistributionSchedule {
 
     /// Allocation percentages (basis points)
     pub voters_pct: u32,      // 1000 = 10%
-    pub flare_nodes_pct: u32, // 1500 = 15%
+    pub primearc_validators_pct: u32, // 1500 = 15%
     pub validity_nodes_pct: u32, // 1500 = 15%
     pub stakers_pct: u32,     // 4000 = 40%
     pub directors_pct: u32,   // 2000 = 20%
@@ -1388,7 +1388,7 @@ impl Default for DistributionSchedule {
         Self {
             total_daily: 27_397_000_000_000_000_000_000u128, // 27,397 ÉTR
             voters_pct: 1000,      // 10%
-            flare_nodes_pct: 1500, // 15%
+            primearc_validators_pct: 1500, // 15%
             validity_nodes_pct: 1500, // 15%
             stakers_pct: 4000,     // 40%
             directors_pct: 2000,   // 20%
@@ -1399,7 +1399,7 @@ impl Default for DistributionSchedule {
 /// Distribution times (UTC)
 pub struct DistributionTimes {
     pub voters: (u8, u8),        // 00:01 (12:01 AM)
-    pub flare_nodes: (u8, u8),   // 04:01 (4:01 AM)
+    pub primearc_validators: (u8, u8),   // 04:01 (4:01 AM)
     pub validity_nodes: (u8, u8), // 06:01 (6:01 AM)
     pub stakers: (u8, u8),       // 08:01 (8:01 AM)
     pub directors: (u8, u8),     // 12:01 (12:01 PM)
@@ -1409,7 +1409,7 @@ impl Default for DistributionTimes {
     fn default() -> Self {
         Self {
             voters: (0, 1),
-            flare_nodes: (4, 1),
+            primearc_validators: (4, 1),
             validity_nodes: (6, 1),
             stakers: (8, 1),
             directors: (12, 1),
@@ -1479,10 +1479,10 @@ pub fn execute_distribution(
     }
 
     // Check if it's time for flare nodes distribution (04:01)
-    if (hour, minute) == times.flare_nodes {
-        let amount = (schedule.total_daily * schedule.flare_nodes_pct as u128) / 10000;
+    if (hour, minute) == times.primearc_validators {
+        let amount = (schedule.total_daily * schedule.primearc_validators_pct as u128) / 10000;
         distributions.push(Distribution {
-            category: DistributionCategory::FlareNodes,
+            category: DistributionCategory::PrimearcValidators,
             amount,
             timestamp: current_time.timestamp() as u64,
         });
@@ -1531,7 +1531,7 @@ pub struct Distribution {
 #[derive(Clone, Debug)]
 pub enum DistributionCategory {
     Voters,
-    FlareNodes,
+    PrimearcValidators,
     ValidityNodes,
     Stakers,
     Directors,

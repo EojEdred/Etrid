@@ -9,7 +9,7 @@ Docker and containerization files for ËTRID.
 
 ### Dockerfiles
 - **`Dockerfile`** - Standard ËTRID node container
-- **`Dockerfile.flarechain`** - FlareChain relay chain container
+- **`Dockerfile.flarechain`** - Primearc Core Chain relay chain container
 
 ### Configuration
 - **`.dockerignore`** - Files to exclude from Docker builds
@@ -29,7 +29,7 @@ docker-compose -f docker/docker-compose.yml up -d
 # Standard node
 docker build -f docker/Dockerfile -t etrid-node .
 
-# FlareChain relay
+# Primearc Core Chain relay
 docker build -f docker/Dockerfile.flarechain -t flarechain-node .
 ```
 

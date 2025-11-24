@@ -185,7 +185,7 @@ The Distribution Pay System automates daily reward distribution to network parti
 | Time | Category | Amount | Recipients | Purpose |
 |------|----------|--------|------------|---------|
 | 12:01 AM | Voters | 2,740 ÉTR | ~1,000 | Consensus Day participation |
-| 4:01 AM | Flare Nodes | 4,110 ÉTR | 21 validators | Relay chain validation |
+| 4:01 AM | Primearc Validators | 4,110 ÉTR | 21 validators | Core chain validation |
 | 6:01 AM | Validity Nodes | 4,109 ÉTR | 104 collators | PBC collation |
 | 8:01 AM | Stakers | 10,959 ÉTR | Foundation + stakers | Treasury reserve |
 | 12:01 PM | Directors | 5,479 ÉTR | 9 directors | Governance leadership |
@@ -195,7 +195,7 @@ The Distribution Pay System automates daily reward distribution to network parti
 ### 10.3 Allocation Breakdown
 
 - **40%** Foundation Treasury (for development, security, marketing)
-- **30%** Validators (Flare Nodes 15% + Validity Nodes 15%)
+- **30%** Validators (Primearc Validators 15% + Validity Nodes 15%)
 - **20%** Decentralized Directors (governance board)
 - **10%** Voters (active participants in Consensus Day)
 
@@ -297,7 +297,7 @@ impl<AccountId> MultiSigCustodian<AccountId> {
 
 ### 12.1 Executive Summary
 
-ËtwasmVM (Ëtrid WebAssembly Virtual Machine) is a high-performance, EVM-compatible smart contract execution engine built on Substrate. It enables Ethereum smart contracts to run natively on Ëtrid with enhanced security features including built-in reentrancy protection.
+ËtwasmVM (Ëtrid WebAssembly Virtual Machine) is a high-performance, EVM-compatible smart contract execution engine. It enables Ethereum smart contracts to run natively on Ëtrid with enhanced security features including built-in reentrancy protection.
 
 **Key Innovation**: Unlike standard EVM implementations, ËtwasmVM includes:
 - **Reentrancy Protection**: Call stack tracking prevents DAO-style attacks
@@ -544,7 +544,7 @@ let threshold = if variance == 0 {
 **Participants**:
 - 9 Decentralized Directors (vote on behalf of community)
 - Active community members (stake-weighted voting)
-- Flare Node operators (21 validators)
+- Primearc Validator operators (21 validators)
 - Validity Node operators (104 collators)
 
 **Voting Topics**:
@@ -574,7 +574,7 @@ let threshold = if variance == 0 {
 ### 16.1 Development Ecosystem
 
 **Total Codebase**: 44,000+ lines
-- FlareChain Runtime: 8,500 lines
+- Primearc Core Chain Runtime: 8,500 lines
 - PBC Runtimes: 13 × ~2,000 lines
 - Bridge Protocols: 19,189 lines
 - Lightning-Bloc: 14,092 lines
@@ -618,7 +618,7 @@ let threshold = if variance == 0 {
 | **Bridges** | ✅ Implemented | 19,189 | `/05-multichain/bridge-protocols/` |
 | **ËtwasmVM** | ✅ Production | 9,793 | `/08-etwasm-vm/` |
 | **Oracle Network** | ✅ Implemented | 989 | `/05-multichain/.../oracle_adapter.rs` |
-| **FlareChain** | ✅ Live | 8,500 | `/05-multichain/flare-chain/` |
+| **Primearc Core Chain** | ✅ Live | 8,500 | `/05-multichain/primearc-core-chain/` |
 | **PBCs (13 chains)** | ✅ Live | ~26,000 | `/05-multichain/partition-burst-chains/` |
 | **Total** | - | **~79,074** | - |
 
@@ -629,6 +629,7 @@ let threshold = if variance == 0 {
 - **ÉTR**: Native currency of Ëtrid
 - **ËDSC**: Ëtrid stablecoin (pegged to USD)
 - **PBC**: Partition Burst Chain (specialized sidechain)
+- **Primearc Core Chain**: Layer 1 core chain using BFT checkpoint finality and ASF certificates
 - **ASF**: Ascending Scale of Finality (consensus mechanism)
 - **VMw**: Virtual Machine Watts (gas unit, 1 ÉTR = 1M VMw)
 - **TWAP**: Time-Weighted Average Price
@@ -643,8 +644,7 @@ let threshold = if variance == 0 {
 1. **Ethereum Yellow Paper**: https://ethereum.github.io/yellowpaper/
 2. **Lightning Network Whitepaper**: https://lightning.network/lightning-network-paper.pdf
 3. **W3C DID Specification**: https://www.w3.org/TR/did-core/
-4. **Substrate Documentation**: https://docs.substrate.io/
-5. **Chainlink Documentation**: https://docs.chain.link/
+4. **Chainlink Documentation**: https://docs.chain.link/
 
 ---
 

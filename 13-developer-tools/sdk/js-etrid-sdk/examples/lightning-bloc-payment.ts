@@ -16,7 +16,7 @@ import { LightningBlocWrapper } from '../src/wrappers/LightningBlocWrapper';
 
 async function main() {
   // 1. Connect to Ëtrid node
-  console.log('Connecting to Ëtrid FlareChain...');
+  console.log('Connecting to Ëtrid Primearc Core Chain...');
   const provider = new WsProvider('ws://localhost:9944');
   const api = await ApiPromise.create({ provider });
   console.log('✓ Connected to chain:', (await api.rpc.system.chain()).toString());
@@ -220,7 +220,7 @@ async function main() {
 
   console.log('\nRegular On-Chain Transfers:');
   console.log('  • Speed: 6 seconds (block time)');
-  console.log('  • Throughput: 1,000 TPS (FlareChain)');
+  console.log('  • Throughput: 1,000 TPS (Primearc Core Chain)');
   console.log('  • Fees: ~0.01 ÉTR per transaction');
   console.log('  • Finality: 1-2 blocks');
   console.log('  • Privacy: Fully public');

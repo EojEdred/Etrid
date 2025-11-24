@@ -10,7 +10,7 @@
 | Total Validators | 21 |
 | Total VMs | 17 |
 | Deployment Success Rate | 100% |
-| Keys per Validator | 2 (AURA + GRANDPA) |
+| Keys per Validator | 2 (AURA + ASF) |
 | Total Keys Deployed | 42 |
 
 ## VM-by-VM Verification
@@ -50,10 +50,10 @@
 - **Function:** Block authoring in AURA consensus
 - **Storage Format:** `61757261<public_key_hash>` (hex-encoded "aura" + key hash)
 
-### GRANDPA Keys (Finality)
-- **Total GRANDPA Keys:** 21
+### ASF Keys (Finality)
+- **Total ASF Keys:** 21
 - **Scheme:** Ed25519
-- **Function:** Block finalization in GRANDPA consensus
+- **Function:** Block finalization in ASF consensus
 - **Storage Format:** `6772616e<public_key_hash>` (hex-encoded "gran" + key hash)
 
 ## Validator Roles Distribution
@@ -156,7 +156,7 @@ All deployment artifacts are located at:
    - Check AURA consensus is functioning
 
 3. **Verify Finality**
-   - Confirm GRANDPA is finalizing blocks
+   - Confirm ASF is finalizing blocks
    - Check for finality lag
 
 4. **Monitor Network Health**

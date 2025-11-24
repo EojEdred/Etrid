@@ -52,7 +52,7 @@ Form component for creating token transfer transactions.
 **Location:** `components/TransactionBuilder/TransferBuilder.tsx`
 
 **Features:**
-- Multi-chain support (FlareChain + 12 PBCs)
+- Multi-chain support (Primearc Core Chain + 12 PBCs)
 - Real-time balance checking
 - Recipient address validation
 - Fee estimation
@@ -639,7 +639,7 @@ console.log('[TransactionReview] Transaction:', transaction);
 - Initial release
 - Transfer, Staking, Governance, and Channel builders
 - Real-time fee estimation
-- Multi-chain support (FlareChain + 12 PBCs)
+- Multi-chain support (Primearc Core Chain + 12 PBCs)
 - Transaction status tracking
 - Full TypeScript support
 - Comprehensive error handling

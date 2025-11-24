@@ -42,7 +42,7 @@ This report details the comprehensive enhancements made to the Transaction Build
 - WebSocket connection monitoring
 
 #### Multi-Chain Support
-- Full support for FlareChain (relay) + 12 PBCs
+- Full support for Primearc Core Chain (relay) + 12 PBCs
 - Chain filtering options (relay-only, parachains-only)
 - Color-coded chain badges
 - Network type identification (Relay vs PBC)
@@ -287,7 +287,7 @@ const transactions: ExportTransaction[] = [
 ### Supported Chains
 
 #### Relay Chain
-- **FlareChain**: Native ETR token, 12 decimals
+- **Primearc Core Chain**: Native ETR token, 12 decimals
 
 #### Partition Burst Chains (12 PBCs)
 1. **BTC-PBC**: Bitcoin, 8 decimals

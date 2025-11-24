@@ -1,7 +1,32 @@
 {
+  "name": "etrid-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Etrid Native Unified Portal - Monorepo",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev:portal": "pnpm --filter portal dev",
+    "build:portal": "pnpm --filter portal build"
+  },
   "dependencies": {
     "@polkadot/keyring": "^13.5.7",
     "@polkadot/util": "^13.5.7",
     "@polkadot/util-crypto": "^13.5.7"
-  }
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
 }

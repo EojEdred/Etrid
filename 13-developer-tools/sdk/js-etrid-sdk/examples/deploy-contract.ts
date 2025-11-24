@@ -19,7 +19,7 @@ import { EtwasmVMWrapper, GAS_CONSTANTS } from '../src/wrappers/EtwasmVMWrapper'
 
 async function main() {
   // 1. Connect to Ëtrid node
-  console.log('Connecting to Ëtrid FlareChain...');
+  console.log('Connecting to Ëtrid Primearc Core Chain...');
   const provider = new WsProvider('ws://localhost:9944');
   const api = await ApiPromise.create({ provider });
   console.log('✓ Connected to chain:', (await api.rpc.system.chain()).toString());

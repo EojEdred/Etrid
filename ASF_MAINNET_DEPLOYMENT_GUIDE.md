@@ -1,11 +1,12 @@
-# FlareChain Pure ASF Mainnet Deployment Guide
+
+# Primearc Core Chain Pure ASF Mainnet Deployment Guide
 
 ## 🔴 CRITICAL ISSUE IDENTIFIED
 
 **Problem:** All 20 validators are RUNNING but IDLE (no block production)
 
 **Root Cause:** Validators are using the **WRONG binary and chainspec**:
-- ❌ Using: `flarechain-node` binary with `--chain dev`
+- ❌ Using: `primearc-core-node` binary with `--chain dev`
 - ❌ Result: Dev chainspec has NO ASF authorities configured
 - ❌ Result: No block production, stuck at genesis block #0
 
@@ -13,17 +14,17 @@
 
 **Correct Configuration:**
 - ✅ Binary: `etrid` (unified binary with mainnet support)
-- ✅ Chainspec: `flarechain_production_raw.json` (Pure ASF with 21 validators)
+- ✅ Chainspec: `primearc_core_production_raw.json` (Pure ASF with 21 validators)
 - ✅ Result: ASF consensus active, block production starts
 
 ## 📋 What Was Generated
 
 ### 1. ASF Mainnet Raw Chainspec
-**File:** `flarechain_production_raw.json`
+**File:** `primearc_core_production_raw.json`
 
 **Configuration:**
-- **Chain Name:** Ëtrid FlareChain Mainnet (Pure ASF)
-- **Chain ID:** flarechain_mainnet_v1
+- **Chain Name:** Ëtrid Primearc Core Chain Mainnet (Pure ASF)
+- **Chain ID:** primearc_core_mainnet_v1
 - **Chain Type:** Live
 - **Consensus Mode:** pure_asf
 - **Block Production:** PPFA
@@ -55,7 +56,7 @@ ls -lh ./target/release/etrid
 # Should show: 56M (built Nov 16 18:03)
 
 # Check chainspec exists
-ls -lh ./flarechain_production_raw.json
+ls -lh ./primearc_core_production_raw.json
 # Should show: 205 lines
 
 # Check deployment script
@@ -69,29 +70,29 @@ ls -lh ./deploy_asf_mainnet.sh
 # Deploy to just val-1 first
 ssh ubuntu@146.190.136.56 << 'EOF'
     # Stop old node
-    sudo systemctl stop flarechain-node
-    sudo pkill -9 flarechain-node
+    sudo systemctl stop primearc-core-node
+    sudo pkill -9 primearc-core-node
 
     # Upload files manually (or use scp)
     # scp ./target/release/etrid ubuntu@146.190.136.56:/tmp/
-    # scp ./flarechain_production_raw.json ubuntu@146.190.136.56:/tmp/
+    # scp ./primearc_core_production_raw.json ubuntu@146.190.136.56:/tmp/
 
     # Install
     sudo mv /tmp/etrid /usr/local/bin/etrid
     sudo chmod +x /usr/local/bin/etrid
     sudo mkdir -p /etc/etrid
-    sudo mv /tmp/flarechain_production_raw.json /etc/etrid/
+    sudo mv /tmp/primearc_core_production_raw.json /etc/etrid/
 
     # Generate node key
     openssl rand -hex 32 | sudo tee /etc/etrid/node-key.secret
 
     # Start manually to test
     sudo /usr/local/bin/etrid \
-      --chain /etc/etrid/flarechain_production_raw.json \
+      --chain /etc/etrid/primearc_core_production_raw.json \
       --validator \
       --base-path /var/lib/etrid \
       --node-key $(cat /etc/etrid/node-key.secret) \
-      --name "FlareChain-Val-1-Test"
+      --name "Primearc-Core-Val-1-Test"
 EOF
 
 # Monitor logs
@@ -102,7 +103,7 @@ ssh ubuntu@146.190.136.56 'sudo journalctl -u etrid-validator -f'
 - ✅ Genesis block initialized
 - ✅ ASF consensus started
 - ✅ PPFA proposer initialized
-- ✅ "ASF FlareChain node started successfully"
+- ✅ "ASF Primearc Core Chain node started successfully"
 - ✅ Network identity created
 - ✅ DETR P2P network started
 
@@ -180,7 +181,7 @@ ssh ubuntu@val-1 'sudo journalctl -u etrid-validator -n 100'
 
 2. **Chainspec not found**: File not uploaded
    ```bash
-   ssh ubuntu@val-1 'ls -la /etc/etrid/flarechain_production_raw.json'
+   ssh ubuntu@val-1 'ls -la /etc/etrid/primearc_core_production_raw.json'
    ```
 
 3. **Binary not found**: Not installed correctly
@@ -199,7 +200,7 @@ curl -s -X POST http://val-1:9944 -H "Content-Type: application/json" \
 
 **Check if validator has keys in keystore:**
 ```bash
-ssh ubuntu@val-1 'ls -la /var/lib/etrid/chains/flarechain_mainnet_v1/keystore/'
+ssh ubuntu@val-1 'ls -la /var/lib/etrid/chains/primearc_core_mainnet_v1/keystore/'
 ```
 
 **Insert ASF keys if needed:**
@@ -210,7 +211,7 @@ ssh ubuntu@val-1 '/usr/local/bin/etrid key generate --scheme sr25519'
 # Insert into keystore
 ssh ubuntu@val-1 '/usr/local/bin/etrid key insert \
   --base-path /var/lib/etrid \
-  --chain /etc/etrid/flarechain_production_raw.json \
+  --chain /etc/etrid/primearc_core_production_raw.json \
   --scheme sr25519 \
   --suri "YOUR_SEED_PHRASE_HERE" \
   --key-type asf'
@@ -253,8 +254,8 @@ After deployment, you should see:
 
 If issues persist:
 1. Check validator logs: `sudo journalctl -u etrid-validator -f`
-2. Verify chainspec is correct: `cat /etc/etrid/flarechain_production_raw.json | jq`
-3. Test local node: `./target/release/etrid --chain flarechain_production_raw.json --validator --tmp --node-key=$(openssl rand -hex 32)`
+2. Verify chainspec is correct: `cat /etc/etrid/primearc_core_production_raw.json | jq`
+3. Test local node: `./target/release/etrid --chain primearc_core_production_raw.json --validator --tmp --node-key=$(openssl rand -hex 32)`
 
 ---
 

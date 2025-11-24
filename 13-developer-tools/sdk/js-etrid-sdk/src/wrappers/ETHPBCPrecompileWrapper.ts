@@ -2,10 +2,10 @@
  * ETH PBC Precompile Wrappers for JavaScript/TypeScript SDK
  *
  * Provides TypeScript interface to Ethereum Partition Burst Chain (ETH PBC) precompiles
- * that enable access to FlareChain features from EVM contracts.
+ * that enable access to Primearc Core Chain features from EVM contracts.
  *
  * ## Precompile Addresses
- * - 0x800: Oracle (FlareChain price feeds)
+ * - 0x800: Oracle (Primearc Core Chain price feeds)
  * - 0x801: Governance (voting from ETH PBC)
  * - 0x802: Staking (validator queries)
  * - 0x803: Native ETH Wrapping (zero-fee wrap/unwrap)
@@ -22,7 +22,7 @@
  * const wallet = new ethers.Wallet(privateKey, provider);
  * const precompiles = new ETHPBCPrecompiles(provider, wallet);
  *
- * // Get BTC price from FlareChain oracle
+ * // Get BTC price from Primearc Core Chain oracle
  * const price = await precompiles.getOraclePrice('BTC', 'USD');
  * console.log(`BTC Price: $${ethers.utils.formatUnits(price, 18)}`);
  *

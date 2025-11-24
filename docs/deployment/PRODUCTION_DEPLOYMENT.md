@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying FlareChain and ETH-PBC to production (testnet → mainnet).
+This guide covers deploying Primearc Core Chain and ETH-PBC to production (testnet → mainnet).
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ This guide covers deploying FlareChain and ETH-PBC to production (testnet → ma
 #### Step 1: Prepare Binaries
 
 ```bash
-# Build FlareChain node
+# Build Primearc Core Chain node
 cargo build --release -p flarechain-node
 
 # Build ETH-PBC node
@@ -36,7 +36,7 @@ cargo build --release
 #### Step 2: Generate Chain Specs
 
 ```bash
-# FlareChain testnet spec
+# Primearc Core Chain testnet spec
 ./target/release/flarechain-node build-spec \
     --chain flarechain-testnet \
     --raw > flarechain-testnet-raw.json
@@ -59,13 +59,13 @@ cargo build --release
 ```bash
 # Via polkadot.js apps (https://polkadot.js.org/apps/?rpc=wss://rococo-rpc.polkadot.io)
 # Developer > Extrinsics > registrar > reserve()
-# FlareChain: Request ID 2000
+# Primearc Core Chain: Request ID 2000
 # ETH-PBC: Request ID 2001
 ```
 
 2. **Generate Genesis State & Wasm**
 ```bash
-# FlareChain
+# Primearc Core Chain
 ./target/release/flarechain-node export-genesis-state \
     --chain flarechain-testnet-raw.json > flarechain-genesis-state
 
@@ -88,11 +88,11 @@ cargo build --release
 
 #### Step 4: Start Collators
 
-**FlareChain Collator:**
+**Primearc Core Chain Collator:**
 ```bash
 ./target/release/flarechain-node \
     --collator \
-    --name "FlareChain-Collator-01" \
+    --name "Primearc Core Chain-Collator-01" \
     --chain flarechain-testnet-raw.json \
     --base-path /data/flarechain \
     --port 30333 \
@@ -142,24 +142,24 @@ cargo build --release
 
 **Manual Steps (if script fails):**
 
-1. **Open channel ETH-PBC → FlareChain**
+1. **Open channel ETH-PBC → Primearc Core Chain**
 ```javascript
 // From ETH-PBC
 api.tx.hrmp.hrmpInitOpenChannel(
-    2000, // FlareChain
+    2000, // Primearc Core Chain
     1000, // max capacity
     10240 // max message size
 ).signAndSend(collatorAccount)
 
-// From FlareChain (accept)
+// From Primearc Core Chain (accept)
 api.tx.hrmp.hrmpAcceptOpenChannel(
     2001 // ETH-PBC
 ).signAndSend(collatorAccount)
 ```
 
-2. **Open channel FlareChain → ETH-PBC**
+2. **Open channel Primearc Core Chain → ETH-PBC**
 ```javascript
-// From FlareChain
+// From Primearc Core Chain
 api.tx.hrmp.hrmpInitOpenChannel(
     2001, // ETH-PBC
     1000, // max capacity
@@ -168,7 +168,7 @@ api.tx.hrmp.hrmpInitOpenChannel(
 
 // From ETH-PBC (accept)
 api.tx.hrmp.hrmpAcceptOpenChannel(
-    2000 // FlareChain
+    2000 // Primearc Core Chain
 ).signAndSend(collatorAccount)
 ```
 
@@ -277,7 +277,7 @@ npx hardhat test --network ethPbcTestnet
 - [ ] Documentation complete
 - [ ] Monitoring setup complete
 
-### FlareChain
+### Primearc Core Chain
 
 - [ ] Chain spec generated
 - [ ] Genesis state exported
@@ -316,7 +316,7 @@ npx hardhat test --network ethPbcTestnet
 
 ## Infrastructure Requirements
 
-### FlareChain Collator
+### Primearc Core Chain Collator
 
 **Minimum:**
 - CPU: 4 cores

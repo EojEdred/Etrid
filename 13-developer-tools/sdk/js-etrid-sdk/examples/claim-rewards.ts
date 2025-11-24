@@ -20,7 +20,7 @@ import {
 
 async function main() {
   // 1. Connect to Ëtrid node
-  console.log('Connecting to Ëtrid FlareChain...');
+  console.log('Connecting to Ëtrid Primearc Core Chain...');
   const provider = new WsProvider('ws://localhost:9944');
   const api = await ApiPromise.create({ provider });
   console.log('✓ Connected to chain:', (await api.rpc.system.chain()).toString());
@@ -118,7 +118,7 @@ async function main() {
       console.log('⚠ No eligible categories for claiming');
       console.log('\nHow to become eligible:');
       console.log('  • Voters: Participate in governance votes');
-      console.log('  • FlareNodes: Run a FlareChain validator');
+      console.log('  • PrimearcCoreNodes: Run a Primearc Core Chain validator');
       console.log('  • ValidityNodes: Run a validity node');
       console.log('  • Stakers: Stake ÉTR tokens');
       console.log('  • Directors: Become a foundation director');
@@ -211,7 +211,7 @@ async function main() {
       roi: 'Medium-High',
     },
     {
-      category: 'FlareNodes',
+      category: 'PrimearcCoreNodes',
       allocation: '4,110 ÉTR/day',
       requirement: 'Run validator node',
       minStake: '10,000 ÉTR',
@@ -250,7 +250,7 @@ async function main() {
   console.log('  1. Start with Staking (largest pool, low effort)');
   console.log('  2. Add Voting (easy participation)');
   console.log('  3. Consider running ValidityNode (medium commitment)');
-  console.log('  4. Advanced: Run FlareNode validator (high returns)');
+  console.log('  4. Advanced: Run Primearc Core validator (high returns)');
 
   console.log('\n═══════════════════════════════════════════');
   console.log('Distribution Pay Economics');

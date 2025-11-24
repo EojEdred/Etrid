@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # FlareChain Validator Alice
+  # Primearc Core Validator Alice
   validator-alice:
     image: etrid/node:latest
     build:
@@ -27,7 +27,7 @@ services:
     networks:
       - etrid-network
 
-  # FlareChain Validator Bob
+  # Primearc Core Validator Bob
   validator-bob:
     image: etrid/node:latest
     container_name: etrid-validator-bob
@@ -54,7 +54,7 @@ services:
     depends_on:
       - validator-alice
 
-  # FlareChain Full Node Charlie
+  # Primearc Core Full Node Charlie
   fullnode-charlie:
     image: etrid/node:latest
     container_name: etrid-fullnode-charlie

@@ -47,7 +47,7 @@ This Charter establishes the foundational governance structure, economic princip
 │   ├── Community Committee (2 Directors)
 │   └── Security Committee (2 Directors)
 ├── Foundation Treasury (Multi-Sig 5-of-9, 7-of-9 for large expenditures)
-├── Validator Network (21 Flare Nodes + 104 Collators)
+├── Validator Network (21 Primearc Validators + 104 Collators)
 ├── Development Teams (Employed or contracted by Foundation)
 └── Community (All ÉTR holders, stakers, and participants)
 ```
@@ -64,7 +64,7 @@ This Charter establishes the foundational governance structure, economic princip
 **Trademarks**: The following marks are registered trademarks of the Ëtrid Foundation:
 - **ËTRID™** (Protocol name and logo)
 - **ËDSC™** (Stablecoin name)
-- **FlareChain™** (Relay chain name)
+- **Primearc™** (Core chain name)
 - **Partition Burst Chain™** / **PBC™** (Parachain architecture)
 
 **Trademark Policy**:
@@ -219,15 +219,15 @@ Year 10+ : 2,000,000 ÉTR/year (2% minimum floor)
 | Category | Percentage | Daily (ÉTR) | Annual (ÉTR) | Recipients | Distribution Time (UTC) |
 |----------|-----------|-------------|--------------|------------|------------------------|
 | **Foundation Treasury** | 40% | 10,959 | 4,000,000 | Multi-Sig (5-of-9) | Continuous |
-| **Validators** | 30% | 8,219 | 3,000,000 | 21 Flare + 104 Collators | Flare: 04:01, Validity: 06:01 |
+| **Validators** | 30% | 8,219 | 3,000,000 | 21 Primearc + 104 Collators | Primearc: 04:01, Validity: 06:01 |
 | **Directors** | 20% | 5,479 | 2,000,000 | 9 Directors | 12:01 PM |
 | **Voters** | 10% | 2,740 | 1,000,000 | Consensus Day Participants | 00:01 AM (daily after vote) |
 
 **Validator Distribution**:
-- **Flare Nodes** (15%): 4,110 ÉTR/day ÷ 21 = **195.71 ÉTR/day per node**
+- **Primearc Validators** (15%): 4,110 ÉTR/day ÷ 21 = **195.71 ÉTR/day per validator**
 - **Validity Nodes** (15%): 4,109 ÉTR/day ÷ 104 = **39.51 ÉTR/day per collator**
 
-**Rationale**: Flare Nodes secure entire relay chain (higher responsibility) vs. Validity Nodes securing individual PBCs (lower responsibility). Ratio: ~5:1
+**Rationale**: Primearc Validators secure entire core chain (higher responsibility) vs. Validity Nodes securing individual PBCs (lower responsibility). Ratio: ~5:1
 
 ### Section 3.3: Foundation Treasury Management
 
@@ -339,7 +339,7 @@ Result: Alice receives 2x rewards despite having half the stake
 - Code review (2+ core developers)
 - Testnet deployment (14 days minimum)
 - Community testing period
-- Mainnet deployment via Substrate runtime upgrade
+- Mainnet deployment via on-chain runtime upgrade
 
 ### Section 4.2: Emergency Procedures
 
@@ -516,7 +516,7 @@ Method determined by final dissolution vote.
 **Ratification Vote**: To occur at First Consensus Day (November 21, 2025)
 
 **This Charter is a living document.** The latest version shall always be available at:
-- **On-Chain**: Deployed as immutable smart contract on FlareChain
+- **On-Chain**: Deployed as immutable smart contract on Primearc Core Chain
 - **GitHub**: https://github.com/etrid/etrid/blob/main/PROTOCOL_CHARTER.md
 - **Documentation**: https://docs.etrid.network/charter
 
@@ -528,7 +528,7 @@ Method determined by final dissolution vote.
 
 - **ÉTR**: Native cryptocurrency of the Ëtrid Protocol
 - **ËDSC**: Ëtrid stablecoin (not yet launched)
-- **FlareChain**: Layer 1 relay chain using GRANDPA finality
+- **Primearc Core Chain**: Layer 1 core chain using BFT checkpoint finality and ASF certificates
 - **PBC**: Partition Burst Chain (Layer 2 parachains)
 - **Lightning-Bloc**: Layer 3 payment channel network
 - **Consensus Day**: Annual governance voting day (Third Friday of November)

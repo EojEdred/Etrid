@@ -1,6 +1,6 @@
 {
   "chain": "\u00cbtrid Primearc Core Mainnet (formerly FlareChain)",
-  "network_id": "flarechain_mainnet",
+  "network_id": "primearc_core_mainnet",
   "total_validators": 21,
   "generated_date": "2025-11-22",
   "description": "Real validator data from running chain - Genesis hardcoded addresses",
@@ -304,7 +304,7 @@
   },
   "notes": [
     "This file contains REAL data from the running Primearc Core Mainnet",
-    "Genesis addresses are hardcoded in flarechain_mainnet_v1_pure_asf.json",
+    "Genesis addresses are hardcoded in primearc_core_mainnet.json",
     "TBD fields need to be filled from live chain queries and Tailscale",
     "Session keys (asfk) are ASF consensus keys for checkpoint BFT",
     "Directors 0-8 have governance powers (6/9 quorum for emergency actions)",

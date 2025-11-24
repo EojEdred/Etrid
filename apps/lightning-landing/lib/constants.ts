@@ -3,7 +3,7 @@
 export const SUPPORTED_CHAINS = [
   'Bitcoin', 'Ethereum', 'Solana', 'Cardano', 'Polkadot',
   'Avalanche', 'Polygon', 'Algorand', 'Cosmos', 'Tezos',
-  'Flare', 'Hedera', 'NEAR', 'Aptos'
+  'Primearc', 'Hedera', 'NEAR', 'Aptos'
 ] as const;
 
 export const NETWORK_STATS = {
