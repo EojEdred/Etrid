@@ -442,7 +442,7 @@ impl GossipScheduler {
             let should_send = match self.last_sent_votes.get(&key) {
                 None => true,
                 Some(last) => {
-                    let backoff = self.vote_backoff.entry(key).or_insert_with(|| {
+                    let backoff = self.vote_backoff.entry(key.clone()).or_insert_with(|| {
                         ExponentialBackoff::new(Duration::from_millis(100), Duration::from_secs(5))
                     });
                     last.elapsed() > Duration::from_millis((backoff.current_multiplier * 100.0) as u64)
