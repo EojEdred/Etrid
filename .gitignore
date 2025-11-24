@@ -245,3 +245,5 @@ validator-reports/
 pinokio/
 deployment/
 infrastructure/
+.secrets/
+**/.secrets/
