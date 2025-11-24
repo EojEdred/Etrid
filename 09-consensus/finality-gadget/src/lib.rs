@@ -438,7 +438,7 @@ impl GossipScheduler {
 
         // Check votes
         while let Some(vote) = self.pending_votes.pop_front() {
-            let key = (vote.validator_id, vote.view, vote.block_hash);
+            let key = (vote.validator_id.clone(), vote.view, vote.block_hash);
             let should_send = match self.last_sent_votes.get(&key) {
                 None => true,
                 Some(last) => {
