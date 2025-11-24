@@ -352,6 +352,12 @@ impl ViewChangeTimer {
         self.view_change_pending = false;
     }
 
+    /// Reset timer when block is successfully imported (prevents premature view changes)
+    pub fn reset(&mut self) {
+        self.last_block_time = Instant::now();
+        self.view_change_pending = false;
+    }
+
     pub fn get_current_view(&self) -> View {
         self.current_view
     }
@@ -508,7 +514,7 @@ impl FinalityGadget {
             max_validators,
             vote_collector: VoteCollector::new(max_validators),
             certificate_gossip: CertificateGossip::new(100),
-            view_timer: ViewChangeTimer::new(Duration::from_secs(6)),
+            view_timer: ViewChangeTimer::new(Duration::from_secs(18)), // 3x block time for network latency
             gossip_scheduler: GossipScheduler::new(),
             peer_reputation: HashMap::new(),
             committed_blocks: Vec::new(),
@@ -522,11 +528,12 @@ impl FinalityGadget {
     // ========== INBOUND MESSAGE HANDLING ==========
 
     pub async fn handle_vote(&mut self, vote: Vote) -> Result<(), String> {
-        // Validate vote
-        if vote.view != self.view_timer.get_current_view() {
+        // Validate vote - accept current view OR previous view (allow 1-view lag for network latency)
+        let current_view = self.view_timer.get_current_view();
+        if vote.view.0 + 1 < current_view.0 {
             let rep = self.peer_reputation.entry(vote.validator_id).or_insert_with(PeerReputation::new);
             rep.record_invalid();
-            return Err(format!("Vote from wrong view: {:?}", vote.view));
+            return Err(format!("Vote too old: {:?} vs current {:?}", vote.view, current_view));
         }
 
         // Add to collector
@@ -624,6 +631,9 @@ impl FinalityGadget {
                 .unwrap()
                 .as_secs(),
         };
+
+        // Reset view timer when proposing - blocks are progressing, don't change view
+        self.view_timer.reset();
 
         self.broadcast_vote(vote.clone()).await?;
         Ok(vote)
