@@ -1,0 +1,60 @@
+[package]
+name = "chainlink-bridge"
+version = "0.1.0"
+authors = ["Ëtrid Team <gizzi_io@proton.me>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://etrid.org"
+repository = "https://github.com/etrid/etrid"
+description = "Chainlink (LINK) bridge pallet with oracle integration for Ëtrid Multichain"
+
+[dependencies]
+# Substrate Core
+parity-scale-codec = { workspace = true }
+scale-info = { workspace = true }
+
+# FRAME Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+frame-benchmarking = { workspace = true, optional = true }
+
+# Substrate Primitives
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# Etrid Core Dependencies
+pallet-etr-lock = { workspace = true }
+
+# Serialization
+serde = { version = "1.0", default-features = false, optional = true }
+
+[dev-dependencies]
+sp-core = { workspace = true }
+sp-io = { workspace = true }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+[features]
+default = ["std"]
+std = [
+    "parity-scale-codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "frame-benchmarking?/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "sp-core/std",
+    "sp-io/std",
+    "serde/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+    "frame-benchmarking/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+]

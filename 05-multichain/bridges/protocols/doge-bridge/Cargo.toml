@@ -1,0 +1,42 @@
+[package]
+name = "pallet-doge-bridge"
+version = "0.1.0"
+authors = ["Ëtrid Team <gizzi_io@proton.me>"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://etrid.org"
+repository = "https://github.com/etrid/etrid"
+description = "Dogecoin (DOGE) bridge pallet for Ëtrid Multichain"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-etr-lock = { workspace = true }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+]
