@@ -1,0 +1,26 @@
+# Ëtrid Python SDK Requirements
+
+# Substrate/Polkadot Integration
+substrate-interface>=1.7.0
+py-scale-codec>=1.2.0
+scalecodec>=0.11.0
+
+# Networking
+websocket-client>=1.5.0
+requests>=2.31.0
+
+# Ledger Hardware Wallet
+ledgerblue>=0.1.45
+ledger-agent-client>=1.0.0
+
+# Hyperledger Fabric
+hfc>=1.0.0
+grpcio>=1.50.0
+
+# Development Dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.7.0
+pylint>=2.17.0
+mypy>=1.4.0

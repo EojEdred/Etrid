@@ -1,0 +1,33 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Keys and sensitive data
+*.key
+*.keystore
+session-keys/
+*.mnemonic
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+*.tar.gz
+*.zip
+
+# Test outputs
+health-*.json
+metrics-*.json
