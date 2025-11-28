@@ -1,0 +1,26 @@
+[package]
+name = "etrid-did-resolver"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Foundation"]
+license = "Apache-2.0"
+description = "DID resolver with caching, fallback mechanisms, and error handling for the Etrid blockchain"
+
+[dependencies]
+# Local dependencies
+etrid-did-types = { path = "../types" }
+
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "time", "macros"] }
+
+[features]
+default = ["std"]
+std = []

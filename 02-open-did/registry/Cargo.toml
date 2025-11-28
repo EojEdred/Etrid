@@ -1,0 +1,18 @@
+[package]
+name = "etrid-did-registry"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Development Team"]
+license = "MIT OR Apache-2.0"
+description = "DID registry for on-chain registration, updates, and access control"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
+
+[features]
+default = ["std"]
+std = []

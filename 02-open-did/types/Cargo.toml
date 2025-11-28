@@ -1,0 +1,21 @@
+[package]
+name = "etrid-did-types"
+version = "0.1.0"
+edition = "2021"
+authors = ["ÉTRID Development Team"]
+description = "DID (Decentralized Identifier) types and schemas for ÉTRID"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+
+[features]
+default = ["std"]
+std = [
+    "serde/std",
+    "serde_json/std",
+]
