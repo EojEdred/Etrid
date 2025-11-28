@@ -1,0 +1,42 @@
+name: Build Primearc Core Chain Binary
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+        rustup target add wasm32-unknown-unknown
+        rustup component add rust-src
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential protobuf-compiler
+
+    - name: Build primearc-core-chain-node
+      run: |
+        source $HOME/.cargo/env
+        cargo build --release -p primearc-core-chain-node
+
+    - name: Verify binary
+      run: |
+        ls -lh target/release/primearc-core-chain-node
+        file target/release/primearc-core-chain-node
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: primearc-core-chain-node-linux-x86_64
+        path: target/release/primearc-core-chain-node
+        retention-days: 7

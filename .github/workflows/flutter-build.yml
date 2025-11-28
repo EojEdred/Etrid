@@ -1,0 +1,36 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bloc_banc_wallet_flutter_v1_new/**'
+      - '.github/workflows/flutter-build.yml'
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.1'  # You can change this to match your local version
+
+    - name: Install dependencies
+      run: flutter pub get
+      working-directory: bloc_banc_wallet_flutter_v1_new
+
+    - name: Build APK
+      run: flutter build apk --release
+      working-directory: bloc_banc_wallet_flutter_v1_new
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bloc-banc-wallet-apk
+        path: bloc_banc_wallet_flutter_v1_new/build/app/outputs/flutter-apk/app-release.apk

@@ -1,0 +1,29 @@
+name: CI – Monorepo Matrix Build
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [security-stack, account-core, tx-engine, asf-finality, foundation-docs]
+
+    defaults:
+      run:
+        working-directory: ./Etrid_Phase1_Missing_Repos/${{ matrix.service }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and Test ${{ matrix.service }}
+        run: |
+          cargo build --verbose
+          cargo test --verbose
