@@ -1,0 +1,21 @@
+{
+  "name": "@etrid/base-contracts",
+  "version": "1.0.0",
+  "description": "Base L2 smart contracts for Ëtrid Protocol (ÉTR.b, EDSC.b)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:base": "hardhat run scripts/deploy.js --network base",
+    "deploy:base-testnet": "hardhat run scripts/deploy.js --network baseTestnet",
+    "verify": "hardhat verify --network base",
+    "node": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}
