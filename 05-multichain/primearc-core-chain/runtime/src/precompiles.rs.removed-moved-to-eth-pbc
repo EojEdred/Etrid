@@ -1,0 +1,75 @@
+use pallet_evm_precompile_blake2::Blake2F;
+use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
+use pallet_evm_precompile_modexp::Modexp;
+use pallet_evm_precompile_sha3fips::Sha3FIPS256;
+use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use pallet_evm::{
+    IsPrecompileResult, Precompile, PrecompileHandle, PrecompileResult, PrecompileSet,
+};
+use sp_core::H160;
+use sp_std::marker::PhantomData;
+
+/// The PrecompileSet installed in the Ëtrid EVM.
+/// Provides standard Ethereum precompiles plus custom Substrate bridges.
+pub struct EtridPrecompiles<R>(PhantomData<R>);
+
+impl<R> EtridPrecompiles<R>
+where
+    R: pallet_evm::Config,
+{
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+
+    pub fn used_addresses() -> [H160; 9] {
+        [
+            addr(1), // ECRecover
+            addr(2), // Sha256
+            addr(3), // Ripemd160
+            addr(4), // Identity
+            addr(5), // Modexp
+            addr(6), // Bn128Add
+            addr(7), // Bn128Mul
+            addr(8), // Bn128Pairing
+            addr(9), // Blake2F
+        ]
+    }
+}
+
+impl<R> PrecompileSet for EtridPrecompiles<R>
+where
+    R: pallet_evm::Config,
+{
+    fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
+        match handle.code_address() {
+            // Ethereum precompiles (addresses 1-9)
+            a if a == addr(1) => Some(ECRecover::execute(handle)),
+            a if a == addr(2) => Some(Sha256::execute(handle)),
+            a if a == addr(3) => Some(Ripemd160::execute(handle)),
+            a if a == addr(4) => Some(Identity::execute(handle)),
+            a if a == addr(5) => Some(Modexp::execute(handle)),
+            a if a == addr(6) => Some(Bn128Add::execute(handle)),
+            a if a == addr(7) => Some(Bn128Mul::execute(handle)),
+            a if a == addr(8) => Some(Bn128Pairing::execute(handle)),
+            a if a == addr(9) => Some(Blake2F::execute(handle)),
+
+            // TODO: Custom Ëtrid precompiles (addresses 1024+)
+            // a if a == addr(1024) => Some(OraclePrecompile::execute(handle)),
+            // a if a == addr(1025) => Some(StakingPrecompile::execute(handle)),
+            // a if a == addr(1026) => Some(GovernancePrecompile::execute(handle)),
+
+            _ => None,
+        }
+    }
+
+    fn is_precompile(&self, address: H160, _gas: u64) -> IsPrecompileResult {
+        IsPrecompileResult::Answer {
+            is_precompile: Self::used_addresses().contains(&address),
+            extra_cost: 0,
+        }
+    }
+}
+
+fn addr(a: u64) -> H160 {
+    H160::from_low_u64_be(a)
+}
