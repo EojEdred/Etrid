@@ -1,0 +1,274 @@
+# AI Devs Social Media Posting Schedule
+#
+# This configuration defines when and what to post automatically
+#
+# Schedule Syntax:
+# - cron: Standard cron format (minute hour day month weekday)
+# - timezone: UTC (all times in UTC)
+#
+# Workflow Types:
+# - scheduled: Runs at specific times (daily_stats, weekly_summary)
+# - event_driven: Triggered by blockchain events (governance, audits)
+# - reactive: Responds to external triggers (mentions, questions)
+
+version: "1.0"
+
+# Scheduled Posts (time-based)
+scheduled:
+  # Daily blockchain stats - Every day at 12:00 UTC
+  - name: "daily_stats"
+    workflow: "workflows/daily_stats.py"
+    schedule: "0 12 * * *"  # 12:00 UTC daily
+    dev: "oracle-dev"
+    enabled: true
+    description: "Post 24h blockchain metrics"
+    priority: "high"
+
+  # Weekly summary - Sunday at 18:00 UTC
+  - name: "weekly_summary"
+    workflow: "workflows/weekly_summary.py"
+    schedule: "0 18 * * 0"  # Sunday 18:00 UTC
+    dev: "gizzi"
+    enabled: true
+    description: "Week in review from all devs"
+    priority: "medium"
+
+  # Daily EDSC stability check - Every day at 10:00 UTC
+  - name: "edsc_stability"
+    workflow: "workflows/edsc_stability.py"
+    schedule: "0 10 * * *"  # 10:00 UTC daily
+    dev: "edsc-dev"
+    enabled: true
+    description: "EDSC reserve ratio and stability metrics"
+    priority: "high"
+
+  # Bi-weekly economics snapshot - Every other Monday at 14:00 UTC
+  - name: "economics_snapshot"
+    workflow: "workflows/economics_snapshot.py"
+    schedule: "0 14 * * 1"  # Monday 14:00 UTC
+    dev: "economics-dev"
+    enabled: true
+    description: "Staking yields, inflation, tokenomics"
+    frequency: "biweekly"  # Only run on alternating weeks
+    priority: "medium"
+
+  # Monthly validator performance - 1st of month at 16:00 UTC
+  - name: "validator_performance"
+    workflow: "workflows/validator_performance.py"
+    schedule: "0 16 1 * *"  # 1st of month, 16:00 UTC
+    dev: "consensus-dev"
+    enabled: true
+    description: "Monthly validator and consensus metrics"
+    priority: "medium"
+
+# Event-Driven Posts (blockchain events)
+event_driven:
+  # New governance proposals
+  - name: "governance_proposals"
+    workflow: "workflows/governance_monitor.py"
+    trigger: "on_chain_event"
+    event_filter:
+      pallet: "Democracy"
+      method: "Proposed"
+    dev: "governance-dev"
+    enabled: true
+    description: "Announce and summarize new proposals"
+    priority: "high"
+    debounce: 300  # Wait 5 min to batch multiple proposals
+
+  # Proposal voting results
+  - name: "proposal_results"
+    workflow: "workflows/governance_monitor.py"
+    trigger: "on_chain_event"
+    event_filter:
+      pallet: "Democracy"
+      method: ["Passed", "NotPassed", "Executed"]
+    dev: "governance-dev"
+    enabled: true
+    description: "Announce proposal outcomes"
+    priority: "high"
+
+  # Audit flags (from audit-dev monitoring)
+  - name: "audit_alerts"
+    workflow: "workflows/audit_monitor.py"
+    trigger: "audit_flag"
+    severity: ["medium", "high", "critical"]
+    dev: "audit-dev"
+    enabled: true
+    description: "Alert on flagged proposals or security issues"
+    priority: "critical"
+    requires_human_approval: true  # Don't auto-post critical alerts
+
+  # Validator slashing events
+  - name: "slashing_alerts"
+    workflow: "workflows/consensus_monitor.py"
+    trigger: "on_chain_event"
+    event_filter:
+      pallet: "Staking"
+      method: "Slash"
+    dev: "consensus-dev"
+    enabled: true
+    description: "Report validator slashing incidents"
+    priority: "high"
+    requires_human_approval: true
+
+  # Large treasury spends (> 100k ETR)
+  - name: "treasury_spends"
+    workflow: "workflows/governance_monitor.py"
+    trigger: "on_chain_event"
+    event_filter:
+      pallet: "Treasury"
+      method: "Spending"
+    threshold: "100000000000000000000000"  # 100k ETR in base units
+    dev: "governance-dev"
+    enabled: true
+    description: "Report significant treasury expenditures"
+    priority: "medium"
+
+  # EDSC reserve ratio warnings (< 1.3)
+  - name: "reserve_warnings"
+    workflow: "workflows/edsc_stability.py"
+    trigger: "reserve_ratio_low"
+    threshold: 1.3
+    dev: "edsc-dev"
+    enabled: true
+    description: "Alert on low EDSC collateralization"
+    priority: "critical"
+    requires_human_approval: true
+
+# Reactive Posts (responses to external events)
+reactive:
+  # Twitter mentions monitoring
+  - name: "twitter_mentions"
+    workflow: "workflows/twitter_mentions.py"
+    trigger: "continuous"
+    mode: "stream"  # Real-time streaming
+    dev: "auto_route"  # Routes to appropriate dev
+    enabled: true
+    description: "Monitor and respond to Twitter mentions"
+    priority: "medium"
+    rate_limit: 20  # Max 20 responses per hour
+
+  # Community questions (Discord, Telegram in future)
+  - name: "community_questions"
+    workflow: "workflows/community_qa.py"
+    trigger: "continuous"
+    platforms: ["twitter", "discord"]
+    dev: "auto_route"
+    enabled: false  # Enable after Discord integration
+    description: "Answer community questions across platforms"
+    priority: "low"
+
+# Manual Triggers (API endpoints for manual posts)
+manual:
+  # Exchange listings
+  - name: "exchange_listing"
+    workflow: "workflows/announce_listing.py"
+    trigger: "api"
+    endpoint: "/api/trigger/listing"
+    dev: "gizzi"
+    enabled: true
+    description: "Announce new exchange integrations"
+    priority: "high"
+    requires_approval: true
+
+  # Partnership announcements
+  - name: "partnership"
+    workflow: "workflows/announce_partnership.py"
+    trigger: "api"
+    endpoint: "/api/trigger/partnership"
+    dev: "gizzi-advisor"
+    enabled: true
+    description: "Announce partnerships and collaborations"
+    priority: "high"
+    requires_approval: true
+
+  # Emergency announcements
+  - name: "emergency"
+    workflow: "workflows/emergency_post.py"
+    trigger: "api"
+    endpoint: "/api/trigger/emergency"
+    dev: "audit-dev"
+    enabled: true
+    description: "Critical network alerts or security notices"
+    priority: "critical"
+    requires_approval: true
+
+# Content Moderation Settings
+moderation:
+  # Always moderate before posting
+  enabled: true
+
+  # Strictness level (normal, strict, paranoid)
+  strictness: "normal"
+
+  # Auto-approve if moderation score > threshold
+  auto_approve_threshold: 0.8
+
+  # Always require human review for these categories
+  human_review_required:
+    - "critical"
+    - "security"
+    - "financial"
+    - "legal"
+    - "partnership"
+
+  # Max posts per day (safety limit)
+  daily_post_limit: 50
+
+  # Cooldown between posts (seconds)
+  min_post_interval: 300  # 5 minutes
+
+# Rate Limiting
+rate_limits:
+  # Twitter API limits
+  twitter:
+    posts_per_day: 1500  # Free tier limit
+    posts_per_hour: 100
+    replies_per_hour: 50
+
+  # Claude API limits (to manage costs)
+  claude:
+    requests_per_day: 500
+    requests_per_hour: 50
+    max_tokens_per_request: 500
+
+# Notification Settings
+notifications:
+  # Notify humans on these events
+  slack_webhook_url: "${SLACK_WEBHOOK_URL}"
+  notify_on:
+    - "post_failed"
+    - "moderation_rejected"
+    - "critical_alert"
+    - "daily_summary"
+    - "human_review_needed"
+
+# Feature Flags
+features:
+  # Enable/disable entire categories
+  scheduled_posts: true
+  event_driven_posts: true
+  auto_responses: false  # Disabled by default, enable after testing
+  multi_platform: false  # Only Twitter initially
+
+  # Advanced features
+  thread_generation: true
+  image_attachments: false  # Future: charts, graphs
+  video_posts: false  # Future: explainer videos
+  polls: false  # Future: community polls
+
+# Development/Testing
+development:
+  # Dry run mode (don't actually post)
+  dry_run: false
+
+  # Mock blockchain data (for testing without node)
+  use_mock_data: false
+
+  # Verbose logging
+  debug: true
+
+  # Test mode (posts to test account)
+  test_mode: false
+  test_account: "@EtridAI_Test"

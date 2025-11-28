@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:consensus-dev01",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:consensus-dev01#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:consensus-dev01",
+      "publicKeyMultibase": "zHR43Hot2e5FBgvqReDiMEEWi7nN1dVhPtiZ1jCBF6WNt",
+      "publicKeyBase58": "HR43Hot2e5FBgvqReDiMEEWi7nN1dVhPtiZ1jCBF6WNt"
+    }
+  ],
+  "authentication": [
+    "did:etrid:consensus-dev01#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:consensus-dev01#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:consensus-dev01#mcp-service",
+      "type": "AIConsensusWorker",
+      "serviceEndpoint": "mcp://ai-devs/consensus-dev01"
+    },
+    {
+      "id": "did:etrid:consensus-dev01#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/consensus-dev01/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:consensus-dev01#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/consensus-dev01/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "Consensus Dev",
+    "description": "PPFA consensus + validator rotation specialist. Adaptive slot timing expert.",
+    "skills": [
+      "validator-rotation",
+      "ppfa-sealing",
+      "adaptive-timing",
+      "consensus-analysis"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "I maintain PPFA consensus + validator rotation. Adaptive slot timing is my specialty. #\u00cbtridConsensus",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}

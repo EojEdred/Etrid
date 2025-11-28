@@ -1,0 +1,150 @@
+# AI Devs Social Automation - Python Dependencies
+#
+# Installation:
+#   pip install -r requirements.txt
+#
+# Or with specific Python version:
+#   python3.11 -m pip install -r requirements.txt
+#
+# For development:
+#   pip install -r requirements.txt -r requirements-dev.txt
+
+# ============================================================================
+# CORE DEPENDENCIES
+# ============================================================================
+
+# Twitter API client
+tweepy>=4.14.0
+
+# Anthropic Claude API
+anthropic>=0.40.0
+
+# Substrate blockchain interface (Polkadot.js Python equivalent)
+substrate-interface>=1.7.11
+
+# ============================================================================
+# ASYNC & CONCURRENCY
+# ============================================================================
+
+# Async HTTP client
+aiohttp>=3.11.11
+httpx>=0.28.1
+
+# Async utilities
+asyncio-throttle>=1.0.2
+
+# ============================================================================
+# DATA & SERIALIZATION
+# ============================================================================
+
+# YAML parsing (for config files)
+pyyaml>=6.0.2
+
+# JSON utilities
+python-json-logger>=2.0.7
+
+# Data validation
+pydantic>=2.10.4
+
+# ============================================================================
+# SCHEDULING & BACKGROUND TASKS
+# ============================================================================
+
+# Cron-like scheduling
+schedule>=1.2.2
+apscheduler>=3.10.4
+
+# Background task queue (optional, for scaling)
+celery>=5.4.0
+
+# ============================================================================
+# DATABASE & CACHING (Optional)
+# ============================================================================
+
+# PostgreSQL adapter
+psycopg2-binary>=2.9.10
+
+# Redis client
+redis>=5.2.1
+
+# SQLAlchemy ORM (for analytics)
+sqlalchemy>=2.0.36
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+
+# Environment variables
+python-dotenv>=1.0.1
+
+# Date/time utilities
+python-dateutil>=2.9.0.post0
+pytz>=2024.2
+
+# Retry logic
+tenacity>=9.0.0
+
+# Rate limiting
+ratelimit>=2.2.1
+
+# ============================================================================
+# MONITORING & LOGGING
+# ============================================================================
+
+# Structured logging
+structlog>=24.4.0
+
+# Prometheus metrics
+prometheus-client>=0.21.0
+
+# Sentry error tracking (optional)
+sentry-sdk>=2.19.2
+
+# ============================================================================
+# TESTING (will be in requirements-dev.txt)
+# ============================================================================
+
+# pytest>=8.3.4
+# pytest-asyncio>=0.24.0
+# pytest-cov>=6.0.0
+# pytest-mock>=3.14.0
+
+# ============================================================================
+# SECURITY
+# ============================================================================
+
+# Cryptography for key management
+cryptography>=44.0.0
+
+# ============================================================================
+# WEB (for API endpoints - optional)
+# ============================================================================
+
+# Flask (lightweight API)
+flask>=3.1.0
+flask-cors>=5.0.0
+
+# FastAPI (alternative, more modern)
+# fastapi>=0.115.6
+# uvicorn>=0.34.0
+
+# ============================================================================
+# CONTENT MODERATION
+# ============================================================================
+
+# NLP utilities (for tone analysis fallback)
+# textblob>=0.18.0.post0
+
+# ============================================================================
+# EXTERNAL APIS (Optional)
+# ============================================================================
+
+# CoinGecko API client
+# pycoingecko>=3.1.0
+
+# ============================================================================
+# VERSION CONSTRAINTS
+# ============================================================================
+
+# Python version requirement
+# Requires: Python 3.10+

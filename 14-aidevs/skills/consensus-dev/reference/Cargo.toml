@@ -1,0 +1,4 @@
+[dependencies]
+sc-consensus = { git = "https://github.com/paritytech/substrate" }
+codec = { package = "parity-scale-codec", version = "3.6.9" }
+futures = "0.3"

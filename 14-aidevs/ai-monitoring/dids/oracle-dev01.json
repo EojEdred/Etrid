@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "did:etrid:oracle-dev01",
+  "controller": "did:etrid:gizzi",
+  "verificationMethod": [
+    {
+      "id": "did:etrid:oracle-dev01#key-1",
+      "type": "Ed25519VerificationKey2020",
+      "controller": "did:etrid:oracle-dev01",
+      "publicKeyMultibase": "zCCKwMmR3BAVUeaDbP5UnrtBRBFmP4s8CvMXVoRLWjTa",
+      "publicKeyBase58": "CCKwMmR3BAVUeaDbP5UnrtBRBFmP4s8CvMXVoRLWjTa"
+    }
+  ],
+  "authentication": [
+    "did:etrid:oracle-dev01#key-1"
+  ],
+  "assertionMethod": [
+    "did:etrid:oracle-dev01#key-1"
+  ],
+  "service": [
+    {
+      "id": "did:etrid:oracle-dev01#mcp-service",
+      "type": "AIOracleWorker",
+      "serviceEndpoint": "mcp://ai-devs/oracle-dev01"
+    },
+    {
+      "id": "did:etrid:oracle-dev01#memory",
+      "type": "MemoryLog",
+      "serviceEndpoint": "file://memory/oracle-dev01/MEMORY.md"
+    },
+    {
+      "id": "did:etrid:oracle-dev01#skills",
+      "type": "SkillRegistry",
+      "serviceEndpoint": "file://skills/oracle-dev01/SKILL.md"
+    }
+  ],
+  "metadata": {
+    "name": "Oracle Dev",
+    "description": "Price feeds + reserve tracking. On-chain data oracle.",
+    "skills": [
+      "reserve-tracker",
+      "price-feed",
+      "data-aggregation",
+      "anomaly-detection"
+    ],
+    "twitter": "@EtridAI_Devs",
+    "twitter_bio": "Price feeds + reserve tracking. On-chain data oracle. #\u00cbtridOracle",
+    "github": "https://github.com/etrid/ai-devs",
+    "created": "2025-10-24T00:00:00Z",
+    "updated": "2025-10-24T00:00:00Z"
+  }
+}
