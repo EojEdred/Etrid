@@ -1,0 +1,16 @@
+[package]
+name = "etrid-p2p-dpeers"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Team"]
+description = "Distributed Peer Management for Etrid P2P Network"
+license = "MIT"
+
+[dependencies]
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[lib]
+path = "src/lib.rs"
