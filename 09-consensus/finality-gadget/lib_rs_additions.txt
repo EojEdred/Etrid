@@ -1,0 +1,104 @@
+================================================================================
+ADDITIONS TO lib.rs FOR EQUIVOCATION DETECTION INTEGRATION
+================================================================================
+
+1. ADD AFTER LINE 15 (after imports):
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
+
+pub mod equivocation;
+pub use equivocation::{EquivocationDetector, EquivocationProof, EquivocationStats, EquivocationVote};
+
+
+2. ADD TO FinalityGadget STRUCT (line ~713):
+
+    /// Equivocation detector for identifying double-voting validators
+    equivocation_detector: EquivocationDetector,
+
+
+3. MODIFY FinalityGadget::new() TO INCLUDE:
+
+    // Initialize equivocation detector with slashing channel
+    let (equivocation_tx, mut equivocation_rx) = tokio::sync::mpsc::unbounded_channel();
+
+    // Spawn task to handle equivocation proofs
+    tokio::spawn(async move {
+        while let Some(proof) = equivocation_rx.recv().await {
+            tracing::warn!(
+                "🚨 SLASHING: Validator {} equivocated in view {}",
+                hex::encode(&proof.validator_id[..8]),
+                proof.view
+            );
+            // TODO: Submit to slashing pallet when available
+        }
+    });
+
+    // ... in Self { } initialization:
+    equivocation_detector: EquivocationDetector::new(Some(equivocation_tx)),
+
+
+4. ADD AT START OF handle_vote() METHOD (before existing validation):
+
+    // Extract validator ID and block hash as bytes for equivocation detection
+    let validator_id_bytes: &[u8; 32] = vote.validator_id.0.as_ref();
+    let block_hash_bytes = vote.block_hash.as_bytes();
+
+    // Convert signature to fixed-size array for equivocation detection
+    let mut signature_array = [0u8; 64];
+    if vote.signature.len() == 64 {
+        signature_array.copy_from_slice(&vote.signature);
+
+        // Check for equivocation before processing vote
+        if let Some(proof) = self.equivocation_detector.check_vote(
+            vote.view.0,
+            *validator_id_bytes,
+            *block_hash_bytes,
+            block_number,
+            signature_array,
+        ).await {
+            tracing::warn!("⚠️ Equivocation detected! Rejecting vote from malicious validator");
+
+            // Severely penalize equivocating validator
+            let rep = self.peer_reputation
+                .entry(vote.validator_id.clone())
+                .or_insert_with(PeerReputation::new);
+            for _ in 0..10 {
+                rep.record_invalid();
+            }
+
+            return Err(format!("Validator equivocated in view {}", proof.view));
+        }
+    }
+
+
+5. UPDATE run_worker() TO INCLUDE CLEANUP:
+
+    let mut cleanup_interval = interval(Duration::from_secs(60));
+
+    // Add to tokio::select! block:
+    _ = cleanup_interval.tick() => {
+        self.equivocation_detector.cleanup_old_views().await;
+    }
+
+
+6. ADD PUBLIC METHODS (after run_worker):
+
+    /// Get equivocation detector statistics
+    pub async fn get_equivocation_stats(&self) -> EquivocationStats {
+        self.equivocation_detector.stats().await
+    }
+
+    /// Get pending equivocation proofs for submission to chain
+    pub async fn get_pending_equivocation_proofs(&self) -> Vec<EquivocationProof> {
+        self.equivocation_detector.get_pending_proofs().await
+    }
+
+
+================================================================================
+NOTE: The handle_vote() method signature needs to be updated to:
+    pub async fn handle_vote(&mut self, vote: Vote, block_number: u32) -> Result<(), String>
+
+This requires updating all callers to pass the block_number parameter.
+================================================================================
