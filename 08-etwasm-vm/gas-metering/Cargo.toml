@@ -1,0 +1,17 @@
+[package]
+name = "etwasm-gas-metering"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Gas metering for ETWasm VM - re-exports from etrid-vmw-gas (canonical source)"
+
+[dependencies]
+# Re-export from the canonical VMW gas economics module (06-native-currency)
+etrid-vmw-gas = { path = "../../06-native-currency/vmw-gas", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "etrid-vmw-gas/std",
+]

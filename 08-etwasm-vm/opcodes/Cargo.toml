@@ -1,0 +1,30 @@
+[package]
+name = "etwasm-opcodes"
+version = "0.1.0"
+authors = ["Ëtrid Team"]
+edition = "2021"
+license = "Apache-2.0"
+description = "EVM opcode definitions and handlers for ETWasm VM"
+
+[dependencies]
+codec = { workspace = true }
+scale-info = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+etwasm-gas-metering = { path = "../gas-metering", default-features = false }
+
+# EVM dependencies
+primitive-types = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-std/std",
+    "sp-core/std",
+    "sp-runtime/std",
+    "etwasm-gas-metering/std",
+    "primitive-types/std",
+]
