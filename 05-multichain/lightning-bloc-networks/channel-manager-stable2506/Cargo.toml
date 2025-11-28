@@ -1,0 +1,20 @@
+[package]
+name = "pallet-lightning-channels-stable2506"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
+
+# Use stable2506 for eth-pbc compatibility with Frontier EVM
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2506", default-features = false }
+
+[features]
+default = ["std"]
+std = ["codec/std", "scale-info/std", "frame-support/std", "frame-system/std", "sp-runtime/std", "sp-std/std", "sp-io/std", "sp-core/std"]
