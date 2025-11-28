@@ -1,0 +1,39 @@
+[package]
+name = "etrid-post-quantum"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Team"]
+description = "Post-quantum cryptographic primitives for Etrid: Kyber, Dilithium, hybrid schemes"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Post-quantum cryptography libraries (NIST PQC standards)
+# Note: These are the official Rust implementations of NIST PQC algorithms
+pqcrypto-kyber = { version = "0.8", default-features = false }
+pqcrypto-dilithium = { version = "0.5", default-features = false }
+pqcrypto-traits = { version = "0.3", default-features = false }
+
+# Classical cryptography (for hybrid mode)
+ed25519-dalek = { version = "2.1", default-features = false, features = ["rand_core"] }
+sha2 = { version = "0.10", default-features = false }
+
+# Utilities
+rand = { version = "0.8", default-features = false, features = ["std", "std_rng"] }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+serde = { version = "1.0", optional = true, features = ["derive"] }
+
+[dev-dependencies]
+rand = "0.8"
+
+[features]
+default = ["std"]
+std = [
+    "pqcrypto-kyber/std",
+    "pqcrypto-dilithium/std",
+    "pqcrypto-traits/std",
+    "ed25519-dalek/std",
+    "sha2/std",
+    "rand/std",
+    "hex/std",
+]
+serde = ["dep:serde"]
