@@ -1,0 +1,38 @@
+[package]
+name = "etrid-flare-nodes"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Team"]
+description = "Flare Nodes - Root-chain validators responsible for finality attestation and state aggregation"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Workspace dependencies - Substrate/Polkadot SDK
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# Workspace dependencies - Serialization & Encoding
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Workspace dependencies - Utilities
+log = { workspace = true }
+
+# Local dependencies - Peer Roles
+peer-roles-staking-types = { path = "../staking/types", default-features = false }
+
+[features]
+default = ["std"]
+
+std = [
+    "codec/std",
+    "frame-support/std",
+    "frame-system/std",
+    "log/std",
+    "peer-roles-staking-types/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-std/std",
+]

@@ -1,0 +1,30 @@
+[package]
+name = "pallet-validator-committee-runtime-api"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+authors = ["Ëtrid Team"]
+description = "Runtime API for ASF validator committee queries"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false }
+scale-info = { version = "2.11", default-features = false, features = ["derive"] }
+
+# Substrate dependencies
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+
+# Ëtrid consensus dependencies
+validator-management = { path = "../../../09-consensus/validator-management", default-features = false }
+asf-algorithm = { path = "../../../09-consensus/asf-algorithm", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-api/std",
+    "sp-std/std",
+    "validator-management/std",
+    "asf-algorithm/std",
+]
