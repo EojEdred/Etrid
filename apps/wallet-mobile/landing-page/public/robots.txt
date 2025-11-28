@@ -1,0 +1,22 @@
+# robots.txt for Ëtrid Mobile Wallet Landing Page
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://wallet.etrid.com/sitemap.xml
+
+# Disallow admin and internal pages
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow common crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

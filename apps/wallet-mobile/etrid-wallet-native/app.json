@@ -1,0 +1,44 @@
+{
+  "name": "EtridWallet",
+  "displayName": "Ëtrid Wallet",
+  "version": "1.0.0",
+  "description": "The most advanced DeFi mobile wallet",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#1a0033"
+  },
+  "ios": {
+    "bundleIdentifier": "com.etrid.wallet",
+    "buildNumber": "1.0.0",
+    "supportsTablet": false,
+    "deploymentTarget": "13.0",
+    "infoPlist": {
+      "NSCameraUsageDescription": "We need camera access to scan QR codes for transactions and addresses",
+      "NSFaceIDUsageDescription": "We use Face ID to secure your wallet and authenticate transactions",
+      "NSPhotoLibraryUsageDescription": "We need access to save and share QR codes",
+      "NFCReaderUsageDescription": "We use NFC to connect with hardware wallets like Ledger",
+      "NSLocationWhenInUseUsageDescription": "Location is used for merchant features"
+    }
+  },
+  "android": {
+    "package": "com.etrid.wallet",
+    "versionCode": 1,
+    "compileSdkVersion": 33,
+    "targetSdkVersion": 33,
+    "minSdkVersion": 23,
+    "permissions": [
+      "CAMERA",
+      "USE_BIOMETRIC",
+      "USE_FINGERPRINT",
+      "INTERNET",
+      "NFC",
+      "ACCESS_FINE_LOCATION",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+      "VIBRATE"
+    ]
+  }
+}

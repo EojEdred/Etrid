@@ -1,0 +1,901 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00E24249B3CEB3F29822E65A /* SocialTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A444B2A411E09B0C965FE0 /* SocialTabView.swift */; };
+		07624083B1B1A9BDE6217684 /* SlippageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2C4125B7992BE6092A887D /* SlippageSettingsView.swift */; };
+		07F24EC48E27C789F159BCB0 /* ETHPBC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546741E885CDDD86D4BEE1C9 /* ETHPBC.swift */; };
+		0B6EA3EB71824484B83A9D22 /* Core/Security/SecurityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329289DD14FE414C8ABAAA24 /* Core/Security/SecurityManager.swift */; };
+		0BB44D57AC4191A46EE061C9 /* MultiSigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DE643ADAFFFDD7B754E60F1 /* MultiSigService.swift */; };
+		0F2F4D04AB55D4CFC6F4CAAA /* TradingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FE4FC6B4AE413A573B5F9C /* TradingView.swift */; };
+		138B4E26B325E069F40DB309 /* BillSplit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF16426D91BCA85E686383BE /* BillSplit.swift */; };
+		154A4D2E9E22FE03C6E3495C /* BridgeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87D43DF93070D7E2093C73C /* BridgeHistoryView.swift */; };
+		18CE4851B8DE40B036B83464 /* BillSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66545ADA6CB0778AB55D90E /* BillSplitView.swift */; };
+		196967A9181C4788A62A7922 /* Services/Web3Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = A131BA5BF0424EAFA5F76FAA /* Services/Web3Service.swift */; };
+		1B1949FBA32A4580449D7D30 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2624C1580D18A5FDD613E78 /* HapticService.swift */; };
+		1E2247D2A83DF5AFC171D0FC /* GPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0774AE2BEEE5BF7B3EFDDC6 /* GPU.swift */; };
+		24BD4A3F8FDF0BAEE702EB4D /* ContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BD43C3BA23DD70CF7B91D7 /* ContactsView.swift */; };
+		285E561A5C7D42D19459079A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 34116E43AB0145A1991BF86B /* Assets.xcassets */; };
+		28834BDFB4861B02739817FC /* WalletConnectMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1BD49E593CEF365B633E774 /* WalletConnectMainView.swift */; };
+		28B24C02B330A81F3552DC04 /* DAppBrowserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C444E9EBAAEEDF14BB3C378 /* DAppBrowserService.swift */; };
+		2ABA45128EC0A43116828E62 /* SwapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA344ABA252C18C90A824D1 /* SwapView.swift */; };
+		2D53404B89819DA118CAB614 /* BillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF8246EF8C2D246627A3A4C6 /* BillDetailView.swift */; };
+		2EDE4A2F49EC4302B44CC5A4 /* Models/WalletModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DE106B1BC0345FF99B63169 /* Models/WalletModels.swift */; };
+		2F15456593155BEB5141F029 /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3E4573B3BCD788D4355334 /* GoalDetailView.swift */; };
+		2F5E47D78CEB9488BCD8D8F0 /* ETHPBCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483A4634BC2618E4BCE110D9 /* ETHPBCService.swift */; };
+		2FA84CD8B02ABBCE71725D34 /* FiatRamp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9E4FD6A73186198986969F /* FiatRamp.swift */; };
+		31FF4BD1AED14EDEB45FB8CB /* TransactionApprovalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A34348E88A65F3BCA3D00F4E /* TransactionApprovalView.swift */; };
+		32254ACCB99D2287A5EC2051 /* MultiSigWalletDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89D64ECFA5AC474CCB70C3C1 /* MultiSigWalletDetailView.swift */; };
+		3AC743788909DC5B6B8AAF95 /* LendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6794ADA8583F0A008D3934C /* LendingView.swift */; };
+		3B864B38B719748074050DE6 /* HyperledgerBridgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 679C485EB7B5EA09326EDE97 /* HyperledgerBridgeView.swift */; };
+		3F816AB93194478AB05E6689 /* Services/TokenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CC18254BE04BDC824054E3 /* Services/TokenService.swift */; };
+		434D4426B4BF31F05AE7D507 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2F4F26B61EEF6E25F95E82 /* MainTabView.swift */; };
+		445D40D89A7B4C3CAA7005DE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DAA4866ACCCFC77BDBE8BD7 /* SettingsView.swift */; };
+		45687DAC42B7438381CC925B /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FD861E10A145128482C888 /* QRScannerView.swift */; };
+		489B4328894587BE3B87F8CF /* Savings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E1432C950A571F586F336F /* Savings.swift */; };
+		4B804AFDB0A87432A6423A04 /* GPUMarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CF4F4D92B37410345B92E6 /* GPUMarketplaceView.swift */; };
+		4C83FC19942744D49D2C7F33 /* Core/Network/NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1697EA33CDE4299B2F942B6 /* Core/Network/NetworkManager.swift */; };
+		4D2840D9993932E6D22D6E75 /* SavingsGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3846E6ADF367DA5A8600A4 /* SavingsGoalsView.swift */; };
+		51D94390BB797D58B7A0848F /* MultiSigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B740DE8433CF70F3CDA403 /* MultiSigView.swift */; };
+		531B480EAD15761BA1A0617B /* RentGPUView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B94B9D9B5A827AB5F1309A /* RentGPUView.swift */; };
+		53BB44C7BC460E059097B84B /* HyperledgerBridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD5747E1A02194BDC212C4AE /* HyperledgerBridgeService.swift */; };
+		567CFC09245D40F29D6D0273 /* Storage/StorageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C1568B364314B4EA424FD30 /* Storage/StorageManager.swift */; };
+		5C0142CE891D55B874A4E96F /* DAO.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13A4592B8E0CAD40AF8710D /* DAO.swift */; };
+		60F0EDBB68DE43E984457388 /* Views/Onboarding/WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009B5D0D7FB24A36975CB118 /* Views/Onboarding/WelcomeView.swift */; };
+		61BDD760CBE4479EAAEAE542 /* Views/Receive/ReceiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D60148425684D6FBA563610 /* Views/Receive/ReceiveView.swift */; };
+		67974498837FC2373752F89F /* DApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F4CFE8CF0FE18F0A96FBE /* DApp.swift */; };
+		6A0A4FF78EB5174FEA12935F /* NFT.swift in Sources */ = {isa = PBXBuildFile; fileRef = 689D418DA7D5A72AE934AA6D /* NFT.swift */; };
+		6BB84E99831559F17C6532C1 /* BorrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F614456AB56C641A4CD584F /* BorrowView.swift */; };
+		6E5048469CF094AA8A99B997 /* SecuritySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10E041398B43C000F9FF13AD /* SecuritySettingsView.swift */; };
+		6F844978AAFDD923FB633186 /* OracleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B7437D8C3088A2F3281132 /* OracleView.swift */; };
+		73C3443E98AFAD550BE0B603 /* StakingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2608420B87B85D31D149A46A /* StakingView.swift */; };
+		7524401AAF21962EB661E787 /* AddContactView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080A4CFD8168DA7780FE1F20 /* AddContactView.swift */; };
+		75E6474EBAD7E7D86E02E2DA /* BiometricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB964403850275083F7EC617 /* BiometricService.swift */; };
+		775C4235B18266CF0D362EAD /* MultiSig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04194573B5DF68352773C208 /* MultiSig.swift */; };
+		77E637929E384F00951694AA /* WalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8A8CC9D72443159B07D5B3 /* WalletApp.swift */; };
+		78A44FA4A431A7F22EB604C8 /* CreateDAOView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF74341932D8304CF5CDDAD /* CreateDAOView.swift */; };
+		7902D6933B5849878A29F1F1 /* Views/Settings/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4760B07098412C81520196 /* Views/Settings/SettingsView.swift */; };
+		7A2C4498B42BB568A4928261 /* WalletConnectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EF94A0B92E87B6AED2FCD9B /* WalletConnectService.swift */; };
+		7D7F4082ADE638DFBE20ED94 /* BiometricSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 646B4AE294C33F0272226338 /* BiometricSettingsView.swift */; };
+		7EC8915D837E46BD8FE234BE /* Data/Networks.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB77A18B1B849EE84A1F6F5 /* Data/Networks.swift */; };
+		7F19AC30908B4643B68FC3F1 /* Models/TransactionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35EB1F10523D4BCE9FC45402 /* Models/TransactionModels.swift */; };
+		7F37093574784272B870C2C2 /* WalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C319935CD4545FE93652747 /* WalletManager.swift */; };
+		86589FE1B1C34DC19FE678E0 /* Core/Crypto/CryptoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E97C2A19C3ED4AB082994C6E /* Core/Crypto/CryptoManager.swift */; };
+		8CFD4786A0D12813DF17E8A4 /* TokenSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A07A4BD8A1D6CAD3BADBE21E /* TokenSelectorView.swift */; };
+		90BA4706B3BF7CD816C18C42 /* Trading.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF17465A93649A41E9D6F86D /* Trading.swift */; };
+		928347DF9610FAE24FA2C720 /* PositionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F844C12A0F04A653375DFA4 /* PositionsView.swift */; };
+		93F24EA7910D5773AD746A26 /* NFTGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70B64987A094106EC7E59023 /* NFTGalleryView.swift */; };
+		989F4F2082E3031E91909640 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53674ADA942D2AA52B64060B /* DeepLink.swift */; };
+		98E4E00A527E408B914A3936 /* Views/Home/HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B8204B4A04E0BB7BF9EDB /* Views/Home/HomeView.swift */; };
+		9AF65B6B05794DA68C17AF33 /* Views/Onboarding/ImportWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09617E0AEEFB4FBCBF1640CF /* Views/Onboarding/ImportWalletView.swift */; };
+		9BB68AF9506247C8BB06B4D4 /* Core/Transaction/TransactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA76AF5586F64B15B2E4689A /* Core/Transaction/TransactionManager.swift */; };
+		9C884CEBBF78A35E6726B611 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4834C5C800AF518DE2340B2 /* BookmarksView.swift */; };
+		9F98E36FB84D44B59763F1F4 /* Views/Onboarding/CreateWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3B1439D2AE4EA5A1A6ACFD /* Views/Onboarding/CreateWalletView.swift */; };
+		A55E4F0093A45FFC05ADA8B0 /* WrapUnwrapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A774002A0291DCF20F42632 /* WrapUnwrapView.swift */; };
+		A5D440E58DDDE611B2D7852E /* Lending.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DA41568F19273790300DE9 /* Lending.swift */; };
+		A68B8988831D4611AC476D9C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C71C77AB422472D92BCECC7 /* ContentView.swift */; };
+		A82CBBBDA4784A7590C8A05A /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B8CFB2201114298B39F4B73 /* KeychainManager.swift */; };
+		AA1C4EABB057ECB129F16D61 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36A4B09B48EBF0A4840A506 /* NotificationService.swift */; };
+		AA8D4F5295F346272CB0760D /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC545EC84C1CE5E9A68DE35 /* NotificationSettingsView.swift */; };
+		'AAAA0001' = {isa = PBXBuildFile; productRef = BBBB0001; };
+		'AAAA0002' = {isa = PBXBuildFile; productRef = BBBB0002; };
+		'AAAA0003' = {isa = PBXBuildFile; productRef = BBBB0003; };
+		AC004B44AF03C3AE95EAC948 /* WalletConnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A0493187F5218CDBC8D537 /* WalletConnect.swift */; };
+		AD2647D998F5E842EC9A5CAC /* GPUDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83C4C27B8D044DD477B1034 /* GPUDetailView.swift */; };
+		AF76499C89A4871EB6957AAF /* NFTDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFA4A5784A9C930B1043F4A /* NFTDetailView.swift */; };
+		B13A863FB0B74F019AE604ED /* Views/Activity/ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BBD859FD5AC4DDCA282AF82 /* Views/Activity/ActivityView.swift */; };
+		B1CC7B28DC5A4F2295E8B2AC /* Views/Components/LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E602D64F29C4F0788F9A752 /* Views/Components/LoadingView.swift */; };
+		B2664C26A49A6D50607A3607 /* CreateMultiSigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB1C45508D83DFCFA6C79492 /* CreateMultiSigView.swift */; };
+		B3DF4D9CA629095C8C272111 /* SocialFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A37B4D3BB2AF1C74D7B1D24C /* SocialFeedView.swift */; };
+		B9C2421A8FE26C72DBB1E58A /* Hyperledger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83AE47EA8C7638BE2F656198 /* Hyperledger.swift */; };
+		BA5345A0A3F832787EF96C61 /* MyRentalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83004BACA88382F9917F0ECB /* MyRentalsView.swift */; };
+		BBC649CC630147B589EC0A31 /* Utils/Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05BA079385F7425299A55A61 /* Utils/Extensions.swift */; };
+		BFB14291813F982C46F57E72 /* AppClipService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0844A1BADA3E645F0213036 /* AppClipService.swift */; };
+		C2A14D4084608EF5C37A4661 /* DeepLinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6715402397AD24A530DC3EF8 /* DeepLinkService.swift */; };
+		C574950038164E4D8AA9E06C /* Views/Components/ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28D60ED1F634D43BE0F1C17 /* Views/Components/ErrorView.swift */; };
+		C6154192AA469CF841873A23 /* Social.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D44A6F9EA98D4D6BFD5FAE /* Social.swift */; };
+		C6B1406C8CB4D67B6FE2C8E8 /* ETHPBCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E543D9A9EC3ABF09E1153B /* ETHPBCView.swift */; };
+		C7BD725AEF01454195EEA68E /* Data/DefaultTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C253BEB9E64E0B84BCE716 /* Data/DefaultTokens.swift */; };
+		C80F51AF66EE45EA93B5C351 /* Utils/Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31644A8608794367891B9859 /* Utils/Formatters.swift */; };
+		C93A4BD3A568A00AB3E2324C /* NetworkSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50D4DE3BAA634E2B836E39B /* NetworkSelectorView.swift */; };
+		CCB34CFA85B145CE43BBD7D3 /* DAOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05F4D3585ACF1631CAE6170 /* DAOService.swift */; };
+		D13E4134874089C4F5D8B740 /* RegisterGPUView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005C47558D87855140CA900B /* RegisterGPUView.swift */; };
+		D17741068D42EF8805A66A6D /* WalletConnectScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8C4F67B6F138A85EAEDE66 /* WalletConnectScannerView.swift */; };
+		D4872769477846E699808931 /* Storage/WalletStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D565C5BF110046489311D8AB /* Storage/WalletStorage.swift */; };
+		D5F4BD42B7CB4C34A3E82223 /* Views/Send/SendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8244DE9C3E68428491E5E4FC /* Views/Send/SendView.swift */; };
+		D90F9284322F4BC2805193D5 /* Core/Error/WalletError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3C6838D9A54910A0700E06 /* Core/Error/WalletError.swift */; };
+		DA5E4EA9BCD0363CCC90D4C7 /* GovernanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB44331989D69E846ACF609 /* GovernanceView.swift */; };
+		DB6B49149B41D7DF7F77A0EF /* GPUMarketplaceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F449A8958E55C447EF8334 /* GPUMarketplaceService.swift */; };
+		DB9806734C5147D0A6A1AA5A /* Core/Network/RPCProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401F71F3123B43BD9BB11660 /* Core/Network/RPCProvider.swift */; };
+		DC854BD98D4B2D85057FB13A /* DAODetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B04FFBA165E369822DA5C8 /* DAODetailView.swift */; };
+		DF7423443026417CB0AA42EA /* Services/BalanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB2A9DA250A430E86D244E5 /* Services/BalanceService.swift */; };
+		E10944579FAAA9D991904CF0 /* DAppBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 248B4F9B8DCEB48B5EBD6FE2 /* DAppBrowserView.swift */; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* Resources/BIP39Wordlist.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8A9E7D1A5B4C8E9D2F3A41 /* Resources/BIP39Wordlist.swift */; };
+		E26F4E62A65CF2E8F7707C43 /* Swap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07944E5B9BE5F89442EA5FF5 /* Swap.swift */; };
+		E42B44B2B3DA1B55C3CFCF6C /* BuyCryptoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC24FE598FC27D77D9272C6 /* BuyCryptoView.swift */; };
+		E8AE4F8EB6AC865DE1A3BDC5 /* CreateBillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00D484F9293940526D16C4D /* CreateBillView.swift */; };
+		E9F2428C8CAD05F2B3583889 /* DAOListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C174A0C9C012B6CD94F6AB4 /* DAOListView.swift */; };
+		EBD2402FB8CB7832DB6AFBC8 /* Contact.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66B4AE7809C6600E949ED30 /* Contact.swift */; };
+		EC2E4FB7A8F23BD34D2921AB /* CreateGoalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97E465A86A12CCDD6F31EE2 /* CreateGoalView.swift */; };
+		ED6046EE92973916908BFA72 /* NFTMarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9154732855758D633B4535D /* NFTMarketplaceView.swift */; };
+		EE324788B0EECFF0C8CA3F90 /* ContactDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C324179963B1E14E0F7B42B /* ContactDetailView.swift */; };
+		'F2G3B4C5D6E7F8G9A0B1D2E3' = {isa = PBXBuildFile; fileRef = CF9B0F8E2B6C5D9F0E3G4B52; };
+		F5154C36951F1B9315CF9640 /* PaymentRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFF4F15832CBBDCD8CC706F /* PaymentRequestView.swift */; };
+		FD4740A8961690946BFD7B93 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1D4951B0786EB536001024 /* Notification.swift */; };
+		FD6F156807DA4B1BBF61F1A9 /* Core/Crypto/HDWalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FBDDC3DEC448CE8E847510 /* Core/Crypto/HDWalletManager.swift */; };
+		'G3H4C5D6E7F8G9H0A1B2E3F4' = {isa = PBXBuildFile; fileRef = DF0C1G9F3C7D6E0G1F4H5C63; };
+		D7690EC874BE494C8FC89C80 /* Views/ConsensusDay/ConsensusDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7AB2647628349968281C055 /* Views/ConsensusDay/ConsensusDayView.swift */; };
+		54CC5AEFA8404719BAC995D6 /* Views/ConsensusDay/ProposalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0066E69074244BAC91D38D76 /* Views/ConsensusDay/ProposalDetailView.swift */; };
+		723B3F37CE674326BB9EBB2A /* Views/ConsensusDay/DirectorCandidateDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA823641BAFF46C2B1C575E3 /* Views/ConsensusDay/DirectorCandidateDetailView.swift */; };
+		C3A76B21AA264A8FB8206838 /* Views/ConsensusDay/VotingPowerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63CA122C7404D4FBE0D294D /* Views/ConsensusDay/VotingPowerDetailView.swift */; };
+		71FECE59704F4DCB88F73DB3 /* Views/ConsensusDay/RewardsHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB9AB9FEFD67416E872A36A2 /* Views/ConsensusDay/RewardsHistoryView.swift */; };
+		A99F71B3952243F59DCCF39F /* Models/ConsensusDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D178DAEF6435680F6AD9C /* Models/ConsensusDay.swift */; };
+		9C1A8B8B49E44A8187467B7E /* ViewModels/ConsensusDayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7527C4D395BA40D3808C0D91 /* ViewModels/ConsensusDayViewModel.swift */; };
+		BDF85890527B43BF832A7B14 /* Models/CryptoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B1339D174644E4B08DCBBA /* Models/CryptoCard.swift */; };
+		A1D8829F3EF94BEE8C305F55 /* ViewModels/CardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F02E664AC2F4F93BCC171A1 /* ViewModels/CardViewModel.swift */; };
+		F5C6848F11F34795AFBC5EC8 /* Views/Card/CardManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D01E6D176940229DECA26E /* Views/Card/CardManagementView.swift */; };
+		43DD7F4965084F809F87F443 /* Views/Card/CardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2458803E475D4BA4A3D8E8FE /* Views/Card/CardDetailView.swift */; };
+		9BC1DC3777814FF496D058E0 /* Views/ConsensusDay/CreateProposalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350B13C83C954BDFBBB680CC /* Views/ConsensusDay/CreateProposalView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		005C47558D87855140CA900B /* RegisterGPUView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RegisterGPUView.swift; path = EtridWallet/Views/GPUMarketplace/RegisterGPUView.swift; sourceTree = SOURCE_ROOT; };
+		009B5D0D7FB24A36975CB118 /* Views/Onboarding/WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Onboarding/WelcomeView.swift; sourceTree = "<group>"; };
+		04194573B5DF68352773C208 /* MultiSig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MultiSig.swift; path = EtridWallet/Models/MultiSig.swift; sourceTree = SOURCE_ROOT; };
+		05BA079385F7425299A55A61 /* Utils/Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/Extensions.swift; sourceTree = "<group>"; };
+		07944E5B9BE5F89442EA5FF5 /* Swap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Swap.swift; path = EtridWallet/Models/Swap.swift; sourceTree = SOURCE_ROOT; };
+		080A4CFD8168DA7780FE1F20 /* AddContactView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AddContactView.swift; path = EtridWallet/Views/Contacts/AddContactView.swift; sourceTree = SOURCE_ROOT; };
+		09617E0AEEFB4FBCBF1640CF /* Views/Onboarding/ImportWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Onboarding/ImportWalletView.swift; sourceTree = "<group>"; };
+		0BBD859FD5AC4DDCA282AF82 /* Views/Activity/ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Activity/ActivityView.swift; sourceTree = "<group>"; };
+		0C1D4951B0786EB536001024 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Notification.swift; path = EtridWallet/Models/Notification.swift; sourceTree = SOURCE_ROOT; };
+		0C324179963B1E14E0F7B42B /* ContactDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContactDetailView.swift; path = EtridWallet/Views/Contacts/ContactDetailView.swift; sourceTree = SOURCE_ROOT; };
+		10E041398B43C000F9FF13AD /* SecuritySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SecuritySettingsView.swift; path = EtridWallet/Views/Settings/SecuritySettingsView.swift; sourceTree = SOURCE_ROOT; };
+		19BD43C3BA23DD70CF7B91D7 /* ContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContactsView.swift; path = EtridWallet/Views/Contacts/ContactsView.swift; sourceTree = SOURCE_ROOT; };
+		1AC545EC84C1CE5E9A68DE35 /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NotificationSettingsView.swift; path = EtridWallet/Views/Settings/NotificationSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		1B8CFB2201114298B39F4B73 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		1CA344ABA252C18C90A824D1 /* SwapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwapView.swift; path = EtridWallet/Views/Swap/SwapView.swift; sourceTree = SOURCE_ROOT; };
+		1CC8700EE34647278FA1F45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		248B4F9B8DCEB48B5EBD6FE2 /* DAppBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAppBrowserView.swift; path = EtridWallet/Views/DAppBrowser/DAppBrowserView.swift; sourceTree = SOURCE_ROOT; };
+		24B04FFBA165E369822DA5C8 /* DAODetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAODetailView.swift; path = EtridWallet/Views/DAO/DAODetailView.swift; sourceTree = SOURCE_ROOT; };
+		2608420B87B85D31D149A46A /* StakingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StakingView.swift; path = EtridWallet/Views/ETHPBC/StakingView.swift; sourceTree = SOURCE_ROOT; };
+		26DA41568F19273790300DE9 /* Lending.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Lending.swift; path = EtridWallet/Models/Lending.swift; sourceTree = SOURCE_ROOT; };
+		2EB2A9DA250A430E86D244E5 /* Services/BalanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BalanceService.swift; sourceTree = "<group>"; };
+		31644A8608794367891B9859 /* Utils/Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/Formatters.swift; sourceTree = "<group>"; };
+		329289DD14FE414C8ABAAA24 /* Core/Security/SecurityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Security/SecurityManager.swift; sourceTree = "<group>"; };
+		34116E43AB0145A1991BF86B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		35D44A6F9EA98D4D6BFD5FAE /* Social.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Social.swift; path = EtridWallet/Models/Social.swift; sourceTree = SOURCE_ROOT; };
+		35EB1F10523D4BCE9FC45402 /* Models/TransactionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TransactionModels.swift; sourceTree = "<group>"; };
+		3DAA4866ACCCFC77BDBE8BD7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsView.swift; path = EtridWallet/Views/Settings/SettingsView.swift; sourceTree = SOURCE_ROOT; };
+		3E602D64F29C4F0788F9A752 /* Views/Components/LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/LoadingView.swift; sourceTree = "<group>"; };
+		3FC24FE598FC27D77D9272C6 /* BuyCryptoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BuyCryptoView.swift; path = EtridWallet/Views/FiatRamp/BuyCryptoView.swift; sourceTree = SOURCE_ROOT; };
+		401F71F3123B43BD9BB11660 /* Core/Network/RPCProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Network/RPCProvider.swift; sourceTree = "<group>"; };
+		42B7437D8C3088A2F3281132 /* OracleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OracleView.swift; path = EtridWallet/Views/ETHPBC/OracleView.swift; sourceTree = SOURCE_ROOT; };
+		47CC18254BE04BDC824054E3 /* Services/TokenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenService.swift; sourceTree = "<group>"; };
+		483A4634BC2618E4BCE110D9 /* ETHPBCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ETHPBCService.swift; path = EtridWallet/Services/ETHPBCService.swift; sourceTree = SOURCE_ROOT; };
+		4D6F4CFE8CF0FE18F0A96FBE /* DApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DApp.swift; path = EtridWallet/Models/DApp.swift; sourceTree = SOURCE_ROOT; };
+		4DE106B1BC0345FF99B63169 /* Models/WalletModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/WalletModels.swift; sourceTree = "<group>"; };
+		4E8A8CC9D72443159B07D5B3 /* WalletApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletApp.swift; sourceTree = "<group>"; };
+		53674ADA942D2AA52B64060B /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DeepLink.swift; path = EtridWallet/Models/DeepLink.swift; sourceTree = SOURCE_ROOT; };
+		546741E885CDDD86D4BEE1C9 /* ETHPBC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ETHPBC.swift; path = EtridWallet/Models/ETHPBC.swift; sourceTree = SOURCE_ROOT; };
+		5B8C4F67B6F138A85EAEDE66 /* WalletConnectScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalletConnectScannerView.swift; path = EtridWallet/Views/WalletConnect/WalletConnectScannerView.swift; sourceTree = SOURCE_ROOT; };
+		646B4AE294C33F0272226338 /* BiometricSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BiometricSettingsView.swift; path = EtridWallet/Views/Settings/BiometricSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		6715402397AD24A530DC3EF8 /* DeepLinkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DeepLinkService.swift; path = EtridWallet/Services/DeepLinkService.swift; sourceTree = SOURCE_ROOT; };
+		679C485EB7B5EA09326EDE97 /* HyperledgerBridgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HyperledgerBridgeView.swift; path = EtridWallet/Views/Hyperledger/HyperledgerBridgeView.swift; sourceTree = SOURCE_ROOT; };
+		689D418DA7D5A72AE934AA6D /* NFT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NFT.swift; path = EtridWallet/Models/NFT.swift; sourceTree = SOURCE_ROOT; };
+		6C1568B364314B4EA424FD30 /* Storage/StorageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage/StorageManager.swift; sourceTree = "<group>"; };
+		6D60148425684D6FBA563610 /* Views/Receive/ReceiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Receive/ReceiveView.swift; sourceTree = "<group>"; };
+		6DE643ADAFFFDD7B754E60F1 /* MultiSigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MultiSigService.swift; path = EtridWallet/Services/MultiSigService.swift; sourceTree = SOURCE_ROOT; };
+		6F614456AB56C641A4CD584F /* BorrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BorrowView.swift; path = EtridWallet/Views/Lending/BorrowView.swift; sourceTree = SOURCE_ROOT; };
+		70B64987A094106EC7E59023 /* NFTGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NFTGalleryView.swift; path = EtridWallet/Views/NFT/NFTGalleryView.swift; sourceTree = SOURCE_ROOT; };
+		71FBDDC3DEC448CE8E847510 /* Core/Crypto/HDWalletManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Crypto/HDWalletManager.swift; sourceTree = "<group>"; };
+		7A774002A0291DCF20F42632 /* WrapUnwrapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WrapUnwrapView.swift; path = EtridWallet/Views/ETHPBC/WrapUnwrapView.swift; sourceTree = SOURCE_ROOT; };
+		7C319935CD4545FE93652747 /* WalletManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletManager.swift; sourceTree = "<group>"; };
+		7C444E9EBAAEEDF14BB3C378 /* DAppBrowserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAppBrowserService.swift; path = EtridWallet/Services/DAppBrowserService.swift; sourceTree = SOURCE_ROOT; };
+		7C4760B07098412C81520196 /* Views/Settings/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Settings/SettingsView.swift; sourceTree = "<group>"; };
+		7CFF4F15832CBBDCD8CC706F /* PaymentRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PaymentRequestView.swift; path = EtridWallet/Views/Social/PaymentRequestView.swift; sourceTree = SOURCE_ROOT; };
+		8244DE9C3E68428491E5E4FC /* Views/Send/SendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Send/SendView.swift; sourceTree = "<group>"; };
+		83004BACA88382F9917F0ECB /* MyRentalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MyRentalsView.swift; path = EtridWallet/Views/GPUMarketplace/MyRentalsView.swift; sourceTree = SOURCE_ROOT; };
+		83AE47EA8C7638BE2F656198 /* Hyperledger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Hyperledger.swift; path = EtridWallet/Models/Hyperledger.swift; sourceTree = SOURCE_ROOT; };
+		83E543D9A9EC3ABF09E1153B /* ETHPBCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ETHPBCView.swift; path = EtridWallet/Views/ETHPBC/ETHPBCView.swift; sourceTree = SOURCE_ROOT; };
+		86F449A8958E55C447EF8334 /* GPUMarketplaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GPUMarketplaceService.swift; path = EtridWallet/Services/GPUMarketplaceService.swift; sourceTree = SOURCE_ROOT; };
+		88FD861E10A145128482C888 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		89D64ECFA5AC474CCB70C3C1 /* MultiSigWalletDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MultiSigWalletDetailView.swift; path = EtridWallet/Views/MultiSig/MultiSigWalletDetailView.swift; sourceTree = SOURCE_ROOT; };
+		8C174A0C9C012B6CD94F6AB4 /* DAOListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAOListView.swift; path = EtridWallet/Views/DAO/DAOListView.swift; sourceTree = SOURCE_ROOT; };
+		8D3E4573B3BCD788D4355334 /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GoalDetailView.swift; path = EtridWallet/Views/Savings/GoalDetailView.swift; sourceTree = SOURCE_ROOT; };
+		8F844C12A0F04A653375DFA4 /* PositionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PositionsView.swift; path = EtridWallet/Views/Lending/PositionsView.swift; sourceTree = SOURCE_ROOT; };
+		8FF74341932D8304CF5CDDAD /* CreateDAOView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateDAOView.swift; path = EtridWallet/Views/DAO/CreateDAOView.swift; sourceTree = SOURCE_ROOT; };
+		9C71C77AB422472D92BCECC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9E2C4125B7992BE6092A887D /* SlippageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SlippageSettingsView.swift; path = EtridWallet/Views/Swap/SlippageSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		9EF94A0B92E87B6AED2FCD9B /* WalletConnectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalletConnectService.swift; path = EtridWallet/Services/WalletConnectService.swift; sourceTree = SOURCE_ROOT; };
+		A05F4D3585ACF1631CAE6170 /* DAOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAOService.swift; path = EtridWallet/Services/DAOService.swift; sourceTree = SOURCE_ROOT; };
+		A07A4BD8A1D6CAD3BADBE21E /* TokenSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TokenSelectorView.swift; path = EtridWallet/Views/Swap/TokenSelectorView.swift; sourceTree = SOURCE_ROOT; };
+		A0844A1BADA3E645F0213036 /* AppClipService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppClipService.swift; path = EtridWallet/Services/AppClipService.swift; sourceTree = SOURCE_ROOT; };
+		A131BA5BF0424EAFA5F76FAA /* Services/Web3Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Web3Service.swift; sourceTree = "<group>"; };
+		A1BD49E593CEF365B633E774 /* WalletConnectMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalletConnectMainView.swift; path = EtridWallet/Views/WalletConnect/WalletConnectMainView.swift; sourceTree = SOURCE_ROOT; };
+		A34348E88A65F3BCA3D00F4E /* TransactionApprovalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TransactionApprovalView.swift; path = EtridWallet/Views/DAppBrowser/TransactionApprovalView.swift; sourceTree = SOURCE_ROOT; };
+		A36A4B09B48EBF0A4840A506 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NotificationService.swift; path = EtridWallet/Services/NotificationService.swift; sourceTree = SOURCE_ROOT; };
+		A37B4D3BB2AF1C74D7B1D24C /* SocialFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SocialFeedView.swift; path = EtridWallet/Views/Social/SocialFeedView.swift; sourceTree = SOURCE_ROOT; };
+		A6A444B2A411E09B0C965FE0 /* SocialTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SocialTabView.swift; path = EtridWallet/Views/Social/SocialTabView.swift; sourceTree = SOURCE_ROOT; };
+		A87D43DF93070D7E2093C73C /* BridgeHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BridgeHistoryView.swift; path = EtridWallet/Views/Hyperledger/BridgeHistoryView.swift; sourceTree = SOURCE_ROOT; };
+		AA76AF5586F64B15B2E4689A /* Core/Transaction/TransactionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Transaction/TransactionManager.swift; sourceTree = "<group>"; };
+		AF17465A93649A41E9D6F86D /* Trading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Trading.swift; path = EtridWallet/Models/Trading.swift; sourceTree = SOURCE_ROOT; };
+		B4B740DE8433CF70F3CDA403 /* MultiSigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MultiSigView.swift; path = EtridWallet/Views/MultiSig/MultiSigView.swift; sourceTree = SOURCE_ROOT; };
+		B4E1432C950A571F586F336F /* Savings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Savings.swift; path = EtridWallet/Models/Savings.swift; sourceTree = SOURCE_ROOT; };
+		B66B4AE7809C6600E949ED30 /* Contact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Contact.swift; path = EtridWallet/Models/Contact.swift; sourceTree = SOURCE_ROOT; };
+		B9154732855758D633B4535D /* NFTMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NFTMarketplaceView.swift; path = EtridWallet/Views/NFT/NFTMarketplaceView.swift; sourceTree = SOURCE_ROOT; };
+		B97E465A86A12CCDD6F31EE2 /* CreateGoalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateGoalView.swift; path = EtridWallet/Views/Savings/CreateGoalView.swift; sourceTree = SOURCE_ROOT; };
+		BE3C6838D9A54910A0700E06 /* Core/Error/WalletError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Error/WalletError.swift; sourceTree = "<group>"; };
+		BF8A9E7D1A5B4C8E9D2F3A41 /* Resources/BIP39Wordlist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resources/BIP39Wordlist.swift; sourceTree = "<group>"; };
+		C4834C5C800AF518DE2340B2 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BookmarksView.swift; path = EtridWallet/Views/DAppBrowser/BookmarksView.swift; sourceTree = SOURCE_ROOT; };
+		C4FE4FC6B4AE413A573B5F9C /* TradingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TradingView.swift; path = EtridWallet/Views/Trading/TradingView.swift; sourceTree = SOURCE_ROOT; };
+		C66545ADA6CB0778AB55D90E /* BillSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BillSplitView.swift; path = EtridWallet/Views/BillSplit/BillSplitView.swift; sourceTree = SOURCE_ROOT; };
+		C7C253BEB9E64E0B84BCE716 /* Data/DefaultTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data/DefaultTokens.swift; sourceTree = "<group>"; };
+		C8A0493187F5218CDBC8D537 /* WalletConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalletConnect.swift; path = EtridWallet/Models/WalletConnect.swift; sourceTree = SOURCE_ROOT; };
+		C8CF4F4D92B37410345B92E6 /* GPUMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GPUMarketplaceView.swift; path = EtridWallet/Views/GPUMarketplace/GPUMarketplaceView.swift; sourceTree = SOURCE_ROOT; };
+		CC3B1439D2AE4EA5A1A6ACFD /* Views/Onboarding/CreateWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Onboarding/CreateWalletView.swift; sourceTree = "<group>"; };
+		CD5747E1A02194BDC212C4AE /* HyperledgerBridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HyperledgerBridgeService.swift; path = EtridWallet/Services/HyperledgerBridgeService.swift; sourceTree = SOURCE_ROOT; };
+		CEB77A18B1B849EE84A1F6F5 /* Data/Networks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data/Networks.swift; sourceTree = "<group>"; };
+		CF16426D91BCA85E686383BE /* BillSplit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BillSplit.swift; path = EtridWallet/Models/BillSplit.swift; sourceTree = SOURCE_ROOT; };
+		'CF9B0F8E2B6C5D9F0E3G4B52' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/RLPEncoder.swift; sourceTree = "<group>"; };
+		D1697EA33CDE4299B2F942B6 /* Core/Network/NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Network/NetworkManager.swift; sourceTree = "<group>"; };
+		D49B8204B4A04E0BB7BF9EDB /* Views/Home/HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Home/HomeView.swift; sourceTree = "<group>"; };
+		D565C5BF110046489311D8AB /* Storage/WalletStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage/WalletStorage.swift; sourceTree = "<group>"; };
+		DA9E4FD6A73186198986969F /* FiatRamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FiatRamp.swift; path = EtridWallet/Models/FiatRamp.swift; sourceTree = SOURCE_ROOT; };
+		DB3846E6ADF367DA5A8600A4 /* SavingsGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SavingsGoalsView.swift; path = EtridWallet/Views/Savings/SavingsGoalsView.swift; sourceTree = SOURCE_ROOT; };
+		'DF0C1G9F3C7D6E0G1F4H5C63' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data/RPCEndpoints.swift; sourceTree = "<group>"; };
+		E00D484F9293940526D16C4D /* CreateBillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateBillView.swift; path = EtridWallet/Views/BillSplit/CreateBillView.swift; sourceTree = SOURCE_ROOT; };
+		E0774AE2BEEE5BF7B3EFDDC6 /* GPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GPU.swift; path = EtridWallet/Models/GPU.swift; sourceTree = SOURCE_ROOT; };
+		E2624C1580D18A5FDD613E78 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HapticService.swift; path = EtridWallet/Services/HapticService.swift; sourceTree = SOURCE_ROOT; };
+		E28D60ED1F634D43BE0F1C17 /* Views/Components/ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/ErrorView.swift; sourceTree = "<group>"; };
+		E50D4DE3BAA634E2B836E39B /* NetworkSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NetworkSelectorView.swift; path = EtridWallet/Views/Hyperledger/NetworkSelectorView.swift; sourceTree = SOURCE_ROOT; };
+		E97C2A19C3ED4AB082994C6E /* Core/Crypto/CryptoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Crypto/CryptoManager.swift; sourceTree = "<group>"; };
+		E9B94B9D9B5A827AB5F1309A /* RentGPUView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RentGPUView.swift; path = EtridWallet/Views/GPUMarketplace/RentGPUView.swift; sourceTree = SOURCE_ROOT; };
+		EB964403850275083F7EC617 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BiometricService.swift; path = EtridWallet/Services/BiometricService.swift; sourceTree = SOURCE_ROOT; };
+		EBB44331989D69E846ACF609 /* GovernanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GovernanceView.swift; path = EtridWallet/Views/ETHPBC/GovernanceView.swift; sourceTree = SOURCE_ROOT; };
+		ED8241BA8BA64211A6D62C19 /* EtridWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EtridWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFFA4A5784A9C930B1043F4A /* NFTDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NFTDetailView.swift; path = EtridWallet/Views/NFT/NFTDetailView.swift; sourceTree = SOURCE_ROOT; };
+		F13A4592B8E0CAD40AF8710D /* DAO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DAO.swift; path = EtridWallet/Models/DAO.swift; sourceTree = SOURCE_ROOT; };
+		F6794ADA8583F0A008D3934C /* LendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LendingView.swift; path = EtridWallet/Views/Lending/LendingView.swift; sourceTree = SOURCE_ROOT; };
+		F83C4C27B8D044DD477B1034 /* GPUDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GPUDetailView.swift; path = EtridWallet/Views/GPUMarketplace/GPUDetailView.swift; sourceTree = SOURCE_ROOT; };
+		FB1C45508D83DFCFA6C79492 /* CreateMultiSigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateMultiSigView.swift; path = EtridWallet/Views/MultiSig/CreateMultiSigView.swift; sourceTree = SOURCE_ROOT; };
+		FE2F4F26B61EEF6E25F95E82 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainTabView.swift; path = EtridWallet/Views/MainTabView.swift; sourceTree = SOURCE_ROOT; };
+		FF8246EF8C2D246627A3A4C6 /* BillDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BillDetailView.swift; path = EtridWallet/Views/BillSplit/BillDetailView.swift; sourceTree = SOURCE_ROOT; };
+		E7AB2647628349968281C055 /* Views/ConsensusDay/ConsensusDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConsensusDay/ConsensusDayView.swift"; sourceTree = "<group>"; };
+		0066E69074244BAC91D38D76 /* Views/ConsensusDay/ProposalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConsensusDay/ProposalDetailView.swift"; sourceTree = "<group>"; };
+		DA823641BAFF46C2B1C575E3 /* Views/ConsensusDay/DirectorCandidateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConsensusDay/DirectorCandidateDetailView.swift"; sourceTree = "<group>"; };
+		F63CA122C7404D4FBE0D294D /* Views/ConsensusDay/VotingPowerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConsensusDay/VotingPowerDetailView.swift"; sourceTree = "<group>"; };
+		FB9AB9FEFD67416E872A36A2 /* Views/ConsensusDay/RewardsHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConsensusDay/RewardsHistoryView.swift"; sourceTree = "<group>"; };
+		817D178DAEF6435680F6AD9C /* Models/ConsensusDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ConsensusDay.swift"; sourceTree = "<group>"; };
+		7527C4D395BA40D3808C0D91 /* ViewModels/ConsensusDayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/ViewModels/ConsensusDayViewModel.swift"; sourceTree = "<group>"; };
+		14B1339D174644E4B08DCBBA /* Models/CryptoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/Models/CryptoCard.swift"; sourceTree = "<group>"; };
+		1F02E664AC2F4F93BCC171A1 /* ViewModels/CardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/ViewModels/CardViewModel.swift"; sourceTree = "<group>"; };
+		E7D01E6D176940229DECA26E /* Views/Card/CardManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/Views/Card/CardManagementView.swift"; sourceTree = "<group>"; };
+		2458803E475D4BA4A3D8E8FE /* Views/Card/CardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/Views/Card/CardDetailView.swift"; sourceTree = "<group>"; };
+		350B13C83C954BDFBBB680CC /* Views/ConsensusDay/CreateProposalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EtridWallet/Views/ConsensusDay/CreateProposalView.swift"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6F5EA1077A684B7DA6103317 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAA0001,
+				AAAA0002,
+				AAAA0003,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1FDF3BE722C146A2BE8A8730 /* EtridWallet */ = {
+			isa = PBXGroup;
+			children = (
+				9C71C77AB422472D92BCECC7 /* ContentView.swift */,
+				1B8CFB2201114298B39F4B73 /* KeychainManager.swift */,
+				88FD861E10A145128482C888 /* QRScannerView.swift */,
+				4E8A8CC9D72443159B07D5B3 /* WalletApp.swift */,
+				7C319935CD4545FE93652747 /* WalletManager.swift */,
+				AA76AF5586F64B15B2E4689A /* Core/Transaction/TransactionManager.swift */,
+				E97C2A19C3ED4AB082994C6E /* Core/Crypto/CryptoManager.swift */,
+				71FBDDC3DEC448CE8E847510 /* Core/Crypto/HDWalletManager.swift */,
+				329289DD14FE414C8ABAAA24 /* Core/Security/SecurityManager.swift */,
+				D1697EA33CDE4299B2F942B6 /* Core/Network/NetworkManager.swift */,
+				401F71F3123B43BD9BB11660 /* Core/Network/RPCProvider.swift */,
+				BE3C6838D9A54910A0700E06 /* Core/Error/WalletError.swift */,
+				05BA079385F7425299A55A61 /* Utils/Extensions.swift */,
+				31644A8608794367891B9859 /* Utils/Formatters.swift */,
+				35EB1F10523D4BCE9FC45402 /* Models/TransactionModels.swift */,
+				4DE106B1BC0345FF99B63169 /* Models/WalletModels.swift */,
+				6C1568B364314B4EA424FD30 /* Storage/StorageManager.swift */,
+				D565C5BF110046489311D8AB /* Storage/WalletStorage.swift */,
+				C7C253BEB9E64E0B84BCE716 /* Data/DefaultTokens.swift */,
+				CEB77A18B1B849EE84A1F6F5 /* Data/Networks.swift */,
+				7C4760B07098412C81520196 /* Views/Settings/SettingsView.swift */,
+				D49B8204B4A04E0BB7BF9EDB /* Views/Home/HomeView.swift */,
+				0BBD859FD5AC4DDCA282AF82 /* Views/Activity/ActivityView.swift */,
+				6D60148425684D6FBA563610 /* Views/Receive/ReceiveView.swift */,
+				E28D60ED1F634D43BE0F1C17 /* Views/Components/ErrorView.swift */,
+				3E602D64F29C4F0788F9A752 /* Views/Components/LoadingView.swift */,
+				8244DE9C3E68428491E5E4FC /* Views/Send/SendView.swift */,
+				CC3B1439D2AE4EA5A1A6ACFD /* Views/Onboarding/CreateWalletView.swift */,
+				09617E0AEEFB4FBCBF1640CF /* Views/Onboarding/ImportWalletView.swift */,
+				009B5D0D7FB24A36975CB118 /* Views/Onboarding/WelcomeView.swift */,
+				2EB2A9DA250A430E86D244E5 /* Services/BalanceService.swift */,
+				47CC18254BE04BDC824054E3 /* Services/TokenService.swift */,
+				A131BA5BF0424EAFA5F76FAA /* Services/Web3Service.swift */,
+				34116E43AB0145A1991BF86B /* Assets.xcassets */,
+				1CC8700EE34647278FA1F45A /* Info.plist */,
+				BF8A9E7D1A5B4C8E9D2F3A41 /* Resources/BIP39Wordlist.swift */,
+				CF9B0F8E2B6C5D9F0E3G4B52,
+				DF0C1G9F3C7D6E0G1F4H5C63,
+				689D418DA7D5A72AE934AA6D /* NFT.swift */,
+				AF17465A93649A41E9D6F86D /* Trading.swift */,
+				07944E5B9BE5F89442EA5FF5 /* Swap.swift */,
+				26DA41568F19273790300DE9 /* Lending.swift */,
+				B4E1432C950A571F586F336F /* Savings.swift */,
+				DA9E4FD6A73186198986969F /* FiatRamp.swift */,
+				B66B4AE7809C6600E949ED30 /* Contact.swift */,
+				CF16426D91BCA85E686383BE /* BillSplit.swift */,
+				35D44A6F9EA98D4D6BFD5FAE /* Social.swift */,
+				4D6F4CFE8CF0FE18F0A96FBE /* DApp.swift */,
+				C8A0493187F5218CDBC8D537 /* WalletConnect.swift */,
+				817D178DAEF6435680F6AD9C /* Models/ConsensusDay.swift */,
+				E7AB2647628349968281C055 /* Views/ConsensusDay/ConsensusDayView.swift */,
+				0066E69074244BAC91D38D76 /* Views/ConsensusDay/ProposalDetailView.swift */,
+				DA823641BAFF46C2B1C575E3 /* Views/ConsensusDay/DirectorCandidateDetailView.swift */,
+				F63CA122C7404D4FBE0D294D /* Views/ConsensusDay/VotingPowerDetailView.swift */,
+				FB9AB9FEFD67416E872A36A2 /* Views/ConsensusDay/RewardsHistoryView.swift */,
+				F13A4592B8E0CAD40AF8710D /* DAO.swift */,
+				04194573B5DF68352773C208 /* MultiSig.swift */,
+				0C1D4951B0786EB536001024 /* Notification.swift */,
+				53674ADA942D2AA52B64060B /* DeepLink.swift */,
+				E0774AE2BEEE5BF7B3EFDDC6 /* GPU.swift */,
+				83AE47EA8C7638BE2F656198 /* Hyperledger.swift */,
+				546741E885CDDD86D4BEE1C9 /* ETHPBC.swift */,
+				E2624C1580D18A5FDD613E78 /* HapticService.swift */,
+				A36A4B09B48EBF0A4840A506 /* NotificationService.swift */,
+				6715402397AD24A530DC3EF8 /* DeepLinkService.swift */,
+				EB964403850275083F7EC617 /* BiometricService.swift */,
+				A0844A1BADA3E645F0213036 /* AppClipService.swift */,
+				7C444E9EBAAEEDF14BB3C378 /* DAppBrowserService.swift */,
+				9EF94A0B92E87B6AED2FCD9B /* WalletConnectService.swift */,
+				A05F4D3585ACF1631CAE6170 /* DAOService.swift */,
+				6DE643ADAFFFDD7B754E60F1 /* MultiSigService.swift */,
+				86F449A8958E55C447EF8334 /* GPUMarketplaceService.swift */,
+				CD5747E1A02194BDC212C4AE /* HyperledgerBridgeService.swift */,
+				483A4634BC2618E4BCE110D9 /* ETHPBCService.swift */,
+				FE2F4F26B61EEF6E25F95E82 /* MainTabView.swift */,
+				248B4F9B8DCEB48B5EBD6FE2 /* DAppBrowserView.swift */,
+				A34348E88A65F3BCA3D00F4E /* TransactionApprovalView.swift */,
+				C4834C5C800AF518DE2340B2 /* BookmarksView.swift */,
+				3DAA4866ACCCFC77BDBE8BD7 /* SettingsView.swift */,
+				1AC545EC84C1CE5E9A68DE35 /* NotificationSettingsView.swift */,
+				10E041398B43C000F9FF13AD /* SecuritySettingsView.swift */,
+				646B4AE294C33F0272226338 /* BiometricSettingsView.swift */,
+				EBB44331989D69E846ACF609 /* GovernanceView.swift */,
+				83E543D9A9EC3ABF09E1153B /* ETHPBCView.swift */,
+				2608420B87B85D31D149A46A /* StakingView.swift */,
+				42B7437D8C3088A2F3281132 /* OracleView.swift */,
+				7A774002A0291DCF20F42632 /* WrapUnwrapView.swift */,
+				8D3E4573B3BCD788D4355334 /* GoalDetailView.swift */,
+				B97E465A86A12CCDD6F31EE2 /* CreateGoalView.swift */,
+				DB3846E6ADF367DA5A8600A4 /* SavingsGoalsView.swift */,
+				005C47558D87855140CA900B /* RegisterGPUView.swift */,
+				F83C4C27B8D044DD477B1034 /* GPUDetailView.swift */,
+				E9B94B9D9B5A827AB5F1309A /* RentGPUView.swift */,
+				C8CF4F4D92B37410345B92E6 /* GPUMarketplaceView.swift */,
+				83004BACA88382F9917F0ECB /* MyRentalsView.swift */,
+				B9154732855758D633B4535D /* NFTMarketplaceView.swift */,
+				70B64987A094106EC7E59023 /* NFTGalleryView.swift */,
+				EFFA4A5784A9C930B1043F4A /* NFTDetailView.swift */,
+				19BD43C3BA23DD70CF7B91D7 /* ContactsView.swift */,
+				080A4CFD8168DA7780FE1F20 /* AddContactView.swift */,
+				0C324179963B1E14E0F7B42B /* ContactDetailView.swift */,
+				A07A4BD8A1D6CAD3BADBE21E /* TokenSelectorView.swift */,
+				9E2C4125B7992BE6092A887D /* SlippageSettingsView.swift */,
+				1CA344ABA252C18C90A824D1 /* SwapView.swift */,
+				24B04FFBA165E369822DA5C8 /* DAODetailView.swift */,
+				8FF74341932D8304CF5CDDAD /* CreateDAOView.swift */,
+				8C174A0C9C012B6CD94F6AB4 /* DAOListView.swift */,
+				B4B740DE8433CF70F3CDA403 /* MultiSigView.swift */,
+				FB1C45508D83DFCFA6C79492 /* CreateMultiSigView.swift */,
+				89D64ECFA5AC474CCB70C3C1 /* MultiSigWalletDetailView.swift */,
+				E50D4DE3BAA634E2B836E39B /* NetworkSelectorView.swift */,
+				679C485EB7B5EA09326EDE97 /* HyperledgerBridgeView.swift */,
+				A87D43DF93070D7E2093C73C /* BridgeHistoryView.swift */,
+				F6794ADA8583F0A008D3934C /* LendingView.swift */,
+				6F614456AB56C641A4CD584F /* BorrowView.swift */,
+				8F844C12A0F04A653375DFA4 /* PositionsView.swift */,
+				7CFF4F15832CBBDCD8CC706F /* PaymentRequestView.swift */,
+				A37B4D3BB2AF1C74D7B1D24C /* SocialFeedView.swift */,
+				A6A444B2A411E09B0C965FE0 /* SocialTabView.swift */,
+				A1BD49E593CEF365B633E774 /* WalletConnectMainView.swift */,
+				5B8C4F67B6F138A85EAEDE66 /* WalletConnectScannerView.swift */,
+				C66545ADA6CB0778AB55D90E /* BillSplitView.swift */,
+				E00D484F9293940526D16C4D /* CreateBillView.swift */,
+				FF8246EF8C2D246627A3A4C6 /* BillDetailView.swift */,
+				3FC24FE598FC27D77D9272C6 /* BuyCryptoView.swift */,
+				C4FE4FC6B4AE413A573B5F9C /* TradingView.swift */,
+			);
+			path = EtridWallet;
+			sourceTree = "<group>";
+		};
+		D518AA8C1DD1417CA21E6D54 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ED8241BA8BA64211A6D62C19 /* EtridWallet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FA1C8942AD7D47D995386727 = {
+			isa = PBXGroup;
+			children = (
+				1FDF3BE722C146A2BE8A8730 /* EtridWallet */,
+				D518AA8C1DD1417CA21E6D54 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E00FB56220224E8F8EA2CC2C /* EtridWallet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D807EE9AFB894E7EB20CF5D4 /* Build configuration list for PBXNativeTarget "EtridWallet" */;
+			buildPhases = (
+				A419AB731197478FB1DFBB26 /* Sources */,
+				6F5EA1077A684B7DA6103317 /* Frameworks */,
+				E1EE900F339547DC8B183332 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EtridWallet;
+			packageProductDependencies = (
+				BBBB0001,
+				BBBB0002,
+				BBBB0003,
+			);
+			productName = EtridWallet;
+			productReference = ED8241BA8BA64211A6D62C19 /* EtridWallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3D73483A75A44049980D98EA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					E00FB56220224E8F8EA2CC2C = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 27D184E42432437EB642096B /* Build configuration list for PBXProject "EtridWallet" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FA1C8942AD7D47D995386727;
+			packageReferences = (
+				CCCC0001,
+				CCCC0002,
+				CCCC0003,
+			);
+			productRefGroup = D518AA8C1DD1417CA21E6D54 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E00FB56220224E8F8EA2CC2C /* EtridWallet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E1EE900F339547DC8B183332 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				285E561A5C7D42D19459079A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A419AB731197478FB1DFBB26 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A68B8988831D4611AC476D9C /* ContentView.swift in Sources */,
+				A82CBBBDA4784A7590C8A05A /* KeychainManager.swift in Sources */,
+				45687DAC42B7438381CC925B /* QRScannerView.swift in Sources */,
+				77E637929E384F00951694AA /* WalletApp.swift in Sources */,
+				7F37093574784272B870C2C2 /* WalletManager.swift in Sources */,
+				9BB68AF9506247C8BB06B4D4 /* Core/Transaction/TransactionManager.swift in Sources */,
+				86589FE1B1C34DC19FE678E0 /* Core/Crypto/CryptoManager.swift in Sources */,
+				FD6F156807DA4B1BBF61F1A9 /* Core/Crypto/HDWalletManager.swift in Sources */,
+				0B6EA3EB71824484B83A9D22 /* Core/Security/SecurityManager.swift in Sources */,
+				4C83FC19942744D49D2C7F33 /* Core/Network/NetworkManager.swift in Sources */,
+				DB9806734C5147D0A6A1AA5A /* Core/Network/RPCProvider.swift in Sources */,
+				D90F9284322F4BC2805193D5 /* Core/Error/WalletError.swift in Sources */,
+				BBC649CC630147B589EC0A31 /* Utils/Extensions.swift in Sources */,
+				C80F51AF66EE45EA93B5C351 /* Utils/Formatters.swift in Sources */,
+				7F19AC30908B4643B68FC3F1 /* Models/TransactionModels.swift in Sources */,
+				2EDE4A2F49EC4302B44CC5A4 /* Models/WalletModels.swift in Sources */,
+				567CFC09245D40F29D6D0273 /* Storage/StorageManager.swift in Sources */,
+				D4872769477846E699808931 /* Storage/WalletStorage.swift in Sources */,
+				C7BD725AEF01454195EEA68E /* Data/DefaultTokens.swift in Sources */,
+				7EC8915D837E46BD8FE234BE /* Data/Networks.swift in Sources */,
+				7902D6933B5849878A29F1F1 /* Views/Settings/SettingsView.swift in Sources */,
+				98E4E00A527E408B914A3936 /* Views/Home/HomeView.swift in Sources */,
+				B13A863FB0B74F019AE604ED /* Views/Activity/ActivityView.swift in Sources */,
+				61BDD760CBE4479EAAEAE542 /* Views/Receive/ReceiveView.swift in Sources */,
+				C574950038164E4D8AA9E06C /* Views/Components/ErrorView.swift in Sources */,
+				B1CC7B28DC5A4F2295E8B2AC /* Views/Components/LoadingView.swift in Sources */,
+				D5F4BD42B7CB4C34A3E82223 /* Views/Send/SendView.swift in Sources */,
+				9F98E36FB84D44B59763F1F4 /* Views/Onboarding/CreateWalletView.swift in Sources */,
+				9AF65B6B05794DA68C17AF33 /* Views/Onboarding/ImportWalletView.swift in Sources */,
+				60F0EDBB68DE43E984457388 /* Views/Onboarding/WelcomeView.swift in Sources */,
+				DF7423443026417CB0AA42EA /* Services/BalanceService.swift in Sources */,
+				3F816AB93194478AB05E6689 /* Services/TokenService.swift in Sources */,
+				196967A9181C4788A62A7922 /* Services/Web3Service.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* Resources/BIP39Wordlist.swift in Sources */,
+				F2G3B4C5D6E7F8G9A0B1D2E3,
+				G3H4C5D6E7F8G9H0A1B2E3F4,
+				6A0A4FF78EB5174FEA12935F /* NFT.swift in Sources */,
+				90BA4706B3BF7CD816C18C42 /* Trading.swift in Sources */,
+				E26F4E62A65CF2E8F7707C43 /* Swap.swift in Sources */,
+				A5D440E58DDDE611B2D7852E /* Lending.swift in Sources */,
+				489B4328894587BE3B87F8CF /* Savings.swift in Sources */,
+				2FA84CD8B02ABBCE71725D34 /* FiatRamp.swift in Sources */,
+				EBD2402FB8CB7832DB6AFBC8 /* Contact.swift in Sources */,
+				138B4E26B325E069F40DB309 /* BillSplit.swift in Sources */,
+				C6154192AA469CF841873A23 /* Social.swift in Sources */,
+				67974498837FC2373752F89F /* DApp.swift in Sources */,
+				AC004B44AF03C3AE95EAC948 /* WalletConnect.swift in Sources */,
+				5C0142CE891D55B874A4E96F /* DAO.swift in Sources */,
+				775C4235B18266CF0D362EAD /* MultiSig.swift in Sources */,
+				FD4740A8961690946BFD7B93 /* Notification.swift in Sources */,
+				989F4F2082E3031E91909640 /* DeepLink.swift in Sources */,
+				1E2247D2A83DF5AFC171D0FC /* GPU.swift in Sources */,
+				B9C2421A8FE26C72DBB1E58A /* Hyperledger.swift in Sources */,
+				07F24EC48E27C789F159BCB0 /* ETHPBC.swift in Sources */,
+				1B1949FBA32A4580449D7D30 /* HapticService.swift in Sources */,
+				AA1C4EABB057ECB129F16D61 /* NotificationService.swift in Sources */,
+				C2A14D4084608EF5C37A4661 /* DeepLinkService.swift in Sources */,
+				75E6474EBAD7E7D86E02E2DA /* BiometricService.swift in Sources */,
+				BFB14291813F982C46F57E72 /* AppClipService.swift in Sources */,
+				28B24C02B330A81F3552DC04 /* DAppBrowserService.swift in Sources */,
+				7A2C4498B42BB568A4928261 /* WalletConnectService.swift in Sources */,
+				CCB34CFA85B145CE43BBD7D3 /* DAOService.swift in Sources */,
+				0BB44D57AC4191A46EE061C9 /* MultiSigService.swift in Sources */,
+				DB6B49149B41D7DF7F77A0EF /* GPUMarketplaceService.swift in Sources */,
+				53BB44C7BC460E059097B84B /* HyperledgerBridgeService.swift in Sources */,
+				2F5E47D78CEB9488BCD8D8F0 /* ETHPBCService.swift in Sources */,
+				434D4426B4BF31F05AE7D507 /* MainTabView.swift in Sources */,
+				E10944579FAAA9D991904CF0 /* DAppBrowserView.swift in Sources */,
+				31FF4BD1AED14EDEB45FB8CB /* TransactionApprovalView.swift in Sources */,
+				9C884CEBBF78A35E6726B611 /* BookmarksView.swift in Sources */,
+				445D40D89A7B4C3CAA7005DE /* SettingsView.swift in Sources */,
+				AA8D4F5295F346272CB0760D /* NotificationSettingsView.swift in Sources */,
+				6E5048469CF094AA8A99B997 /* SecuritySettingsView.swift in Sources */,
+				7D7F4082ADE638DFBE20ED94 /* BiometricSettingsView.swift in Sources */,
+				DA5E4EA9BCD0363CCC90D4C7 /* GovernanceView.swift in Sources */,
+				C6B1406C8CB4D67B6FE2C8E8 /* ETHPBCView.swift in Sources */,
+				73C3443E98AFAD550BE0B603 /* StakingView.swift in Sources */,
+				6F844978AAFDD923FB633186 /* OracleView.swift in Sources */,
+				A55E4F0093A45FFC05ADA8B0 /* WrapUnwrapView.swift in Sources */,
+				2F15456593155BEB5141F029 /* GoalDetailView.swift in Sources */,
+				EC2E4FB7A8F23BD34D2921AB /* CreateGoalView.swift in Sources */,
+				4D2840D9993932E6D22D6E75 /* SavingsGoalsView.swift in Sources */,
+				D13E4134874089C4F5D8B740 /* RegisterGPUView.swift in Sources */,
+				AD2647D998F5E842EC9A5CAC /* GPUDetailView.swift in Sources */,
+				531B480EAD15761BA1A0617B /* RentGPUView.swift in Sources */,
+				4B804AFDB0A87432A6423A04 /* GPUMarketplaceView.swift in Sources */,
+				BA5345A0A3F832787EF96C61 /* MyRentalsView.swift in Sources */,
+				ED6046EE92973916908BFA72 /* NFTMarketplaceView.swift in Sources */,
+				93F24EA7910D5773AD746A26 /* NFTGalleryView.swift in Sources */,
+				AF76499C89A4871EB6957AAF /* NFTDetailView.swift in Sources */,
+				24BD4A3F8FDF0BAEE702EB4D /* ContactsView.swift in Sources */,
+				7524401AAF21962EB661E787 /* AddContactView.swift in Sources */,
+				EE324788B0EECFF0C8CA3F90 /* ContactDetailView.swift in Sources */,
+				8CFD4786A0D12813DF17E8A4 /* TokenSelectorView.swift in Sources */,
+				07624083B1B1A9BDE6217684 /* SlippageSettingsView.swift in Sources */,
+				2ABA45128EC0A43116828E62 /* SwapView.swift in Sources */,
+				DC854BD98D4B2D85057FB13A /* DAODetailView.swift in Sources */,
+				78A44FA4A431A7F22EB604C8 /* CreateDAOView.swift in Sources */,
+				E9F2428C8CAD05F2B3583889 /* DAOListView.swift in Sources */,
+				51D94390BB797D58B7A0848F /* MultiSigView.swift in Sources */,
+				B2664C26A49A6D50607A3607 /* CreateMultiSigView.swift in Sources */,
+				32254ACCB99D2287A5EC2051 /* MultiSigWalletDetailView.swift in Sources */,
+				C93A4BD3A568A00AB3E2324C /* NetworkSelectorView.swift in Sources */,
+				3B864B38B719748074050DE6 /* HyperledgerBridgeView.swift in Sources */,
+				154A4D2E9E22FE03C6E3495C /* BridgeHistoryView.swift in Sources */,
+				3AC743788909DC5B6B8AAF95 /* LendingView.swift in Sources */,
+				6BB84E99831559F17C6532C1 /* BorrowView.swift in Sources */,
+				928347DF9610FAE24FA2C720 /* PositionsView.swift in Sources */,
+				F5154C36951F1B9315CF9640 /* PaymentRequestView.swift in Sources */,
+				B3DF4D9CA629095C8C272111 /* SocialFeedView.swift in Sources */,
+				00E24249B3CEB3F29822E65A /* SocialTabView.swift in Sources */,
+				28834BDFB4861B02739817FC /* WalletConnectMainView.swift in Sources */,
+				D17741068D42EF8805A66A6D /* WalletConnectScannerView.swift in Sources */,
+				18CE4851B8DE40B036B83464 /* BillSplitView.swift in Sources */,
+				E8AE4F8EB6AC865DE1A3BDC5 /* CreateBillView.swift in Sources */,
+				2D53404B89819DA118CAB614 /* BillDetailView.swift in Sources */,
+				E42B44B2B3DA1B55C3CFCF6C /* BuyCryptoView.swift in Sources */,
+				0F2F4D04AB55D4CFC6F4CAAA /* TradingView.swift in Sources */,
+			
+				D7690EC874BE494C8FC89C80 /* Views/ConsensusDay/ConsensusDayView.swift in Sources */,
+				54CC5AEFA8404719BAC995D6 /* Views/ConsensusDay/ProposalDetailView.swift in Sources */,
+				723B3F37CE674326BB9EBB2A /* Views/ConsensusDay/DirectorCandidateDetailView.swift in Sources */,
+				C3A76B21AA264A8FB8206838 /* Views/ConsensusDay/VotingPowerDetailView.swift in Sources */,
+				71FECE59704F4DCB88F73DB3 /* Views/ConsensusDay/RewardsHistoryView.swift in Sources */,
+				A99F71B3952243F59DCCF39F /* Models/ConsensusDay.swift in Sources */,
+				9C1A8B8B49E44A8187467B7E /* ViewModels/ConsensusDayViewModel.swift in Sources */,
+				BDF85890527B43BF832A7B14 /* Models/CryptoCard.swift in Sources */,
+				A1D8829F3EF94BEE8C305F55 /* ViewModels/CardViewModel.swift in Sources */,
+				F5C6848F11F34795AFBC5EC8 /* Views/Card/CardManagementView.swift in Sources */,
+				43DD7F4965084F809F87F443 /* Views/Card/CardDetailView.swift in Sources */,
+				9BC1DC3777814FF496D058E0 /* Views/ConsensusDay/CreateProposalView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3A9D00C0CDC14D509D1CA244 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		87C0C75F3CBF4987BC487D50 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EtridWallet/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.etrid.wallet;
+				PRODUCT_NAME = EtridWallet;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9206258D1D654C85B6014D71 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		92C523EA74314FE8A5D486EA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EtridWallet/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.etrid.wallet;
+				PRODUCT_NAME = EtridWallet;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		27D184E42432437EB642096B /* Build configuration list for PBXProject "EtridWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A9D00C0CDC14D509D1CA244 /* Debug */,
+				9206258D1D654C85B6014D71 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D807EE9AFB894E7EB20CF5D4 /* Build configuration list for PBXNativeTarget "EtridWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92C523EA74314FE8A5D486EA /* Debug */,
+				87C0C75F3CBF4987BC487D50 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		'CCCC0001' = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/web3swift-team/web3swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.0;
+			};
+		};
+		'CCCC0002' = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/CryptoSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.3;
+			};
+		};
+		'CCCC0003' = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/attaswift/BigInt";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		'BBBB0001' = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCCC0001;
+			productName = web3swift;
+		};
+		'BBBB0002' = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCCC0002;
+			productName = CryptoSwift;
+		};
+		'BBBB0003' = {
+			isa = XCSwiftPackageProductDependency;
+			package = CCCC0003;
+			productName = BigInt;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3D73483A75A44049980D98EA /* Project object */;
+}

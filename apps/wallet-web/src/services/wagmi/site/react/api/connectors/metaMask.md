@@ -1,0 +1,11 @@
+---
+title: metaMask
+---
+
+<script setup>
+const docsPath = 'react'
+const packageName = 'wagmi'
+const connectorsPackageName = 'wagmi/connectors'
+</script>
+
+<!-- @include: @shared/connectors/metaMask.md -->

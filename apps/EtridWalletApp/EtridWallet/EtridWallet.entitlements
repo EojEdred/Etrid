@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Groups for widget and extension sharing -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.etrid.wallet</string>
+    </array>
+
+    <!-- Associated Domains for Universal Links -->
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>applinks:etrid.app</string>
+        <string>applinks:staging.etrid.app</string>
+        <string>applinks:dev.etrid.app</string>
+        <string>webcredentials:etrid.app</string>
+    </array>
+
+    <!-- Push Notifications -->
+    <key>aps-environment</key>
+    <string>development</string>
+
+    <!-- Keychain Sharing -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)com.etrid.wallet</string>
+    </array>
+
+    <!-- Data Protection -->
+    <key>com.apple.developer.default-data-protection</key>
+    <string>NSFileProtectionComplete</string>
+</dict>
+</plist>

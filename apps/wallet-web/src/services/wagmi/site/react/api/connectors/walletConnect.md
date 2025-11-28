@@ -1,0 +1,10 @@
+---
+title: walletConnect
+---
+
+<script setup>
+const packageName = 'wagmi'
+const connectorsPackageName = 'wagmi/connectors'
+</script>
+
+<!-- @include: @shared/connectors/walletConnect.md -->
