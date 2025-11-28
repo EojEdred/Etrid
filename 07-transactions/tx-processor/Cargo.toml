@@ -1,0 +1,28 @@
+[package]
+name = "pallet-tx-processor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Account management pallet for Ëtrid multichain"
+license = "Apache-2.0"
+
+[dependencies]
+codec = { workspace = true }
+scale-info = { workspace = true }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+pallet-transaction = { path = "../types", default-features = false }
+ed25519-dalek = { workspace = true }
+sp-core = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+"codec/std",
+"scale-info/std",
+"frame-support/std",
+"frame-system/std",
+"pallet-transaction/std",
+"ed25519-dalek/std",
+"sp-core/std",
+]

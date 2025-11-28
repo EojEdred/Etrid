@@ -1,0 +1,18 @@
+[package]
+name = "etrid-transactions-cross-chain"
+version = "0.1.0"
+authors = ["Ëtrid Foundation"]
+description = "Cross-chain bridge module for ÉTRID - enables atomic asset transfers between ÉTRID and other blockchains"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+# No external dependencies required - uses only std library
+# The module implements cross-chain bridge logic using standard Rust collections and types
+
+[dev-dependencies]
+# Test dependencies are handled by standard Rust test framework
+
+[features]
+default = ["std"]
+std = []

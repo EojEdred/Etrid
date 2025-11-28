@@ -1,0 +1,31 @@
+[package]
+name = "etrid-lightning-bloc"
+version = "0.1.0"
+authors = ["Ëtrid Foundation"]
+description = "Lightning-Bloc: Layer 2 Payment Channel Implementation for ÉTRID - enables fast, off-chain payments with on-chain settlement"
+license = "Apache-2.0"
+edition = "2021"
+
+[dependencies]
+# Cryptographic hashing for fraud proofs and state verification
+# Note: blake2 0.10.x doesn't have 'alloc' feature - use default for no_std
+blake2 = { version = "0.10", default-features = false }
+
+# Signature verification
+ed25519-dalek = { version = "2.0", default-features = false, features = ["alloc"] }
+
+# Utilities
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+tracing = { version = "0.1", optional = true }
+tokio = { version = "1", features = ["time", "rt", "macros"], optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[features]
+default = ["std"]
+std = ["blake2/std", "ed25519-dalek/std", "hex/std", "tracing", "tokio"]
+
+[[bench]]
+name = "routing_bench"
+harness = false

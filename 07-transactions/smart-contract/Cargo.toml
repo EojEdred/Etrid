@@ -1,0 +1,35 @@
+[package]
+name = "etrid-smart-contract"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ëtrid Foundation"]
+description = "Smart contract execution engine for ÉTRID with WASM support, gas metering, and state management"
+license = "Apache-2.0"
+
+[dependencies]
+# Serialization & Encoding
+codec = { workspace = true }
+scale-info = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# WASM Runtime (for future WASM execution support)
+wasmi = { workspace = true, optional = true }
+
+# Utilities
+hex = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "serde/std",
+    "serde_json/std",
+    "hex/std",
+    "log/std",
+]
+wasm-execution = ["wasmi"]
