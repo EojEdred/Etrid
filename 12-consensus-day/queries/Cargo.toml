@@ -1,0 +1,46 @@
+[package]
+name = "consensus-day-queries"
+version = "0.1.0"
+edition = "2021"
+authors = ["Etrid Foundation"]
+license = "Apache-2.0"
+
+[dependencies]
+# Substrate / Polkadot SDK Dependencies
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+
+# Serialization & Encoding
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Local Consensus-Day Modules
+consensus-day-proposal-system = { path = "../proposal-system", default-features = false }
+consensus-day-voting-protocol = { path = "../voting-protocol", default-features = false }
+consensus-day-minting-logic = { path = "../minting-logic", default-features = false }
+consensus-day-distribution = { path = "../distribution", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "consensus-day-proposal-system/std",
+    "consensus-day-voting-protocol/std",
+    "consensus-day-minting-logic/std",
+    "consensus-day-distribution/std",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "frame-system/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "frame-system/try-runtime",
+]
