@@ -1,10 +1,12 @@
-import { MasterChefStaking } from '@/components/eth-pbc/MasterChefStaking'
-import { Metadata } from 'next'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'ETH PBC Staking | Ëtrid',
-  description: 'Stake LP tokens on ETH Partition Burst Chain and earn ETR rewards',
-}
+import dynamic from 'next/dynamic'
+
+// Dynamically import the staking component to avoid SSR issues with wagmi
+const MasterChefStaking = dynamic(
+  () => import('@/components/eth-pbc/MasterChefStaking').then((mod) => mod.MasterChefStaking),
+  { ssr: false, loading: () => <div className="animate-pulse bg-muted h-96 rounded-lg" /> }
+)
 
 export default function EthPbcStakingPage() {
   return (

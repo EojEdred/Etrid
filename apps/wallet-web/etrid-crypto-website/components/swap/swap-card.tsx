@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronDown, ArrowDownUp, Settings } from "lucide-react"
+import { ChevronDown, ArrowDownUp, Settings, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -10,6 +10,19 @@ import { SwapDetails } from "./swap-details"
 import { ConfirmSwapModal } from "./confirm-swap-modal"
 import type { UseWalletReturn } from "@/lib/polkadot/useWallet"
 import { getSwapBalances } from "@/lib/polkadot/swap"
+import {
+  Network,
+  Token,
+  useQuote,
+  useNetworkSelection,
+  useAvailableTokens,
+  useTokenBalance,
+  useSlippage,
+  WETR_TOKEN,
+  formatTokenAmount,
+  formatUsdValue,
+  getPriceImpactLevel,
+} from "@/lib/dex"
 
 interface SwapCardProps {
   wallet: UseWalletReturn
@@ -18,61 +31,70 @@ interface SwapCardProps {
 export function SwapCard({ wallet }: SwapCardProps) {
   const { isConnected, selectedAccount } = wallet
 
-  const [fromToken, setFromToken] = useState("ÉTR")
-  const [toToken, setToToken] = useState("EDSC")
+  // Network and DEX selection
+  const { network, dex, updateNetwork } = useNetworkSelection(Network.ETHEREUM)
+
+  // Available tokens for selected network
+  const availableTokens = useAvailableTokens(network)
+
+  const [fromToken, setFromToken] = useState<Token | null>(null)
+  const [toToken, setToToken] = useState<Token | null>(null)
   const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
   const [showFromSelector, setShowFromSelector] = useState(false)
   const [showToSelector, setShowToSelector] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isSwapping, setIsSwapping] = useState(false)
-  const [etrBalance, setEtrBalance] = useState(0)
-  const [edscBalance, setEdscBalance] = useState(0)
 
-  // Calculate exchange rate based on direction
-  const exchangeRate = fromToken === 'ÉTR' ? 8.0 : 0.125 // 1 ÉTR = 8 EDSC, 1 EDSC = 0.125 ÉTR
-
-  // Fetch balances for both ÉTR and EDSC when wallet connects
+  // Initialize tokens when available tokens change
   useEffect(() => {
-    if (isConnected && selectedAccount?.address) {
-      getSwapBalances(selectedAccount.address)
-        .then(({ etr, edsc }) => {
-          setEtrBalance(parseFloat(etr.balance))
-          setEdscBalance(parseFloat(edsc.balance))
-        })
-        .catch(console.error)
+    if (availableTokens.length > 0 && !fromToken) {
+      setFromToken(availableTokens[0]) // wETR
+      setToToken(availableTokens[1]) // First base token
     }
-  }, [isConnected, selectedAccount?.address])
+  }, [availableTokens, fromToken])
 
-  // Get balance for current token
-  const fromBalance = isConnected
-    ? (fromToken === 'ÉTR' ? etrBalance : edscBalance)
-    : 0
-  const toBalance = isConnected
-    ? (toToken === 'ÉTR' ? etrBalance : edscBalance)
-    : 0
+  // Slippage management
+  const { slippage, updateSlippage, setCustom: setCustomSlippage } = useSlippage()
+
+  // Get quote from DEX
+  const { quote, loading: quoteLoading, error: quoteError, refetch: refetchQuote } = useQuote(
+    network,
+    fromToken,
+    toToken,
+    fromAmount,
+    slippage
+  )
+
+  // Get token balances
+  const { balance: fromBalance, refetch: refetchFromBalance } = useTokenBalance(
+    network,
+    fromToken?.address || null,
+    selectedAccount?.address || null
+  )
+
+  const { balance: toBalance, refetch: refetchToBalance } = useTokenBalance(
+    network,
+    toToken?.address || null,
+    selectedAccount?.address || null
+  )
+
+  // Calculate output amount from quote
+  const toAmount = quote?.outputAmount || ""
 
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
-    if (value && !isNaN(Number(value))) {
-      const rate = fromToken === 'ÉTR' ? 8.0 : 0.125
-      const calculated = (Number(value) * rate).toFixed(4)
-      setToAmount(calculated)
-    } else {
-      setToAmount("")
-    }
   }
 
   const handleSwapDirection = () => {
+    const tempToken = fromToken
     setFromToken(toToken)
-    setToToken(fromToken)
-    setFromAmount(toAmount)
-    setToAmount(fromAmount)
+    setToToken(tempToken)
+    setFromAmount("")
   }
 
   const handleMaxClick = () => {
-    handleFromAmountChange(fromBalance.toString())
+    handleFromAmountChange(fromBalance)
   }
 
   const getButtonState = () => {
@@ -82,8 +104,20 @@ export function SwapCard({ wallet }: SwapCardProps) {
     if (!fromAmount || Number(fromAmount) === 0) {
       return { text: "Enter amount", disabled: true, variant: "secondary" as const }
     }
-    if (Number(fromAmount) > fromBalance) {
+    if (quoteLoading) {
+      return { text: "Fetching quote...", disabled: true, variant: "secondary" as const }
+    }
+    if (quoteError) {
+      return { text: "Error fetching quote", disabled: true, variant: "destructive" as const }
+    }
+    if (!quote) {
+      return { text: "No quote available", disabled: true, variant: "secondary" as const }
+    }
+    if (Number(fromAmount) > Number(fromBalance)) {
       return { text: "Insufficient balance", disabled: true, variant: "destructive" as const }
+    }
+    if (quote.priceImpact > 10) {
+      return { text: "Price impact too high", disabled: true, variant: "destructive" as const }
     }
     if (isSwapping) {
       return { text: "Swapping...", disabled: true, variant: "default" as const }
@@ -99,22 +133,42 @@ export function SwapCard({ wallet }: SwapCardProps) {
     }
   }
 
+  const priceImpactInfo = quote ? getPriceImpactLevel(quote.priceImpact) : null
+
   return (
     <>
       <Card className="p-6 bg-card/50 backdrop-blur-xl border-border/50">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Swap</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Swap</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {network.toUpperCase()} • {dex.charAt(0).toUpperCase() + dex.slice(1)}
+            </p>
+          </div>
           <Button variant="ghost" size="icon" onClick={() => setShowDetails(!showDetails)}>
             <Settings className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* Network Warning for High Price Impact */}
+        {priceImpactInfo && priceImpactInfo.level === 'high' && (
+          <div className="mb-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-orange-500">High Price Impact</p>
+              <p className="text-muted-foreground">
+                This swap will move the market price by {quote?.priceImpact.toFixed(2)}%
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* From Section */}
         <div className="space-y-2 mb-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">You pay</span>
             <span className="text-muted-foreground">
-              Balance: {fromBalance.toLocaleString()} {fromToken}
+              Balance: {formatTokenAmount(fromBalance)} {fromToken?.symbol || ''}
             </span>
           </div>
 
@@ -133,23 +187,20 @@ export function SwapCard({ wallet }: SwapCardProps) {
                 size="sm"
                 onClick={handleMaxClick}
                 className="text-accent border-accent/50 hover:bg-accent/10 bg-transparent"
+                disabled={!isConnected}
               >
                 MAX
               </Button>
               <Button variant="ghost" onClick={() => setShowFromSelector(true)} className="gap-2 font-semibold">
-                {fromToken}
+                {fromToken?.symbol || 'Select'}
                 <ChevronDown className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
-          {fromAmount && (
+          {fromAmount && quote && (
             <div className="text-sm text-muted-foreground text-right">
-              ≈ $
-              {(Number(fromAmount) * 8).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              ≈ {formatUsdValue(Number(fromAmount) * 8)}
             </div>
           )}
         </div>
@@ -171,29 +222,44 @@ export function SwapCard({ wallet }: SwapCardProps) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">You receive</span>
             <span className="text-muted-foreground">
-              Balance: {toBalance.toLocaleString()} {toToken}
+              Balance: {formatTokenAmount(toBalance)} {toToken?.symbol || ''}
             </span>
           </div>
 
           <div className="flex items-center gap-2 p-4 rounded-xl bg-background/50 border border-border/50">
-            <div className="text-3xl font-bold flex-1">{toAmount || "0.0"}</div>
+            <div className="text-3xl font-bold flex-1">
+              {quoteLoading ? (
+                <span className="text-muted-foreground animate-pulse">Loading...</span>
+              ) : (
+                formatTokenAmount(toAmount)
+              )}
+            </div>
 
             <Button variant="ghost" onClick={() => setShowToSelector(true)} className="gap-2 font-semibold shrink-0">
-              {toToken}
+              {toToken?.symbol || 'Select'}
               <ChevronDown className="w-4 h-4" />
             </Button>
           </div>
 
-          {toAmount && (
+          {toAmount && quote && (
             <div className="text-sm text-muted-foreground text-right">
-              ≈ $
-              {(Number(toAmount) * 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ≈ {formatUsdValue(Number(toAmount) * 1)}
             </div>
           )}
         </div>
 
         {/* Details Dropdown */}
-        {showDetails && <SwapDetails fromAmount={fromAmount} toAmount={toAmount} />}
+        {showDetails && (
+          <SwapDetails
+            fromAmount={fromAmount}
+            toAmount={toAmount}
+            quote={quote}
+            slippage={slippage}
+            onSlippageChange={updateSlippage}
+            onCustomSlippage={setCustomSlippage}
+            network={network}
+          />
+        )}
 
         {/* Swap Button */}
         <Button
@@ -213,7 +279,9 @@ export function SwapCard({ wallet }: SwapCardProps) {
           setFromToken(token)
           setShowFromSelector(false)
         }}
-        currentToken={fromToken}
+        currentToken={fromToken?.symbol || ''}
+        tokens={availableTokens}
+        network={network}
       />
 
       <TokenSelector
@@ -223,30 +291,28 @@ export function SwapCard({ wallet }: SwapCardProps) {
           setToToken(token)
           setShowToSelector(false)
         }}
-        currentToken={toToken}
+        currentToken={toToken?.symbol || ''}
+        tokens={availableTokens}
+        network={network}
       />
 
       <ConfirmSwapModal
         open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        fromToken={fromToken}
-        toToken={toToken}
+        fromToken={fromToken?.symbol || ''}
+        toToken={toToken?.symbol || ''}
         fromAmount={fromAmount}
         toAmount={toAmount}
+        quote={quote}
+        network={network}
+        dex={dex}
         wallet={wallet}
         onSwapComplete={() => {
           setShowConfirmModal(false)
           setFromAmount("")
-          setToAmount("")
           // Refresh balances
-          if (selectedAccount?.address) {
-            getSwapBalances(selectedAccount.address)
-              .then(({ etr, edsc }) => {
-                setEtrBalance(parseFloat(etr.balance))
-                setEdscBalance(parseFloat(edsc.balance))
-              })
-              .catch(console.error)
-          }
+          refetchFromBalance()
+          refetchToBalance()
         }}
       />
     </>

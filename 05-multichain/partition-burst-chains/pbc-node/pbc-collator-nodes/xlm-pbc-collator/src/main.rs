@@ -6,6 +6,7 @@
 
 mod chain_spec;
 mod cli;
+mod rpc;
 mod service;
 mod p2p_config;
 mod p2p_bridge;

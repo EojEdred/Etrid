@@ -107,6 +107,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/matic-pbc-collator",   # MATIC PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/sc-usdt-pbc-collator", # SC-USDT PBC collator node
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/edsc-pbc-collator",   # EDSC PBC collator node
+    "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/ai-compute-pbc-collator", # AI Compute PBC collator node
     "05-multichain/bridges/protocols/common",             # Common bridge protocol components
     "05-multichain/bridges/protocols/bitcoin-bridge",    # Bitcoin bridge pallet
     "05-multichain/bridges/protocols/cardano-bridge",    # Cardano bridge pallet
@@ -200,6 +201,7 @@ members = [
     # ═════════════════════════════════════════════════════════════════════════════
     # 13 - Clients
     # ═════════════════════════════════════════════════════════════════════════════
+    "13-developer-tools/cli/etrust-console",            # ËTRUST - Rust CLI
     # "13-clients/cli/etrust-console",                  # ËTRUST - Rust CLI (disabled - does not exist)
 
     # ═════════════════════════════════════════════════════════════════════════════

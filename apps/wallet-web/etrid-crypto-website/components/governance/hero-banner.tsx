@@ -33,8 +33,9 @@ export default function HeroBanner() {
     <div className="relative overflow-hidden bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border-b border-border">
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Shape Ëtrid's Future
+          Consënsus
         </h1>
+        <p className="text-xl text-muted-foreground mb-4">Shape the future of Ëtridefi Bloc</p>
 
         <div className="mb-6">
           <p className="text-muted-foreground mb-2">Voting ends in:</p>

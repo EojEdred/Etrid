@@ -22,6 +22,9 @@ pub mod ppfa_protocol;
 /// ASF RPC endpoints for querying consensus state
 pub mod asf_rpc;
 
+/// Governance RPC endpoints for querying proposals and Consensus Day
+pub mod governance_rpc;
+
 /// ASF indexer for tracking finality events
 pub mod asf_indexer;
 

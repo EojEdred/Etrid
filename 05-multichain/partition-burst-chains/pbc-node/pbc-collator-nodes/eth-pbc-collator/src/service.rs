@@ -2,7 +2,7 @@
 
 use futures::FutureExt;
 use sc_client_api::{Backend, HeaderBackend};
-use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
+use sc_consensus_asf_pbc::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
@@ -310,6 +310,45 @@ pub async fn start_collator(
     } else {
         log::info!("ℹ️ DETR P2P networking not configured");
     }
+
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RPC SERVER INITIALIZATION - CRITICAL FIX
+    // ═══════════════════════════════════════════════════════════════════════════
+    log::info!("🔧 Initializing RPC server for ETH-PBC Collator...");
+
+    // Build RPC extensions
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |_| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+            };
+
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
+    };
+
+    // Spawn RPC server tasks - THIS STARTS THE JSON-RPC SERVER
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        network: network.clone(),
+        client: client.clone(),
+        keystore: keystore_container.keystore(),
+        task_manager: &mut task_manager,
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder: rpc_extensions_builder,
+        backend: backend.clone(),
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        config,
+        telemetry: telemetry.as_mut(),
+    })?;
+
+    log::info!("✅ RPC server initialized successfully");
 
     Ok(task_manager)
 }

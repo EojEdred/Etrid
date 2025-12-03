@@ -203,10 +203,26 @@ pub mod pallet {
         ValueQuery,
     >;
 
+    /// Authorized relayers who can submit deposits and process burns
+    #[pallet::storage]
+    #[pallet::getter(fn authorized_relayers)]
+    pub type AuthorizedRelayers<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        bool,
+        ValueQuery,
+    >;
+
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
         pub sol_to_etr_rate: u128,
         pub wormhole_enabled: bool,
+        /// Supported SPL tokens: (mint_address, exchange_rate)
+        /// Exchange rate is scaled by 1e9 for Solana (9 decimals)
+        pub supported_tokens: Vec<(SplTokenMint, u128)>,
+        /// Bridge operator account (optional, can be set via extrinsic)
+        pub bridge_operator: Option<T::AccountId>,
         pub _phantom: sp_std::marker::PhantomData<T>,
     }
 
@@ -215,6 +231,8 @@ pub mod pallet {
             Self {
                 sol_to_etr_rate: 1_000_000_000, // 1:1 default
                 wormhole_enabled: false,
+                supported_tokens: Vec::new(),
+                bridge_operator: None,
                 _phantom: Default::default(),
             }
         }
@@ -225,6 +243,17 @@ pub mod pallet {
         fn build(&self) {
             SolToEtrRate::<T>::put(self.sol_to_etr_rate);
             WormholeEnabled::<T>::put(self.wormhole_enabled);
+
+            // Register supported SPL tokens from genesis
+            for (mint, rate) in &self.supported_tokens {
+                SupportedTokens::<T>::insert(mint, true);
+                TokenRates::<T>::insert(mint, *rate);
+            }
+
+            // Set bridge operator if provided
+            if let Some(ref operator) = self.bridge_operator {
+                BridgeOperator::<T>::put(operator.clone());
+            }
         }
     }
 
@@ -363,6 +392,8 @@ pub mod pallet {
         BurnAlreadyProcessed,
         /// Lock account not configured
         LockAccountNotSet,
+        /// Caller is not an authorized relayer
+        NotAuthorizedRelayer,
     }
 
     #[pallet::call]
@@ -765,8 +796,12 @@ pub mod pallet {
             sol_burn_tx: SolanaSignature,
         ) -> DispatchResult {
             // Should be called by authorized relayer/oracle
-            let _relayer = ensure_signed(origin)?;
-            // TODO: Add relayer authorization check
+            let relayer = ensure_signed(origin)?;
+            // Verify relayer is authorized
+            ensure!(
+                AuthorizedRelayers::<T>::get(&relayer),
+                Error::<T>::NotAuthorizedRelayer
+            );
 
             // Verify burn hasn't been processed
             ensure!(
@@ -803,6 +838,30 @@ pub mod pallet {
                 sol_burn_tx,
             });
 
+            Ok(())
+        }
+
+        /// Register an authorized relayer (sudo only)
+        #[pallet::call_index(20)]
+        #[pallet::weight(10_000)]
+        pub fn register_relayer(
+            origin: OriginFor<T>,
+            relayer: T::AccountId,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+            AuthorizedRelayers::<T>::insert(&relayer, true);
+            Ok(())
+        }
+
+        /// Deregister a relayer (sudo only)
+        #[pallet::call_index(21)]
+        #[pallet::weight(10_000)]
+        pub fn deregister_relayer(
+            origin: OriginFor<T>,
+            relayer: T::AccountId,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+            AuthorizedRelayers::<T>::remove(&relayer);
             Ok(())
         }
     }

@@ -9,6 +9,24 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod asf_config;
+mod constants;
+use sp_core::crypto::KeyTypeId;
+use pallet_session::disabling::UpToLimitDisablingStrategy;
+use sp_runtime::{
+    create_runtime_str, generic, impl_opaque_keys,
+    traits::{
+        AccountIdLookup, BlakeTwo256, Block as BlockT, OpaqueKeys,
+    },
+    transaction_validity::{TransactionSource, TransactionValidity},
+    ApplyExtrinsicResult,
+};
+use sp_api::impl_runtime_apis;
+use sp_std::prelude::*;
+#[cfg(feature = "std")]
+use sp_version::NativeVersion;
+use sp_version::RuntimeVersion;
+
 // Import common PBC runtime code from pbc-common
 pub use pbc_common::*;
 
@@ -76,17 +94,43 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // ASF manages consensus internally - no session keys needed
+            // Empty - ASF consensus manages validator rotation internally
+            // Custom EmptySessionHandler below satisfies trait bounds
         }
     }
 }
+
+/// Empty session handler for ASF consensus
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ASF handles validator initialization via ValidatorCommittee
+    }
+
+    fn on_new_session<Ks: OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ASF handles validator rotation via ValidatorCommittee
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ASF handles validator disabling via ValidatorCommittee
+    }
+}
+
+
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("btc-pbc"),
-    impl_name: create_runtime_str!("btc-pbc"),
+    spec_name: create_runtime_str!("bnb-pbc"),
+    impl_name: create_runtime_str!("bnb-pbc"),
     authoring_version: 1,
     spec_version: 100,
     impl_version: 1,
@@ -219,7 +263,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -250,6 +294,50 @@ parameter_types! {
     pub const SessionDuration: BlockNumber = 10 * MINUTES;
 }
 
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>; // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>; // 90% of reward pool goes to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type Currency = Balances;
+    type KeyDeposit = ConstU128<0>; // No deposit required for session keys
+}
+
+
+/// Configure the pallet-etrid-staking (peer roles staking system)
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>; // ~2 days at 6 second blocks
+    type MaxUnbondingEntries = ConstU32<32>; // Max unbonding entries per account
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
+}
+
 impl pallet_consensus::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
@@ -273,6 +361,14 @@ parameter_types! {
 
 // Lock identifier for ETR locking
 const ETR_LOCK_ID: [u8; 8] = *b"etr/lock";
+
+// Treasury stub for bridge fee collection
+pub struct TreasuryStub;
+impl etrid_bridge_common::treasury::TreasuryInterface<AccountId, Balance> for TreasuryStub {
+    fn receive_cross_chain_fees(_amount: Balance) -> frame_support::dispatch::DispatchResult {
+        Ok(()) // Stub implementation - fees are burned for now
+    }
+}
 
 // ETR Lock Configuration (required by bridge pallets)
 parameter_types! {
@@ -311,6 +407,23 @@ impl pallet_bnb_bridge::Config for Runtime {
     type MaxWithdrawalsPerAccount = MaxBnbWithdrawalsPerAccount;
 }
 
+parameter_types! {
+    pub const TreasuryDirectorCount: u8 = 9; // 9 directors
+    pub const TreasuryApprovalThreshold: u8 = 6; // 6-of-9 for normal disbursements
+    pub const TreasuryEmergencyThreshold: u8 = 7; // 7-of-9 for emergency withdrawals
+    pub const TreasuryProposalExpiration: BlockNumber = 7 * DAYS; // 7 days
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]); // Treasury account for staking
+}
+
+impl pallet_treasury_etrid::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type DirectorCount = TreasuryDirectorCount;
+    type ApprovalThreshold = TreasuryApprovalThreshold;
+    type EmergencyThreshold = TreasuryEmergencyThreshold;
+    type ProposalExpiration = TreasuryProposalExpiration;
+    type WeightInfo = ();
+}
 
 // Lightning Channels Configuration
 parameter_types! {
@@ -337,15 +450,21 @@ construct_runtime!(
     {
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
-        Timestamp: pallet_timestamp,Balances: pallet_balances,
+        Timestamp: pallet_timestamp,
+        Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
-        
+        Session: pallet_session,
+
         // Ëtrid Core
         Consensus: pallet_consensus,
+        ValidatorCommittee: pallet_validator_committee,
+        ValidatorRewards: pallet_validator_rewards,
+        EtridStaking: pallet_etrid_staking,
+        EtridTreasury: pallet_treasury_etrid,
         EtrLock: pallet_etr_lock,
-        
-        // Bitcoin Bridge & Lightning
+
+        // BNB Bridge & Lightning
         BnbBridge: pallet_bnb_bridge,
         LightningChannels: pallet_lightning_channels,
     }

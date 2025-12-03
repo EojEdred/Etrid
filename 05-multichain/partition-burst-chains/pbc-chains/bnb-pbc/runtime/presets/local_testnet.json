@@ -9,5 +9,14 @@
   },
   "sudo": {
     "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+  },
+  "bnbBridge": {
+    "bnbToEtrRate": 1000000000000000000,
+    "maxwellUpgradeEnabled": true,
+    "portalBridgeEnabled": false,
+    "supportedTokens": [
+      ["0xcc9b37fed77a01329502f8844620577742eb0dc6", 1000000000000000000]
+    ],
+    "bridgeOperator": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
   }
 }

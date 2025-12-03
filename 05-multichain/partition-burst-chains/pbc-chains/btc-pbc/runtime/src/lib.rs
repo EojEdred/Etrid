@@ -12,6 +12,24 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod asf_config;
+mod constants;
+use sp_core::crypto::KeyTypeId;
+use pallet_session::disabling::UpToLimitDisablingStrategy;
+use sp_runtime::{
+    create_runtime_str, generic, impl_opaque_keys,
+    traits::{
+        AccountIdLookup, BlakeTwo256, Block as BlockT, OpaqueKeys,
+    },
+    transaction_validity::{TransactionSource, TransactionValidity},
+    ApplyExtrinsicResult,
+};
+use sp_api::impl_runtime_apis;
+use sp_std::prelude::*;
+#[cfg(feature = "std")]
+use sp_version::NativeVersion;
+use sp_version::RuntimeVersion;
+
 // Import common PBC runtime code from pbc-common
 pub use pbc_common::*;
 
@@ -79,10 +97,35 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // ASF manages consensus internally - no session keys needed
+            // Empty - ASF consensus manages validator rotation internally
+            // Custom EmptySessionHandler below satisfies trait bounds
         }
     }
 }
+
+/// Empty session handler for ASF consensus
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ASF handles validator initialization via ValidatorCommittee
+    }
+
+    fn on_new_session<Ks: OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ASF handles validator rotation via ValidatorCommittee
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ASF handles validator disabling via ValidatorCommittee
+    }
+}
+
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -100,8 +143,6 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
-/// `SLOT_DURATION` is picked up by `pallet_timestamp` which is in turn picked
-/// up by `pallet_aura` to implement `fn slot_duration()`.
 ///
 /// Change this to adjust the block time.
 pub const MILLISECS_PER_BLOCK: u64 = 6000; // 6 seconds per block for PBC
@@ -217,7 +258,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -259,6 +300,52 @@ impl pallet_consensus::Config for Runtime {
     type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
     type BaseSlotDuration = ConstU64<6000>; // 6 seconds
 }
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>; // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>; // 90% of reward pool goes to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]); // Treasury account for staking
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type Currency = Balances;
+    type KeyDeposit = ConstU128<0>; // No deposit required for session keys
+}
+
+
+/// Configure the pallet-etrid-staking (peer roles staking system)
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>; // ~2 days at 6 second blocks
+    type MaxUnbondingEntries = ConstU32<32>; // Max unbonding entries per account
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
+}
+
 // Lock identifier for ETR locking
 const ETR_LOCK_ID: [u8; 8] = *b"etr/lock";
 
@@ -337,9 +424,14 @@ construct_runtime!(
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
+        Session: pallet_session,
         
         // Ëtrid Core
         Consensus: pallet_consensus,
+        ValidatorCommittee: pallet_validator_committee,
+        ValidatorRewards: pallet_validator_rewards,
+        EtridStaking: pallet_etrid_staking,
+        EtridTreasury: pallet_treasury_etrid,
         EtrLock: pallet_etr_lock,
 
         // Bitcoin Bridge & Lightning
@@ -347,6 +439,24 @@ construct_runtime!(
         LightningChannels: pallet_lightning_channels,
     }
 );
+
+parameter_types! {
+    pub const TreasuryDirectorCount: u8 = 9; // 9 directors
+    pub const TreasuryApprovalThreshold: u8 = 6; // 6-of-9 for normal disbursements
+    pub const TreasuryEmergencyThreshold: u8 = 7; // 7-of-9 for emergency withdrawals
+    pub const TreasuryProposalExpiration: BlockNumber = 7 * DAYS; // 7 days
+}
+
+impl pallet_treasury_etrid::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type DirectorCount = TreasuryDirectorCount;
+    type ApprovalThreshold = TreasuryApprovalThreshold;
+    type EmergencyThreshold = TreasuryEmergencyThreshold;
+    type ProposalExpiration = TreasuryProposalExpiration;
+    type WeightInfo = ();
+}
+
 
 #[cfg(feature = "runtime-benchmarks")]
 #[macro_use]
@@ -378,11 +488,11 @@ impl_runtime_apis! {
     }
 
     impl sp_api::Metadata<Block> for Runtime {
-        fn metadata() -> OpaqueMetadata {
+        fn metadata() -> sp_core::OpaqueMetadata {
             OpaqueMetadata::new(Runtime::metadata().into())
         }
 
-        fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
+        fn metadata_at_version(version: u32) -> Option<sp_core::OpaqueMetadata> {
             Runtime::metadata_at_version(version)
         }
 
@@ -476,13 +586,13 @@ impl_runtime_apis! {
         fn query_info(
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
-        ) -> RuntimeDispatchInfo<Balance> {
+        ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
             TransactionPayment::query_info(uxt, len)
         }
         fn query_fee_details(
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
-        ) -> FeeDetails<Balance> {
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
             TransactionPayment::query_fee_details(uxt, len)
         }
         fn query_weight_to_fee(weight: Weight) -> Balance {

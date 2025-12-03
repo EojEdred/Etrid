@@ -9,5 +9,12 @@
   },
   "sudo": {
     "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+  },
+  "polygonBridge": {
+    "bridgeContract": "0x5566f6fb5cdb3aadf8662f9d1218ce2fc4bc72fb",
+    "checkpointManager": null,
+    "registeredTokens": [
+      ["0x5566f6fb5cdb3aadf8662f9d1218ce2fc4bc72fb", {"contractAddress": "0x5566f6fb5cdb3aadf8662f9d1218ce2fc4bc72fb", "decimals": 18, "symbol": "wETR"}]
+    ]
   }
 }

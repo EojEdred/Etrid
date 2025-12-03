@@ -45,6 +45,44 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+/// Trait for token burn/mint operations
+pub trait TokenOperations<AccountId> {
+	/// Burn tokens from an account
+	fn burn_tokens(account: &AccountId, amount: u128) -> frame_support::dispatch::DispatchResult;
+
+	/// Mint tokens to an account
+	fn mint_tokens(account: &AccountId, amount: u128) -> frame_support::dispatch::DispatchResult;
+}
+
+/// Default implementation (no-op for testing)
+impl<AccountId> TokenOperations<AccountId> for () {
+	fn burn_tokens(_account: &AccountId, _amount: u128) -> frame_support::dispatch::DispatchResult {
+		Ok(())
+	}
+	fn mint_tokens(_account: &AccountId, _amount: u128) -> frame_support::dispatch::DispatchResult {
+		Ok(())
+	}
+}
+
+/// Trait for cross-chain message attestation verification
+pub trait AttestationVerifier {
+	/// Verify attestation for a cross-chain message
+	fn verify_message_attestation(
+		message: &[u8],
+		message_hash: sp_core::H256,
+	) -> frame_support::dispatch::DispatchResult;
+}
+
+/// Default implementation (for testing - no verification)
+impl AttestationVerifier for () {
+	fn verify_message_attestation(
+		_message: &[u8],
+		_message_hash: sp_core::H256,
+	) -> frame_support::dispatch::DispatchResult {
+		Ok(())
+	}
+}
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::{
@@ -55,6 +93,7 @@ pub mod pallet {
 	use sp_runtime::traits::Saturating;
 	use sp_core::H256;
 	use sp_std::vec::Vec;
+	use crate::{TokenOperations, AttestationVerifier};
 
 	/// Domain identifier for different blockchains
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
@@ -167,6 +206,12 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		/// Token operations provider (burn/mint)
+		type TokenOperations: crate::TokenOperations<Self::AccountId>;
+
+		/// Attestation verification provider
+		type AttestationVerifier: crate::AttestationVerifier;
 
 		/// Maximum message body size
 		#[pallet::constant]
@@ -315,6 +360,10 @@ pub mod pallet {
 		MessageTooLarge,
 		/// Attestation verification failed
 		AttestationFailed,
+		/// Token burn operation failed
+		BurnFailed,
+		/// Token mint operation failed
+		MintFailed,
 	}
 
 	#[pallet::hooks]
@@ -383,6 +432,10 @@ pub mod pallet {
 			OutboundMessages::<T>::insert(nonce, message);
 			TotalSent::<T>::mutate(|count| *count = count.saturating_add(1));
 
+			// Burn tokens from sender's account
+			T::TokenOperations::burn_tokens(&sender, amount)
+				.map_err(|_| Error::<T>::BurnFailed)?;
+
 			// Emit event
 			Self::deposit_event(Event::BurnMessageSent {
 				nonce,
@@ -390,9 +443,6 @@ pub mod pallet {
 				amount,
 				recipient,
 			});
-
-			// In production, this would call pallet_edsc_token::burn()
-			// For now, just mark as sent
 
 			Ok(())
 		}
@@ -438,6 +488,14 @@ pub mod pallet {
 			UsedNonces::<T>::insert(cross_chain_msg.source_domain, cross_chain_msg.nonce, true);
 			TotalReceived::<T>::mutate(|count| *count = count.saturating_add(1));
 
+			// Convert recipient bytes to account
+			let recipient_account: T::AccountId = T::AccountId::decode(&mut &burn_msg.mint_recipient[..])
+				.map_err(|_| Error::<T>::InvalidRecipient)?;
+
+			// Mint tokens to recipient
+			T::TokenOperations::mint_tokens(&recipient_account, burn_msg.amount)
+				.map_err(|_| Error::<T>::MintFailed)?;
+
 			// Emit event
 			Self::deposit_event(Event::MessageReceived {
 				source_domain: cross_chain_msg.source_domain,
@@ -445,9 +503,6 @@ pub mod pallet {
 				amount: burn_msg.amount,
 				recipient: burn_msg.mint_recipient.to_vec(),
 			});
-
-			// In production, this would call pallet_edsc_token::mint()
-			// For now, just mark as received
 
 			Ok(())
 		}
@@ -545,14 +600,18 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Verify attestation (placeholder - will call pallet_edsc_bridge_attestation)
-		fn verify_attestation(_message: &[u8], _attestation: &[u8]) -> DispatchResult {
-			// In production, this would:
-			// 1. Call pallet_edsc_bridge_attestation::verify_attestation()
-			// 2. Check M-of-N threshold signatures
-			// 3. Verify signatures are from registered attesters
+		/// Verify attestation using configured verifier
+		fn verify_attestation(message: &[u8], _attestation: &[u8]) -> DispatchResult {
+			// Decode message to get hash
+			let cross_chain_msg = CrossChainMessage::decode(&mut &message[..])
+				.map_err(|_| Error::<T>::InvalidMessageFormat)?;
 
-			// For now, always succeed (placeholder)
+			let message_hash = Self::get_message_hash(&cross_chain_msg);
+
+			// Delegate to configured attestation verifier
+			T::AttestationVerifier::verify_message_attestation(message, message_hash)
+				.map_err(|_| Error::<T>::AttestationFailed)?;
+
 			Ok(())
 		}
 

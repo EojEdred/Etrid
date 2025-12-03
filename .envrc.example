@@ -1,0 +1,47 @@
+# ============================================================================
+# DIRENV CONFIGURATION FOR ËTRID
+# Copy this to .envrc and customize as needed
+# Run: direnv allow
+# ============================================================================
+
+# Rust configuration
+export RUSTFLAGS="-C target-cpu=native"
+export CARGO_INCREMENTAL=1
+
+# Use specific Rust toolchain if needed
+# layout rust stable
+
+# Wasm target for Substrate runtimes
+rustup target add wasm32-unknown-unknown 2>/dev/null || true
+
+# Increase file descriptors
+ulimit -n 10240 2>/dev/null
+
+# Project-specific paths
+export ETRID_ROOT="$(pwd)"
+export ETRID_RUNTIME="${ETRID_ROOT}/runtime"
+export ETRID_PALLETS="${ETRID_ROOT}/pallets"
+
+# Node configuration
+export NODE_ENV="development"
+
+# Python virtual environment (if using Python tools)
+# layout python python3
+
+# Custom environment variables
+export ETRID_NETWORK="testnet"
+export ETRID_LOG_LEVEL="info"
+
+# Add project bin to PATH
+PATH_add ./target/release
+PATH_add ./target/debug
+PATH_add ./scripts
+
+# Load local overrides if they exist
+if [ -f .envrc.local ]; then
+  source_env .envrc.local
+fi
+
+echo "✅ Ëtrid development environment loaded"
+echo "   ETRID_ROOT: $ETRID_ROOT"
+echo "   Rust flags: $RUSTFLAGS"

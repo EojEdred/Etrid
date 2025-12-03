@@ -13,7 +13,7 @@ use sc_client_api::backend::AuxStore;
 use sc_consensus::BlockImportParams;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
-use sp_consensus_asf::{AsfApi, SlotDuration};
+use sp_consensus_asf_pbc::{AsfApi, SlotDuration};
 use sp_consensus_slots::Slot;
 use sp_runtime::{traits::{Block as BlockT, Header as HeaderT}, DigestItem};
 use std::{marker::PhantomData, sync::Arc};

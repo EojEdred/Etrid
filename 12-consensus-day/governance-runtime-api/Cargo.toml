@@ -1,0 +1,31 @@
+[package]
+name = "governance-runtime-api"
+version = "0.1.0"
+authors = ["Ëtrid Foundation"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Runtime API for ËTRID Governance and Consensus Day queries"
+
+[dependencies]
+# Codec
+codec = { workspace = true }
+scale-info = { workspace = true }
+
+# Substrate primitives
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2509", default-features = false }
+
+# Local dependencies
+consensus-day-proposal-system = { path = "../proposal-system", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "scale-info/std",
+    "sp-api/std",
+    "sp-std/std",
+    "sp-runtime/std",
+    "consensus-day-proposal-system/std",
+]

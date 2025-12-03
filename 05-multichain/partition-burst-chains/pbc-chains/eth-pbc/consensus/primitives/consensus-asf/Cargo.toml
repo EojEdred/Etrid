@@ -7,21 +7,20 @@ description = "Primitives for ASF (Adaptive Stake-weighted Finality) consensus -
 license = "Apache-2.0"
 
 [dependencies]
-# Substrate primitives - conditional based on sdk2506 feature
-# Default: use workspace (stable2509), sdk2506 feature: use stable2506
-sp-api = { workspace = true }
-sp-std = { workspace = true }
-sp-runtime = { workspace = true }
-sp-inherents = { workspace = true }
-sp-consensus-slots = { workspace = true }
-sp-timestamp = { workspace = true }
+# Substrate primitives - explicit stable2506
+sp-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-consensus-slots = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-timestamp = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # Codec
-codec = { workspace = true, features = ["derive"] }
-scale-info = { workspace = true, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.7.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
 
 # Async (std only)
-async-trait = { workspace = true, optional = true }
+async-trait = { version = "0.1", default-features = false, optional = true }
 
 [features]
 default = ["std"]

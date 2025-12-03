@@ -2,7 +2,6 @@
 
 use sc_service::ChainType;
 use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
 
 // XLM-PBC Runtime imports
 use xlm_pbc_runtime::{AccountId, WASM_BINARY};
@@ -24,6 +23,20 @@ where
 {
     let public = get_from_seed::<sr25519::Public>(seed);
     public.into()
+}
+
+fn production_genesis() -> serde_json::Value {
+    let endowed_accounts: Vec<AccountId> = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice"),
+        get_account_id_from_seed::<sr25519::Public>("Bob"),
+        get_account_id_from_seed::<sr25519::Public>("Charlie"),
+    ];
+
+    serde_json::json!({
+        "balances": {
+            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
+        }
+    })
 }
 
 /// Development config (single collator)
@@ -57,7 +70,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-/// Production mainnet config with 20 validators
+/// Production mainnet config
 pub fn production_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 
@@ -77,40 +90,4 @@ pub fn production_config() -> Result<ChainSpec, String> {
         props
     })
     .build())
-}
-
-/// Generate production genesis configuration with 20 validators
-fn production_genesis() -> serde_json::Value {
-    // Generate all 20 validator accounts from //Validator{1-20} seeds
-    let validators: Vec<AccountId> = (1..=20)
-        .map(|i| get_account_id_from_seed::<sr25519::Public>(&format!("Validator{}", i)))
-        .collect();
-
-    // Each validator gets 1,000,000 ETRID (with 18 decimals)
-    let balances: Vec<(AccountId, u128)> = validators
-        .iter()
-        .cloned()
-        .map(|k| (k, 1_000_000_000_000_000_000_000_000u128))
-        .collect();
-
-    // Validator config: (account_id, stake, role)
-    // 64,000 ETRID stake per validator (18 decimals)
-    let validator_config: Vec<(AccountId, u128, &str)> = validators
-        .iter()
-        .cloned()
-        .map(|k| (k, 64_000_000_000_000_000_000_000u128, "ValidityNode"))
-        .collect();
-
-    serde_json::json!({
-        "balances": {
-            "balances": balances,
-        },
-        "sudo": {
-            "key": validators[0],
-        },
-        "consensus": {
-            "validators": validator_config,
-            "slotDuration": 6000,
-        }
-    })
 }

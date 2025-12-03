@@ -41,9 +41,8 @@ pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
 pallet-transaction-payment = { workspace = true }
 pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-
-# Balances - NOT in workspace, so explicit dependency
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # RPC Runtime APIs
 frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -53,6 +52,10 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 etrid-primitives = { path = "../../../../primitives", default-features = false }
 pallet-accounts = { path = "../../../../../04-accounts/pallet", default-features = false }
 pallet-consensus = { path = "../../../../../09-consensus/pallet", default-features = false }
+pallet-validator-committee = { path = "../../../../../11-peer-roles/pallet-validator-committee", default-features = false }
+pallet-validator-rewards = { path = "../../../../../11-peer-roles/pallet-validator-rewards", default-features = false }
+pallet-etrid-staking = { path = "../../../../../11-peer-roles/staking/pallet", default-features = false }
+pallet-treasury-etrid = { path = "../../../../../10-foundation/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
 pallet-etr-lock = { path = "../../../../../06-native-currency/pallets/pallet-etr-lock", default-features = false }
 pallet-bitcoin-bridge = { path = "../../../../bridges/protocols/bitcoin-bridge", default-features = false }
 pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
@@ -88,11 +91,16 @@ std = [
     "pallet-timestamp/std",
     "pallet-transaction-payment/std",
     "pallet-insecure-randomness-collective-flip/std",
+    "pallet-session/std",
     "frame-system-rpc-runtime-api/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
     "etrid-primitives/std",
     "pallet-accounts/std",
     "pallet-consensus/std",
+    "pallet-validator-committee/std",
+    "pallet-validator-rewards/std",
+    "pallet-etrid-staking/std",
+    "pallet-treasury-etrid/std",
     "pallet-etr-lock/std",
     "pallet-bitcoin-bridge/std",
     "pallet-lightning-channels/std",

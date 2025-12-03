@@ -17,6 +17,8 @@ pub struct FullDeps<C, P> {
     pub pool: Arc<P>,
     /// Enable ASF RPC endpoints
     pub enable_asf: bool,
+    /// Enable Governance RPC endpoints
+    pub enable_governance: bool,
 }
 
 /// Instantiate all full RPC extensions
@@ -37,7 +39,7 @@ where
     use substrate_frame_rpc_system::{System, SystemApiServer};
 
     let mut module = RpcModule::new(());
-    let FullDeps { client, pool, enable_asf } = deps;
+    let FullDeps { client, pool, enable_asf, enable_governance } = deps;
 
     // Standard Substrate RPC
     module.merge(System::new(client.clone(), pool).into_rpc())?;
@@ -48,6 +50,13 @@ where
         log::info!("🔌 ASF RPC endpoints (temporarily disabled for compilation)");
         // TODO: Re-enable once module path issue is resolved
         // module.merge(crate::asf_rpc::create_asf_rpc(client.clone()))?;
+    }
+
+    // Governance RPC (if enabled)
+    if enable_governance {
+        log::info!("🗳️ Governance RPC endpoints enabled");
+        // TODO: Enable once runtime API is implemented
+        // module.merge(crate::governance_rpc::create_governance_rpc::<_, Block, AccountId>(client.clone()))?;
     }
 
     Ok(module)

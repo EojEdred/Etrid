@@ -12,7 +12,7 @@ use sc_consensus::{
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_consensus::Error as ConsensusError;
-use sp_consensus_asf::AsfApi;
+use sp_consensus_asf_pbc::AsfApi;
 use sp_runtime::traits::Block as BlockT;
 use std::{marker::PhantomData, sync::Arc};
 

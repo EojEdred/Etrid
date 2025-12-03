@@ -18,19 +18,20 @@ export interface ChainConfig {
   type: 'relay' | 'pbc';
 }
 
-// Dual Bootstrap Nodes (VM #1 Alice, VM #2 Bob)
+// Bootstrap Nodes with public SSL endpoint
 export const BOOTSTRAP_NODES = [
-  'ws://20.186.91.207:9944', // VM #1 (Alice) - Primary
-  'ws://172.177.44.73:9944',  // VM #2 (Bob) - Fallback
+  'wss://rpc.etrid.org',       // Public SSL (primary - Caddy auto-SSL)
+  'ws://157.173.200.80:9944',  // Contabo proxy fallback (stable, won't migrate)
+  'ws://100.96.84.69:9944',    // Tailscale fallback (gizzi-io-validator)
 ];
 
 export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
   'primearc-core-chain': {
     id: 'primearc-core-chain',
     name: 'Primearc Core Chain',
-    endpoint: 'ws://20.186.91.207:9944', // VM #1 (Alice) - Primary bootstrap node
+    endpoint: 'wss://rpc.etrid.org', // Public SSL endpoint
     symbol: 'ÉTR',
-    decimals: 18,
+    decimals: 12, // Correct decimals for ETR
     type: 'relay',
   },
   'btc-pbc': {

@@ -18,10 +18,10 @@ export default function GovHeader({ isConnected, walletAddress, onConnect, onDis
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent" />
-          <span className="text-xl font-bold">Ëtrid</span>
+          <span className="text-xl font-bold">Ëtridefi Bloc</span>
         </Link>
 
-        <h1 className="text-2xl font-bold hidden md:block">Consensus Day 2026</h1>
+        <h1 className="text-2xl font-bold hidden md:block">Consënsus Day 2026</h1>
 
         {isConnected ? (
           <DropdownMenu>

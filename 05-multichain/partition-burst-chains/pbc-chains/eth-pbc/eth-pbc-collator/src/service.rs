@@ -2,16 +2,18 @@
 
 use futures::FutureExt;
 use sc_client_api::{Backend, HeaderBackend};
-use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
+use sc_consensus_asf_pbc::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::traits::Header as HeaderT;
 use std::{marker::PhantomData, sync::Arc, time::Duration};
 
 use eth_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
+
+/// Authority ID type for eth-pbc (Ethereum-style AccountId20)
+pub type AuthorityId = AccountId;
 
 pub type FullClient = TFullClient<Block, RuntimeApi, sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>>;
 pub type FullBackend = TFullBackend<Block>;
@@ -68,7 +70,7 @@ pub fn new_partial(
         .build(),
     );
 
-    let import_queue = asf_import_queue::<_, _, _, AuraId>(
+    let import_queue = asf_import_queue::<_, _, _, AuthorityId>(
         client.clone(),
         client.clone(),
         &task_manager.spawn_essential_handle(),

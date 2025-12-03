@@ -21,8 +21,8 @@ futures = "0.3"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-jsonrpsee = { version = "0.16", features = ["server"] }
-tokio = { version = "1", features = ["macros", "time"] }
+jsonrpsee = { version = "0.24.3", features = ["server"] }
+tokio = { version = "1", features = ["macros", "time", "sync"] }
 
 # Substrate Client
 sc-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
@@ -79,7 +79,6 @@ ai-compute-pbc-runtime = { path = "../../../pbc-chains/ai-compute-pbc/runtime" }
 detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
 hex = "0.4"
-tokio = { version = "1", features = ["macros", "time", "sync"] }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }

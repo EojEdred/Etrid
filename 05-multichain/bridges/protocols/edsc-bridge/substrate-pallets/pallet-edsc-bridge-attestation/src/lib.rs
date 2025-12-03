@@ -55,6 +55,7 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_core::{ecdsa, sr25519, H256};
+	use sp_io;
 	use sp_runtime::traits::Saturating;
 	use sp_std::vec::Vec;
 
@@ -586,9 +587,9 @@ pub mod pallet {
 				Error::<T>::InsufficientSignatures
 			);
 
-			// Verify signatures (simplified - in production would verify cryptographically)
+			// Verify signatures cryptographically
 			// For each signature, verify it's from an active attester
-			for (attester_id, _signature) in attestation.signatures.iter() {
+			for (attester_id, signature) in attestation.signatures.iter() {
 				let attester = Attesters::<T>::get(attester_id)
 					.ok_or(Error::<T>::AttesterNotFound)?;
 				ensure!(
@@ -596,8 +597,12 @@ pub mod pallet {
 					Error::<T>::AttesterNotActive
 				);
 
-				// In production, verify signature cryptographically:
-				// Self::verify_signature(&attester.public_key, &message_hash, signature)?;
+				// Cryptographically verify signature
+				Self::verify_signature(
+					&attester.public_key,
+					&message_hash,
+					signature,
+				)?;
 			}
 
 			TotalAttestations::<T>::mutate(|count| *count = count.saturating_add(1));
@@ -704,6 +709,48 @@ pub mod pallet {
 				}
 			}
 			Self::get_threshold_for_message()
+		}
+
+		/// Verify a single ECDSA signature cryptographically
+		fn verify_signature(
+			public_key: &[u8],
+			message_hash: &H256,
+			signature: &[u8],
+		) -> DispatchResult {
+			// Validate signature length (65 bytes for ECDSA: 64 sig + 1 recovery)
+			ensure!(
+				signature.len() == 65,
+				Error::<T>::InvalidSignature
+			);
+
+			// Validate public key length (33 bytes compressed ECDSA)
+			ensure!(
+				public_key.len() == 33,
+				Error::<T>::InvalidPublicKey
+			);
+
+			// Convert to fixed arrays
+			let sig_array: [u8; 65] = signature
+				.try_into()
+				.map_err(|_| Error::<T>::InvalidSignature)?;
+
+			let pubkey_array: [u8; 33] = public_key
+				.try_into()
+				.map_err(|_| Error::<T>::InvalidPublicKey)?;
+
+			// Convert to sp_core ECDSA types
+			let ecdsa_sig = sp_core::ecdsa::Signature::from_raw(sig_array);
+			let ecdsa_pubkey = sp_core::ecdsa::Public::from_raw(pubkey_array);
+
+			// Perform ECDSA verification using Substrate's crypto primitives
+			let is_valid = sp_io::crypto::ecdsa_verify(
+				&ecdsa_sig,
+				&message_hash.0,
+				&ecdsa_pubkey,
+			);
+
+			ensure!(is_valid, Error::<T>::InvalidSignature);
+			Ok(())
 		}
 
 		/// Public verification function (called by other pallets)

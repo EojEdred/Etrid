@@ -1,0 +1,98 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ */
+react {
+    /* Folders */
+    root = file("../../")
+    reactNativeDir = file("../../node_modules/react-native")
+    codegenDir = file("../../node_modules/@react-native/codegen")
+
+    /* Variants */
+    debuggableVariants = ["debug"]
+
+    /* Bundling */
+    entryFile = file("../../index.js")
+    bundleCommand = "bundle"
+
+    /* Hermes */
+    hermesEnabled = true
+
+    /* Enable autolinking of native modules */
+    autolinkLibrariesWithApp()
+}
+
+/**
+ * Set this to true to create four separate APKs instead of one
+ */
+def enableSeparateBuildPerCPUArchitecture = false
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def enableProguardInReleaseBuilds = true
+
+android {
+    ndkVersion = rootProject.ext.ndkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
+    compileSdk = rootProject.ext.compileSdkVersion
+
+    namespace "com.etrid.wallet"
+
+    defaultConfig {
+        applicationId "com.etrid.wallet"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 2
+        versionName "1.0.1"
+    }
+
+    splits {
+        abi {
+            reset()
+            enable enableSeparateBuildPerCPUArchitecture
+            universalApk false
+            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            storeFile file('etridefi-release.keystore')
+            storePassword 'Etridefi2024!'
+            keyAlias 'etridefi-key'
+            keyPassword 'Etridefi2024!'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+    implementation("com.facebook.react:hermes-android")
+
+    // Android dependencies
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'com.google.android.gms:play-services-vision:20.1.3'
+}

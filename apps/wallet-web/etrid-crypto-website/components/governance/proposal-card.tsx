@@ -4,35 +4,70 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react"
-
-interface Proposal {
-  id: number
-  title: string
-  status: "active" | "passed" | "rejected"
-  category: string
-  submittedBy: string
-  submissionDate: string
-  description: string
-  votesYes: number
-  votesNo: number
-  votesAbstain: number
-  totalVotes: number
-  quorumReached: boolean
-  quorumPercentage: number
-  timeLeft: string
-  userVoted: boolean
-  userVote?: "yes" | "no" | "abstain"
-}
+import { Proposal } from "@/lib/polkadot/governance"
+import { formatETR } from "@/lib/governance/hooks"
+import { useEffect, useState } from "react"
 
 interface ProposalCardProps {
   proposal: Proposal
   onClick: () => void
+  userAddress?: string
 }
 
-export default function ProposalCard({ proposal, onClick }: ProposalCardProps) {
-  const yesPercentage = (proposal.votesYes / proposal.totalVotes) * 100
-  const noPercentage = (proposal.votesNo / proposal.totalVotes) * 100
-  const abstainPercentage = (proposal.votesAbstain / proposal.totalVotes) * 100
+// Map categories to display names
+const categoryDisplayNames: Record<string, string> = {
+  InflationRate: "Inflation Rate",
+  ParameterChange: "Parameter Change",
+  BudgetAllocation: "Budget Allocation",
+  ProtocolUpgrade: "Protocol Upgrade",
+  DirectorElection: "Director Election",
+  EmergencyAction: "Emergency Action",
+}
+
+// Map status to UI-friendly status
+const statusMap: Record<string, "active" | "passed" | "rejected"> = {
+  Active: "active",
+  Pending: "active",
+  Approved: "passed",
+  Executed: "passed",
+  Rejected: "rejected",
+  Cancelled: "rejected",
+}
+
+export default function ProposalCard({ proposal, onClick, userAddress }: ProposalCardProps) {
+  // Calculate vote percentages
+  const totalVotesBigInt = BigInt(proposal.votesFor) + BigInt(proposal.votesAgainst) + BigInt(proposal.votesAbstain)
+  const totalVotes = Number(totalVotesBigInt)
+
+  const yesPercentage = totalVotes > 0 ? (Number(BigInt(proposal.votesFor) * BigInt(10000) / totalVotesBigInt) / 100) : 0
+  const noPercentage = totalVotes > 0 ? (Number(BigInt(proposal.votesAgainst) * BigInt(10000) / totalVotesBigInt) / 100) : 0
+  const abstainPercentage = totalVotes > 0 ? (Number(BigInt(proposal.votesAbstain) * BigInt(10000) / totalVotesBigInt) / 100) : 0
+
+  // Countdown timer state
+  const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, minutes: 0 })
+
+  useEffect(() => {
+    // Calculate time remaining based on block time (6 seconds per block)
+    // For active proposals, estimate based on typical voting period
+    if (proposal.status === "Active") {
+      const BLOCKS_PER_DAY = 14400 // 86400 seconds / 6 seconds per block
+      const VOTING_PERIOD_DAYS = 7 // Example: 7 day voting period
+      const TOTAL_VOTING_BLOCKS = BLOCKS_PER_DAY * VOTING_PERIOD_DAYS
+
+      // Calculate blocks since proposal creation (simplified)
+      const currentBlock = Date.now() / 6000 // Very rough estimate
+      const proposalBlock = proposal.createdAt || 0
+      const blocksPassed = Math.max(0, currentBlock - proposalBlock)
+      const blocksRemaining = Math.max(0, TOTAL_VOTING_BLOCKS - blocksPassed)
+
+      const totalSeconds = blocksRemaining * 6
+      const days = Math.floor(totalSeconds / 86400)
+      const hours = Math.floor((totalSeconds % 86400) / 3600)
+      const minutes = Math.floor((totalSeconds % 3600) / 60)
+
+      setTimeRemaining({ days, hours, minutes })
+    }
+  }, [proposal])
 
   const statusColors = {
     active: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -41,22 +76,45 @@ export default function ProposalCard({ proposal, onClick }: ProposalCardProps) {
   }
 
   const categoryColors: Record<string, string> = {
-    "Fiscal Policy": "bg-purple-500/10 text-purple-500",
-    "Protocol Upgrades": "bg-blue-500/10 text-blue-500",
-    Treasury: "bg-amber-500/10 text-amber-500",
+    "InflationRate": "bg-purple-500/10 text-purple-500",
+    "ParameterChange": "bg-blue-500/10 text-blue-500",
+    "BudgetAllocation": "bg-amber-500/10 text-amber-500",
+    "ProtocolUpgrade": "bg-cyan-500/10 text-cyan-500",
+    "DirectorElection": "bg-pink-500/10 text-pink-500",
+    "EmergencyAction": "bg-red-500/10 text-red-500",
   }
 
+  const uiStatus = statusMap[proposal.status] || "active"
+  const displayCategory = categoryDisplayNames[proposal.category] || proposal.category
+
+  // Format vote counts
+  const formatVoteCount = (votes: string) => {
+    const count = Number(BigInt(votes) / BigInt(1e18))
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`
+    return count.toFixed(0)
+  }
+
+  // Format submission date
+  const submissionDate = proposal.createdAt
+    ? new Date(proposal.createdAt * 1000).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Unknown"
+
   return (
-    <Card className="p-6 hover:border-accent/50 transition-all cursor-pointer group">
+    <Card className="p-6 hover:border-accent/50 transition-all cursor-pointer group glass-card">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-mono text-muted-foreground">#{proposal.id}</span>
-            <Badge className={statusColors[proposal.status]}>
-              {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+            <Badge className={statusColors[uiStatus]}>
+              {uiStatus.charAt(0).toUpperCase() + uiStatus.slice(1)}
             </Badge>
-            <Badge className={categoryColors[proposal.category]}>{proposal.category}</Badge>
+            <Badge className={categoryColors[proposal.category]}>{displayCategory}</Badge>
           </div>
         </div>
 
@@ -67,14 +125,14 @@ export default function ProposalCard({ proposal, onClick }: ProposalCardProps) {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent" />
-            <span>{proposal.submittedBy}</span>
+            <span className="font-mono text-xs">{proposal.proposer.slice(0, 6)}...{proposal.proposer.slice(-4)}</span>
           </div>
           <span>•</span>
-          <span>{proposal.submissionDate}</span>
+          <span>{submissionDate}</span>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-muted-foreground line-clamp-3">{proposal.description}</p>
+        <p className="text-sm text-muted-foreground line-clamp-3">{proposal.description || "No description provided"}</p>
         <button onClick={onClick} className="text-sm text-accent hover:underline">
           Read more
         </button>
@@ -88,46 +146,48 @@ export default function ProposalCard({ proposal, onClick }: ProposalCardProps) {
           </div>
 
           <div className="flex justify-between text-xs">
-            <span className="text-green-500">{(proposal.votesYes / 1000000).toFixed(1)}M Yes</span>
-            <span className="text-red-500">{(proposal.votesNo / 1000000).toFixed(1)}M No</span>
-            <span className="text-gray-500">{(proposal.votesAbstain / 1000000).toFixed(1)}M Abstain</span>
+            <span className="text-green-500">{formatVoteCount(proposal.votesFor)} Yes ({yesPercentage.toFixed(1)}%)</span>
+            <span className="text-red-500">{formatVoteCount(proposal.votesAgainst)} No ({noPercentage.toFixed(1)}%)</span>
+            <span className="text-gray-500">{formatVoteCount(proposal.votesAbstain)} Abstain</span>
           </div>
 
           <div className="flex items-center gap-2 text-sm">
-            {proposal.quorumReached ? (
+            {proposal.approved ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                <span className="text-green-500">{proposal.quorumPercentage}% quorum reached</span>
+                <span className="text-green-500">Quorum reached</span>
               </>
             ) : (
               <>
                 <AlertCircle className="w-4 h-4 text-amber-500" />
-                <span className="text-amber-500">{proposal.quorumPercentage}% needed</span>
+                <span className="text-amber-500">Pending quorum</span>
               </>
             )}
           </div>
         </div>
 
-        {/* Time Left */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          <span>{proposal.timeLeft} remaining</span>
-        </div>
+        {/* Time Left (only for active proposals) */}
+        {proposal.status === "Active" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span>
+              {timeRemaining.days > 0 && `${timeRemaining.days}d `}
+              {timeRemaining.hours}h {timeRemaining.minutes}m remaining
+            </span>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2">
-          {proposal.userVoted ? (
-            <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-              You voted: {proposal.userVote?.toUpperCase()} ✅
-            </Badge>
-          ) : (
+          {proposal.status === "Active" ? (
             <Button onClick={onClick} className="flex-1">
-              Vote
+              Vote Now
+            </Button>
+          ) : (
+            <Button onClick={onClick} variant="outline" className="flex-1">
+              View Details
             </Button>
           )}
-          <Button onClick={onClick} variant="outline">
-            Details
-          </Button>
         </div>
       </div>
     </Card>

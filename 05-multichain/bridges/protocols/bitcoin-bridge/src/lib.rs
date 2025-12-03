@@ -171,6 +171,17 @@ pub mod pallet {
         ValueQuery,
     >;
 
+    /// Authorized relayers who can submit deposits and process burns
+    #[pallet::storage]
+    #[pallet::getter(fn authorized_relayers)]
+    pub type AuthorizedRelayers<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        bool,
+        ValueQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -266,6 +277,8 @@ pub mod pallet {
         BurnAlreadyProcessed,
         /// Lock account not configured
         LockAccountNotSet,
+        /// Caller is not an authorized relayer
+        NotAuthorizedRelayer,
     }
 
     #[pallet::genesis_config]
@@ -636,8 +649,12 @@ pub mod pallet {
             bitcoin_burn_tx: Vec<u8>,
         ) -> DispatchResult {
             // Should be called by authorized relayer/oracle
-            let _relayer = ensure_signed(origin)?;
-            // TODO: Add relayer authorization check
+            let relayer = ensure_signed(origin)?;
+            // Verify relayer is authorized
+            ensure!(
+                AuthorizedRelayers::<T>::get(&relayer),
+                Error::<T>::NotAuthorizedRelayer
+            );
 
             // Convert to bounded vec for storage lookup
             let burn_tx_bounded: BoundedVec<u8, ConstU32<64>> = bitcoin_burn_tx.clone().try_into()
@@ -678,6 +695,30 @@ pub mod pallet {
                 bitcoin_burn_tx,
             });
 
+            Ok(())
+        }
+
+        /// Register an authorized relayer (sudo only)
+        #[pallet::call_index(20)]
+        #[pallet::weight(10_000)]
+        pub fn register_relayer(
+            origin: OriginFor<T>,
+            relayer: T::AccountId,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+            AuthorizedRelayers::<T>::insert(&relayer, true);
+            Ok(())
+        }
+
+        /// Deregister a relayer (sudo only)
+        #[pallet::call_index(21)]
+        #[pallet::weight(10_000)]
+        pub fn deregister_relayer(
+            origin: OriginFor<T>,
+            relayer: T::AccountId,
+        ) -> DispatchResult {
+            ensure_root(origin)?;
+            AuthorizedRelayers::<T>::remove(&relayer);
             Ok(())
         }
     }

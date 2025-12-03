@@ -266,7 +266,7 @@ impl pallet_grandpa::Config for Runtime {
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
 
 // ASF Consensus Configuration (replaces Aura/GRANDPA for block production)
-impl pallet_consensus::Config for Runtime {
+impl pallet_consensus_pbc::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = Balances;
 	type RandomnessSource = RandomnessCollectiveFlip;
@@ -503,7 +503,7 @@ mod runtime {
 
 	// ASF Consensus (primary consensus mechanism)
 	#[runtime::pallet_index(6)]
-	pub type Consensus = pallet_consensus;
+	pub type Consensus = pallet_consensus_pbc;
 
 	#[runtime::pallet_index(7)]
 	pub type TransactionPayment = pallet_transaction_payment;
@@ -1060,7 +1060,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl sp_consensus_asf::AsfApi<Block, AccountId> for Runtime {
+	impl sp_consensus_asf_pbc::AsfApi<Block, AccountId> for Runtime {
 		fn committee() -> Vec<AccountId> {
 			Consensus::committee()
 		}
@@ -1069,8 +1069,8 @@ impl_runtime_apis! {
 			Consensus::ppfa_index()
 		}
 
-		fn slot_duration() -> sp_consensus_asf::SlotDuration {
-			sp_consensus_asf::SlotDuration::from_millis(Consensus::slot_duration())
+		fn slot_duration() -> sp_consensus_asf_pbc::SlotDuration {
+			sp_consensus_asf_pbc::SlotDuration::from_millis(Consensus::slot_duration())
 		}
 
 		fn should_propose(validator: AccountId) -> bool {

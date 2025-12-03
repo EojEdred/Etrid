@@ -254,6 +254,45 @@ pub async fn start_collator_with_p2p(
         log::info!("ℹ️ No P2P configuration provided - running without DETR P2P");
     }
 
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RPC SERVER INITIALIZATION - CRITICAL FIX
+    // ═══════════════════════════════════════════════════════════════════════════
+    log::info!("🔧 Initializing RPC server for TRX-PBC Collator...");
+
+    // Build RPC extensions
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |_| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+            };
+
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
+    };
+
+    // Spawn RPC server tasks - THIS STARTS THE JSON-RPC SERVER
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        network: network.clone(),
+        client: client.clone(),
+        keystore: keystore_container.keystore(),
+        task_manager: &mut task_manager,
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder: rpc_extensions_builder,
+        backend: backend.clone(),
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        config,
+        telemetry: telemetry.as_mut(),
+    })?;
+
+    log::info!("✅ RPC server initialized successfully");
+
     Ok(task_manager)
 }
 

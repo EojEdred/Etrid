@@ -188,6 +188,11 @@ pub mod pallet {
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
         pub trx_to_etr_rate: u128,
+        /// Supported TRC-20 tokens: (contract_address, exchange_rate)
+        /// Exchange rate is scaled by 1e6 for Tron (6 decimals)
+        pub supported_tokens: Vec<(TokenContract, u128)>,
+        /// Bridge operator account (optional, can be set via extrinsic)
+        pub bridge_operator: Option<T::AccountId>,
         pub _phantom: PhantomData<T>,
     }
 
@@ -195,6 +200,8 @@ pub mod pallet {
         fn default() -> Self {
             Self {
                 trx_to_etr_rate: 1_000_000, // 1:1 default
+                supported_tokens: Vec::new(),
+                bridge_operator: None,
                 _phantom: Default::default(),
             }
         }
@@ -204,6 +211,17 @@ pub mod pallet {
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
             TrxToEtrRate::<T>::put(self.trx_to_etr_rate);
+
+            // Register supported TRC-20 tokens from genesis
+            for (contract, rate) in &self.supported_tokens {
+                SupportedTokens::<T>::insert(contract, true);
+                TokenRates::<T>::insert(contract, *rate);
+            }
+
+            // Set bridge operator if provided
+            if let Some(ref operator) = self.bridge_operator {
+                BridgeOperator::<T>::put(operator.clone());
+            }
         }
     }
 

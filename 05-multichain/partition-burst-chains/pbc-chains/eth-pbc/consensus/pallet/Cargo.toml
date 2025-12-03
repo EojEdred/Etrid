@@ -7,17 +7,17 @@ description = "FODDoS ASF consensus pallet for Ëtrid multichain"
 license = "Apache-2.0"
 
 [dependencies]
-frame-support.workspace = true
-frame-system.workspace = true
-sp-runtime.workspace = true
-sp-std.workspace = true
-sp-io.workspace = true
-codec.workspace = true
-scale-info.workspace = true
-log.workspace = true
+frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+codec = { package = "parity-scale-codec", version = "3.7.0", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
+log = { version = "0.4", default-features = false }
 
 # Serde for serialization
-serde = { workspace = true, features = ["alloc", "derive"], default-features = false }
+serde = { version = "1.0.208", default-features = false, features = ["alloc", "derive"] }
 
 # Internal Ëtrid dependencies
 pallet-accounts-pbc = { path = "../../04-accounts/pallet", default-features = false }

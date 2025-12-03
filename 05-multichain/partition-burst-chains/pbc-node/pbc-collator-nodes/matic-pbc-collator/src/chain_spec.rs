@@ -1,13 +1,12 @@
-//! Chain specification for BTC-PBC collator
+//! Chain specification for MATIC-PBC collator
 
 use sc_service::ChainType;
 use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
 
-// BTC-PBC Runtime imports
+// MATIC-PBC Runtime imports
 use matic_pbc_runtime::{AccountId, WASM_BINARY};
 
-/// Specialized `ChainSpec` for BTC-PBC
+/// Specialized `ChainSpec` for MATIC-PBC
 pub type ChainSpec = sc_service::GenericChainSpec;
 
 /// Generate a crypto pair from seed
@@ -26,6 +25,20 @@ where
     public.into()
 }
 
+fn production_genesis() -> serde_json::Value {
+    let endowed_accounts: Vec<AccountId> = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice"),
+        get_account_id_from_seed::<sr25519::Public>("Bob"),
+        get_account_id_from_seed::<sr25519::Public>("Charlie"),
+    ];
+
+    serde_json::json!({
+        "balances": {
+            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
+        }
+    })
+}
+
 /// Development config (single collator)
 pub fn development_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
@@ -34,7 +47,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("BTC-PBC Development")
+    .with_name("MATIC-PBC Development")
     .with_id("matic_pbc_dev")
     .with_chain_type(ChainType::Development)
     .with_genesis_config_preset_name(sp_genesis_builder::DEV_RUNTIME_PRESET)
@@ -49,7 +62,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         wasm_binary,
         None,
     )
-    .with_name("BTC-PBC Local Testnet")
+    .with_name("MATIC-PBC Local Testnet")
     .with_id("matic_pbc_local")
     .with_chain_type(ChainType::Local)
     .with_protocol_id("matic-pbc")
@@ -57,7 +70,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-/// Production mainnet config with 20 validators
+/// Production mainnet config
 pub fn production_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 
@@ -77,40 +90,4 @@ pub fn production_config() -> Result<ChainSpec, String> {
         props
     })
     .build())
-}
-
-/// Generate production genesis configuration with 20 validators
-fn production_genesis() -> serde_json::Value {
-    // Generate all 20 validator accounts from //Validator{1-20} seeds
-    let validators: Vec<AccountId> = (1..=20)
-        .map(|i| get_account_id_from_seed::<sr25519::Public>(&format!("Validator{}", i)))
-        .collect();
-
-    // Each validator gets 1,000,000 ETRID (with 18 decimals)
-    let balances: Vec<(AccountId, u128)> = validators
-        .iter()
-        .cloned()
-        .map(|k| (k, 1_000_000_000_000_000_000_000_000u128))
-        .collect();
-
-    // Validator config: (account_id, stake, role)
-    // 64,000 ETRID stake per validator (18 decimals)
-    let validator_config: Vec<(AccountId, u128, &str)> = validators
-        .iter()
-        .cloned()
-        .map(|k| (k, 64_000_000_000_000_000_000_000u128, "ValidityNode"))
-        .collect();
-
-    serde_json::json!({
-        "balances": {
-            "balances": balances,
-        },
-        "sudo": {
-            "key": validators[0],
-        },
-        "consensus": {
-            "validators": validator_config,
-            "slotDuration": 6000,
-        }
-    })
 }

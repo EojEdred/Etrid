@@ -1,7 +1,7 @@
 # ËTRID IVORY PAPER - VOLUME 3: GOVERNANCE & ECONOMICS
 
-**Version**: 2.0-Governance
-**Last Updated**: November 16, 2025
+**Version**: 2.1-Governance
+**Last Updated**: December 2, 2025
 **Status**: Living Document
 **License**: GPLv3
 **Audience**: Community Members, Governance Participants, Policy Makers
@@ -486,24 +486,97 @@ Actual Bonus = 54.79 × 1.0 × 0.9 = 49.31 ÉTR/day
 
 ## 3. Consensus Day Voting
 
-### 3.1 Annual Schedule
+### 3.1 Annual Schedule & Calendar-Based Phases
 
-**Date**: Third Friday of November (each year)
+The ËTRID governance operates on a **calendar-based phase system** that automatically determines what governance actions are available at any given time:
 
-**2025-2030 Schedule**:
-- **2025**: November 21
-- **2026**: November 20
-- **2027**: November 19
-- **2028**: November 17
-- **2029**: November 16
-- **2030**: November 15
+```
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                    ËTRID ANNUAL GOVERNANCE CALENDAR                           ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
 
-**Voting Window**: 24 hours (00:00 UTC to 23:59 UTC)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  JANUARY 1 - NOVEMBER 30 (334 days)                                         │
+│  ═══════════════════════════════════                                         │
+│  REGISTRATION PHASE                                                          │
+│  • Submit new governance proposals                                           │
+│  • Register as Director candidate (30 days before Dec 1)                     │
+│  • Stake ÉTR to increase voting power                                        │
+│  • Proposal bond: 10,000 ÉTR (refunded if approved)                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  DECEMBER 1 (24 hours)                                                       │
+│  ════════════════════                                                        │
+│  CONSENSUS DAY - VOTING PHASE                                                │
+│  • Cast votes on all active proposals                                        │
+│  • Director elections                                                        │
+│  • Annual inflation rate vote                                                │
+│  • Budget allocation votes                                                   │
+│  • Voting window: 00:00 UTC to 23:59 UTC                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  DECEMBER 2-30 (29 days)                                                     │
+│  ════════════════════════                                                    │
+│  EXECUTION PHASE                                                             │
+│  • Approved proposals are implemented                                        │
+│  • Director transition period                                                │
+│  • Protocol upgrades deployed                                                │
+│  • Budget allocations activated                                              │
+│  • NO new proposals accepted                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  DECEMBER 31 (24 hours)                                                      │
+│  ══════════════════════                                                      │
+│  DISTRIBUTION & MINTING PHASE                                                │
+│  • Annual treasury distribution executed                                     │
+│  • Voter participation rewards distributed                                   │
+│  • Year-end accounting finalized                                             │
+│  • New fiscal year prepared                                                  │
+│  • New Directors officially take office at midnight                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-**Why Third Friday of November?**
-- Avoids major holidays (Thanksgiving in late November, Christmas in December)
-- Consistent annual date (easy to remember)
-- Aligns with fiscal year planning (January 1st start)
+#### Phase Detection (On-Chain Implementation)
+
+The current governance phase is determined automatically by the calendar date:
+
+```swift
+/// Determines the current Consensus Day phase based on calendar date
+public static func currentPhase(for date: Date = Date()) -> ConsensusDayPhase {
+    let calendar = Calendar.current
+    let month = calendar.component(.month, from: date)
+    let day = calendar.component(.day, from: date)
+
+    switch month {
+    case 12: // December
+        switch day {
+        case 1:
+            return .voting      // Consensus Day
+        case 2...30:
+            return .execution   // Implementation period
+        case 31:
+            return .distribution // Year-end distribution
+        default:
+            return .inactive
+        }
+    default: // January through November
+        return .registration    // Proposals accepted
+    }
+}
+```
+
+#### Phase Properties
+
+| Phase | Dates | Duration | Proposals Accepted | Voting Active |
+|-------|-------|----------|-------------------|---------------|
+| **Registration** | Jan 1 - Nov 30 | 334 days | ✅ Yes | ❌ No |
+| **Voting** | Dec 1 | 24 hours | ❌ No | ✅ Yes |
+| **Execution** | Dec 2-30 | 29 days | ❌ No | ❌ No |
+| **Distribution** | Dec 31 | 24 hours | ❌ No | ❌ No |
+
+**Why December 1st for Consensus Day?**
+- Fixed, memorable date (same day every year)
+- Aligns with fiscal year planning (before January 1st start)
+- Allows 29-day execution period for complex implementations
+- After major November holidays globally
+- New Directors take office January 1st with fresh fiscal year
 
 ### 3.2 Voting Topics & Proposals
 
@@ -1885,10 +1958,37 @@ Total: 50,000 ÉTR distributed
 - **Governance Portal**: https://gov.etrid.org
 - **Community Forum**: https://forum.etrid.org
 
+**Mobile Wallet Governance Features**:
+
+The ËTRID iOS Wallet (`EtridWalletSwift`) implements the calendar-based governance phase system with the following features:
+
+| Feature | Description |
+|---------|-------------|
+| **CalendarPhaseBanner** | Shows current governance phase with countdown |
+| **Phase Detection** | Automatic phase detection based on system date |
+| **Proposal Submission** | Only enabled during Registration phase (Jan 1 - Nov 30) |
+| **Requirements Checker** | Shows wallet connection, bond availability, and phase status |
+| **Phase Schedule Display** | Visual timeline showing all 4 governance phases |
+| **Consensus Day Countdown** | Days remaining until next December 1st |
+
+**Example Phase Banner (December 2nd)**:
+```
+┌────────────────────────────────────────────────────┐
+│ 🔨 Execution Period                                │
+│    Execution                                       │
+│                                      28 days       │
+│                                  until completion  │
+│ [○] Registration [○] Voting [●] Execution [○] Dist │
+└────────────────────────────────────────────────────┘
+```
+
+Source: `apps/EtridWalletSwift/Sources/EtridWalletSwift/Models/GovernanceModels.swift`
+
 **Next Steps**:
 1. Review and provide feedback on governance proposals
-2. Participate in Consensus Day voting (November 15, 2025)
+2. Participate in Consensus Day voting (December 1, 2025)
 3. Apply for grants or contribute to development
 4. Join as community ambassador
+5. Download ËTRID Wallet for mobile governance participation
 
 *For updates and latest governance decisions, visit: https://docs.etrid.org*

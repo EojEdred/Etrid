@@ -28,7 +28,7 @@ use sc_consensus_slots::BackoffAuthoringBlocksStrategy;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_consensus::{Environment, Error as ConsensusError, Proposer, SyncOracle};
-use sp_consensus_asf::{AsfApi, SlotDuration};
+use sp_consensus_asf_pbc::{AsfApi, SlotDuration};
 use sp_consensus_slots::Slot;
 use sp_inherents::{CreateInherentDataProviders, InherentDataProvider};
 use sp_keystore::KeystorePtr;

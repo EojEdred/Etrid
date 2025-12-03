@@ -930,6 +930,12 @@ parameter_types! {
 
 impl pallet_edsc_bridge_token_messenger::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+    /// Token operations - use default (no-op) implementation for now
+    /// TODO: Connect to pallet_balances for actual burn/mint
+    type TokenOperations = ();
+    /// Attestation verifier - use default for now
+    /// TODO: Connect to pallet_edsc_bridge_attestation for real verification
+    type AttestationVerifier = ();
     type MaxMessageBodySize = FlareTokenMessengerMaxMessageBodySize;
     type MaxBurnAmount = FlareTokenMessengerMaxBurnAmount;
     type DailyBurnCap = FlareTokenMessengerDailyBurnCap;
@@ -1653,6 +1659,180 @@ impl_runtime_apis! {
     // - Governance proposals
     // - Cross-chain coordination via XCM
     // ═══════════════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GOVERNANCE & CONSENSUS DAY RUNTIME APIs
+    // ═══════════════════════════════════════════════════════════════════════════════
+    impl governance_runtime_api::GovernanceApi<Block, AccountId> for Runtime {
+        fn get_proposals() -> Vec<governance_runtime_api::ProposalInfo<AccountId>> {
+            // Query proposals from Consensus Day pallet
+            pallet_consensus_day::Proposals::<Runtime>::iter()
+                .map(|(id, p)| governance_runtime_api::ProposalInfo {
+                    id,
+                    proposer: p.proposer,
+                    title: p.title.to_vec(),
+                    description: Vec::new(), // Description not stored in main struct
+                    category: match p.category {
+                        pallet_consensus_day::ProposalCategory::InflationRate => 0,
+                        pallet_consensus_day::ProposalCategory::ParameterChange => 1,
+                        pallet_consensus_day::ProposalCategory::BudgetAllocation => 2,
+                        pallet_consensus_day::ProposalCategory::ProtocolUpgrade => 3,
+                        pallet_consensus_day::ProposalCategory::DirectorElection => 4,
+                        pallet_consensus_day::ProposalCategory::EmergencyAction => 5,
+                    },
+                    status: if p.executed { 4 } else if p.approved { 2 } else { 1 },
+                    votes_for: p.yes_votes,
+                    votes_against: p.no_votes,
+                    votes_abstain: p.abstain_votes,
+                    created_at: 0, // Block number when created
+                    approved: p.approved,
+                    executed: p.executed,
+                })
+                .collect()
+        }
+
+        fn get_proposal(id: u64) -> Option<governance_runtime_api::ProposalInfo<AccountId>> {
+            pallet_consensus_day::Proposals::<Runtime>::get(id)
+                .map(|p| governance_runtime_api::ProposalInfo {
+                    id,
+                    proposer: p.proposer,
+                    title: p.title.to_vec(),
+                    description: Vec::new(),
+                    category: match p.category {
+                        pallet_consensus_day::ProposalCategory::InflationRate => 0,
+                        pallet_consensus_day::ProposalCategory::ParameterChange => 1,
+                        pallet_consensus_day::ProposalCategory::BudgetAllocation => 2,
+                        pallet_consensus_day::ProposalCategory::ProtocolUpgrade => 3,
+                        pallet_consensus_day::ProposalCategory::DirectorElection => 4,
+                        pallet_consensus_day::ProposalCategory::EmergencyAction => 5,
+                    },
+                    status: if p.executed { 4 } else if p.approved { 2 } else { 1 },
+                    votes_for: p.yes_votes,
+                    votes_against: p.no_votes,
+                    votes_abstain: p.abstain_votes,
+                    created_at: 0,
+                    approved: p.approved,
+                    executed: p.executed,
+                })
+        }
+
+        fn get_consensus_day_phase() -> governance_runtime_api::ConsensusDayPhaseInfo {
+            let state = pallet_consensus_day::ConsensusDayState::<Runtime>::get();
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+
+            governance_runtime_api::ConsensusDayPhaseInfo {
+                phase: match state.phase {
+                    pallet_consensus_day::Phase::Inactive => 0,
+                    pallet_consensus_day::Phase::Registration => 1,
+                    pallet_consensus_day::Phase::Voting => 2,
+                    pallet_consensus_day::Phase::Minting => 3,
+                    pallet_consensus_day::Phase::Distribution => 4,
+                },
+                phase_start_block: state.phase_start_block,
+                event_start_block: state.event_start_block,
+                year: state.year,
+                blocks_remaining: 0, // TODO: Calculate based on phase duration
+            }
+        }
+
+        fn is_consensus_day_active() -> bool {
+            let state = pallet_consensus_day::ConsensusDayState::<Runtime>::get();
+            !matches!(state.phase, pallet_consensus_day::Phase::Inactive)
+        }
+
+        fn get_voting_power(account: AccountId) -> governance_runtime_api::VotingPowerInfo {
+            pallet_consensus_day::VotingPowerMap::<Runtime>::get(&account)
+                .map(|vp| governance_runtime_api::VotingPowerInfo {
+                    staked_amount: vp.staked_amount.saturated_into(),
+                    voting_power: vp.voting_power,
+                    participation_history: vp.participation_history,
+                    can_vote: vp.voting_power > 0,
+                })
+                .unwrap_or(governance_runtime_api::VotingPowerInfo {
+                    staked_amount: 0,
+                    voting_power: 0,
+                    participation_history: 0,
+                    can_vote: false,
+                })
+        }
+
+        fn get_proposal_votes(proposal_id: u64) -> Vec<governance_runtime_api::VoteInfo<AccountId>> {
+            pallet_consensus_day::Votes::<Runtime>::iter_prefix(proposal_id)
+                .map(|(voter, record)| governance_runtime_api::VoteInfo {
+                    voter,
+                    proposal_id,
+                    vote_type: match record.ballot {
+                        pallet_consensus_day::Ballot::Yes => 0,
+                        pallet_consensus_day::Ballot::No => 1,
+                        pallet_consensus_day::Ballot::Abstain => 2,
+                    },
+                    voting_power: 0, // Not stored in vote record
+                })
+                .collect()
+        }
+
+        fn get_vote_counts(proposal_id: u64) -> (u128, u128, u128) {
+            pallet_consensus_day::Proposals::<Runtime>::get(proposal_id)
+                .map(|p| (p.yes_votes, p.no_votes, p.abstain_votes))
+                .unwrap_or((0, 0, 0))
+        }
+
+        fn get_elected_directors() -> Vec<AccountId> {
+            pallet_consensus_day::ElectedDirectors::<Runtime>::get().to_vec()
+        }
+
+        fn get_director_candidates() -> Vec<governance_runtime_api::DirectorInfo<AccountId>> {
+            pallet_consensus_day::DirectorCandidates::<Runtime>::iter()
+                .map(|(account, candidate)| governance_runtime_api::DirectorInfo {
+                    account,
+                    stake: candidate.stake.saturated_into(),
+                    votes: candidate.votes,
+                })
+                .collect()
+        }
+
+        fn get_distribution_info() -> governance_runtime_api::DistributionInfo {
+            let (foundation, directors, validators, voters) =
+                pallet_consensus_day::FeeDistributionBreakdown::<Runtime>::get();
+
+            governance_runtime_api::DistributionInfo {
+                total_minted: pallet_consensus_day::TotalMinted::<Runtime>::get().saturated_into(),
+                foundation_share: foundation.saturated_into(),
+                directors_share: directors.saturated_into(),
+                validators_share: validators.saturated_into(),
+                voters_share: voters.saturated_into(),
+                fees_distributed: pallet_consensus_day::FeesDistributed::<Runtime>::get().saturated_into(),
+            }
+        }
+
+        fn get_governance_stats() -> governance_runtime_api::GovernanceStats {
+            let proposals: Vec<_> = pallet_consensus_day::Proposals::<Runtime>::iter().collect();
+            let total = proposals.len() as u64;
+            let approved = proposals.iter().filter(|(_, p)| p.approved).count() as u64;
+            let rejected = proposals.iter().filter(|(_, p)| !p.approved && p.executed).count() as u64;
+            let active = total - approved - rejected;
+
+            governance_runtime_api::GovernanceStats {
+                total_proposals: total,
+                active_proposals: active,
+                approved_proposals: approved,
+                rejected_proposals: rejected,
+                total_votes_cast: 0, // TODO: Sum all vote counts
+                unique_voters: 0, // TODO: Count unique voters
+                circulating_supply: pallet_consensus_day::CirculatingSupply::<Runtime>::get().saturated_into(),
+                quorum_threshold: 33, // 33% community quorum
+            }
+        }
+
+        fn get_participation_reward(account: AccountId) -> u128 {
+            pallet_consensus_day::ParticipationRewards::<Runtime>::get(&account)
+                .saturated_into()
+        }
+
+        fn get_inflation_rate() -> u32 {
+            pallet_consensus_day::InflationRate::<Runtime>::get()
+        }
+    }
 
     #[cfg(feature = "try-runtime")]
     impl frame_try_runtime::TryRuntime<Block> for Runtime {

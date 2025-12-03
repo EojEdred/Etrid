@@ -204,11 +204,27 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// Authorized relayers who can submit deposits and process burns
+	#[pallet::storage]
+	#[pallet::getter(fn authorized_relayers)]
+	pub type AuthorizedRelayers<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		bool,
+		ValueQuery,
+	>;
+
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub bnb_to_etr_rate: u128,
 		pub maxwell_upgrade_enabled: bool,
 		pub portal_bridge_enabled: bool,
+		/// Supported BEP-20 tokens: (contract_address, exchange_rate)
+		/// Exchange rate is scaled by 1e18 (e.g., 1e18 = 1:1)
+		pub supported_tokens: Vec<(Bep20Contract, u128)>,
+		/// Bridge operator account (optional, can be set via extrinsic)
+		pub bridge_operator: Option<T::AccountId>,
 		pub _phantom: PhantomData<T>,
 	}
 
@@ -218,6 +234,8 @@ pub mod pallet {
 				bnb_to_etr_rate: 1_000_000_000_000_000_000, // 1:1 default
 				maxwell_upgrade_enabled: true,
 				portal_bridge_enabled: false,
+				supported_tokens: Vec::new(),
+				bridge_operator: None,
 				_phantom: Default::default(),
 			}
 		}
@@ -229,6 +247,17 @@ pub mod pallet {
 			BnbToEtrRate::<T>::put(self.bnb_to_etr_rate);
 			MaxwellUpgradeEnabled::<T>::put(self.maxwell_upgrade_enabled);
 			PortalBridgeEnabled::<T>::put(self.portal_bridge_enabled);
+
+			// Register supported BEP-20 tokens from genesis
+			for (contract, rate) in &self.supported_tokens {
+				SupportedTokens::<T>::insert(contract, true);
+				TokenRates::<T>::insert(contract, *rate);
+			}
+
+			// Set bridge operator if provided
+			if let Some(ref operator) = self.bridge_operator {
+				BridgeOperator::<T>::put(operator.clone());
+			}
 		}
 	}
 
@@ -350,6 +379,8 @@ pub mod pallet {
 		BurnAlreadyProcessed,
 		/// Lock account not configured
 		LockAccountNotSet,
+		/// Caller is not an authorized relayer
+		NotAuthorizedRelayer,
 	}
 
 	#[pallet::call]
@@ -786,8 +817,12 @@ pub mod pallet {
 			bnb_burn_tx: BnbTxHash,
 		) -> DispatchResult {
 			// Should be called by authorized relayer/oracle
-			let _relayer = ensure_signed(origin)?;
-			// TODO: Add relayer authorization check
+			let relayer = ensure_signed(origin)?;
+			// Verify relayer is authorized
+			ensure!(
+				AuthorizedRelayers::<T>::get(&relayer),
+				Error::<T>::NotAuthorizedRelayer
+			);
 
 			// Verify burn hasn't been processed
 			ensure!(
@@ -824,6 +859,30 @@ pub mod pallet {
 				bnb_burn_tx,
 			});
 
+			Ok(())
+		}
+
+		/// Register an authorized relayer (sudo only)
+		#[pallet::call_index(20)]
+		#[pallet::weight(10_000)]
+		pub fn register_relayer(
+			origin: OriginFor<T>,
+			relayer: T::AccountId,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			AuthorizedRelayers::<T>::insert(&relayer, true);
+			Ok(())
+		}
+
+		/// Deregister a relayer (sudo only)
+		#[pallet::call_index(21)]
+		#[pallet::weight(10_000)]
+		pub fn deregister_relayer(
+			origin: OriginFor<T>,
+			relayer: T::AccountId,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			AuthorizedRelayers::<T>::remove(&relayer);
 			Ok(())
 		}
 	}

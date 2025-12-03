@@ -25,6 +25,7 @@ consensus-day-voting-protocol = { path = "../../../12-consensus-day/voting-proto
 consensus-day-distribution = { path = "../../../12-consensus-day/distribution", default-features = false }
 consensus-day-minting-logic = { path = "../../../12-consensus-day/minting-logic", default-features = false }
 consensus-day-queries = { path = "../../../12-consensus-day/queries", default-features = false }
+governance-runtime-api = { path = "../../../12-consensus-day/governance-runtime-api", default-features = false }
 
 # Transaction pallets (07-transactions)
 pallet-tx-processor = { path = "../../../07-transactions/tx-processor", default-features = false }
@@ -187,6 +188,7 @@ std = [
     "consensus-day-distribution/std",
     "consensus-day-minting-logic/std",
     "consensus-day-queries/std",
+    "governance-runtime-api/std",
 
     # Transaction pallets
     "pallet-tx-processor/std",

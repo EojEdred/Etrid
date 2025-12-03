@@ -8,9 +8,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Ëtrid - Decentralized Democracy of Stakeholders",
-  description: "Multichain blockchain with on-chain governance and adaptive consensus",
-  generator: "v0.app",
+  title: "Ëtridefi Bloc - DeFi Wallet",
+  description: "Multichain DeFi wallet with swap, staking, and consënsus governance",
+  generator: "Ëtridefi Bloc",
 }
 
 export default function RootLayout({

@@ -207,6 +207,17 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
+	/// Authorized relayers who can submit deposits and process burns
+	#[pallet::storage]
+	#[pallet::getter(fn authorized_relayers)]
+	pub type AuthorizedRelayers<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		bool,
+		ValueQuery,
+	>;
+
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub xrp_to_etr_rate: u128,
@@ -352,6 +363,8 @@ pub mod pallet {
 		BurnAlreadyProcessed,
 		/// Lock account not configured
 		LockAccountNotSet,
+		/// Caller is not an authorized relayer
+		NotAuthorizedRelayer,
 	}
 
 	#[pallet::call]
@@ -785,8 +798,12 @@ pub mod pallet {
 			xrp_burn_tx: XrpTxHash,
 		) -> DispatchResult {
 			// Should be called by authorized relayer/oracle
-			let _relayer = ensure_signed(origin)?;
-			// TODO: Add relayer authorization check
+			let relayer = ensure_signed(origin)?;
+			// Verify relayer is authorized
+			ensure!(
+				AuthorizedRelayers::<T>::get(&relayer),
+				Error::<T>::NotAuthorizedRelayer
+			);
 
 			// Verify burn hasn't been processed
 			ensure!(
@@ -823,6 +840,30 @@ pub mod pallet {
 				xrp_burn_tx,
 			});
 
+			Ok(())
+		}
+
+		/// Register an authorized relayer (sudo only)
+		#[pallet::call_index(20)]
+		#[pallet::weight(10_000)]
+		pub fn register_relayer(
+			origin: OriginFor<T>,
+			relayer: T::AccountId,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			AuthorizedRelayers::<T>::insert(&relayer, true);
+			Ok(())
+		}
+
+		/// Deregister a relayer (sudo only)
+		#[pallet::call_index(21)]
+		#[pallet::weight(10_000)]
+		pub fn deregister_relayer(
+			origin: OriginFor<T>,
+			relayer: T::AccountId,
+		) -> DispatchResult {
+			ensure_root(origin)?;
+			AuthorizedRelayers::<T>::remove(&relayer);
 			Ok(())
 		}
 	}

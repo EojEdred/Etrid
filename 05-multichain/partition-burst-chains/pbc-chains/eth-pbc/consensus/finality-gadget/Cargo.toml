@@ -6,11 +6,11 @@ authors = ["Ëtrid Foundation"]
 license = "Apache-2.0"
 
 [dependencies]
-sp-core = { workspace = true }
-sp-runtime = { workspace = true }
-sp-std = { workspace = true }
-codec = { workspace = true }
-scale-info = { workspace = true }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+codec = { package = "parity-scale-codec", version = "3.7.0", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
 
 # Async runtime
 tokio = { version = "1.36", features = ["full"] }
@@ -30,7 +30,7 @@ sha2 = "0.10"
 hex = "0.4"
 
 [dev-dependencies]
-sp-io = { workspace = true }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 [features]
 default = ["std"]

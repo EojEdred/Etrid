@@ -1,21 +1,22 @@
-import Hero from "@/components/hero"
-import Features from "@/components/features"
-import Stats from "@/components/stats"
-import Architecture from "@/components/architecture"
-import Roadmap from "@/components/roadmap"
-import Community from "@/components/community"
-import Footer from "@/components/footer"
+'use client'
+
+import dynamic from 'next/dynamic'
+
+const WalletDashboard = dynamic(
+  () => import('@/components/wallet/WalletDashboard'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen gradient-bg-animated flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 mb-4" />
+          <div className="h-4 w-32 bg-white/10 rounded" />
+        </div>
+      </div>
+    )
+  }
+)
 
 export default function Home() {
-  return (
-    <main className="min-h-screen">
-      <Hero />
-      <Features />
-      <Stats />
-      <Architecture />
-      <Roadmap />
-      <Community />
-      <Footer />
-    </main>
-  )
+  return <WalletDashboard />
 }

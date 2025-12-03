@@ -148,6 +148,25 @@ jobs:
           mkdir -p deployment/systemd
 
           for COLLATOR in btc sol bnb edsc eth xrp matic sc-usdt xlm trx ada link doge; do
+            # Assign unique RPC ports per PBC to avoid conflicts
+            # PrimearC Core uses 9944, so PBCs use 9945+
+            case "${COLLATOR}" in
+              btc)      RPC_PORT=9956; P2P_PORT=30340; WS_PORT=9945 ;;  # BTC reassigned to 9956 (was 9944 - conflict!)
+              xrp)      RPC_PORT=9945; P2P_PORT=30341; WS_PORT=9946 ;;
+              bnb)      RPC_PORT=9946; P2P_PORT=30342; WS_PORT=9947 ;;
+              sol)      RPC_PORT=9947; P2P_PORT=30343; WS_PORT=9948 ;;
+              ada)      RPC_PORT=9948; P2P_PORT=30344; WS_PORT=9949 ;;
+              doge)     RPC_PORT=9949; P2P_PORT=30345; WS_PORT=9950 ;;
+              trx)      RPC_PORT=9950; P2P_PORT=30346; WS_PORT=9951 ;;
+              matic)    RPC_PORT=9951; P2P_PORT=30347; WS_PORT=9952 ;;
+              xlm)      RPC_PORT=9952; P2P_PORT=30348; WS_PORT=9953 ;;
+              link)     RPC_PORT=9953; P2P_PORT=30349; WS_PORT=9954 ;;
+              sc-usdt)  RPC_PORT=9954; P2P_PORT=30350; WS_PORT=9955 ;;
+              edsc)     RPC_PORT=9955; P2P_PORT=30351; WS_PORT=9956 ;;
+              eth)      RPC_PORT=9957; P2P_PORT=30352; WS_PORT=9958 ;;  # ETH not in original mapping
+              *)        RPC_PORT=9960; P2P_PORT=30360; WS_PORT=9961 ;;
+            esac
+
             cat > "deployment/systemd/${COLLATOR}-pbc-collator.service" <<EOF
           [Unit]
           Description=${COLLATOR^^} PBC Collator Node
@@ -162,11 +181,11 @@ jobs:
           ExecStart=/opt/etrid/bin/${COLLATOR}-pbc-collator \\
             --chain=/opt/etrid/chainspecs/${COLLATOR}-pbc-chainspec.json \\
             --base-path=/opt/etrid/${COLLATOR}-pbc/data \\
-            --port=3033\${NODE_ID} \\
-            --rpc-port=944\${NODE_ID} \\
-            --ws-port=933\${NODE_ID} \\
-            --prometheus-port=961\${NODE_ID} \\
-            --name=${COLLATOR^^}-Validator-\${NODE_ID} \\
+            --port=${P2P_PORT} \\
+            --rpc-port=${RPC_PORT} \\
+            --ws-port=${WS_PORT} \\
+            --prometheus-port=\$((9615 + \${NODE_ID:-1})) \\
+            --name=${COLLATOR^^}-Validator-\${NODE_ID:-1} \\
             --validator \\
             --rpc-cors=all \\
             --rpc-methods=Safe \\

@@ -180,7 +180,7 @@ parameter_types! {
 // Configure pallet_timestamp
 impl pallet_timestamp::Config for Runtime {
     type Moment = u64;
-    type OnTimestampSet = Aura;
+    type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = ();
 }

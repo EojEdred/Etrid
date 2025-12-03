@@ -8,20 +8,20 @@ license = "Apache-2.0"
 
 [dependencies]
 # Substrate primitives
-sp-core = { workspace = true }
-sp-std = { workspace = true }
-sp-runtime = { workspace = true }
-sp-io = { workspace = true }
+sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # Codec
-codec = { workspace = true }
-scale-info = { workspace = true }
+codec = { package = "parity-scale-codec", version = "3.7.0", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
 
 # Serialization
-serde = { workspace = true }
+serde = { version = "1.0.208", default-features = false, features = ["derive", "alloc"] }
 
 # Logging
-log = { workspace = true }
+log = { version = "0.4", default-features = false }
 
 # Internal dependencies
 asf-algorithm-pbc = { path = "../asf-algorithm", default-features = false }
@@ -38,9 +38,9 @@ thiserror = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true }
 
 [dev-dependencies]
-sp-io = { workspace = true }
-sp-core = { workspace = true }
-tokio = { workspace = true, features = ["test-util"] }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+tokio = { version = "1", features = ["test-util", "macros", "time"] }
 
 [features]
 default = ["std"]

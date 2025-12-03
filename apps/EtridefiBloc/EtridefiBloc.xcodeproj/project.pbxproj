@@ -1,0 +1,607 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0501AC73322A8AF9571A4220 /* RPCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F557C238C17708AD1DE25F50 /* RPCService.swift */; };
+		0D8E7EB77D61823A1DBFCE68 /* TokensView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45095E7C6F14C6933EFE7B /* TokensView.swift */; };
+		11E1A8C4A739E527957BC32A /* WalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC92C2F0EB04F56629F3291D /* WalletApp.swift */; };
+		126D9B8318E0EBE82447AD84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EBE8C3685FE08D23A14381D5 /* Assets.xcassets */; };
+		AAA111111111111111111111 /* BalanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB111111111111111111111 /* BalanceService.swift */; };
+		AAA222222222222222222222 /* ContractAddresses.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB222222222222222222222 /* ContractAddresses.swift */; };
+		AAA333333333333333333333 /* DEXService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB333333333333333333333 /* DEXService.swift */; };
+		AAA444444444444444444444 /* LiquidityPoolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB444444444444444444444 /* LiquidityPoolService.swift */; };
+		AAA555555555555555555555 /* PriceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB555555555555555555555 /* PriceService.swift */; };
+		AAA666666666666666666666 /* TransactionSigningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB666666666666666666666 /* TransactionSigningService.swift */; };
+		AAA777777777777777777777 /* SwapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB777777777777777777777 /* SwapView.swift */; };
+		13B6AF8CF2737BD010BD9B1A /* WalletCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 389E5C73A8A0B997329D6CF7 /* WalletCore.swift */; };
+		28DB10247AC1EB1DDA92C146 /* CryptoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F7F8B53519D9AE335DC2FA /* CryptoUtils.swift */; };
+		2B125C13DBA62C9A1C596E3C /* Blake2 in Frameworks */ = {isa = PBXBuildFile; productRef = 71DF6496EA17944734A96105 /* Blake2 */; };
+		2CDBBEFDB51D15715034CE03 /* GovernanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C24CE6C59DDFBF563660B0 /* GovernanceService.swift */; };
+		2EAC6926EB8D9EB8BE16B739 /* EtridWalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AE36B035D634378E44B266 /* EtridWalletApp.swift */; };
+		3C853F77019583ED3686C70C /* DeFiHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBBA198BBBA86CD82E311C33 /* DeFiHubView.swift */; };
+		40A810F5FB94E4F694F285F7 /* WalletModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF71EE865E9014A23A8BBD0 /* WalletModels.swift */; };
+		4D2D5D49A074978C4138C0F7 /* Base58Swift in Frameworks */ = {isa = PBXBuildFile; productRef = D23FF7F5E1C0238C2673A706 /* Base58Swift */; };
+		55E6EAED1943EE28F688DFFC /* GovernanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC4CAFAE7393ABC402E71E1D /* GovernanceView.swift */; };
+		5766DA1053BD4DC21DC17F3F /* SendReceiveViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E94E5539DCA097083D61A8 /* SendReceiveViews.swift */; };
+		5D547C0A5F999800373CFA16 /* P256K in Frameworks */ = {isa = PBXBuildFile; productRef = 4A1B0383707C9A4505BED2EC /* P256K */; };
+		6BA1CBEDC074B2070E38CC47 /* HDWalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFAACA6FC97A21EF13445873 /* HDWalletManager.swift */; };
+		8B2DE61628F0BAEC9EF5291E /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = 4BBE55C9514FF93B126C4697 /* QRCode */; };
+		92D48E656AB7D8CA89C2D8DF /* DeFiHubModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D692D46B2C2E60CCA921876 /* DeFiHubModels.swift */; };
+		9A5F31AFFC75858D48D99FB8 /* etrid_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = DD77A8E438D4CB4889610674 /* etrid_logo.png */; };
+		A1928B58BA1C927CC9995313 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 177831F1FB4153A57056DC14 /* MainTabView.swift */; };
+		B23DB841E0AE634F786C589A /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CB5823D8006FA26E4523D4 /* OnboardingView.swift */; };
+		B77257ACAD3C2DE7E7938CC6 /* ATMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF3F99F66340927562A8EB22 /* ATMService.swift */; };
+		B80A55100D9FFBDF74E2B0A2 /* BridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 688739E5E282314B5828BC2E /* BridgeService.swift */; };
+		C4A85AE4A2FDBFD2A4AE6141 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC55F9CB36BE17DAA544C20D /* KeychainManager.swift */; };
+		CC8E314CB7433566AAC8F945 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F2530487481F49BAC4357E /* SettingsView.swift */; };
+		DE8D3B0DA1DB4F7D075251B7 /* GovernanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11307ED6437EB10A31DAE4AA /* GovernanceModels.swift */; };
+		F6282A8934FBAF2AC6F3DB91 /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7239E9D814B88319418CB387 /* CryptoSwift */; };
+		FE9BC44535E18BD09851CB3A /* NetworkConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A550008ED7141DBC566B80DA /* NetworkConfig.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A45095E7C6F14C6933EFE7B /* TokensView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokensView.swift; sourceTree = "<group>"; };
+		11307ED6437EB10A31DAE4AA /* GovernanceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernanceModels.swift; sourceTree = "<group>"; };
+		BBB111111111111111111111 /* BalanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceService.swift; sourceTree = "<group>"; };
+		BBB222222222222222222222 /* ContractAddresses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractAddresses.swift; sourceTree = "<group>"; };
+		BBB333333333333333333333 /* DEXService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DEXService.swift; sourceTree = "<group>"; };
+		BBB444444444444444444444 /* LiquidityPoolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidityPoolService.swift; sourceTree = "<group>"; };
+		BBB555555555555555555555 /* PriceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceService.swift; sourceTree = "<group>"; };
+		BBB666666666666666666666 /* TransactionSigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionSigningService.swift; sourceTree = "<group>"; };
+		BBB777777777777777777777 /* SwapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwapView.swift; sourceTree = "<group>"; };
+		177831F1FB4153A57056DC14 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		1D692D46B2C2E60CCA921876 /* DeFiHubModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeFiHubModels.swift; sourceTree = "<group>"; };
+		25E94E5539DCA097083D61A8 /* SendReceiveViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendReceiveViews.swift; sourceTree = "<group>"; };
+		27CB5823D8006FA26E4523D4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		389E5C73A8A0B997329D6CF7 /* WalletCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletCore.swift; sourceTree = "<group>"; };
+		688739E5E282314B5828BC2E /* BridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeService.swift; sourceTree = "<group>"; };
+		84F2530487481F49BAC4357E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1AE36B035D634378E44B266 /* EtridWalletApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtridWalletApp.swift; sourceTree = "<group>"; };
+		A550008ED7141DBC566B80DA /* NetworkConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConfig.swift; sourceTree = "<group>"; };
+		AFAACA6FC97A21EF13445873 /* HDWalletManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDWalletManager.swift; sourceTree = "<group>"; };
+		B3F7F8B53519D9AE335DC2FA /* CryptoUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoUtils.swift; sourceTree = "<group>"; };
+		BC55F9CB36BE17DAA544C20D /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		BC92C2F0EB04F56629F3291D /* WalletApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletApp.swift; sourceTree = "<group>"; };
+		BDF71EE865E9014A23A8BBD0 /* WalletModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletModels.swift; sourceTree = "<group>"; };
+		CF3F99F66340927562A8EB22 /* ATMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ATMService.swift; sourceTree = "<group>"; };
+		DC4CAFAE7393ABC402E71E1D /* GovernanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernanceView.swift; sourceTree = "<group>"; };
+		DD77A8E438D4CB4889610674 /* etrid_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = etrid_logo.png; sourceTree = "<group>"; };
+		E696A13848A469834B394D76 /* EtridWallet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EtridWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EBBA198BBBA86CD82E311C33 /* DeFiHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeFiHubView.swift; sourceTree = "<group>"; };
+		EBE8C3685FE08D23A14381D5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F557C238C17708AD1DE25F50 /* RPCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCService.swift; sourceTree = "<group>"; };
+		F5C24CE6C59DDFBF563660B0 /* GovernanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernanceService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		29F9968B3AE72F2FCDFC95DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D547C0A5F999800373CFA16 /* P256K in Frameworks */,
+				8B2DE61628F0BAEC9EF5291E /* QRCode in Frameworks */,
+				F6282A8934FBAF2AC6F3DB91 /* CryptoSwift in Frameworks */,
+				2B125C13DBA62C9A1C596E3C /* Blake2 in Frameworks */,
+				4D2D5D49A074978C4138C0F7 /* Base58Swift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0AEC5BF86C105876FB2595C5 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				BC55F9CB36BE17DAA544C20D /* KeychainManager.swift */,
+				389E5C73A8A0B997329D6CF7 /* WalletCore.swift */,
+				B7B630742B747C1D10601876 /* Crypto */,
+				0F02E820AAF616B3E921F8DE /* Network */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		0F02E820AAF616B3E921F8DE /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				A550008ED7141DBC566B80DA /* NetworkConfig.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		2856E47858AEF373C134C7FC /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1D692D46B2C2E60CCA921876 /* DeFiHubModels.swift */,
+				11307ED6437EB10A31DAE4AA /* GovernanceModels.swift */,
+				BDF71EE865E9014A23A8BBD0 /* WalletModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		3C40966CF70F6CE31E92C01B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				EBBA198BBBA86CD82E311C33 /* DeFiHubView.swift */,
+				DC4CAFAE7393ABC402E71E1D /* GovernanceView.swift */,
+				177831F1FB4153A57056DC14 /* MainTabView.swift */,
+				27CB5823D8006FA26E4523D4 /* OnboardingView.swift */,
+				25E94E5539DCA097083D61A8 /* SendReceiveViews.swift */,
+				84F2530487481F49BAC4357E /* SettingsView.swift */,
+				BBB777777777777777777777 /* SwapView.swift */,
+				0A45095E7C6F14C6933EFE7B /* TokensView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		798A8964C8F3C9B0F8DB3334 /* EtridWalletSwift */ = {
+			isa = PBXGroup;
+			children = (
+				BC92C2F0EB04F56629F3291D /* WalletApp.swift */,
+				0AEC5BF86C105876FB2595C5 /* Core */,
+				2856E47858AEF373C134C7FC /* Models */,
+				E1CC99A6159272B9C2A2983A /* Resources */,
+				EF131CC2F85916FCEA0A0D4F /* Services */,
+				3C40966CF70F6CE31E92C01B /* Views */,
+			);
+			name = EtridWalletSwift;
+			path = Sources/EtridWalletSwift;
+			sourceTree = "<group>";
+		};
+		9103AB0B7C30A0BAA04E64D5 /* AppSources */ = {
+			isa = PBXGroup;
+			children = (
+				A1AE36B035D634378E44B266 /* EtridWalletApp.swift */,
+			);
+			path = AppSources;
+			sourceTree = "<group>";
+		};
+		9D4197E436E67B43C5BC3271 /* EtridWalletSwift */ = {
+			isa = PBXGroup;
+			children = (
+				798A8964C8F3C9B0F8DB3334 /* EtridWalletSwift */,
+			);
+			name = EtridWalletSwift;
+			sourceTree = "<group>";
+		};
+		B3B484667769E998A954B3F7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E696A13848A469834B394D76 /* EtridWallet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B7B630742B747C1D10601876 /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				B3F7F8B53519D9AE335DC2FA /* CryptoUtils.swift */,
+				AFAACA6FC97A21EF13445873 /* HDWalletManager.swift */,
+			);
+			path = Crypto;
+			sourceTree = "<group>";
+		};
+		DBD924AEB867EDCD54D4D2D0 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9103AB0B7C30A0BAA04E64D5 /* AppSources */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		E1CC99A6159272B9C2A2983A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				EBE8C3685FE08D23A14381D5 /* Assets.xcassets */,
+				DD77A8E438D4CB4889610674 /* etrid_logo.png */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		E69668CC375C4A92943EC2D0 = {
+			isa = PBXGroup;
+			children = (
+				DBD924AEB867EDCD54D4D2D0 /* App */,
+				9D4197E436E67B43C5BC3271 /* EtridWalletSwift */,
+				B3B484667769E998A954B3F7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EF131CC2F85916FCEA0A0D4F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				CF3F99F66340927562A8EB22 /* ATMService.swift */,
+				BBB111111111111111111111 /* BalanceService.swift */,
+				688739E5E282314B5828BC2E /* BridgeService.swift */,
+				BBB222222222222222222222 /* ContractAddresses.swift */,
+				BBB333333333333333333333 /* DEXService.swift */,
+				F5C24CE6C59DDFBF563660B0 /* GovernanceService.swift */,
+				BBB444444444444444444444 /* LiquidityPoolService.swift */,
+				BBB555555555555555555555 /* PriceService.swift */,
+				F557C238C17708AD1DE25F50 /* RPCService.swift */,
+				BBB666666666666666666666 /* TransactionSigningService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6CC42812D0020E0C8C57135D /* EtridWallet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6798CA93C31B3B70CDB7829E /* Build configuration list for PBXNativeTarget "EtridWallet" */;
+			buildPhases = (
+				48DEE8D320A8F5BDB8BB7700 /* Sources */,
+				F8E726BAC9C18C62085C2626 /* Resources */,
+				29F9968B3AE72F2FCDFC95DB /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EtridWallet;
+			packageProductDependencies = (
+				4A1B0383707C9A4505BED2EC /* P256K */,
+				4BBE55C9514FF93B126C4697 /* QRCode */,
+				7239E9D814B88319418CB387 /* CryptoSwift */,
+				71DF6496EA17944734A96105 /* Blake2 */,
+				D23FF7F5E1C0238C2673A706 /* Base58Swift */,
+			);
+			productName = EtridWallet;
+			productReference = E696A13848A469834B394D76 /* EtridWallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5D3A3E989B6B5601B2D87634 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					6CC42812D0020E0C8C57135D = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = ACEE99FFF94F1FBFF6E5E734 /* Build configuration list for PBXProject "EtridWallet" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E69668CC375C4A92943EC2D0;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C4F64765AC51B1650CE8D78C /* XCRemoteSwiftPackageReference "Base58Swift" */,
+				5279C2C20B9E9799698E8BD6 /* XCRemoteSwiftPackageReference "Blake2.swift" */,
+				99BED20CA8E14E6583CF172A /* XCRemoteSwiftPackageReference "CryptoSwift" */,
+				C2B42FE8FBE4FCAD6E39EC90 /* XCRemoteSwiftPackageReference "QRCode" */,
+				F0B272B4838CBD5333AEECB3 /* XCRemoteSwiftPackageReference "secp256k1.swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6CC42812D0020E0C8C57135D /* EtridWallet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F8E726BAC9C18C62085C2626 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				126D9B8318E0EBE82447AD84 /* Assets.xcassets in Resources */,
+				9A5F31AFFC75858D48D99FB8 /* etrid_logo.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		48DEE8D320A8F5BDB8BB7700 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B77257ACAD3C2DE7E7938CC6 /* ATMService.swift in Sources */,
+				AAA111111111111111111111 /* BalanceService.swift in Sources */,
+				B80A55100D9FFBDF74E2B0A2 /* BridgeService.swift in Sources */,
+				AAA222222222222222222222 /* ContractAddresses.swift in Sources */,
+				28DB10247AC1EB1DDA92C146 /* CryptoUtils.swift in Sources */,
+				92D48E656AB7D8CA89C2D8DF /* DeFiHubModels.swift in Sources */,
+				3C853F77019583ED3686C70C /* DeFiHubView.swift in Sources */,
+				AAA333333333333333333333 /* DEXService.swift in Sources */,
+				2EAC6926EB8D9EB8BE16B739 /* EtridWalletApp.swift in Sources */,
+				DE8D3B0DA1DB4F7D075251B7 /* GovernanceModels.swift in Sources */,
+				2CDBBEFDB51D15715034CE03 /* GovernanceService.swift in Sources */,
+				55E6EAED1943EE28F688DFFC /* GovernanceView.swift in Sources */,
+				6BA1CBEDC074B2070E38CC47 /* HDWalletManager.swift in Sources */,
+				C4A85AE4A2FDBFD2A4AE6141 /* KeychainManager.swift in Sources */,
+				AAA444444444444444444444 /* LiquidityPoolService.swift in Sources */,
+				A1928B58BA1C927CC9995313 /* MainTabView.swift in Sources */,
+				FE9BC44535E18BD09851CB3A /* NetworkConfig.swift in Sources */,
+				B23DB841E0AE634F786C589A /* OnboardingView.swift in Sources */,
+				AAA555555555555555555555 /* PriceService.swift in Sources */,
+				0501AC73322A8AF9571A4220 /* RPCService.swift in Sources */,
+				5766DA1053BD4DC21DC17F3F /* SendReceiveViews.swift in Sources */,
+				CC8E314CB7433566AAC8F945 /* SettingsView.swift in Sources */,
+				AAA777777777777777777777 /* SwapView.swift in Sources */,
+				0D8E7EB77D61823A1DBFCE68 /* TokensView.swift in Sources */,
+				AAA666666666666666666666 /* TransactionSigningService.swift in Sources */,
+				11E1A8C4A739E527957BC32A /* WalletApp.swift in Sources */,
+				13B6AF8CF2737BD010BD9B1A /* WalletCore.swift in Sources */,
+				40A810F5FB94E4F694F285F7 /* WalletModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2A25B104355FCEF1FCC93906 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = EtridWallet.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MQ85968PQP;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.etrid.wallet;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		49DFE63BA57D3B2648118173 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7B475A19A81DE880AB30F097 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = EtridWallet.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MQ85968PQP;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.etrid.wallet;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FE8D4482A197BD06E9DF0AC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6798CA93C31B3B70CDB7829E /* Build configuration list for PBXNativeTarget "EtridWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B475A19A81DE880AB30F097 /* Debug */,
+				2A25B104355FCEF1FCC93906 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ACEE99FFF94F1FBFF6E5E734 /* Build configuration list for PBXProject "EtridWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE8D4482A197BD06E9DF0AC5 /* Debug */,
+				49DFE63BA57D3B2648118173 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5279C2C20B9E9799698E8BD6 /* XCRemoteSwiftPackageReference "Blake2.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tesseract-one/Blake2.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
+		99BED20CA8E14E6583CF172A /* XCRemoteSwiftPackageReference "CryptoSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/CryptoSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.0;
+			};
+		};
+		C2B42FE8FBE4FCAD6E39EC90 /* XCRemoteSwiftPackageReference "QRCode" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WalletConnect/QRCode";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 14.3.1;
+			};
+		};
+		C4F64765AC51B1650CE8D78C /* XCRemoteSwiftPackageReference "Base58Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/keefertaylor/Base58Swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.0;
+			};
+		};
+		F0B272B4838CBD5333AEECB3 /* XCRemoteSwiftPackageReference "secp256k1.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4A1B0383707C9A4505BED2EC /* P256K */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0B272B4838CBD5333AEECB3 /* XCRemoteSwiftPackageReference "secp256k1.swift" */;
+			productName = P256K;
+		};
+		4BBE55C9514FF93B126C4697 /* QRCode */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C2B42FE8FBE4FCAD6E39EC90 /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCode;
+		};
+		71DF6496EA17944734A96105 /* Blake2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5279C2C20B9E9799698E8BD6 /* XCRemoteSwiftPackageReference "Blake2.swift" */;
+			productName = Blake2;
+		};
+		7239E9D814B88319418CB387 /* CryptoSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 99BED20CA8E14E6583CF172A /* XCRemoteSwiftPackageReference "CryptoSwift" */;
+			productName = CryptoSwift;
+		};
+		D23FF7F5E1C0238C2673A706 /* Base58Swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C4F64765AC51B1650CE8D78C /* XCRemoteSwiftPackageReference "Base58Swift" */;
+			productName = Base58Swift;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 5D3A3E989B6B5601B2D87634 /* Project object */;
+}

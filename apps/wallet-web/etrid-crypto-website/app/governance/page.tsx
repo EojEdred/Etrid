@@ -1,91 +1,22 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import GovHeader from "@/components/governance/gov-header"
-import HeroBanner from "@/components/governance/hero-banner"
-import UserStatsCard from "@/components/governance/user-stats-card"
-import FilterBar from "@/components/governance/filter-bar"
-import ProposalsList from "@/components/governance/proposals-list"
-import Sidebar from "@/components/governance/sidebar"
-import { useWallet } from "@/lib/polkadot/useWallet"
+import dynamic from 'next/dynamic'
 
-export default function GovernancePage() {
-  const {
-    isConnected,
-    selectedAccount,
-    connect,
-    disconnect,
-    error,
-    isLoading
-  } = useWallet()
-
-  const [selectedFilter, setSelectedFilter] = useState("all")
-  const [sortBy, setSortBy] = useState("most-votes")
-  const [searchQuery, setSearchQuery] = useState("")
-
-  // Format wallet address for display (e.g., "5GrwE...Kw3t")
-  const formatAddress = (address: string) => {
-    if (!address) return ""
-    return `${address.slice(0, 5)}...${address.slice(-4)}`
-  }
-
-  const handleConnectWallet = async () => {
-    await connect()
-  }
-
-  const handleDisconnect = () => {
-    disconnect()
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <GovHeader
-        isConnected={isConnected}
-        walletAddress={selectedAccount ? formatAddress(selectedAccount.address) : ""}
-        onConnect={handleConnectWallet}
-        onDisconnect={handleDisconnect}
-      />
-
-      <HeroBanner />
-
-      <div className="container mx-auto px-4 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
-            {isConnected && selectedAccount && (
-              <UserStatsCard
-                address={selectedAccount.address}
-                balance={selectedAccount.balance || "0"}
-              />
-            )}
-
-            <FilterBar
-              selectedFilter={selectedFilter}
-              onFilterChange={setSelectedFilter}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-
-            <ProposalsList
-              filter={selectedFilter}
-              sortBy={sortBy}
-              searchQuery={searchQuery}
-              isWalletConnected={isConnected}
-            />
-          </div>
-
-          <div className="hidden lg:block w-80">
-            <Sidebar />
-          </div>
+const GovernanceContent = dynamic(
+  () => import('@/components/governance/GovernanceContent'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen gradient-bg-animated flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 via-purple-500 to-blue-500 mb-4" />
+          <div className="h-4 w-32 bg-white/10 rounded" />
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+)
+
+export default function GovernancePage() {
+  return <GovernanceContent />
 }

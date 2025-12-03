@@ -76,6 +76,9 @@ finality-gadget = { package = "etrid-finality-gadget", path = "../../../09-conse
 validator-management = { path = "../../../09-consensus/validator-management" }
 pallet-validator-committee-runtime-api = { path = "../../../11-peer-roles/pallet-validator-committee/runtime-api" }
 
+# Governance RPC (Consensus Day integration)
+governance-runtime-api = { path = "../../../12-consensus-day/governance-runtime-api" }
+
 # ÉTRID P2P Networking
 detrp2p = { workspace = true }
 etrid-protocol = { path = "../../../01-detr-p2p/etrid-protocol" }

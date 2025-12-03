@@ -1,0 +1,44 @@
+{
+  "name": "wrapped-etr-bsc",
+  "version": "1.0.0",
+  "description": "Wrapped Etrid (wETR) BEP-20 token for Binance Smart Chain",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run deploy-bsc.js --network bscTestnet",
+    "deploy:mainnet": "hardhat run deploy-bsc.js --network bsc",
+    "verify": "hardhat verify --network",
+    "console:testnet": "hardhat console --network bscTestnet",
+    "console:mainnet": "hardhat console --network bsc",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "etrid",
+    "wrapped",
+    "etr",
+    "bep20",
+    "erc20",
+    "bsc",
+    "binance",
+    "bridge"
+  ],
+  "author": "Etrid Team",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.19.0",
+    "hardhat-gas-reporter": "^1.0.9"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

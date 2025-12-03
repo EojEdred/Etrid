@@ -1,0 +1,49 @@
+{
+  "balances": {
+    "balances": [
+      ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 100000000000000000000000000],
+      ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 100000000000000000000000000],
+      ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 100000000000000000000000000],
+      ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 100000000000000000000000000],
+      ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 100000000000000000000000000]
+    ]
+  },
+  "sudo": {
+    "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+  },
+  "asf": {
+    "authorities": [
+      "0x8060f6966061a0c102d12d0600a1e1cd701afe18f29a971a77fadc65b76e867d",
+      "0x5a84dec5e66b43f0ba2f746a681ea71bcbea08dc25850c73f8376a7b78a0f60c",
+      "0x2436920b4b750461e28c9aa3fdc09bb047b9b8910393a21071a36d8c721acb0e",
+      "0x247cae69dc6746a7de9652c02becf46a90c5d41a4b9f2373cb0d91c3d1362a00",
+      "0xe29d2fbf7666e7d733a02cb45f5cb5fb022e1b207cfb141eafc6731954f86600",
+      "0x2603a0ecb3575b29f608e6aca6fa3bcb8d50ad662c22e97d55466ea794e57e45",
+      "0xbcfee772070e35c7cd3af239f6df28cee0035842cd53dd697a25fc290386fe24",
+      "0xd4190c4988ef8d05dbc02fc9bb112be7e76f3a8c3706d983977fa4887f5a5c58",
+      "0x5457898992e134605ea795a0b200332ebce3459b3eba815cfea5f2bab8061038",
+      "0xe4126e02f7aad1dcbac4bd3ce03164b4eccfa52de6e220bbbee4a3a835321478",
+      "0xca6b16861029cccb0027902d2a9e26d89fdc743818b731693d6fcda9ad98301e",
+      "0x023145bb4a1a5a5679732527ed7d13ab1b14c452530ffd0e3cabaa778a99350a",
+      "0x2cee55c0cdcc7b71996948a6f35f97cf0e1fe3622c42e52f426b961ab0f39d2c",
+      "0x0ea99766a0b23dc5679fceb31a6e02bf4bff079f67ea93d6ecbb90ab17d6b167",
+      "0x66c16325191d2cfff50c9c97596611fc9e24dad2ae4edc6e7ceadc5542db8343",
+      "0xf0c8b7dc37dfb964e450a1e17319694430bc8ca52402e7d1a82ce1517143127b",
+      "0xfa82465525f3aa067372df1c9d7b7e8bb2fd7554c82a1f3aa7db17fa96257403",
+      "0x404dcc18438274a5ec69fa75762a9103f3d11f9e8d827f44bf898942a3012f1d",
+      "0x0841f718aeb4785b5789261a662b723faa675ac9fde6ece7f7c90316eb185043",
+      "0xf8bc8b704a6292d14f62f6aef5d2dd4bd3fbd83220acaffdeba319432e4ac84d",
+      "0xa2a142009330d453d150b1468a468e45b0f2a9d058706d4d76c3fd728f31ba0e",
+      "0xf8b523653cce6281845101d212d2fa42fa3759666d26104403c2268576e2f362"
+    ]
+  },
+  "bnbBridge": {
+    "bnbToEtrRate": 1000000000000000000,
+    "maxwellUpgradeEnabled": true,
+    "portalBridgeEnabled": false,
+    "supportedTokens": [
+      ["0xcc9b37fed77a01329502f8844620577742eb0dc6", 1000000000000000000]
+    ],
+    "bridgeOperator": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+  }
+}

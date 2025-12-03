@@ -1,0 +1,53 @@
+name: EtridWallet
+options:
+  bundleIdPrefix: com.etrid
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+
+packages:
+  secp256k1:
+    url: https://github.com/GigaBitcoin/secp256k1.swift
+    from: "0.15.0"
+  QRCode:
+    url: https://github.com/WalletConnect/QRCode
+    from: "14.3.1"
+  CryptoSwift:
+    url: https://github.com/krzyzanowskim/CryptoSwift
+    from: "1.8.0"
+  Blake2:
+    url: https://github.com/tesseract-one/Blake2.swift
+    from: "0.2.0"
+  Base58Swift:
+    url: https://github.com/keefertaylor/Base58Swift
+    from: "2.1.0"
+
+targets:
+  EtridWallet:
+    type: application
+    platform: iOS
+    sources:
+      - path: AppSources
+        group: App
+      - path: Sources/EtridWalletSwift
+        group: EtridWalletSwift
+    resources:
+      - path: Sources/EtridWalletSwift/Resources
+        group: Resources
+    dependencies:
+      - package: secp256k1
+        product: P256K
+      - package: QRCode
+      - package: CryptoSwift
+      - package: Blake2
+      - package: Base58Swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.etrid.wallet
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: Info.plist
+        CODE_SIGN_ENTITLEMENTS: EtridWallet.entitlements
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
