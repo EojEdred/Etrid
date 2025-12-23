@@ -383,8 +383,8 @@ sudo journalctl -u primearc-core-validator -f | grep -E "(ASF|PPFA|pre-commit|co
 ### Issue: Keys Not Loading
 
 **Symptoms**:
-- "No GRANDPA key found in keystore"
-- GRANDPA doesn't initialize
+- "No ASFK key found in keystore"
+- ASFK doesn't initialize
 
 **Solutions**:
 
@@ -542,7 +542,7 @@ Use this checklist to ensure a complete deployment:
 - [ ] Build node binary with release profile
 - [ ] Generate production chain spec with `--chain primearc-core`
 - [ ] Verify chain spec has 182 storage keys
-- [ ] Generate validator keys (AURA + GRANDPA) for each validator
+- [ ] Generate validator keys (ASFK + Session Keys) for each validator
 - [ ] Securely store secret seeds offline
 
 ### Deployment
@@ -560,7 +560,7 @@ Use this checklist to ensure a complete deployment:
 - [ ] Verify they connect to each other
 - [ ] Start remaining 16 validators
 - [ ] Monitor all nodes for "Loaded 21 validators" message
-- [ ] Verify GRANDPA loads GRANDPA keys
+- [ ] Verify ASFK loads ASFK keys
 
 ### Verification
 
@@ -590,9 +590,9 @@ This deployment guide covers all aspects of deploying Primearc Core Chain mainne
 4. ✅ **Production Ready**: Tested with 2-validator local testnet
 
 When deployed with 21 validators, Primearc Core Chain will:
-- Produce blocks every 6 seconds using AURA + ASF PPFA
+- Produce blocks every 6 seconds using ASF PPFA
 - Pre-commit blocks through ASF with 2/3+ quorum
-- Finalize blocks with BFT checkpoint (GRANDPA)
+- Finalize blocks with BFT checkpoint (ASF Finality)
 - Maintain a finality lag of 2-5 blocks
 
 **The fix is production-ready.** 🚀

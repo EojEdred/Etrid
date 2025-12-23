@@ -21,7 +21,7 @@ use sp_runtime::{
         AccountIdLookup, AccountIdConversion, BlakeTwo256, Block as BlockT, IdentifyAccount, NumberFor, One, Verify, OpaqueKeys,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, DispatchResult, FixedU128, MultiSignature, Perbill,
+    ApplyExtrinsicResult, DispatchResult, FixedU128, MultiSignature, Perbill, SaturatedConversion,
 };
 use sp_arithmetic::Permill;
 use sp_std::prelude::*;
@@ -137,7 +137,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("etrid"),
     impl_name: create_runtime_str!("etrid"),
     authoring_version: 1,
-    spec_version: 108,
+    spec_version: 110,  // v110: Generic bridge pallets + ASF slashing activated
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -432,6 +432,15 @@ impl pallet_etwasm_vm::Config for Runtime {
     type VmwOperationPrice = ConstU32<1>; // VMW operation price (1 unit per operation)
     type TreasuryFeePercent = ConstU32<50>; // 50% of VMw fees to treasury
 }
+
+/// Configure the pallet-evm (EVM compatibility layer)
+impl pallet_evm::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WasmBridge = EtwasmBridge;
+    type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
+}
+
+pub use pallet_evm::EtwsmBridge;
 
 /// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)
 impl pallet_consensus::Config for Runtime {
@@ -922,39 +931,62 @@ impl pallet_xcm_bridge::Config for Runtime {
 // ════════════════════════════════════════════════════════════════════════════
 
 parameter_types! {
-    pub const FlareTokenMessengerMaxMessageBodySize: u32 = 512;
-    pub const FlareTokenMessengerMaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000;  // 1M EDSC per tx
-    pub const FlareTokenMessengerDailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000;  // 10M EDSC per day
-    pub const FlareTokenMessengerMessageTimeout: u32 = 1000;
+    pub const PrimearcTokenMessengerMaxMessageBodySize: u32 = 512;
+    pub const PrimearcTokenMessengerMaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000;  // 1M EDSC per tx
+    pub const PrimearcTokenMessengerDailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000;  // 10M EDSC per day
+    pub const PrimearcTokenMessengerMessageTimeout: u32 = 1000;
+    pub const PrimearcTokenMessengerMinBurnAmount: u128 = 1_000_000_000_000_000_000;  // 1 EDSC minimum
+    pub const PrimearcTokenMessengerBlocksPerDay: u32 = 14_400;  // ~24 hours at 6s blocks
+    pub const PrimearcLocalDomain: u32 = 2;  // Domain::PrimearcCore = 2
 }
 
-impl pallet_edsc_bridge_token_messenger::Config for Runtime {
+// ═══════════════════════════════════════════════════════════════════════════════
+// GENERIC BRIDGE PROTOCOL (CCTP-style) FOR ÉTR TOKEN
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Primearc Core Chain uses generic bridge pallets for native ÉTR token transfers
+// between Primearc and PBCs. EDSC-specific pallets are only on PBC-EDSC chain.
+
+/// Attestation verifier for Primearc Core Chain (ÉTR token)
+pub struct PrimearcBridgeAttestationVerifier;
+
+impl pallet_token_messenger::AttestationVerifier for PrimearcBridgeAttestationVerifier {
+    fn verify_message_attestation(
+        message: &[u8],
+        attestation: &[u8],
+        message_hash: sp_core::H256,
+    ) -> DispatchResult {
+        pallet_bridge_attestation::Pallet::<Runtime>::verify_attestation(
+            message,
+            attestation,
+            message_hash,
+        )
+    }
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    /// Token operations - use default (no-op) implementation for now
-    /// TODO: Connect to pallet_balances for actual burn/mint
-    type TokenOperations = ();
-    /// Attestation verifier - use default for now
-    /// TODO: Connect to pallet_edsc_bridge_attestation for real verification
-    type AttestationVerifier = ();
-    type MaxMessageBodySize = FlareTokenMessengerMaxMessageBodySize;
-    type MaxBurnAmount = FlareTokenMessengerMaxBurnAmount;
-    type DailyBurnCap = FlareTokenMessengerDailyBurnCap;
-    type MessageTimeout = FlareTokenMessengerMessageTimeout;
+    type ChainId = ConstU32<2>; // Primearc domain ID
+    type MaxAttesters = ConstU32<100>;
+    type MaxAttestersPerMessage = ConstU32<10>;
+    type MinSignatureThreshold = ConstU32<5>;  // 5-of-9
+    type AttestationMaxAge = ConstU32<1000>;
+    type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
 }
 
-parameter_types! {
-    pub const FlareMaxAttesters: u32 = 100;  // Maximum registered attesters
-    pub const FlareMaxAttestersPerMessage: u32 = 10;  // Maximum signatures per message
-    pub const FlareMinSignatureThreshold: u32 = 3;  // Default M-of-N (3-of-5)
-    pub const FlareAttestationMaxAge: u32 = 1000;  // 1000 blocks (~100 minutes)
-}
-
-impl pallet_edsc_bridge_attestation::Config for Runtime {
+impl pallet_token_messenger::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type MaxAttesters = FlareMaxAttesters;
-    type MaxAttestersPerMessage = FlareMaxAttestersPerMessage;
-    type MinSignatureThreshold = FlareMinSignatureThreshold;
-    type AttestationMaxAge = FlareAttestationMaxAge;
+    type TokenOperations = pallet_token_messenger::token_ops::PbcTokenOperations<Runtime>;
+    type AttestationVerifier = PrimearcBridgeAttestationVerifier;
+    type WeightInfo = pallet_token_messenger::weights::SubstrateWeight<Runtime>;
+    type MaxMessageBodySize = ConstU32<512>;
+    type MaxBurnAmount = ConstU128<1_000_000_000_000_000_000_000_000>; // 1M ÉTR
+    type DailyBurnCap = ConstU128<10_000_000_000_000_000_000_000_000>; // 10M ÉTR
+    type MinBurnAmount = ConstU128<1_000_000_000_000_000>;  // 0.001 ÉTR
+    type MessageTimeout = ConstU32<1000>;
+    type BlocksPerDay = ConstU32<14400>;
+    type LocalDomain = ConstU32<2>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1259,7 +1291,8 @@ construct_runtime!(
 
         // Ëtrid custom pallets
         Accounts: pallet_accounts,
-        EtwasmVM: pallet_etwasm_vm,
+        EtwamVM: pallet_etwasm_vm,
+        Evm: pallet_evm,
         Consensus: pallet_consensus,
         Governance: pallet_governance,
         PbcRouter: pallet_pbc_router,
@@ -1305,9 +1338,9 @@ construct_runtime!(
         ReserveBackedToken: pallet_reserve_backed_token,
         XcmBridge: pallet_xcm_bridge,
 
-        // Phase 3: External Bridge Protocol (CCTP-style)
-        TokenMessenger: pallet_edsc_bridge_token_messenger,
-        BridgeAttestation: pallet_edsc_bridge_attestation,
+        // Phase 3: External Bridge Protocol (CCTP-style) - Generic for ÉTR
+        TokenMessenger: pallet_token_messenger,
+        BridgeAttestation: pallet_bridge_attestation,
 
         // ASF Consensus pallets
         ValidatorCommittee: pallet_validator_committee,
@@ -1330,6 +1363,71 @@ construct_runtime!(
         CircuitBreaker: pallet_circuit_breaker,
     }
 );
+
+#[cfg(feature = "std")]
+pub type RuntimeGenesisConfig = GenesisConfig;
+
+#[cfg(feature = "std")]
+impl Default for RuntimeGenesisConfig {
+    fn default() -> Self {
+        Self {
+            system: Default::default(),
+            balances: Default::default(),
+            vesting: Default::default(),
+            multisig: Default::default(),
+            transaction_payment: Default::default(),
+            sudo: Default::default(),
+            node_authorization: Default::default(),
+            accounts: Default::default(),
+            etwasm_vm: Default::default(),
+            evm: Default::default(),
+            consensus: Default::default(),
+            governance: Default::default(),
+            pbc_router: Default::default(),
+            etrid_staking: Default::default(),
+            consensus_day_proposal_system: Default::default(),
+            consensus_day_voting_protocol: Default::default(),
+            consensus_day_distribution: Default::default(),
+            consensus_day_minting_logic: Default::default(),
+            tx_processor: Default::default(),
+            bitcoin_bridge: Default::default(),
+            ethereum_bridge: Default::default(),
+            doge_bridge: Default::default(),
+            stellar_bridge: Default::default(),
+            xrp_bridge: Default::default(),
+            solana_bridge: Default::default(),
+            cardano_bridge: Default::default(),
+            chainlink_bridge: Default::default(),
+            polygon_bridge: Default::default(),
+            bnb_bridge: Default::default(),
+            tron_bridge: Default::default(),
+            usdt_bridge: Default::default(),
+            etr_lock: Default::default(),
+            edsc_token: Default::default(),
+            edsc_receipts: Default::default(),
+            edsc_redemption: Default::default(),
+            edsc_oracle: Default::default(),
+            reserve_vault: Default::default(),
+            custodian_registry: Default::default(),
+            reserve_oracle: Default::default(),
+            multiasset_reserve: Default::default(),
+            reserve_backed_token: Default::default(),
+            xcm_bridge: Default::default(),
+            token_messenger: Default::default(),
+            bridge_attestation: Default::default(),
+            validator_committee: Default::default(),
+            validator_rewards: Default::default(),
+            oracle_network: Default::default(),
+            did_registry: Default::default(),
+            aidid: Default::default(),
+            ai_agents: Default::default(),
+            etrid_treasury: Default::default(),
+            consensus_day_pallet: Default::default(),
+            edsc_stability: Default::default(),
+            circuit_breaker: Default::default(),
+        }
+    }
+}
 
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
@@ -1361,7 +1459,7 @@ pub type Executive = frame_executive::Executive<
     frame_system::ChainContext<Runtime>,
     Runtime,
     AllPalletsWithSystem,
-    migrations::MigrateToAsfPrimary,
+    migrations::MigrateSudoAndEdscMinter,
 >;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
@@ -1741,32 +1839,35 @@ impl_runtime_apis! {
         }
 
         fn get_voting_power(account: AccountId) -> governance_runtime_api::VotingPowerInfo {
-            pallet_consensus_day::VotingPowerMap::<Runtime>::get(&account)
-                .map(|vp| governance_runtime_api::VotingPowerInfo {
-                    staked_amount: vp.staked_amount.saturated_into(),
-                    voting_power: vp.voting_power,
-                    participation_history: vp.participation_history,
-                    can_vote: vp.voting_power > 0,
-                })
-                .unwrap_or(governance_runtime_api::VotingPowerInfo {
-                    staked_amount: 0,
-                    voting_power: 0,
-                    participation_history: 0,
-                    can_vote: false,
-                })
+            // VotingPowerMap uses ValueQuery, so get() returns the value directly
+            let vp = pallet_consensus_day::VotingPowerMap::<Runtime>::get(&account);
+            governance_runtime_api::VotingPowerInfo {
+                staked_amount: vp.staked_amount.saturated_into(),
+                voting_power: vp.voting_power,
+                participation_history: vp.participation_history,
+                can_vote: vp.voting_power > 0,
+            }
         }
 
         fn get_proposal_votes(proposal_id: u64) -> Vec<governance_runtime_api::VoteInfo<AccountId>> {
-            pallet_consensus_day::Votes::<Runtime>::iter_prefix(proposal_id)
-                .map(|(voter, record)| governance_runtime_api::VoteInfo {
-                    voter,
-                    proposal_id,
-                    vote_type: match record.ballot {
-                        pallet_consensus_day::Ballot::Yes => 0,
-                        pallet_consensus_day::Ballot::No => 1,
-                        pallet_consensus_day::Ballot::Abstain => 2,
-                    },
-                    voting_power: 0, // Not stored in vote record
+            // Votes storage uses (AccountId, proposal_id) key order, so we iterate all
+            // and filter by proposal_id
+            pallet_consensus_day::Votes::<Runtime>::iter()
+                .filter_map(|(voter, prop_id, record)| {
+                    if prop_id == proposal_id {
+                        Some(governance_runtime_api::VoteInfo {
+                            voter,
+                            proposal_id,
+                            vote_type: match record.ballot {
+                                pallet_consensus_day::Ballot::Yes => 0,
+                                pallet_consensus_day::Ballot::No => 1,
+                                pallet_consensus_day::Ballot::Abstain => 2,
+                            },
+                            voting_power: record.voting_power,
+                        })
+                    } else {
+                        None
+                    }
                 })
                 .collect()
         }

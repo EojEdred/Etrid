@@ -7,6 +7,7 @@ mod asf_service; // ASF consensus service integration
 mod ppfa_protocol; // PPFA protocol for libp2p network layer
 mod asf_rpc; // ASF finality RPC endpoints
 mod asf_indexer; // ASF finality event indexer
+mod governance_rpc; // Governance RPC endpoints
 
 use clap::Parser;
 use sc_cli::SubstrateCli;

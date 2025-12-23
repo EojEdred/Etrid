@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 //! ASF Finality Indexer
 //!
 //! Tracks and indexes finality events for external queries.

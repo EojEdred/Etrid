@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 //! ASF Finality RPC Endpoints
 //!
 //! Provides RPC methods for querying ASF finality state.
@@ -393,4 +395,21 @@ where
             explicit_finality: block_number <= finalized,
         })
     }
+}
+
+/// Create ASF finality RPC extension
+pub fn create_asf_rpc<C, Block>(
+    client: Arc<C>,
+    finality_state: Arc<AsfFinalityState>,
+) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
+where
+    Block: BlockT,
+    C: HeaderBackend<Block> + Send + Sync + 'static,
+    NumberFor<Block>: Into<u32>,
+{
+    use AsfFinalityApiServer;
+    let asf = AsfFinality::<C, Block>::new(client, finality_state);
+    let mut module = jsonrpsee::RpcModule::new(());
+    module.merge(asf.into_rpc())?;
+    Ok(module)
 }

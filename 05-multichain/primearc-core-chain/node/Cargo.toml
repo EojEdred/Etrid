@@ -75,6 +75,7 @@ block-production = { path = "../../../09-consensus/block-production" }
 finality-gadget = { package = "etrid-finality-gadget", path = "../../../09-consensus/finality-gadget" }
 validator-management = { path = "../../../09-consensus/validator-management" }
 pallet-validator-committee-runtime-api = { path = "../../../11-peer-roles/pallet-validator-committee/runtime-api" }
+substrate-prometheus-endpoint = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 # Governance RPC (Consensus Day integration)
 governance-runtime-api = { path = "../../../12-consensus-day/governance-runtime-api" }
@@ -83,6 +84,8 @@ governance-runtime-api = { path = "../../../12-consensus-day/governance-runtime-
 detrp2p = { workspace = true }
 etrid-protocol = { path = "../../../01-detr-p2p/etrid-protocol" }
 bincode = "1.3"
+etrid-p2p-dpeers = { path = "../../../01-detr-p2p/dpeers" }
+detrp2p-peerstored = { path = "../../../01-detr-p2p/stored" }
 
 # Additional dependencies for ASF integration
 async-trait = "0.1"
@@ -94,10 +97,15 @@ hex = "0.4"
 # Additional Substrate dependencies for ASF consensus
 sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", optional = true }
+frame-benchmarking-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", optional = true }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
 
 [features]
 default = []
-runtime-benchmarks = ["primearc-core-runtime/runtime-benchmarks"]
+runtime-benchmarks = [
+    "primearc-core-runtime/runtime-benchmarks",
+    "frame-benchmarking",
+    "frame-benchmarking-cli",
+]

@@ -33,6 +33,8 @@
 use primearc_core_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::{BlockBackend, UsageProvider, Backend, HeaderBackend, BlockchainEvents, Finalizer, LockImportRun};
 use sp_runtime::traits::SaturatedConversion;
+use futures::executor::block_on;
+#[allow(unused_imports)]
 use futures::StreamExt;
 use futures::channel::mpsc;
 use sc_consensus::BlockImport;
@@ -42,12 +44,16 @@ use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
 use sp_consensus::{Environment, Proposer};
 use sp_core::Encode;
+use substrate_prometheus_endpoint::{register, Gauge, Registry, U64, Counter};
 use codec::Decode;
-use sp_runtime::traits::{Header, IdentifyAccount, NumberFor};
+use sp_runtime::traits::{Header, IdentifyAccount, NumberFor, Zero};
 use sp_runtime::MultiSigner;
 use sp_core::crypto::AccountId32;
 use sp_timestamp;
-use std::{sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
+use std::{collections::HashMap, sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
+use detrp2p_peerstored::PeerStore;
+use serde_json;
+use tokio::fs;
 
 // ASF Justification and Block Import
 use crate::asf_justification::{
@@ -66,6 +72,7 @@ use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 
 // ÉTRID P2P Networking
 use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
+use detrp2p_peerstored::StoredPeer;
 use etrid_protocol::gadget_network_bridge::{
     GadgetNetworkBridge,
     VoteData,
@@ -74,6 +81,7 @@ use etrid_protocol::gadget_network_bridge::{
 };
 
 // ASF Finality Components (Phases 3-9 Integration)
+#[allow(unused_imports)]
 use finality_gadget::{
     equivocation::{EquivocationDetector, EquivocationProof},
     implicit_finality::{ImplicitFinalityTracker, ImplicitFinalityConfig, FinalityStatus},
@@ -82,12 +90,150 @@ use finality_gadget::{
 };
 
 // ASF RPC and Indexer
+#[allow(unused_imports)]
 use crate::asf_rpc::{AsfFinality, AsfFinalityState, AsfFinalityApiServer};
 use crate::asf_indexer::{AsfIndexer, FinalityEvent, create_indexer};
+use std::time::{SystemTime, UNIX_EPOCH};
+use etrid_p2p_dpeers::{PeerRegistry, DiscoveryProtocol, ConnectionState};
+
+/// Cap the number of tracked detrp2p peers to keep organic growth without unbounded memory.
+const DETR_P2P_MAX_TRACKED_PEERS: usize = 2048;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
+
+/// Lightweight Prometheus gauges for peer/sync observability.
+struct PeerSyncMetrics {
+    libp2p_connected: Option<Gauge<U64>>,
+    dpeers_authenticated: Option<Gauge<U64>>,
+    dpeers_total: Option<Gauge<U64>>,
+    best_block: Option<Gauge<U64>>,
+}
+
+impl PeerSyncMetrics {
+    fn new(registry: Option<&Registry>) -> Self {
+        let register_gauge = |name: &str, help: &str| -> Option<Gauge<U64>> {
+            registry.and_then(|r| {
+                register(Gauge::new(name, help).expect("gauge valid"), r).ok()
+            })
+        };
+
+        Self {
+            libp2p_connected: register_gauge(
+                "ppfa_libp2p_connected_peers",
+                "Connected libp2p peers for PPFA"
+            ),
+            dpeers_authenticated: register_gauge(
+                "ppfa_dpeers_authenticated",
+                "Authenticated DETR P2P peers"
+            ),
+            dpeers_total: register_gauge(
+                "ppfa_dpeers_total",
+                "Total DETR P2P peers tracked"
+            ),
+            best_block: register_gauge(
+                "ppfa_best_block_number",
+                "Best block number observed by PPFA node"
+            ),
+        }
+    }
+
+    fn set_libp2p(&self, v: u64) {
+        if let Some(g) = &self.libp2p_connected {
+            g.set(v);
+        }
+    }
+
+    fn set_dpeers(&self, authenticated: u64, total: u64) {
+        if let Some(g) = &self.dpeers_authenticated {
+            g.set(authenticated);
+        }
+        if let Some(g) = &self.dpeers_total {
+            g.set(total);
+        }
+    }
+
+    fn set_best_block(&self, v: u64) {
+        if let Some(g) = &self.best_block {
+            g.set(v);
+        }
+    }
+}
+
+/// Lightweight counters for DETR P2P consensus traffic.
+#[derive(Clone)]
+struct Detrp2PMetrics {
+    dropped_rate_limited: Option<Counter<U64>>,
+    block_requests: Option<Counter<U64>>,
+    block_responses_sent: Option<Counter<U64>>,
+    status_responses_sent: Option<Counter<U64>>,
+    stored_peers: Option<Gauge<U64>>,
+}
+
+impl Detrp2PMetrics {
+    fn new(registry: Option<&Registry>) -> Self {
+        let register_counter = |name: &str, help: &str| -> Option<Counter<U64>> {
+            registry.and_then(|r| register(Counter::new(name, help).expect("counter valid"), r).ok())
+        };
+        let register_gauge = |name: &str, help: &str| -> Option<Gauge<U64>> {
+            registry.and_then(|r| register(Gauge::new(name, help).expect("gauge valid"), r).ok())
+        };
+
+        Self {
+            dropped_rate_limited: register_counter(
+                "detrp2p_finality_dropped_rate_limited",
+                "Number of detrp2p finality messages dropped due to rate limits",
+            ),
+            block_requests: register_counter(
+                "detrp2p_block_requests_received",
+                "Number of detrp2p block requests received",
+            ),
+            block_responses_sent: register_counter(
+                "detrp2p_block_responses_sent",
+                "Number of detrp2p block responses sent",
+            ),
+            status_responses_sent: register_counter(
+                "detrp2p_status_responses_sent",
+                "Number of detrp2p status responses sent",
+            ),
+            stored_peers: register_gauge(
+                "detrp2p_peerstore_active",
+                "Number of active peers in the detrp2p peer store",
+            ),
+        }
+    }
+
+    fn inc_dropped(&self) {
+        if let Some(c) = &self.dropped_rate_limited {
+            c.inc();
+        }
+    }
+
+    fn inc_block_request(&self) {
+        if let Some(c) = &self.block_requests {
+            c.inc();
+        }
+    }
+
+    fn inc_block_response(&self) {
+        if let Some(c) = &self.block_responses_sent {
+            c.inc();
+        }
+    }
+
+    fn inc_status_response(&self) {
+        if let Some(c) = &self.status_responses_sent {
+            c.inc();
+        }
+    }
+
+    fn set_stored_peers(&self, v: u64) {
+        if let Some(g) = &self.stored_peers {
+            g.set(v);
+        }
+    }
+}
 
 /// Convert a libp2p peer ID string to DETR P2P peer ID bytes.
 /// Uses Blake2-256 hash to get a deterministic 32-byte identifier from any input string.
@@ -155,6 +301,9 @@ pub struct AsfParams {
 
     /// Minimum stake for validators (in smallest unit)
     pub min_validator_stake: u128,
+
+    /// Enable peer/sync metrics logging
+    pub enable_peer_metrics: bool,
 }
 
 impl Default for AsfParams {
@@ -165,6 +314,7 @@ impl Default for AsfParams {
             epoch_duration: 2400, // ~4 hours at 6s blocks (from validator-management::EPOCH_DURATION)
             enable_finality_gadget: true,
             min_validator_stake: 64_000_000_000_000_000_000_000, // 64 ËTR for FlareNode
+            enable_peer_metrics: true,
         }
     }
 }
@@ -584,6 +734,7 @@ pub fn new_full_with_params(
         transaction_pool,
         other: (block_import, mut telemetry, asf_finality_rx),
     } = new_partial(&config)?;
+    let _select_chain = select_chain;
 
     // V113: Store finality receiver - will be consumed by ASF block import finality handler
     // This channel receives finality notifications when blocks with justifications are imported
@@ -608,6 +759,9 @@ pub fn new_full_with_params(
 
     let _peer_store_handle = net_config.peer_store_handle();
 
+    // Clone chain spec properties for use inside async tasks (avoid capturing config)
+    let config_genesis_props = config.chain_spec.properties().clone();
+
     // ═══════════════════════════════════════════════════════════════════════════
     // PPFA PROTOCOL SETUP - Finality over libp2p (v110)
     // ═══════════════════════════════════════════════════════════════════════════
@@ -625,6 +779,15 @@ pub fn new_full_with_params(
     let ppfa_config = PPFAProtocolConfig::new(protocol_id);
     let ppfa_protocol_name = ppfa_config.protocol_name.clone();
 
+    // Initialize ASF finality indexer (in-memory) for observability of events.
+    let (indexer_tx, indexer) = create_indexer();
+    let _indexer_tx = Arc::new(indexer_tx);
+    task_manager.spawn_handle().spawn(
+        "asf-indexer",
+        None,
+        async move { indexer.run().await; },
+    );
+
     // Build notification config and service for PPFA
     // V115: Pass reserved nodes from Substrate config to PPFA for proper peer connectivity
     // This ensures PPFA can connect to bootnodes for block sync (port 30333)
@@ -636,6 +799,31 @@ pub fn new_full_with_params(
     net_config.add_notification_protocol(ppfa_notification_config);
 
     log::info!("✅ PPFA protocol registered: {}", ppfa_protocol_name);
+
+    // Guard: ensure runtime exposes required ASF API before proceeding.
+    if !runtime_supports_asf(&client) {
+        log::error!("❌ Runtime does not expose ValidatorCommittee API required for ASF/PPFA; aborting startup.");
+        return Err(ServiceError::Other("runtime missing ValidatorCommitteeApi".into()));
+    }
+
+    // Fetch and log the current runtime committee to ensure wiring is healthy before proceeding.
+    let best_hash = client.info().best_hash;
+    match get_ppfa_committee(&client, best_hash) {
+        Ok(committee) => {
+            log::info!(
+                "👥 Runtime validator committee size at best hash {}: {}",
+                best_hash,
+                committee.len()
+            );
+        }
+        Err(e) => {
+            log::warn!(
+                "⚠️ Failed to fetch runtime committee at best hash {}: {:?}",
+                best_hash,
+                e
+            );
+        }
+    }
 
     // Create PPFA channels for bridging ASF finality from DETR P2P to libp2p
     // V112: Remove underscore - ppfa_finality_rx is now used by the finality notification handler
@@ -663,12 +851,93 @@ pub fn new_full_with_params(
             spawn_handle: task_manager.spawn_handle(),
             import_queue,
             block_announce_validator_builder: None,
+            // Warp sync currently disabled by upstream type; use provided config if set
             warp_sync_config: warp_sync,
             block_relay: None,
             metrics,
         })?;
 
     log::info!("✅ Substrate network built successfully on port 30333");
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DPEERS ↔ libp2p integration (bootstrap via bootnodes/reserved)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Prometheus registry for metrics exposure (if enabled)
+    let prometheus_registry = config.prometheus_registry().cloned();
+    let dpeers_registry = Arc::new(PeerRegistry::new(200));
+    let dpeers_discovery = DiscoveryProtocol::new(dpeers_registry.clone());
+    let mut bootstrap_nodes = config.network.boot_nodes.clone();
+    bootstrap_nodes.extend(config.network.default_peers_set.reserved_nodes.clone());
+    if bootstrap_nodes.is_empty() {
+        log::warn!("⚠️ No bootnodes/reserved nodes configured; peer connectivity may be limited");
+    }
+    let network_for_dpeers = Arc::new(network.clone());
+    let peer_metrics_network = network_for_dpeers.clone();
+    let peer_metrics_client = client.clone();
+    let peer_metrics_enabled = asf_params.enable_peer_metrics;
+    let peer_metrics = PeerSyncMetrics::new(prometheus_registry.as_ref());
+    let detrp2p_metrics = Detrp2PMetrics::new(prometheus_registry.as_ref());
+    let dpeers_registry_for_bridge = dpeers_registry.clone();
+    task_manager.spawn_handle().spawn(
+        "dpeers-libp2p-bridge",
+        Some("networking"),
+        async move {
+            // Discover and add reserved peers
+            for peer in bootstrap_nodes.iter() {
+                let _ = dpeers_discovery
+                    .discover_peers(vec![(peer.peer_id.to_base58(), peer.to_string())])
+                    .await;
+                let _ = network_for_dpeers.add_reserved_peer(peer.clone());
+            }
+
+            // Periodically sync connection state from libp2p into dpeers
+            let mut interval = tokio::time::interval(Duration::from_secs(10));
+            loop {
+                interval.tick().await;
+                if let Ok(state) = network_for_dpeers.network_state().await {
+                    for (peer_id, _) in state.connected_peers.iter() {
+                        let _ = dpeers_registry_for_bridge
+                            .set_connection_state(peer_id, ConnectionState::Authenticated)
+                            .await;
+                    }
+                }
+            }
+        },
+    );
+
+    // Lightweight peer/sync metrics logger (periodic)
+    if peer_metrics_enabled {
+        let peer_metrics_registry = dpeers_registry.clone();
+        task_manager.spawn_handle().spawn(
+            "peer-sync-metrics",
+            Some("networking"),
+            async move {
+                let mut interval = tokio::time::interval(Duration::from_secs(15));
+                loop {
+                    interval.tick().await;
+                    let peers = if let Ok(state) = peer_metrics_network.network_state().await {
+                        state.connected_peers.len()
+                    } else {
+                        0
+                    };
+                    let best = peer_metrics_client.info().best_number;
+                    let stats = peer_metrics_registry.stats().await;
+
+                    peer_metrics.set_libp2p(peers as u64);
+                    peer_metrics.set_dpeers(stats.authenticated_peers as u64, stats.total_peers as u64);
+                    peer_metrics.set_best_block(best.saturated_into::<u64>());
+
+                    log::info!(
+                        "📈 Peer metrics: connected={}, authenticated={}, total_peers={}, best_block={}",
+                        peers,
+                        stats.authenticated_peers,
+                        stats.total_peers,
+                        best
+                    );
+                }
+            },
+        );
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // PPFA PROTOCOL WORKER - Bridges ASF finality to libp2p (v110)
@@ -815,24 +1084,34 @@ pub fn new_full_with_params(
     // ═══════════════════════════════════════════════════════════════════════════
 
     let role = config.role;
-    let force_authoring = config.force_authoring;
-    let name = config.network.node_name.clone();
-    let prometheus_registry = config.prometheus_registry().cloned();
+    let _force_authoring = config.force_authoring;
+    let _name = config.network.node_name.clone();
+    // Create ASF finality state for RPC endpoints
+    let asf_finality_state = Arc::new(crate::asf_rpc::AsfFinalityState::new(6));
 
     let rpc_extensions_builder = {
         let client = client.clone();
         let pool = transaction_pool.clone();
+        let finality_state = asf_finality_state.clone();
 
         Box::new(move |_| {
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
-                enable_asf: true, // Enable ASF RPC endpoints
+                enable_asf: true,
+                enable_governance: true,
+                asf_finality_state: Some(finality_state.clone()),
             };
 
             crate::rpc::create_full(deps).map_err(Into::into)
         })
     };
+
+    // Capture identifiers/paths before moving config (used later for detrp2p peer store)
+    let chain_id = config.chain_spec.id().to_string();
+    let data_base_path = config.base_path.clone();
+    let base_path = data_base_path.config_dir(chain_id.as_str());
+    let committee_cache_path = base_path.join("ppfa").join("committee_cache.json");
 
     // Clone network data before moving config (needed for DETR P2P setup)
     let boot_nodes = config.network.boot_nodes.clone();
@@ -876,18 +1155,6 @@ pub fn new_full_with_params(
             telemetry.as_ref().map(|x| x.handle()),
         );
 
-        // TODO: Initialize ASF block production worker
-        //
-        // In production, this will:
-        // 1. Load validator identity from keystore
-        // 2. Query validator-management for committee membership
-        // 3. Calculate PPFA rotation schedule
-        // 4. Spawn block production worker (block-production::proposer)
-        // 5. Handle Queen and Ant block creation
-        //
-        // For now, we log that ASF is enabled but don't spawn the worker
-        // (to avoid compilation errors until full integration is complete)
-
         log::info!(
             "ASF PPFA proposer initialized (slot_duration: {}ms, committee_size: {})",
             asf_params.slot_duration,
@@ -896,12 +1163,12 @@ pub fn new_full_with_params(
 
         // ASF block production task - PPFA proposer loop
         let ppfa_client = client.clone();
-        let ppfa_backend = backend.clone();
+        let _ppfa_backend = backend.clone();
         let ppfa_params = asf_params.clone();
         let ppfa_block_import = block_import.clone();
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
-        // let ppfa_finality_gadget = finality_gadget.clone(); // TODO: finality_gadget not created until line 1607
+        let genesis_props = config_genesis_props.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -913,39 +1180,55 @@ pub fn new_full_with_params(
                 use block_production::{
                     ProposerSelector, CommitteeManager, SlotTimer, HealthMonitor,
                 };
+                use std::time::Duration;
 
-                // Create committee manager
-                // TEMPORARY FIX: Force target_size to be large enough to include all validators
-                // This bypasses the filtering in select_committee() that was limiting to 16
-                let mut committee = CommitteeManager::new(100);  // Use 100 to ensure all 21 validators are selected
+                // Require ASF key before starting
+                use sp_core::crypto::KeyTypeId;
+                        const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
+                let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
+                if our_keys.is_empty() {
+                    log::error!("❌ No ASF (asfk) key in keystore; aborting PPFA proposer startup");
+                    return;
+                }
+
+                // Create committee manager with configured size
+                let mut committee = CommitteeManager::new(ppfa_params.max_committee_size);
 
                 // ═══════════════════════════════════════════════════════════════
                 // TODO #1 IMPLEMENTATION: Load committee from runtime via API
                 // ═══════════════════════════════════════════════════════════════
 
-                // Get best block hash for runtime queries
-                let best_hash = ppfa_client.info().best_hash;
+                // Get best block hash for runtime queries (with limited retries)
+                let mut retries = 0;
+                let mut runtime_committee = Vec::new();
+                while retries < 2 {
+                    let best_hash = ppfa_client.info().best_hash;
+                    match ppfa_client.runtime_api().validator_committee(best_hash) {
+                        Ok(members) => {
+                            log::info!(
+                                "✅ Loaded {} committee members from runtime at block {:?}",
+                                members.len(),
+                                best_hash
+                            );
+                            runtime_committee = members;
+                            break;
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "⚠️  Failed to load committee from runtime (attempt {}): {:?}",
+                                retries + 1,
+                                e
+                            );
+                            retries += 1;
+                            tokio::time::sleep(Duration::from_secs(1)).await;
+                        }
+                    }
+                }
 
-                // Query runtime for active committee members
-                let runtime_committee = match ppfa_client.runtime_api()
-                    .validator_committee(best_hash)
-                {
-                    Ok(members) => {
-                        log::info!(
-                            "✅ Loaded {} committee members from runtime at block {:?}",
-                            members.len(),
-                            best_hash
-                        );
-                        members
-                    }
-                    Err(e) => {
-                        log::warn!(
-                            "⚠️  Failed to load committee from runtime: {:?}, using empty committee",
-                            e
-                        );
-                        Vec::new()
-                    }
-                };
+                if runtime_committee.is_empty() {
+                    log::error!("❌ Committee could not be loaded after retries; aborting PPFA proposer startup");
+                    return;
+                }
 
                 // Initialize committee with runtime validators
                 let mut added_count = 0;
@@ -985,12 +1268,6 @@ pub fn new_full_with_params(
                 );
 
                 // Get our validator key from keystore (using ASF validator keys)
-                // FIX: ASF uses dedicated "asfk" key type
-                // v108: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
-                use sp_core::crypto::KeyTypeId;
-                const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
-
-                let our_keys = ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE);
                 if !our_keys.is_empty() {
                     // Add ourselves as a validator
                     // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
@@ -1040,12 +1317,15 @@ pub fn new_full_with_params(
                 let health_monitor = HealthMonitor::default();
                 let mut slot_timer = SlotTimer::new(ppfa_params.slot_duration, health_monitor);
 
-                // Fixed genesis time for Primearc Core Mainnet v1
-                // All nodes MUST use the same genesis time for consistent slot calculation
-                // This prevents network forks caused by nodes calculating different slot numbers
-                // Genesis: November 25, 2025 00:00:00 UTC = 1764028800000 ms
+                // Genesis time for slot scheduling:
+                // - Default to PRIMEARC mainnet genesis constant
+                // - Allow override via chain spec property "genesis_time_ms"
+                // - Fallback to current time for dev/test
                 const PRIMEARC_MAINNET_GENESIS_MS: u64 = 1764028800000;
-                let genesis_time = PRIMEARC_MAINNET_GENESIS_MS;
+                let genesis_time = genesis_props
+                    .get("genesis_time_ms")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(PRIMEARC_MAINNET_GENESIS_MS);
 
                 slot_timer.reset(genesis_time);
 
@@ -1053,6 +1333,50 @@ pub fn new_full_with_params(
                 log::info!("   - Committee size: {}", proposer_selector.committee_size());
                 log::info!("   - Slot duration: {}ms", slot_timer.current_duration());
                 log::info!("   - Genesis time: {}", genesis_time);
+
+                let committee_cache_path = committee_cache_path.clone();
+
+                // Seed last-successful committee from cache if available
+                let mut last_successful_committee = if let Ok(bytes) = fs::read(&committee_cache_path).await {
+                    match serde_json::from_slice::<Vec<validator_management::ValidatorInfo>>(&bytes) {
+                        Ok(saved) if !saved.is_empty() => {
+                            log::info!(
+                                "♻️  Loaded cached committee ({} validators) from {:?}",
+                                saved.len(),
+                                committee_cache_path
+                            );
+                            saved
+                        }
+                        Ok(_) => runtime_committee.clone(),
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to decode cached committee {:?}: {:?}; using runtime committee",
+                                committee_cache_path,
+                                e
+                            );
+                            runtime_committee.clone()
+                        }
+                    }
+                } else {
+                    runtime_committee.clone()
+                };
+                let mut last_rotated_epoch: u32 = 1;
+                let save_committee = |committee: Vec<validator_management::ValidatorInfo>| {
+                    let path = committee_cache_path.clone();
+                    async move {
+                        if let Some(dir) = path.parent() {
+                            let _ = fs::create_dir_all(dir).await;
+                        }
+                        match serde_json::to_vec(&committee) {
+                            Ok(bytes) => {
+                                if let Err(e) = fs::write(&path, bytes).await {
+                                    log::warn!("Failed to persist committee cache {:?}: {:?}", path, e);
+                                }
+                            }
+                            Err(e) => log::warn!("Failed to encode committee cache: {:?}", e),
+                        }
+                    }
+                };
 
                 // Main proposer loop
                 let mut slot_count = 0u64;
@@ -1086,36 +1410,21 @@ pub fn new_full_with_params(
                             hex::encode(&current_proposer.encode()[..8])
                         );
 
-                        // Get our validator ID from keystore
-                        // FIX: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
-                        // v108: ASF uses dedicated "asfk" key type (0x6173666b = "asfk")
-                        use sp_core::crypto::KeyTypeId;
-
-                        const ASF_KEY_TYPE: KeyTypeId = KeyTypeId([0x61, 0x73, 0x66, 0x6b]); // "asfk"
-
-                        let our_validator_id = match ppfa_keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
-                            Some(public_key) => {
-                                log::info!(
-                                    "🔑 ASF using validator key from keystore (raw sr25519): {}",
-                                    hex::encode(public_key.as_ref() as &[u8])
-                                );
-                                // FIX: Use MultiSigner to properly convert sr25519 public key to AccountId32
-                                let multi_signer = MultiSigner::Sr25519(public_key.clone());
-                                let account_id: AccountId32 = multi_signer.into_account();
-                                let validator_id = block_production::ValidatorId::from(account_id);
-                                log::info!(
-                                    "🔑 Converted to ValidatorId (AccountId32): {}",
-                                    hex::encode(validator_id.as_ref() as &[u8])
-                                );
-                                validator_id
-                            }
-                            None => {
-                                log::warn!(
-                                    "⚠️  No ASF validator key found in keystore. \
-                                     Using placeholder. Node may not participate in block production."
-                                );
-                                block_production::ValidatorId::from([0u8; 32])
-                            }
+                        // Get our validator ID from keystore (validated earlier)
+                        let our_validator_id = {
+                            let public_key = &our_keys[0];
+                            log::info!(
+                                "🔑 ASF using validator key from keystore (raw sr25519): {}",
+                                hex::encode(public_key.as_ref() as &[u8])
+                            );
+                            let multi_signer = MultiSigner::Sr25519(public_key.clone());
+                            let account_id: AccountId32 = multi_signer.into_account();
+                            let validator_id = block_production::ValidatorId::from(account_id);
+                            log::info!(
+                                "🔑 Converted to ValidatorId (AccountId32): {}",
+                                hex::encode(validator_id.as_ref() as &[u8])
+                            );
+                            validator_id
                         };
 
                         // DEBUG: Log proposer comparison for troubleshooting
@@ -1314,14 +1623,9 @@ pub fn new_full_with_params(
                         if slot_count % ppfa_params.epoch_duration as u64 == 0 {
                             let slot_epoch = slot_count / ppfa_params.epoch_duration as u64;
 
-                            // Query current epoch from runtime
+                            // Query current epoch from runtime with small retry/backoff
                             let chain_info = ppfa_client.usage_info().chain;
                             let at_hash = chain_info.best_hash;
-
-                            // Query the runtime for current epoch and committee
-                            // TODO: Once Runtime APIs are fully integrated, use:
-                            //   let runtime_epoch = ppfa_client.runtime_api().current_epoch(at_hash).ok();
-                            //   let new_committee = ppfa_client.runtime_api().validator_committee(at_hash).ok();
 
                             log::info!(
                                 "🔄 Epoch transition detected at slot #{} (slot epoch: #{})",
@@ -1329,53 +1633,87 @@ pub fn new_full_with_params(
                                 slot_epoch
                             );
 
-                            // ═══════════════════════════════════════════════════════════════
-                            // TODO #3 IMPLEMENTATION: Epoch Transitions with Committee Rotation
-                            // ═══════════════════════════════════════════════════════════════
-
-                            // Query runtime for new committee at epoch boundary
-                            match ppfa_client.runtime_api().validator_committee(at_hash) {
-                                Ok(new_committee_members) => {
-                                    log::info!(
-                                        "✅ Loaded {} new committee members for epoch #{}",
-                                        new_committee_members.len(),
-                                        slot_epoch
-                                    );
-
-                                    // Update committee with new members
-                                    committee.clear_committee();
-                                    for validator_info in new_committee_members {
-                                        if let Err(e) = committee.add_validator(validator_info) {
-                                            log::warn!("Failed to add validator to new committee: {:?}", e);
-                                        }
+                            let mut fetched_committee: Option<Vec<_>> = None;
+                            for attempt in 0..3 {
+                                match ppfa_client.runtime_api().validator_committee(at_hash) {
+                                    Ok(members) if !members.is_empty() => {
+                                        fetched_committee = Some(members);
+                                        break;
                                     }
-
-                                    // Rotate committee to new epoch
-                                    let epoch_u32 = slot_epoch.try_into().unwrap_or_else(|_| {
-                                        log::warn!("Epoch {} too large for u32, using max", slot_epoch);
-                                        u32::MAX
-                                    });
-                                    if let Err(e) = committee.rotate_committee(epoch_u32) {
-                                        log::error!("Failed to rotate committee to epoch {}: {:?}", slot_epoch, e);
-                                    } else {
-                                        // Update proposer selector with refreshed committee (pass epoch number)
-                                        if let Err(e) = proposer_selector.rotate_committee(epoch_u32) {
-                                            log::error!("Failed to rotate proposer selector: {:?}", e);
-                                        }
-                                        log::info!(
-                                            "🔄 Committee rotated successfully (size: {}, epoch: {})",
-                                            committee.committee_size(),
-                                            slot_epoch
+                                    Ok(_) => {
+                                        log::warn!(
+                                            "⚠️  Runtime returned empty committee at epoch {} (attempt {})",
+                                            slot_epoch,
+                                            attempt + 1
+                                        );
+                                    }
+                                    Err(e) => {
+                                        log::warn!(
+                                            "⚠️  Failed to load committee from runtime (attempt {}): {:?}",
+                                            attempt + 1,
+                                            e
                                         );
                                     }
                                 }
-                                Err(e) => {
-                                    log::error!(
-                                        "❌ Failed to load committee from runtime for epoch {}: {:?}",
-                                        slot_epoch,
-                                        e
+                                tokio::time::sleep(Duration::from_millis(500)).await;
+                            }
+
+                            let committee_to_apply = if let Some(new_committee_members) = fetched_committee {
+                                last_successful_committee = new_committee_members.clone();
+                                save_committee(last_successful_committee.clone()).await;
+                                Some(new_committee_members)
+                            } else if !last_successful_committee.is_empty() {
+                                log::warn!(
+                                    "Using last successful committee for epoch {} due to runtime errors/empties",
+                                    slot_epoch
+                                );
+                                Some(last_successful_committee.clone())
+                            } else {
+                                log::error!(
+                                    "No committee available for epoch {} (runtime empty and no cached committee); skipping rotation",
+                                    slot_epoch
+                                );
+                                None
+                            };
+
+                            if let Some(next_committee) = committee_to_apply {
+                                if next_committee.is_empty() {
+                                    log::warn!("Skipping rotation to empty committee at epoch {}", slot_epoch);
+                                    continue;
+                                }
+
+                                let epoch_u32 = slot_epoch.try_into().unwrap_or_else(|_| {
+                                    log::warn!("Epoch {} too large for u32, using max", slot_epoch);
+                                    u32::MAX
+                                });
+
+                                if epoch_u32 == last_rotated_epoch {
+                                    log::debug!(
+                                        "Epoch {} already applied (last rotated epoch = {}), skipping",
+                                        epoch_u32,
+                                        last_rotated_epoch
                                     );
-                                    // Continue with existing committee if runtime query fails
+                                    continue;
+                                }
+
+                                committee.clear_committee();
+                                for validator_info in next_committee {
+                                    if let Err(e) = committee.add_validator(validator_info) {
+                                        log::warn!("Failed to add validator to new committee: {:?}", e);
+                                    }
+                                }
+
+                                if let Err(e) = committee.rotate_committee(epoch_u32) {
+                                    log::error!("Failed to rotate committee to epoch {}: {:?}", slot_epoch, e);
+                                } else if let Err(e) = proposer_selector.rotate_committee(epoch_u32) {
+                                    log::error!("Failed to rotate proposer selector: {:?}", e);
+                                } else {
+                                    last_rotated_epoch = epoch_u32;
+                                    log::info!(
+                                        "🔄 Committee rotated successfully (size: {}, epoch: {})",
+                                        committee.committee_size(),
+                                        slot_epoch
+                                    );
                                 }
                             }
                         }
@@ -1403,8 +1741,10 @@ pub fn new_full_with_params(
         use codec::{Encode, Decode};
 
         // Define ASF finality gossip protocol
+        #[allow(dead_code)]
         const ASF_FINALITY_PROTOCOL: &str = "/etrid/asf-finality/1";
 
+        #[allow(dead_code)]
         #[derive(Clone, Debug, Encode, Decode)]
         enum AsfFinalityMessage {
             Vote(FinalityVote),
@@ -1415,16 +1755,19 @@ pub fn new_full_with_params(
         struct DetrP2PNetworkBridge {
             p2p_network: Arc<P2PNetwork>,
             gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+            peer_store: Arc<PeerStore>,
         }
 
         impl DetrP2PNetworkBridge {
             fn new(
                 p2p_network: Arc<P2PNetwork>,
                 gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+                peer_store: Arc<PeerStore>,
             ) -> Self {
                 Self {
                     p2p_network,
                     gadget_bridge,
+                    peer_store,
                 }
             }
 
@@ -1481,7 +1824,7 @@ pub fn new_full_with_params(
                 let vote_data = Self::convert_vote_to_bridge(&vote);
 
                 // Queue vote in gadget bridge
-                let mut bridge = self.gadget_bridge.lock().await;
+                let bridge = self.gadget_bridge.lock().await;
                 bridge.send_vote(vote_data).await
                     .map_err(|e| format!("Failed to queue vote: {:?}", e))?;
 
@@ -1498,12 +1841,20 @@ pub fn new_full_with_params(
 
                             // Create P2P message
                             let p2p_msg = P2PMessage::Vote {
-                                data: payload,
+                                data: payload.clone(),
                             };
 
-                            // Broadcast to all connected peers
-                            self.p2p_network.broadcast(p2p_msg).await
-                                .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+                            // Prefer targeted unicasts to best peers; fallback to broadcast
+                            let targets = self.peer_store.select_best_peers(16).await;
+                            if targets.is_empty() {
+                                self.p2p_network.broadcast(p2p_msg).await
+                                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+                            } else {
+                                for (_, pid_bytes) in targets {
+                                    let pid = PeerId::new(pid_bytes);
+                                    let _ = self.p2p_network.unicast(pid, P2PMessage::Vote { data: payload.clone() }).await;
+                                }
+                            }
 
                             log::debug!("✅ Vote broadcast via detrp2p (view: {})", vote_data.view);
                         }
@@ -1527,7 +1878,7 @@ pub fn new_full_with_params(
                 let cert_data = Self::convert_certificate_to_bridge(&cert);
 
                 // Queue certificate in gadget bridge
-                let mut bridge = self.gadget_bridge.lock().await;
+                let bridge = self.gadget_bridge.lock().await;
                 bridge.send_certificate(cert_data).await
                     .map_err(|e| format!("Failed to queue certificate: {:?}", e))?;
 
@@ -1544,12 +1895,20 @@ pub fn new_full_with_params(
 
                             // Create P2P message
                             let p2p_msg = P2PMessage::Certificate {
-                                data: payload,
+                                data: payload.clone(),
                             };
 
-                            // Broadcast to all connected peers
-                            self.p2p_network.broadcast(p2p_msg).await
-                                .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+                            // Prefer targeted unicasts to best peers; fallback to broadcast
+                            let targets = self.peer_store.select_best_peers(16).await;
+                            if targets.is_empty() {
+                                self.p2p_network.broadcast(p2p_msg).await
+                                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+                            } else {
+                                for (_, pid_bytes) in targets {
+                                    let pid = PeerId::new(pid_bytes);
+                                    let _ = self.p2p_network.unicast(pid, P2PMessage::Certificate { data: payload.clone() }).await;
+                                }
+                            }
 
                             log::debug!("✅ Certificate broadcast via detrp2p (view: {}, voters: {})",
                                 cert_data.view, cert_data.signatures.len());
@@ -1848,6 +2207,20 @@ pub fn new_full_with_params(
             bootstrap_peers,
         ));
 
+        // Peer storage for organic discovery/reputation (persisted JSON by default; override with DETR_P2P_PEER_STORE_PATH)
+        let base_path = data_base_path.config_dir(chain_id.as_str());
+        let default_peer_path = base_path.join("detrp2p").join("peers");
+        let peer_store_path = std::env::var("DETR_P2P_PEER_STORE_PATH")
+            .map(|p| p.into())
+            .unwrap_or(default_peer_path);
+        let peer_store = match block_on(PeerStore::new_with_path(&peer_store_path)) {
+            Ok(store) => Arc::new(store),
+            Err(e) => {
+                log::warn!("⚠️ Failed to load peer store at {:?}: {}; falling back to in-memory", peer_store_path, e);
+                Arc::new(PeerStore::new())
+            }
+        };
+
         // Spawn P2P network start in background task
         let p2p_for_start = p2p_network.clone();
         let peer_id_for_log = local_peer_id.clone();
@@ -1882,6 +2255,7 @@ pub fn new_full_with_params(
         let network_bridge = Arc::new(DetrP2PNetworkBridge::new(
             p2p_network.clone(),
             gadget_bridge.clone(),
+            peer_store.clone(),
         ));
 
         log::info!("✅ DetrP2PNetworkBridge created - finality messages will use detrp2p");
@@ -1911,7 +2285,7 @@ pub fn new_full_with_params(
 
         // Phase 3: Equivocation Detection
         let (equivocation_proof_tx, mut equivocation_proof_rx) = tokio::sync::mpsc::unbounded_channel();
-        let equivocation_detector = Arc::new(EquivocationDetector::new(Some(equivocation_proof_tx)));
+        let _equivocation_detector = Arc::new(EquivocationDetector::new(Some(equivocation_proof_tx)));
         log::info!("⚔️ Equivocation Detector initialized - will detect and report double-voting");
 
         // Phase 4: Implicit Finality Tracker (6-confirmation rule)
@@ -1982,7 +2356,7 @@ pub fn new_full_with_params(
         // ========== SPAWN FINALITY WORKER TASK ==========
 
         let finality_gadget_clone = finality_gadget.clone();
-        let client_clone = client.clone();
+        let _client_clone = client.clone();
         let network_bridge_clone = network_bridge.clone();
 
         task_manager.spawn_essential_handle().spawn(  // Changed from spawn_blocking to spawn
@@ -2048,6 +2422,9 @@ pub fn new_full_with_params(
         // WITHOUT this task, blocks are produced but finality never advances!
 
         let block_import_finality_gadget = finality_gadget.clone();
+        let finality_submit_enabled = std::env::var("ASF_FINALITY_SUBMIT")
+            .map(|v| v != "0")
+            .unwrap_or(true);
         let import_notifications = client.import_notification_stream();
         // V118: Clone P2P network for BlockAnnounce broadcast
         let block_import_p2p_network = p2p_network.clone();
@@ -2080,6 +2457,11 @@ pub fn new_full_with_params(
                         block_number,
                         substrate_hash
                     );
+
+                    if !finality_submit_enabled {
+                        log::warn!("ASF finality submission disabled (ASF_FINALITY_SUBMIT=0); skipping propose_block()");
+                        continue;
+                    }
 
                     // V4 FIX: Use lock().await with timeout to ensure votes are created
                     // while preventing indefinite blocking. This fixes the deadlock where
@@ -2380,6 +2762,15 @@ pub fn new_full_with_params(
         let bridge_block_client = client.clone();
         // V119: Clone block_import for importing received blocks
         let bridge_block_import = block_import.clone();
+        let indexer_tx = indexer_tx.clone();
+        // Basic guardrails to prevent oversized finality messages from blocking the bridge
+        const DETR_P2P_MAX_FINALITY_MSG: usize = 64 * 1024;
+        const DETR_P2P_RATE_WINDOW_SECS: u64 = 10;
+        const DETR_P2P_MAX_MSGS_UNTRUSTED: u32 = 5;
+        const DETR_P2P_MAX_BYTES_UNTRUSTED: u64 = 256 * 1024; // 256 KB per window for unknown peers
+        let detrp2p_metrics = detrp2p_metrics.clone();
+        // Shared peer store remains optional; if absent, metrics still work.
+        let peer_store = peer_store.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-bridge-worker",
@@ -2391,6 +2782,51 @@ pub fn new_full_with_params(
                 use tokio::time::{interval, Duration};
                 let mut poll_interval = interval(Duration::from_millis(100));
                 let mut poll_count = 0u64;
+                #[derive(Clone)]
+                struct PeerQuota {
+                    msgs: u32,
+                    bytes: u64,
+                    last: std::time::Instant,
+                    trusted: bool,
+                }
+                let mut peer_quota: HashMap<PeerId, PeerQuota> = HashMap::new();
+
+                fn check_quota(
+                    peer_quota: &mut HashMap<PeerId, PeerQuota>,
+                    peer: &PeerId,
+                    size: usize,
+                ) -> bool {
+                    let now = std::time::Instant::now();
+                    let entry = peer_quota.entry(peer.clone()).or_insert(PeerQuota {
+                        msgs: 0,
+                        bytes: 0,
+                        last: now,
+                        trusted: false,
+                    });
+                    if now.duration_since(entry.last).as_secs() >= DETR_P2P_RATE_WINDOW_SECS {
+                        entry.msgs = 0;
+                        entry.bytes = 0;
+                        entry.last = now;
+                    }
+                    if entry.trusted {
+                        return true;
+                    }
+                    if entry.msgs >= DETR_P2P_MAX_MSGS_UNTRUSTED {
+                        return false;
+                    }
+                    if entry.bytes + size as u64 > DETR_P2P_MAX_BYTES_UNTRUSTED {
+                        return false;
+                    }
+                    entry.msgs += 1;
+                    entry.bytes += size as u64;
+                    true
+                }
+
+                fn mark_trusted(peer_quota: &mut HashMap<PeerId, PeerQuota>, peer: &PeerId) {
+                    if let Some(entry) = peer_quota.get_mut(peer) {
+                        entry.trusted = true;
+                    }
+                }
 
                 loop {
                     poll_interval.tick().await;
@@ -2403,10 +2839,67 @@ pub fn new_full_with_params(
 
                     // ========== HANDLE INCOMING P2P MESSAGES ==========
                     // Poll P2P network for incoming vote/certificate messages
+                    let mut processed_inbound: u32 = 0;
                     while let Some((peer_id, p2p_msg)) = bridge_p2p_network.receive_message().await {
+                        processed_inbound += 1;
+                        if processed_inbound > 200 {
+                            // Avoid unbounded work in a single tick; resume next poll
+                            break;
+                        }
                         log::info!("🎯 Bridge worker processing message from {:?}", peer_id);
+
+                        // Track peer in peer store for organic growth/reputation
+                        let peer_hex = hex::encode(peer_id.as_bytes());
+                        if peer_store.get(&peer_hex).await.is_none() {
+                            let _ = peer_store
+                                .store(StoredPeer::new(peer_hex.clone(), format!("unknown:{}", peer_hex)))
+                                .await;
+                        } else {
+                            let _ = peer_store.update(&peer_hex, "0.1.0".into(), Vec::new()).await;
+                        }
+
+                        // Keep peer store bounded to avoid allowlist crowding while allowing organic growth.
+                        if peer_store.count().await > DETR_P2P_MAX_TRACKED_PEERS {
+                            let removed = peer_store
+                                .prune_over_capacity(DETR_P2P_MAX_TRACKED_PEERS)
+                                .await;
+                            if removed > 0 {
+                                log::debug!(
+                                    "🧹 Pruned {} detrp2p peers to stay within cap {}",
+                                    removed,
+                                    DETR_P2P_MAX_TRACKED_PEERS
+                                );
+                            }
+                        }
+
+                        if let Ok(len) = peer_store.active_len().await.try_into() {
+                            detrp2p_metrics.set_stored_peers(len);
+                        }
+
                         match p2p_msg {
                             P2PMessage::Vote { data } => {
+                                if data.len() > DETR_P2P_MAX_FINALITY_MSG {
+                                    log::warn!(
+                                        "Dropping oversized vote from {:?} ({} bytes)",
+                                        peer_id,
+                                        data.len()
+                                    );
+                                    detrp2p_metrics.inc_dropped();
+                                    let _ = peer_store.update_reputation(&peer_hex, -1).await;
+                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                        detrp2p_metrics.set_stored_peers(len);
+                                    }
+                                    continue;
+                                }
+                                if !check_quota(&mut peer_quota, &peer_id, data.len()) {
+                                    log::warn!("Dropping vote from {:?} due to rate limit", peer_id);
+                                    detrp2p_metrics.inc_dropped();
+                                    let _ = peer_store.update_reputation(&peer_hex, -1).await;
+                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                        detrp2p_metrics.set_stored_peers(len);
+                                    }
+                                    continue;
+                                }
                                 log::info!("🗳️  Processing VOTE message from {:?}", peer_id);
                                 // Deserialize vote data
                                 match bincode::deserialize::<VoteData>(&data) {
@@ -2425,7 +2918,7 @@ pub fn new_full_with_params(
                                         );
 
                                         // Forward to bridge for processing
-                                        let mut bridge = bridge_gadget_bridge.lock().await;
+                                        let bridge = bridge_gadget_bridge.lock().await;
                                         if let Err(e) = bridge.on_vote_received(vote_data.clone()).await {
                                             log::warn!("Failed to process vote: {:?}", e);
                                         } else {
@@ -2444,11 +2937,16 @@ pub fn new_full_with_params(
                                                         view,
                                                         finality_vote.block_hash
                                                     );
+                                                    mark_trusted(&mut peer_quota, &peer_id);
+                                                    let _ = peer_store.update_reputation(&peer_hex, 1).await;
+                                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                                        detrp2p_metrics.set_stored_peers(len);
+                                                    }
                                                 }
-                                                Err(e) => {
-                                                    log::warn!(
-                                                        "❌ Vote REJECTED by finality gadget: {:?} (validator: {}, view: {})",
-                                                        e,
+                                                    Err(e) => {
+                                                        log::warn!(
+                                                            "❌ Vote REJECTED by finality gadget: {:?} (validator: {}, view: {})",
+                                                            e,
                                                         validator_short,
                                                         view
                                                     );
@@ -2462,6 +2960,28 @@ pub fn new_full_with_params(
                                 }
                             }
                             P2PMessage::Certificate { data } => {
+                                if data.len() > DETR_P2P_MAX_FINALITY_MSG {
+                                    log::warn!(
+                                        "Dropping oversized certificate from {:?} ({} bytes)",
+                                        peer_id,
+                                        data.len()
+                                    );
+                                    detrp2p_metrics.inc_dropped();
+                                    let _ = peer_store.update_reputation(&peer_hex, -1).await;
+                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                        detrp2p_metrics.set_stored_peers(len);
+                                    }
+                                    continue;
+                                }
+                                if !check_quota(&mut peer_quota, &peer_id, data.len()) {
+                                    log::warn!("Dropping certificate from {:?} due to rate limit", peer_id);
+                                    detrp2p_metrics.inc_dropped();
+                                    let _ = peer_store.update_reputation(&peer_hex, -1).await;
+                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                        detrp2p_metrics.set_stored_peers(len);
+                                    }
+                                    continue;
+                                }
                                 // Deserialize certificate data
                                 match bincode::deserialize::<CertificateData>(&data) {
                                     Ok(cert_data) => {
@@ -2477,7 +2997,7 @@ pub fn new_full_with_params(
                                         );
 
                                         // Forward to bridge
-                                        let mut bridge = bridge_gadget_bridge.lock().await;
+                                        let bridge = bridge_gadget_bridge.lock().await;
                                         if let Err(e) = bridge.on_certificate_received(cert_data.clone()).await {
                                             log::warn!("Failed to process certificate: {:?}", e);
                                         } else {
@@ -2499,6 +3019,24 @@ pub fn new_full_with_params(
                                                         view,
                                                         sig_count
                                                     );
+                                                    mark_trusted(&mut peer_quota, &peer_id);
+                                                    let _ = peer_store.update_reputation(&peer_hex, 1).await;
+                                                    if let Ok(len) = peer_store.active_len().await.try_into() {
+                                                        detrp2p_metrics.set_stored_peers(len);
+                                                    }
+                                                    // Index accepted certificate
+                                                    let timestamp = SystemTime::now()
+                                                        .duration_since(UNIX_EPOCH)
+                                                        .unwrap_or_default()
+                                                        .as_millis() as u64;
+                                                    let block_number: u32 = view as u32;
+                                                    let _ = indexer_tx.send(FinalityEvent::CertificateCreated {
+                                                        view,
+                                                        block_hash: ppfa_block_hash,
+                                                        block_number,
+                                                        signature_count: sig_count as u32,
+                                                        timestamp,
+                                                    }).ok();
 
                                                     // V111: Forward accepted certificate to PPFA for libp2p gossip
                                                     // This bridges DETR P2P finality data to Substrate's libp2p network
@@ -2588,6 +3126,17 @@ pub fn new_full_with_params(
                                                             "✅ V119: Block #{} imported successfully from DETR P2P: {:?}",
                                                             block_number, result
                                                         );
+                                                        // Index block import for observability
+                                                        let timestamp = SystemTime::now()
+                                                            .duration_since(UNIX_EPOCH)
+                                                            .unwrap_or_default()
+                                                            .as_millis() as u64;
+                                                        let _ = indexer_tx.send(FinalityEvent::BlockImported {
+                                                            hash: block_hash,
+                                                            number: block_number as u32,
+                                                            parent_hash,
+                                                            timestamp,
+                                                        }).ok();
                                                     }
                                                     Err(e) => {
                                                         log::warn!(
@@ -2624,29 +3173,167 @@ pub fn new_full_with_params(
                                     by_number,
                                     by_hash.map(|h| hex::encode(&h[..8]))
                                 );
-                                // TODO: Respond with block data if we have it
+                                detrp2p_metrics.inc_block_request();
+
+                                let target_hash = if let Some(hash_bytes) = by_hash {
+                                    Some(sp_core::H256::from_slice(&hash_bytes))
+                                } else if let Some(num) = by_number {
+                                    let num_nf: NumberFor<Block> = num.saturated_into();
+                                    match bridge_block_client.hash(num_nf) {
+                                        Ok(opt) => opt,
+                                        Err(e) => {
+                                            log::warn!("Failed to resolve hash for block #{}: {:?}", num, e);
+                                            None
+                                        }
+                                    }
+                                } else {
+                                    None
+                                };
+
+                                if let Some(hash) = target_hash {
+                                    match bridge_block_client.block(hash) {
+                                        Ok(Some(signed_block)) => {
+                                            let parent_hash = *signed_block.block.header.parent_hash();
+                                            let encoded_block = signed_block.encode();
+                                            let block_number: u64 = (*signed_block.block.header.number()).saturated_into();
+
+                                            let mut hash_bytes = [0u8; 32];
+                                            hash_bytes.copy_from_slice(hash.as_ref());
+                                            let mut parent_bytes = [0u8; 32];
+                                            parent_bytes.copy_from_slice(parent_hash.as_ref());
+
+                                            let response = P2PMessage::BlockResponse {
+                                                request_id,
+                                                block_number,
+                                                block_hash: hash_bytes,
+                                                parent_hash: parent_bytes,
+                                                encoded_block,
+                                            };
+
+                                            if let Err(e) = bridge_p2p_network.unicast(peer_id, response).await {
+                                                log::warn!("Failed to send BlockResponse to {:?}: {:?}", peer_id, e);
+                                            } else {
+                                                detrp2p_metrics.inc_block_response();
+                                                log::debug!("📤 Sent BlockResponse #{} to {:?}", block_number, peer_id);
+                                            }
+                                        }
+                                        Ok(None) => {
+                                            log::debug!("Block not found for request {:?}", request_id);
+                                        }
+                                        Err(e) => {
+                                            log::warn!("Error fetching block for request {:?}: {:?}", request_id, e);
+                                        }
+                                    }
+                                } else {
+                                    log::debug!("No valid hash/number provided in BlockRequest {:?}", request_id);
+                                }
                             }
-                            P2PMessage::BlockResponse { request_id, block_number, block_hash, .. } => {
+                            P2PMessage::BlockResponse { request_id, block_number, block_hash, encoded_block, .. } => {
                                 log::debug!(
                                     "📥 V118: Received BlockResponse from {:?} (id: {}, block #{})",
                                     peer_id,
                                     request_id,
                                     block_number
                                 );
-                                // TODO: Process block response and import
+                                use sp_runtime::generic::SignedBlock;
+                                match SignedBlock::<Block>::decode(&mut &encoded_block[..]) {
+                                    Ok(signed_block) => {
+                                        let decoded_hash = signed_block.block.header.hash();
+                                        let decoded_number = *signed_block.block.header.number();
+                                        let expected_hash = sp_core::H256::from_slice(&block_hash);
+
+                                        if decoded_hash != expected_hash {
+                                            log::warn!(
+                                                "BlockResponse hash mismatch: expected {:?}, got {:?}",
+                                                hex::encode(&block_hash[..8]),
+                                                hex::encode(decoded_hash.as_ref().get(..8).unwrap_or(&[]))
+                                            );
+                                        }
+
+                                        match bridge_block_client.block(decoded_hash) {
+                                            Ok(Some(_)) => {
+                                                log::trace!("Block #{} already present locally, skipping import", decoded_number);
+                                            }
+                                            Ok(None) => {
+                                                use sc_consensus::BlockImportParams;
+                                                use sc_consensus::BlockImport;
+
+                                                let block = signed_block.block;
+                                                let mut import_params = BlockImportParams::new(
+                                                    sp_consensus::BlockOrigin::NetworkBroadcast,
+                                                    block.header.clone(),
+                                                );
+                                                import_params.body = Some(block.extrinsics.to_vec());
+                                                import_params.finalized = false;
+                                                import_params.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
+
+                                                match bridge_block_import.import_block(import_params).await {
+                                                    Ok(result) => {
+                                                        log::info!(
+                                                            "✅ Imported block #{} from BlockResponse: {:?}",
+                                                            decoded_number,
+                                                            result
+                                                        );
+                                                    }
+                                                    Err(e) => {
+                                                        log::warn!(
+                                                            "❌ Failed to import block #{} from BlockResponse: {:?}",
+                                                            decoded_number,
+                                                            e
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                            Err(e) => {
+                                                log::warn!("Error checking block existence: {:?}", e);
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Failed to decode BlockResponse block #{}, err: {:?}", block_number, e);
+                                    }
+                                }
                             }
                             P2PMessage::StatusRequest { request_id } => {
                                 log::trace!("📥 V118: Received StatusRequest from {:?} (id: {})", peer_id, request_id);
-                                // TODO: Respond with our best block info
+                                let info = bridge_block_client.info();
+                                let best_number: u64 = info.best_number.saturated_into();
+                                let best_hash = info.best_hash;
+                                let genesis_hash = bridge_block_client.hash(Zero::zero()).unwrap_or_default().unwrap_or(best_hash);
+                                let mut best_hash_bytes = [0u8; 32];
+                                best_hash_bytes.copy_from_slice(best_hash.as_ref());
+                                let mut genesis_bytes = [0u8; 32];
+                                genesis_bytes.copy_from_slice(genesis_hash.as_ref());
+
+                                let response = P2PMessage::StatusResponse {
+                                    request_id,
+                                    best_number,
+                                    best_hash: best_hash_bytes,
+                                    genesis_hash: genesis_bytes,
+                                };
+                                if let Err(e) = bridge_p2p_network.unicast(peer_id, response).await {
+                                    log::warn!("Failed to send StatusResponse to {:?}: {:?}", peer_id, e);
+                                } else {
+                                    detrp2p_metrics.inc_status_response();
+                                    log::trace!("📤 Sent StatusResponse to {:?} (best #{})", peer_id, best_number);
+                                }
                             }
-                            P2PMessage::StatusResponse { request_id, best_number, best_hash, .. } => {
+                            P2PMessage::StatusResponse { request_id, best_number, best_hash: _best_hash, .. } => {
                                 log::trace!(
                                     "📥 V118: Received StatusResponse from {:?} (id: {}, best #{})",
                                     peer_id,
                                     request_id,
                                     best_number
                                 );
-                                // TODO: Compare with our chain state
+                                let our_best: u64 = bridge_block_client.info().best_number.saturated_into();
+                                if best_number > our_best + 2 {
+                                    log::info!(
+                                        "Peer {:?} ahead (their best #{}, ours #{}); consider requesting blocks",
+                                        peer_id,
+                                        best_number,
+                                        our_best
+                                    );
+                                }
                             }
                             _ => {
                                 log::trace!("Received non-consensus message from peer {:?}", peer_id);
@@ -2655,8 +3342,11 @@ pub fn new_full_with_params(
                     }
 
                     // ========== FORWARD OUTBOUND MESSAGES TO P2P ==========
-                    let mut bridge = bridge_gadget_bridge.lock().await;
-                    let outbound_messages = bridge.get_outbound_messages().await;
+                    let outbound_messages = {
+                        // Minimize time under the lock to reduce contention with inbound processing
+                        let bridge = bridge_gadget_bridge.lock().await;
+                        bridge.get_outbound_messages().await
+                    };
 
                     for (msg, _priority) in outbound_messages {
                         match msg {
@@ -2664,6 +3354,13 @@ pub fn new_full_with_params(
                                 // Serialize and broadcast vote
                                 match bincode::serialize(&vote_data) {
                                     Ok(payload) => {
+                                        if payload.len() > DETR_P2P_MAX_FINALITY_MSG {
+                                            log::warn!(
+                                                "Skipping outbound vote larger than limit ({} bytes)",
+                                                payload.len()
+                                            );
+                                            continue;
+                                        }
                                         let p2p_msg = P2PMessage::Vote { data: payload };
                                         if let Err(e) = bridge_p2p_network.broadcast(p2p_msg).await {
                                             log::warn!("Failed to broadcast vote via P2P: {:?}", e);
@@ -2680,6 +3377,14 @@ pub fn new_full_with_params(
                                 // Serialize and broadcast certificate
                                 match bincode::serialize(&cert_data) {
                                     Ok(payload) => {
+                                        if payload.len() > DETR_P2P_MAX_FINALITY_MSG {
+                                            log::warn!(
+                                                "Skipping outbound certificate larger than limit ({} bytes, view {})",
+                                                payload.len(),
+                                                cert_data.view
+                                            );
+                                            continue;
+                                        }
                                         let p2p_msg = P2PMessage::Certificate { data: payload };
                                         if let Err(e) = bridge_p2p_network.broadcast(p2p_msg).await {
                                             log::warn!("Failed to broadcast certificate via P2P: {:?}", e);
@@ -2743,6 +3448,7 @@ pub fn new_full_with_params(
                 log::info!("🎯 Starting ASF → Substrate finality application task");
 
                 use tokio::time::{interval, Duration};
+                #[allow(unused_imports)]
                 use sp_blockchain::HeaderBackend;
 
                 let mut finality_interval = interval(Duration::from_secs(6));
@@ -2938,26 +3644,42 @@ pub fn new_full_with_params(
 /// This queries the runtime for ASF-specific APIs to ensure compatibility
 pub fn runtime_supports_asf<Client>(_client: &Arc<Client>) -> bool
 where
-    Client: sc_client_api::BlockchainEvents<Block>,
+    Client: sc_client_api::BlockchainEvents<Block> + ProvideRuntimeApi<Block> + sc_client_api::UsageProvider<Block>,
+    Client::Api: ValidatorCommitteeApi<Block>,
 {
-    // TODO: Check for ASF runtime APIs
-    // For now, assume all Primearc Core Chain runtimes support ASF
-    true
+    // Runtime supports ASF if the ValidatorCommittee API is callable.
+    // We query genesis (cheap) and treat errors as lack of support.
+    let at = _client.usage_info().chain.genesis_hash;
+    _client
+        .runtime_api()
+        .validator_committee(at)
+        .map(|_| true)
+        .unwrap_or(false)
 }
 
 /// Get current PPFA committee from runtime
 ///
 /// Queries the runtime state for the active validator committee
 pub fn get_ppfa_committee<Client>(
-    _client: &Arc<Client>,
-    _at: <Block as sp_runtime::traits::Block>::Hash,
+    client: &Arc<Client>,
+    at: <Block as sp_runtime::traits::Block>::Hash,
 ) -> Result<Vec<sp_core::crypto::AccountId32>, String>
 where
-    Client: sc_client_api::BlockchainEvents<Block>,
+    Client: sc_client_api::BlockchainEvents<Block> + ProvideRuntimeApi<Block>,
+    Client::Api: ValidatorCommitteeApi<Block>,
 {
-    // TODO: Query runtime state for committee
-    // This will use validator-management types
-    Ok(Vec::new())
+    let committee = client
+        .runtime_api()
+        .validator_committee(at)
+        .map_err(|e| format!("runtime validator_committee: {:?}", e))?;
+
+    // Map to AccountId32 for existing callers.
+    let accounts = committee
+        .into_iter()
+        .map(|info| info.validator_id().clone())
+        .collect();
+
+    Ok(accounts)
 }
 
 #[cfg(test)]

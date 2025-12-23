@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 //! ASF Justification Import and Sync Link
 //!
 //! This module provides ASF consensus integration with Substrate's syncing engine.
@@ -25,7 +27,7 @@ use primearc_core_runtime::opaque::Block;
 use sc_client_api::{Backend, BlockBackend, BlockchainEvents, HeaderBackend};
 use sc_consensus::BlockImport;
 use sp_api::ProvideRuntimeApi;
-use sp_blockchain::Error as ClientError;
+use sp_core::ByteArray;
 use sp_consensus::BlockOrigin;
 use sp_runtime::traits::{Block as BlockT, Header as HeaderT, NumberFor};
 use sp_runtime::Justification;
@@ -109,9 +111,9 @@ where
     /// Import an ASF certificate as a justification
     pub async fn import_certificate(&self, cert: AsfCertificateJustification, hash: B::Hash) -> Result<(), String> {
         // V114: Strictly enforce BFT signature threshold
-        // For 21 validators, need at least 15 signatures (2*21/3 + 1 = 15)
+        // Fixed ASF guardrail: committee size 21, threshold 15
         const COMMITTEE_SIZE: usize = 21;
-        const BFT_THRESHOLD: usize = (2 * COMMITTEE_SIZE / 3) + 1; // = 15
+        const BFT_THRESHOLD: usize = 15;
 
         if cert.signatures.len() < BFT_THRESHOLD {
             log::error!(
@@ -124,6 +126,50 @@ where
                 "Insufficient signatures: {} < {} required for BFT consensus",
                 cert.signatures.len(),
                 BFT_THRESHOLD
+            ));
+        }
+
+        // Validate signer uniqueness and signature correctness against the expected payload
+        use sp_core::sr25519;
+        use sp_runtime::traits::Verify;
+        use sp_runtime::MultiSignature;
+
+        let mut seen = std::collections::BTreeSet::new();
+        let mut valid_count = 0usize;
+
+        // Payload: view + block_hash + timestamp
+        let mut payload = Vec::with_capacity(8 + 32 + 8);
+        payload.extend_from_slice(&cert.view.to_le_bytes());
+        payload.extend_from_slice(&cert.block_hash);
+        payload.extend_from_slice(&cert.timestamp.to_le_bytes());
+
+        for (validator_id, sig_bytes) in cert.signatures.iter() {
+            if validator_id.len() != 32 {
+                log::warn!("Skipping signer with invalid id length {}", validator_id.len());
+                continue;
+            }
+            if !seen.insert(*validator_id) {
+                log::warn!("Duplicate signer detected: {:?}", hex::encode(&validator_id[..8]));
+                continue;
+            }
+            let pubkey = sr25519::Public::from_raw(*validator_id);
+            let account_id = sp_runtime::AccountId32::from(pubkey);
+            if let Ok(sig) = sr25519::Signature::try_from(sig_bytes.as_slice()) {
+                let multi_sig = MultiSignature::from(sig);
+                if multi_sig.verify(payload.as_slice(), &account_id) {
+                    valid_count += 1;
+                } else {
+                    log::warn!("Invalid signature from signer {:?}", hex::encode(&validator_id[..8]));
+                }
+            } else {
+                log::warn!("Malformed signature from signer {:?}", hex::encode(&validator_id[..8]));
+            }
+        }
+
+        if valid_count < BFT_THRESHOLD {
+            return Err(format!(
+                "ASF certificate REJECTED: only {} valid signatures < required {}",
+                valid_count, BFT_THRESHOLD
             ));
         }
 
@@ -191,11 +237,13 @@ where
 /// Provides sync status information to the network layer.
 /// Reports whether the node is synced based on ASF finality state.
 #[derive(Clone)]
-pub struct AsfSyncOracle<C> {
-    client: Arc<C>,
-    /// Receiver for finality notifications
-    last_finalized: Arc<RwLock<Option<u32>>>,
-}
+    pub struct AsfSyncOracle<C> {
+        client: Arc<C>,
+        /// Receiver for finality notifications
+        last_finalized: Arc<RwLock<Option<u32>>>,
+        /// Tracks whether we have seen any finality (used to avoid false-healthy)
+        has_finality: Arc<RwLock<bool>>,
+    }
 
 impl<C> AsfSyncOracle<C> {
     /// Create a new ASF sync oracle
@@ -203,6 +251,7 @@ impl<C> AsfSyncOracle<C> {
         Self {
             client,
             last_finalized: Arc::new(RwLock::new(None)),
+            has_finality: Arc::new(RwLock::new(false)),
         }
     }
 
@@ -210,6 +259,8 @@ impl<C> AsfSyncOracle<C> {
     pub async fn set_finalized(&self, number: u32) {
         let mut last = self.last_finalized.write().await;
         *last = Some(number);
+        let mut seen = self.has_finality.write().await;
+        *seen = true;
     }
 }
 
@@ -218,13 +269,21 @@ where
     C: Send + Sync,
 {
     fn is_major_syncing(&self) -> bool {
-        // ASF nodes are never "major syncing" in the traditional sense
-        // because ASF handles its own sync
-        false
+        // Report syncing until we have observed at least one finality update.
+        let has_finality = futures::executor::block_on(async {
+            *self.has_finality.read().await
+        });
+        !has_finality
     }
 
     fn is_offline(&self) -> bool {
-        false
+        // Consider offline if we have never finalized and best number is zero.
+        // This is a conservative heuristic to avoid false "healthy".
+        let best_zero = futures::executor::block_on(async {
+            let number = self.last_finalized.read().await;
+            number.is_none()
+        });
+        best_zero
     }
 }
 

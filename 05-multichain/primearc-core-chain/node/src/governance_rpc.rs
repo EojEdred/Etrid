@@ -12,7 +12,9 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
+#[allow(unused_imports)]
 use codec::{Decode, Encode};
+use sp_core::crypto::Ss58Codec;
 use serde::{Deserialize, Serialize};
 
 pub use governance_runtime_api::GovernanceApi as GovernanceRuntimeApi;
@@ -511,13 +513,16 @@ fn parse_account<AccountId: codec::Codec>(s: &str) -> Result<AccountId, String> 
 /// Create governance RPC extension
 pub fn create_governance_rpc<C, Block, AccountId>(
     client: Arc<C>,
-) -> jsonrpsee::RpcModule<()>
+) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     Block: BlockT,
     C: HeaderBackend<Block> + ProvideRuntimeApi<Block> + Send + Sync + 'static,
     C::Api: GovernanceRuntimeApi<Block, AccountId>,
     AccountId: codec::Codec + std::fmt::Display + Clone + Send + Sync + 'static,
 {
+    use GovernanceApiServer;
     let governance = Governance::<C, Block, AccountId>::new(client);
-    governance.into_rpc()
+    let mut module = jsonrpsee::RpcModule::new(());
+    module.merge(governance.into_rpc())?;
+    Ok(module)
 }

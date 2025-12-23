@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use primearc_core_runtime::WASM_BINARY;
 use sc_service::ChainType;
 

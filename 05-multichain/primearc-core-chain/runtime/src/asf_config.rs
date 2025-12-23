@@ -130,41 +130,34 @@ parameter_types! {
 /// - Invalid certificate generation
 pub struct AsfSlashingInterface;
 
-// // impl asf_algorithm::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
-//     fn slash_validator(
-//         validator: &AccountId,
-//         amount: Balance,
-//         reason: asf_algorithm::SlashReason,
-//     ) -> Result<(), sp_runtime::DispatchError> {
-//         use frame_support::traits::Currency;
-// 
-//         // Log the slashing event
-//         log::warn!(
-//             "ASF: Slashing validator {:?} for {:?}, amount: {}",
-//             validator,
-//             reason,
-//             amount
-//         );
-// 
-//         // Slash via EtridStaking pallet
-//         // Note: This is a simplified implementation
-//         // The actual slashing logic should integrate with pallet_etrid_staking
-//         let _ = Balances::slash(validator, amount);
-// 
-//         Ok(())
-//     }
-// 
-//     fn is_validator_active(validator: &AccountId) -> bool {
-//         // Check if validator is in the active set
-//         // This integrates with pallet_validator_committee
-//         crate::ValidatorCommittee::is_validator_active(validator)
-//     }
-// 
-//     fn get_validator_stake(validator: &AccountId) -> Balance {
-//         // Get validator stake from staking pallet
-//         EtridStaking::get_validator_stake(validator)
-//     }
-// }
+impl asf_algorithm::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
+    fn slash_validator(
+        validator: &AccountId,
+        amount: Balance,
+        reason: asf_algorithm::SlashReason,
+    ) -> Result<(), sp_runtime::DispatchError> {
+        use frame_support::traits::Currency;
+
+        log::warn!(
+            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
+            validator,
+            reason,
+            amount
+        );
+
+        let _ = Balances::slash_reserved(validator, amount);
+
+        Ok(())
+    }
+
+    fn is_validator_active(validator: &AccountId) -> bool {
+        crate::ValidatorCommittee::is_validator_active(validator)
+    }
+
+    fn get_validator_stake(validator: &AccountId) -> Balance {
+        EtridStaking::get_validator_stake(validator)
+    }
+}
 
 /// ASF Randomness Source - provides randomness for PPFA rotation
 ///

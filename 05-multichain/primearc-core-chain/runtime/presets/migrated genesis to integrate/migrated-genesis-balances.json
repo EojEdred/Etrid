@@ -1,0 +1,205 @@
+{
+  "exportedAt": "2025-12-04T10:26:56.391Z",
+  "blockNumber": 98505,
+  "blockHash": "0x487411c37a0f2121445acefb4b5e4db9e33d1507068573a2ab3cd7ae367e28dc",
+  "balances": [
+    {
+      "address": "5Gdae5WysRZbw4GUogcSSvDC5pTCy1Vh2zJe1qRY58t7rssj",
+      "free": "1749997999999999998601375597",
+      "reserved": "0",
+      "total": "1749997999999999998601375597"
+    },
+    {
+      "address": "5EpuJN4jMZRRDq4M51zpUSPDRsiCKGsZnkLKse7K1yu6Wfjh",
+      "free": "375000000000000000000000000",
+      "reserved": "0",
+      "total": "375000000000000000000000000"
+    },
+    {
+      "address": "5CB4bmrau6L5q7driYK1hj9pKUNVThj2VisQosifYY4P5WXX",
+      "free": "250000000000000000000000000",
+      "reserved": "0",
+      "total": "250000000000000000000000000"
+    },
+    {
+      "address": "5GwyLGb3LbJDnityKDWXtt8ov13eKLHxYpAihCvskoMVKivQ",
+      "free": "125000000000000000000000000",
+      "reserved": "0",
+      "total": "125000000000000000000000000"
+    },
+    {
+      "address": "5F3xZuvgmQujYeSn3MCq2Q9NzPwAtmnpe6YunZAXsAhuq61Y",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5Dw3v1YDsK5WJZFWbW2PhZ1BiiqvoZGQzinSQaq8zxiuUPma",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5F9NSPBMsxCcZRDGRTVo5FCLMBPUSMZCKUKchzW5974Fec6F",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5G13BKsPPRaM6U36i8r6uUTyoYGJceKhmEEesdnL7chH8YDh",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5E7RQ52y6AtpLtFnnU2Mx65zE7C3QzwSmcZq3CNcmv13d9MW",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5ELweYoxEKhuRkLeNjy7fZfx1ugvz5ReYR2XN1TyXPLgY1Hn",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5EAAiYoSJyaTLLDwJWDmXHsy3arkR2RdYSWpjKUZ8NuuyX64",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5EHxAQVmYouTktPZyyxkm8ffrj3k7Fs6PXNrTZWdWdSmEgwP",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5Fvuc2i7kLEtA22KoJVGziqZU9xkdvQuMQacNhKCUCeZBmgB",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5FWdbjb5TwA9gAG8vE68fHtCZByQEYSzH6X22Sm9vDmfZwXn",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5HdSgUXLwfbH5SLdZyGEHTZRcrWRVHkb5pXrvmnpN1aX9pah",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5G3VMq5DiDwCepMyeWB76n7GPoBYY4vxEu3RKRWBdRD83Rce",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5E78e1HVrEv17RhFSmkMtFru143soFM3c3y1YQmUGt7DjgsR",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5DwG4YMADunfvKwxbqmnxGATjfc6aaPcgLEiqfiBiMbfBFbq",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5FxK7yqRNYsqsMxqpQttQGg1hqQ1yTEZUuyizM6NhBmZZJpD",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5DcMaScvykcc2bhfrLueGYvwHJhaqtTQj9SLufcLTDytcEDN",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5Gj8E6NEz2Kui3v3qHvzAEsZdJhbe9gryUgAAErUUxhB76fT",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5FWnzbp2AThZ7Fw8f882Z96VQmSQTDTc8WwSBXhWqtaVnWUs",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5FPAkGUy1woJrRp76HHdWujS3YLxenKTYQ5zC86LeyfeU4Ax",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5HQMqpWrZU1AdN2WumX2Fv8EphJUgiF6fmyMZr94HH31kVQd",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5CVAY8FtX54DVGNTfteobzW2FBkgNEBdUphcXWkckQzkKry4",
+      "free": "1000000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000000"
+    },
+    {
+      "address": "5Eq5h1KQkzyDStVVaCnizXPHjL6c8HoetjKvzgdPF6i3w7md",
+      "free": "10000000000000000000000",
+      "reserved": "0",
+      "total": "10000000000000000000000"
+    },
+    {
+      "address": "5GWDz1a6inaKC2vxKgjiY4Miyzv1JUzpHWGRR43LiA5ufZs2",
+      "free": "1000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000"
+    },
+    {
+      "address": "5EHaSsLMDQhqFdex2DxBx4f6uukfAapkwNQngzkajrhN9xHN",
+      "free": "1000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000"
+    },
+    {
+      "address": "5DvgxdPMHmkR6oYsWVkKPUvcFJo6CtSdtKKsHQg8rc9F8s1p",
+      "free": "1000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000"
+    },
+    {
+      "address": "5DhrrecXHiyPaNactHLBgN5bzP1tv7nbNGYjkmJq6UxX2XFk",
+      "free": "1000000000000000000000",
+      "reserved": "0",
+      "total": "1000000000000000000000"
+    },
+    {
+      "address": "5FCckgBUS4KoUVQEck7trY9pXMDF64jciARtFuruz3x2LL32",
+      "free": "999999999999369810847",
+      "reserved": "0",
+      "total": "999999999999369810847"
+    },
+    {
+      "address": "5GBq8WgTBzf6mfyu5qP9JFgJeJt8oFobGpDKjbkSxkn7cQ5K",
+      "free": "999999999999369810847",
+      "reserved": "0",
+      "total": "999999999999369810847"
+    },
+    {
+      "address": "5EYCAe5ijiYfyeZ2JJCGq56LmPyNRAKzpG4QkoQkkQNB5e6Z",
+      "free": "2659002709",
+      "reserved": "0",
+      "total": "2659002709"
+    }
+  ]
+}

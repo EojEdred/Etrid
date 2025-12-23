@@ -9,6 +9,9 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 
+use crate::asf_rpc::AsfFinalityState;
+pub use governance_runtime_api::GovernanceApi as GovernanceRuntimeApi;
+
 /// Full client dependencies
 pub struct FullDeps<C, P> {
     /// The client instance to use
@@ -19,6 +22,8 @@ pub struct FullDeps<C, P> {
     pub enable_asf: bool,
     /// Enable Governance RPC endpoints
     pub enable_governance: bool,
+    /// ASF Finality state for ASF RPC (required if enable_asf is true)
+    pub asf_finality_state: Option<Arc<AsfFinalityState>>,
 }
 
 /// Instantiate all full RPC extensions
@@ -32,6 +37,7 @@ where
     C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
     C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
     C::Api: pallet_validator_committee_runtime_api::ValidatorCommitteeApi<Block>,
+    C::Api: GovernanceRuntimeApi<Block, AccountId>,
     C::Api: BlockBuilder<Block>,
     P: TransactionPool + 'static,
 {
@@ -39,24 +45,31 @@ where
     use substrate_frame_rpc_system::{System, SystemApiServer};
 
     let mut module = RpcModule::new(());
-    let FullDeps { client, pool, enable_asf, enable_governance } = deps;
+    let FullDeps { client, pool, enable_asf, enable_governance, asf_finality_state } = deps;
 
     // Standard Substrate RPC
     module.merge(System::new(client.clone(), pool).into_rpc())?;
     module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
-    // ASF Consensus RPC (if enabled)
+    // ASF Consensus RPC (if enabled and state provided)
     if enable_asf {
-        log::info!("🔌 ASF RPC endpoints (temporarily disabled for compilation)");
-        // TODO: Re-enable once module path issue is resolved
-        // module.merge(crate::asf_rpc::create_asf_rpc(client.clone()))?;
+        if let Some(finality_state) = asf_finality_state {
+            log::info!("🔌 ASF RPC endpoints enabled");
+            let asf_rpc = crate::asf_rpc::create_asf_rpc::<C, Block>(client.clone(), finality_state)?;
+            module.merge(asf_rpc)?;
+        } else {
+            log::warn!("⚠️ ASF RPC enabled but no finality state provided - using default state");
+            let default_state = Arc::new(AsfFinalityState::new(6));
+            let asf_rpc = crate::asf_rpc::create_asf_rpc::<C, Block>(client.clone(), default_state)?;
+            module.merge(asf_rpc)?;
+        }
     }
 
     // Governance RPC (if enabled)
     if enable_governance {
         log::info!("🗳️ Governance RPC endpoints enabled");
-        // TODO: Enable once runtime API is implemented
-        // module.merge(crate::governance_rpc::create_governance_rpc::<_, Block, AccountId>(client.clone()))?;
+        let governance_rpc = crate::governance_rpc::create_governance_rpc::<C, Block, AccountId>(client.clone())?;
+        module.merge(governance_rpc)?;
     }
 
     Ok(module)
