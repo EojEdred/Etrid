@@ -40,12 +40,13 @@ impl<Balance> TreasuryInterface<Balance> for () {
     }
 }
 
-#[frame_support::pallet(dev_mode)]
+#[frame_support::pallet]
 pub mod pallet {
     use super::*;
     use frame_support::{
         pallet_prelude::*,
         traits::{Time, Currency, ExistenceRequirement, WithdrawReasons},
+        weights::Weight,
         BoundedVec,
     };
     use frame_system::pallet_prelude::*;

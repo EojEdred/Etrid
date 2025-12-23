@@ -429,12 +429,35 @@ impl pallet_etrid_staking::Config for Runtime {
     type ValidatorRewards = Runtime;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// EVM/ETWasm PALLETS DISABLED FOR PRIMEARC CORE
-// These are moved to ETH-PBC as per architecture. Primearc Core is pure coordination.
-// ═══════════════════════════════════════════════════════════════════════════════
-// impl pallet_etwasm_vm::Config for Runtime { ... }
-// impl pallet_evm::Config for Runtime { ... }
+/// Configure the pallet-etwasm-vm (smart contract execution)
+impl pallet_etwasm_vm::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type Treasury = (); // No-op treasury for now (fees burned)
+    type MaxCodeSize = ConstU32<1_048_576>; // 1 MB max contract size (aligned with vmw-runtime)
+    type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
+    type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
+    type VmwOperationPrice = ConstU32<1>; // VMW operation price (1 unit per operation)
+    type TreasuryFeePercent = ConstU32<50>; // 50% of VMw fees to treasury
+}
+
+/// Configure the pallet-evm (EVM compatibility layer)
+impl pallet_evm::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WasmBridge = EtwasmBridge<Runtime>;
+    type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
+    type Currency = Balances;
+    type Treasury = (); // No-op treasury for now (fees burned)
+    type MaxCodeSize = ConstU32<1_048_576>; // 1 MB max contract size (aligned with vmw-runtime)
+    type DefaultGasLimit = ConstU64<10_000_000>; // 10 million gas default
+    type MaxGasLimit = ConstU64<100_000_000>; // 100 million gas max
+    type VmwOperationPrice = ConstU32<1>; // VMW operation price (1 unit per operation)
+    type TreasuryFeePercent = ConstU32<50>; // 50% of VMw fees to treasury
+    type Balance = Balance;
+    type EtwasmConfig = Runtime;
+}
+
+pub use pallet_evm::EtwasmBridge;
 
 /// Configure the pallet-consensus (ASF consensus - Adaptive Scale of Finality)
 impl pallet_consensus::Config for Runtime {
@@ -1225,8 +1248,8 @@ construct_runtime!(
 
         // Ëtrid custom pallets
         Accounts: pallet_accounts,
-        // EtwamVM: pallet_etwasm_vm,  // Moved to ETH-PBC
-        // Evm: pallet_evm,            // Moved to ETH-PBC
+        EtwamVM: pallet_etwasm_vm,
+        Evm: pallet_evm,
         Consensus: pallet_consensus,
         Governance: pallet_governance,
         PbcRouter: pallet_pbc_router,
@@ -1379,8 +1402,8 @@ impl Default for RuntimeGenesisConfig {
             sudo: Default::default(),
             node_authorization: Default::default(),
             accounts: Default::default(),
-            // etwasm_vm: Default::default(),  // Moved to ETH-PBC
-            // evm: Default::default(),        // Moved to ETH-PBC
+            etwasm_vm: Default::default(),
+            evm: Default::default(),
             consensus: Default::default(),
             governance: Default::default(),
             pbc_router: Default::default(),
