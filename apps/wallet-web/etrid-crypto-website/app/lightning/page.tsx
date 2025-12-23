@@ -1,44 +1,28 @@
-"use client"
+'use client'
 
-import { LightningHeader } from "@/components/lightning/lightning-header"
-import { PaymentCard } from "@/components/lightning/payment-card"
-import { ChannelsList } from "@/components/lightning/channels-list"
-import { PaymentHistory } from "@/components/lightning/payment-history"
-import { NetworkStats } from "@/components/lightning/network-stats"
-import { CrossChainInfo } from "@/components/lightning/cross-chain-info"
-import { useWallet } from "@/lib/polkadot/useWallet"
-import { useLightning } from "@/lib/lightning/useLightning"
+import dynamic from 'next/dynamic'
+import { PageHeader } from '@/components/layout/PageHeader'
+
+const LightningContent = dynamic(
+  () => import('@/components/lightning/LightningContent'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen gradient-bg-animated flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-500 mb-4" />
+          <div className="h-4 w-32 bg-white/10 rounded" />
+        </div>
+      </div>
+    )
+  }
+)
 
 export default function LightningPage() {
-  const wallet = useWallet()
-  const lightning = useLightning()
-
   return (
-    <div className="min-h-screen bg-background">
-      <LightningHeader wallet={wallet} lightning={lightning} />
-
-      <main className="container mx-auto px-4 py-8">
-        {wallet.error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-            {wallet.error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main payment area */}
-          <div className="lg:col-span-2 space-y-6">
-            <PaymentCard wallet={wallet} lightning={lightning} />
-            <CrossChainInfo />
-            <PaymentHistory payments={lightning.payments} />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <NetworkStats lightning={lightning} />
-            <ChannelsList channels={lightning.channels} />
-          </div>
-        </div>
-      </main>
+    <div className="min-h-screen gradient-bg-animated">
+      <PageHeader title="Lightning" subtitle="Fast payments" />
+      <LightningContent />
     </div>
   )
 }

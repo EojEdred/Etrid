@@ -9,10 +9,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { governanceService } from './service';
-import type {
-  Proposal,
+import {
   ProposalCategory,
   ProposalStatus,
+  ConvictionLevel,
+} from './types';
+import type {
+  Proposal,
   ProposalFilters,
   CreateProposalParams,
   CastVoteParams,
@@ -26,7 +29,6 @@ import type {
   GovernanceStats,
   CategoryStats,
   TransactionResult,
-  ConvictionLevel,
   PaginationParams,
   PaginatedResponse,
 } from './types';
@@ -37,6 +39,8 @@ import type {
 
 /**
  * Hook to fetch all proposals with optional filters
+ * Fetches REAL data from democracy pallet on chain
+ * Returns empty array if democracy pallet doesn't exist
  */
 export function useProposals(filters?: ProposalFilters) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -563,6 +567,11 @@ export function useDelegationStats(account: string | null) {
 
 /**
  * Hook to fetch overall governance statistics
+ * Fetches REAL data from democracy pallet including:
+ * - Total proposals and referendums
+ * - Active/passed/rejected counts
+ * - Unique voter count
+ * - Treasury balance
  */
 export function useGovernanceStats() {
   const [stats, setStats] = useState<GovernanceStats | null>(null);
@@ -812,7 +821,7 @@ export interface ConsensusDayPhaseInfo {
  * ETRID uses a 21-day consensus cycle with different phases
  */
 export function useConsensusDayPhase() {
-  const [phase, setPhase] = useState<ConsensusDayPhaseInfo | null>(null);
+  const [phase, setPhase] = useState<{ phase: ConsensusDayPhase; blocksRemaining: number; isActive: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -826,8 +835,11 @@ export function useConsensusDayPhase() {
       // Day 15-18: Validation phase
       // Day 19-21: Distribution phase
 
-      // Mock implementation - in production this would query the chain
-      const currentBlock = Math.floor(Date.now() / 6000); // Simulated block height
+      // For now, query chain for current block and calculate phase
+      // In future, this will query a specific pallet if implemented
+      const api = await governanceService['ensureConnection']();
+      const currentBlock = (await api.rpc.chain.getHeader()).number.toNumber();
+
       const cycleBlocks = 302400; // 21 days in blocks
       const blockInCycle = currentBlock % cycleBlocks;
 
@@ -835,37 +847,35 @@ export function useConsensusDayPhase() {
       const validationEnd = 259200; // Day 18
 
       let currentPhase: ConsensusDayPhase;
-      let phaseStartBlock: number;
       let phaseEndBlock: number;
 
       if (blockInCycle < votingEnd) {
         currentPhase = 'VOTING';
-        phaseStartBlock = 0;
         phaseEndBlock = votingEnd;
       } else if (blockInCycle < validationEnd) {
         currentPhase = 'VALIDATION';
-        phaseStartBlock = votingEnd;
         phaseEndBlock = validationEnd;
       } else {
         currentPhase = 'DISTRIBUTION';
-        phaseStartBlock = validationEnd;
         phaseEndBlock = cycleBlocks;
       }
 
-      const blocksInPhase = phaseEndBlock - phaseStartBlock;
-      const blocksElapsed = blockInCycle - phaseStartBlock;
-      const progress = (blocksElapsed / blocksInPhase) * 100;
+      const blocksRemaining = phaseEndBlock - blockInCycle;
 
       setPhase({
         phase: currentPhase,
-        currentBlock,
-        phaseStartBlock: currentBlock - blocksElapsed,
-        phaseEndBlock: currentBlock + (phaseEndBlock - blockInCycle),
-        blocksRemaining: phaseEndBlock - blockInCycle,
-        progress,
+        blocksRemaining,
+        isActive: true,
       });
     } catch (err) {
+      console.error('Failed to fetch consensus day phase:', err);
       setError(err as Error);
+      // Set a fallback idle state
+      setPhase({
+        phase: 'IDLE',
+        blocksRemaining: 0,
+        isActive: false,
+      });
     } finally {
       setLoading(false);
     }
@@ -879,7 +889,7 @@ export function useConsensusDayPhase() {
   }, [fetchPhase]);
 
   return {
-    phase,
+    phase: phase || { phase: 'IDLE' as ConsensusDayPhase, blocksRemaining: 0, isActive: false },
     loading,
     error,
     refetch: fetchPhase,

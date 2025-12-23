@@ -1,171 +1,123 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Wallet,
   ArrowUpRight,
   ArrowDownLeft,
   RefreshCw,
   Copy,
-  ExternalLink,
-  TrendingUp,
-  TrendingDown,
   Zap,
-  Vote,
-  Layers,
-  ChevronDown,
-  Menu,
-  X,
   Plus,
   Upload,
   LogOut,
-  Clock
+  BarChart3,
+  Shield,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Clock,
+  Layers,
+  Smartphone,
+  Download,
+  Lock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import CreateWallet from './CreateWallet'
-import ImportWallet from './ImportWallet'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import SendReceive from './SendReceive'
+import WalletOnboarding from './WalletOnboarding'
+import BuyETR from './BuyETR'
+import ChainSelector from './ChainSelector'
+import { usePolkadotApi } from '@/hooks/usePolkadotApi'
+import { useBalance } from '@/hooks/useBalance'
+import { ChainSelectorProvider, useChainSelector, useChainBalance } from '@/hooks/useChainSelector'
+import { useTransactions } from '@/hooks/useTransactions'
+import { useToast } from '@/hooks/use-toast'
+import { useWallet } from '@/contexts/WalletContext'
 
-interface Token {
-  symbol: string
-  name: string
-  balance: string
-  usdValue: string
-  change24h: number
-  icon: string
+// Generate a deterministic color from address for identicon
+function generateIdenticonColors(address: string): string[] {
+  if (!address) return ['#666', '#888', '#aaa', '#ccc']
+  const colors: string[] = []
+  for (let i = 0; i < 4; i++) {
+    const hash = address.slice(2 + i * 8, 10 + i * 8)
+    const hue = parseInt(hash, 16) % 360
+    colors.push(`hsl(${hue}, 70%, 60%)`)
+  }
+  return colors
 }
 
-interface Transaction {
-  hash: string
-  type: 'send' | 'receive'
-  amount: string
-  address: string
-  timestamp: string
-  status: 'confirmed' | 'pending' | 'failed'
+// Identicon component like MetaMask
+function Identicon({ address, size = 40 }: { address: string; size?: number }) {
+  const colors = useMemo(() => generateIdenticonColors(address), [address])
+  return (
+    <div className="rounded-full overflow-hidden" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 40 40" width={size} height={size}>
+        <rect x="0" y="0" width="20" height="20" fill={colors[0]} />
+        <rect x="20" y="0" width="20" height="20" fill={colors[1]} />
+        <rect x="0" y="20" width="20" height="20" fill={colors[2]} />
+        <rect x="20" y="20" width="20" height="20" fill={colors[3]} />
+        <circle cx="20" cy="20" r="8" fill={colors[0]} opacity="0.5" />
+      </svg>
+    </div>
+  )
 }
 
-export default function WalletDashboard() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [address, setAddress] = useState('')
-  const [privateKey, setPrivateKey] = useState('')
-  const [mnemonic, setMnemonic] = useState('')
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [etrBalance, setEtrBalance] = useState('0')
-  const [totalBalance, setTotalBalance] = useState('$0.00')
+function WalletDashboardContent() {
+  const { toast } = useToast()
+  const { status, account, lock, deleteCurrentWallet, storedWallet } = useWallet()
+
+  const [copied, setCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState('assets')
 
   // Modal states
-  const [showCreateWallet, setShowCreateWallet] = useState(false)
-  const [showImportWallet, setShowImportWallet] = useState(false)
+  const [showWalletOnboarding, setShowWalletOnboarding] = useState(false)
   const [showSendReceive, setShowSendReceive] = useState(false)
+  const [showBuyETR, setShowBuyETR] = useState(false)
   const [sendReceiveMode, setSendReceiveMode] = useState<'send' | 'receive'>('send')
 
-  // Transaction history
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [isLoadingBalance, setIsLoadingBalance] = useState(false)
+  // Derived state from wallet context
+  const isConnected = status === 'unlocked' && !!account
+  const address = account?.address || ''
 
-  // Load wallet from localStorage on mount
+  // Hooks
+  const { balance, isLoading: isLoadingBalance, refetch: refreshBalance } = useBalance(address)
+  const { isConnected: isChainConnected, chainInfo, currentBlock, error: chainError } = usePolkadotApi()
+  const { selectedChain, isConnected: isPBCConnected } = useChainSelector()
+  const { balance: pbcBalance, isLoading: isPBCBalanceLoading } = useChainBalance(address)
+  const { transactions, isLoading: isLoadingTx, refetch: refetchTx } = useTransactions(address)
+
+  const displayBalance = pbcBalance?.formatted || balance?.formatted || '0'
+  const displayToken = selectedChain.token
+  const etrBalance = balance?.formatted || '0 ETR'
+
+  // Show onboarding if wallet exists but is locked
   useEffect(() => {
-    const savedWallet = localStorage.getItem('etrid_wallet')
-    if (savedWallet) {
-      const wallet = JSON.parse(savedWallet)
-      setAddress(wallet.address)
-      setPrivateKey(wallet.privateKey)
-      setMnemonic(wallet.mnemonic || '')
-      setIsConnected(true)
-      loadBalance(wallet.address)
-      loadTransactions(wallet.address)
+    if (status === 'locked' && storedWallet) {
+      setShowWalletOnboarding(true)
     }
-  }, [])
+  }, [status, storedWallet])
 
-  const loadBalance = async (addr: string) => {
-    setIsLoadingBalance(true)
-    try {
-      // This will be replaced with actual chain balance fetching from lib/wallet/service.ts
-      // For now, using placeholder
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      const balance = '1245.50'
-      setEtrBalance(balance)
-      setTotalBalance(`$${(parseFloat(balance) * 2).toFixed(2)}`)
-    } catch (error) {
-      console.error('Failed to load balance:', error)
-    } finally {
-      setIsLoadingBalance(false)
+  const handleLockWallet = () => {
+    lock()
+    toast({ title: 'Wallet Locked', description: 'Your wallet has been locked' })
+  }
+
+  const handleDisconnectWallet = () => {
+    if (window.confirm('Are you sure you want to remove this wallet? Make sure you have your recovery phrase saved.')) {
+      deleteCurrentWallet()
+      toast({ title: 'Wallet Removed', description: 'Your wallet has been removed from this device' })
     }
-  }
-
-  const loadTransactions = async (addr: string) => {
-    try {
-      // This will be replaced with actual transaction history fetching
-      // For now, using placeholder data
-      const mockTransactions: Transaction[] = [
-        {
-          hash: '0xabc123...',
-          type: 'receive',
-          amount: '100.50',
-          address: '0x1234...5678',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          status: 'confirmed'
-        },
-        {
-          hash: '0xdef456...',
-          type: 'send',
-          amount: '50.25',
-          address: '0x8765...4321',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          status: 'confirmed'
-        }
-      ]
-      setTransactions(mockTransactions)
-    } catch (error) {
-      console.error('Failed to load transactions:', error)
-    }
-  }
-
-  const handleWalletCreated = (addr: string, pk: string, mnem: string) => {
-    setAddress(addr)
-    setPrivateKey(pk)
-    setMnemonic(mnem)
-    setIsConnected(true)
-
-    // Save to localStorage
-    localStorage.setItem('etrid_wallet', JSON.stringify({
-      address: addr,
-      privateKey: pk,
-      mnemonic: mnem
-    }))
-
-    loadBalance(addr)
-    loadTransactions(addr)
-  }
-
-  const handleWalletImported = (addr: string, pk: string, mnem?: string) => {
-    setAddress(addr)
-    setPrivateKey(pk)
-    setMnemonic(mnem || '')
-    setIsConnected(true)
-
-    // Save to localStorage
-    localStorage.setItem('etrid_wallet', JSON.stringify({
-      address: addr,
-      privateKey: pk,
-      mnemonic: mnem || ''
-    }))
-
-    loadBalance(addr)
-    loadTransactions(addr)
-  }
-
-  const disconnectWallet = () => {
-    setAddress('')
-    setPrivateKey('')
-    setMnemonic('')
-    setEtrBalance('0')
-    setTotalBalance('$0.00')
-    setTransactions([])
-    setIsConnected(false)
-    localStorage.removeItem('etrid_wallet')
   }
 
   const formatAddress = (addr: string) => {
@@ -175,6 +127,9 @@ export default function WalletDashboard() {
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address)
+    setCopied(true)
+    toast({ title: 'Address Copied', description: 'Wallet address copied to clipboard' })
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleSendClick = () => {
@@ -188,446 +143,348 @@ export default function WalletDashboard() {
   }
 
   const handleSendTransaction = async (to: string, amount: string) => {
-    // This will be replaced with actual transaction sending from lib/wallet/service.ts
     await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Refresh balance and transactions after sending
-    await loadBalance(address)
-    await loadTransactions(address)
+    refreshBalance()
   }
 
   const refreshData = () => {
     if (address) {
-      loadBalance(address)
-      loadTransactions(address)
+      refreshBalance()
+      refetchTx()
     }
-  }
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const hours = Math.floor(diff / 3600000)
-
-    if (hours < 1) return 'Just now'
-    if (hours < 24) return `${hours}h ago`
-    return date.toLocaleDateString()
   }
 
   return (
     <div className="min-h-screen gradient-bg-animated">
-      {/* Header */}
+      {/* Header with ETRID Branding */}
       <header className="sticky top-0 z-50 glass border-b border-white/10">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Logo - iOS Match */}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center">
-                <span className="text-[#0a0014] font-bold text-lg">E</span>
-              </div>
-              <span className="text-xl font-bold gradient-text hidden sm:block">ETRID</span>
-            </Link>
+            {/* Logo + Navigation */}
+            <div className="flex items-center gap-6">
+              <Link href="/" className="flex items-center gap-2">
+                <Image src="/etrid-logo.png" alt="ETRID" width={36} height={36} className="rounded-xl" />
+                <span className="font-bold text-lg hidden sm:inline gradient-text">ETRID</span>
+              </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/" className="text-white/80 hover:text-white transition-colors font-medium">
-                Wallet
-              </Link>
-              <Link href="/swap" className="text-white/80 hover:text-white transition-colors font-medium">
-                Swap
-              </Link>
-              <Link href="/staking/eth-pbc" className="text-white/80 hover:text-white transition-colors font-medium">
-                Staking
-              </Link>
-              <Link href="/governance" className="text-white/80 hover:text-white transition-colors font-medium">
-                Consënsus
-              </Link>
-              <Link href="/lightning" className="text-white/80 hover:text-white transition-colors font-medium">
-                Lightning
-              </Link>
-              <a
-                href="https://etrid.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/80 hover:text-white transition-colors font-medium flex items-center gap-1"
-              >
-                etrid.org <ExternalLink className="w-3 h-3" />
-              </a>
-            </nav>
+              {/* Navigation Tabs */}
+              <nav className="hidden md:flex items-center gap-1">
+                <Link href="/staking" className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm">
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Staking</span>
+                </Link>
+                <Link href="/lightning" className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm">
+                  <Zap className="w-4 h-4" />
+                  <span>Lightning</span>
+                </Link>
+                <Link href="/validator" className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm">
+                  <Shield className="w-4 h-4" />
+                  <span>Validator</span>
+                </Link>
+              </nav>
+            </div>
 
-            {/* Wallet Connection */}
-            <div className="flex items-center gap-4">
-              {isConnected ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={copyAddress}
-                    className="glass px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-sm font-mono">{formatAddress(address)}</span>
-                    <Copy className="w-4 h-4 text-white/60" />
-                  </button>
-                  <Button
-                    onClick={disconnectWallet}
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Disconnect</span>
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => setShowCreateWallet(true)}
-                    className="btn-primary px-4 py-2 rounded-lg font-medium"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Create</span>
-                  </Button>
-                  <Button
-                    onClick={() => setShowImportWallet(true)}
-                    variant="outline"
-                    className="glass border-white/20 px-4 py-2 rounded-lg font-medium hover:bg-white/10"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Import</span>
-                  </Button>
-                </div>
+            {/* Right Side: Chain Selector + Account */}
+            <div className="flex items-center gap-3">
+              {isConnected && (
+                <ChainSelector address={address} showBalance={false} compact={true} />
               )}
 
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+              {isConnected ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/20 hover:bg-white/10 transition-all">
+                      <Identicon address={address} size={24} />
+                      <span className="text-sm font-mono hidden sm:inline">{formatAddress(address)}</span>
+                      <ChevronDown className="w-3 h-3 text-white/60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="glass border-white/20 w-56">
+                    <div className="p-3 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        <Identicon address={address} size={40} />
+                        <div>
+                          <p className="font-medium">Account 1</p>
+                          <p className="text-xs text-white/60 font-mono">{formatAddress(address)}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <DropdownMenuItem onClick={copyAddress} className="cursor-pointer">
+                      {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                      {copied ? 'Copied!' : 'Copy Address'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a href={`https://explorer.etrid.org/account/${address}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View on Explorer
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem onClick={handleLockWallet} className="cursor-pointer">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Lock Wallet
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem onClick={handleDisconnectWallet} className="cursor-pointer text-red-400 focus:text-red-400">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Remove Wallet
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button onClick={() => setShowWalletOnboarding(true)} className="btn-primary px-4 py-2 rounded-lg font-medium">
+                  <Wallet className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Connect Wallet</span>
+                  <span className="sm:hidden">Connect</span>
+                </Button>
+              )}
             </div>
           </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <nav className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4 flex flex-col gap-3">
-              <Link href="/" className="text-white/80 hover:text-white transition-colors py-2">
-                Wallet
-              </Link>
-              <Link href="/swap" className="text-white/80 hover:text-white transition-colors py-2">
-                Swap
-              </Link>
-              <Link href="/staking/eth-pbc" className="text-white/80 hover:text-white transition-colors py-2">
-                Staking
-              </Link>
-              <Link href="/governance" className="text-white/80 hover:text-white transition-colors py-2">
-                Consënsus
-              </Link>
-              <Link href="/lightning" className="text-white/80 hover:text-white transition-colors py-2">
-                Lightning
-              </Link>
-            </nav>
-          )}
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {!isConnected ? (
-          /* Connect Wallet Prompt */
+          /* Welcome Screen */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
             <div className="glass-card p-12 rounded-2xl max-w-lg">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center pulse-glow">
-                <Wallet className="w-10 h-10 text-[#0a0014]" />
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <Image src="/etrid-logo.png" alt="ETRID" width={56} height={56} className="rounded-full" />
               </div>
               <h1 className="text-3xl font-bold mb-4 gradient-text">Welcome to ETRID Wallet</h1>
               <p className="text-white/60 mb-8">
-                Create a new wallet or import an existing one to access DeFi features, swap tokens, stake assets, and participate in Consënsus governance.
+                Create a new wallet or import an existing one to manage your ETR tokens and interact with the ETRID network.
               </p>
               <div className="space-y-3">
-                <Button
-                  onClick={() => setShowCreateWallet(true)}
-                  className="btn-primary px-8 py-3 rounded-xl text-lg font-medium w-full"
-                >
+                <Button onClick={() => setShowWalletOnboarding(true)} className="btn-primary w-full py-6 rounded-xl text-lg font-medium">
                   <Plus className="w-5 h-5 mr-2" />
-                  Create New Wallet
-                </Button>
-                <Button
-                  onClick={() => setShowImportWallet(true)}
-                  variant="outline"
-                  className="glass border-white/20 px-8 py-3 rounded-xl text-lg font-medium w-full hover:bg-white/10"
-                >
-                  <Upload className="w-5 h-5 mr-2" />
-                  Import Wallet
+                  Get Started
                 </Button>
               </div>
-              <div className="mt-6 text-white/40 text-sm">
-                <p>Your keys, your crypto. Non-custodial and secure.</p>
-              </div>
+              <p className="mt-6 text-white/40 text-sm">Your keys, your crypto. Non-custodial and secure.</p>
             </div>
           </div>
         ) : (
           /* Wallet Dashboard */
-          <div className="space-y-8">
-            {/* Portfolio Overview */}
-            <Card className="glass-card border-0">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Balance Card with Identicon */}
+            <Card className="glass-card border-0 overflow-hidden">
               <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div>
-                    <p className="text-white/60 text-sm mb-1">Total Balance</p>
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-4xl font-bold gradient-text">
-                        {isLoadingBalance ? (
-                          <div className="w-32 h-10 glass rounded animate-pulse" />
-                        ) : (
-                          etrBalance + ' ETR'
-                        )}
-                      </h2>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={refreshData}
-                        className="hover:bg-white/10"
-                        disabled={isLoadingBalance}
-                      >
-                        <RefreshCw className={`w-4 h-4 ${isLoadingBalance ? 'animate-spin' : ''}`} />
-                      </Button>
+                {/* Account Row */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Identicon address={address} size={32} />
+                  <button onClick={copyAddress} className="flex items-center gap-1 text-white/60 hover:text-white transition-colors">
+                    <span className="font-mono text-sm">{formatAddress(address)}</span>
+                    {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                </div>
+
+                {/* Balance */}
+                <div className="text-center mb-6">
+                  {isPBCBalanceLoading || isLoadingBalance ? (
+                    <div className="h-16 flex items-center justify-center">
+                      <RefreshCw className="w-6 h-6 animate-spin text-white/40" />
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-white/60 text-sm">{totalBalance} USD</span>
+                  ) : (
+                    <>
+                      <h2 className="text-5xl font-bold tracking-tight gradient-text">{displayBalance}</h2>
+                      <p className="text-xl text-white/60 mt-1">{displayToken}</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-6">
+                  <button onClick={handleReceiveClick} className="flex flex-col items-center gap-2 group">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+                      <ArrowDownLeft className="w-6 h-6 text-white" />
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      onClick={handleSendClick}
-                      className="btn-primary rounded-xl px-6"
-                    >
-                      <ArrowUpRight className="w-4 h-4 mr-2" />
-                      Send
-                    </Button>
-                    <Button
-                      onClick={handleReceiveClick}
-                      variant="outline"
-                      className="glass border-white/20 rounded-xl px-6 hover:bg-white/10"
-                    >
-                      <ArrowDownLeft className="w-4 h-4 mr-2" />
-                      Receive
-                    </Button>
-                    <Link href="/swap">
-                      <Button variant="outline" className="glass border-white/20 rounded-xl px-6 hover:bg-white/10">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Swap
-                      </Button>
-                    </Link>
-                  </div>
+                    <span className="text-sm font-medium">Receive</span>
+                  </button>
+
+                  <button onClick={handleSendClick} className="flex flex-col items-center gap-2 group">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
+                      <ArrowUpRight className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">Send</span>
+                  </button>
+
+                  <button onClick={() => setShowBuyETR(true)} className="flex flex-col items-center gap-2 group">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                      <Plus className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">Buy</span>
+                  </button>
+
+                  <Link href="/staking" className="flex flex-col items-center gap-2 group">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform">
+                      <BarChart3 className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">Stake</span>
+                  </Link>
+
+                  <button onClick={refreshData} className="flex flex-col items-center gap-2 group">
+                    <div className="w-14 h-14 rounded-full glass border border-white/20 flex items-center justify-center group-hover:scale-105 transition-transform group-hover:bg-white/10">
+                      <RefreshCw className={`w-6 h-6 ${isLoadingBalance ? 'animate-spin' : ''}`} />
+                    </div>
+                    <span className="text-sm font-medium">Refresh</span>
+                  </button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link href="/swap">
-                <Card className="glass-card border-0 card-hover cursor-pointer">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
-                      <RefreshCw className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <h3 className="font-semibold">Swap</h3>
-                    <p className="text-white/60 text-sm">Exchange tokens</p>
-                  </CardContent>
-                </Card>
-              </Link>
+            {/* Chain Info Banner */}
+            <div className="glass-card p-4 rounded-xl border border-white/10">
+              <div className="flex items-center gap-3">
+                <Image src="/etrid-logo.png" alt={selectedChain.token} width={40} height={40} className="rounded-full" />
+                <div className="flex-1">
+                  <h3 className="font-semibold">{selectedChain.name}</h3>
+                  <p className="text-white/60 text-sm">{selectedChain.description}</p>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-lg ${isPBCConnected ? 'glass border border-green-500/30' : 'glass border border-yellow-500/30'}`}>
+                  <div className={`w-2 h-2 rounded-full ${isPBCConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`} />
+                  <span className="text-xs font-medium">{isPBCConnected ? 'Connected' : 'Connecting'}</span>
+                </div>
+              </div>
+            </div>
 
-              <Link href="/staking/eth-pbc">
-                <Card className="glass-card border-0 card-hover cursor-pointer">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3">
-                      <Layers className="w-6 h-6 text-purple-400" />
-                    </div>
-                    <h3 className="font-semibold">Stake</h3>
-                    <p className="text-white/60 text-sm">Earn rewards</p>
-                  </CardContent>
-                </Card>
-              </Link>
+            {/* Tabs - Assets / Activity */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full glass rounded-xl p-1">
+                <TabsTrigger value="assets" className="flex-1 rounded-lg data-[state=active]:bg-white/10">Assets</TabsTrigger>
+                <TabsTrigger value="activity" className="flex-1 rounded-lg data-[state=active]:bg-white/10">Activity</TabsTrigger>
+              </TabsList>
 
-              <Link href="/governance">
-                <Card className="glass-card border-0 card-hover cursor-pointer">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-3">
-                      <Vote className="w-6 h-6 text-cyan-400" />
+              <TabsContent value="assets" className="mt-4 space-y-2">
+                <div className="flex items-center justify-between p-4 glass rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Image src="/etrid-logo.png" alt="ETR" width={40} height={40} className="rounded-full" />
+                    <div>
+                      <h4 className="font-semibold">ETR</h4>
+                      <p className="text-white/60 text-sm">Etrid</p>
                     </div>
-                    <h3 className="font-semibold">Consënsus</h3>
-                    <p className="text-white/60 text-sm">Vote on proposals</p>
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{displayBalance}</p>
+                    <p className="text-white/60 text-sm">$0.00</p>
+                  </div>
+                </div>
+                <button className="w-full p-4 glass rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-white/60 hover:text-white">
+                  <Plus className="w-4 h-4" />
+                  <span>Import Token</span>
+                </button>
+              </TabsContent>
 
-              <Link href="/lightning">
-                <Card className="glass-card border-0 card-hover cursor-pointer">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-3">
-                      <Zap className="w-6 h-6 text-yellow-400" />
-                    </div>
-                    <h3 className="font-semibold">Lightning</h3>
-                    <p className="text-white/60 text-sm">Fast transfers</p>
-                  </CardContent>
-                </Card>
+              <TabsContent value="activity" className="mt-4 space-y-2">
+                {isLoadingTx ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="w-6 h-6 animate-spin text-white/40" />
+                  </div>
+                ) : transactions.length === 0 ? (
+                  <div className="text-center py-8 text-white/40">
+                    <Clock className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p>No transactions yet</p>
+                    <p className="text-sm">Your transaction history will appear here</p>
+                  </div>
+                ) : (
+                  transactions.map((tx) => (
+                    <a
+                      key={tx.id}
+                      href={`https://explorer.etrid.org/extrinsic/${tx.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 glass rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'receive' ? 'bg-green-500/20' : 'bg-purple-500/20'}`}>
+                          {tx.type === 'receive' ? <ArrowDownLeft className="w-5 h-5 text-green-500" /> : <ArrowUpRight className="w-5 h-5 text-purple-500" />}
+                        </div>
+                        <div>
+                          <h4 className="font-medium capitalize">{tx.type}</h4>
+                          <p className="text-white/60 text-sm flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {tx.time}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${tx.type === 'receive' ? 'text-green-500' : ''}`}>
+                          {tx.type === 'receive' ? '+' : '-'}{tx.amountFormatted}
+                        </p>
+                        <p className="text-white/60 text-xs font-mono">{tx.hashDisplay}</p>
+                      </div>
+                    </a>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
+
+            {/* Quick Links */}
+            <div className="grid grid-cols-2 gap-3">
+              <Link href="/lightning" className="p-4 glass rounded-xl hover:bg-white/5 transition-colors flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="font-medium">Lightning</p>
+                  <p className="text-xs text-white/60">Fast payments</p>
+                </div>
+              </Link>
+              <Link href="/validator" className="p-4 glass rounded-xl hover:bg-white/5 transition-colors flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-cyan-500" />
+                </div>
+                <div>
+                  <p className="font-medium">Validator</p>
+                  <p className="text-xs text-white/60">Run a node</p>
+                </div>
               </Link>
             </div>
 
-            {/* Assets */}
+            {/* Mobile App Promotion */}
             <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Assets</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={refreshData}
-                    disabled={isLoadingBalance}
-                    className="text-white/60 hover:text-white"
-                  >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingBalance ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-white/10">
-                  <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center">
-                        <span className="text-[#0a0014] font-bold text-sm">E</span>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">ETR</h4>
-                        <p className="text-white/60 text-sm">Etrid</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {isLoadingBalance ? (
-                        <div className="w-24 h-8 glass rounded animate-pulse" />
-                      ) : (
-                        <>
-                          <p className="font-semibold">{etrBalance}</p>
-                          <span className="text-white/60 text-sm">{totalBalance}</span>
-                        </>
-                      )}
-                    </div>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center flex-shrink-0">
+                    <Smartphone className="w-6 h-6 text-[#0a0014]" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold gradient-text">Get the Mobile App</h3>
+                    <p className="text-white/60 text-sm">Full DeFi experience on the go</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href="https://apps.apple.com/app/etrid-wallet" target="_blank" rel="noopener noreferrer" className="p-2 glass rounded-lg hover:bg-white/10 transition-colors">
+                      <Download className="w-5 h-5" />
+                    </a>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Transaction History */}
-            <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Recent Transactions</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={refreshData}
-                    className="text-white/60 hover:text-white"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {transactions.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <Clock className="w-12 h-12 mx-auto mb-4 text-white/20" />
-                    <h3 className="font-semibold text-white/60 mb-2">No transactions yet</h3>
-                    <p className="text-sm text-white/40">Your transaction history will appear here</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-white/10">
-                    {transactions.map((tx) => (
-                      <div
-                        key={tx.hash}
-                        className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              tx.type === 'receive'
-                                ? 'bg-green-500/20'
-                                : 'bg-blue-500/20'
-                            }`}
-                          >
-                            {tx.type === 'receive' ? (
-                              <ArrowDownLeft className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <ArrowUpRight className="w-5 h-5 text-blue-400" />
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold capitalize">{tx.type}</h4>
-                            <p className="text-white/60 text-sm font-mono">
-                              {formatAddress(tx.address)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${
-                            tx.type === 'receive' ? 'text-green-400' : 'text-white'
-                          }`}>
-                            {tx.type === 'receive' ? '+' : '-'}{tx.amount} ETR
-                          </p>
-                          <div className="flex items-center gap-2 justify-end">
-                            <span className="text-white/60 text-sm">
-                              {formatTimestamp(tx.timestamp)}
-                            </span>
-                            <span className={`text-xs px-2 py-0.5 rounded ${
-                              tx.status === 'confirmed'
-                                ? 'bg-green-500/20 text-green-400'
-                                : tx.status === 'pending'
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-red-500/20 text-red-400'
-                            }`}>
-                              {tx.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
 
             {/* Network Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               <Card className="glass-card border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-white/60 text-sm">Network Status</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-500">Excellent</p>
-                  <p className="text-white/40 text-sm mt-1">All systems operational</p>
+                <CardContent className="p-4 text-center">
+                  <div className={`w-2 h-2 rounded-full mx-auto mb-2 ${chainError ? 'bg-red-500' : isChainConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`} />
+                  <p className="text-xs text-white/60">Network</p>
+                  <p className={`font-bold ${chainError ? 'text-red-500' : isChainConnected ? 'text-green-500' : 'text-yellow-500'}`}>
+                    {chainError ? 'Error' : isChainConnected ? 'Connected' : 'Connecting'}
+                  </p>
                 </CardContent>
               </Card>
-
               <Card className="glass-card border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Zap className="w-4 h-4 text-yellow-500" />
-                    <span className="text-white/60 text-sm">TPS</span>
-                  </div>
-                  <p className="text-2xl font-bold">171,000+</p>
-                  <p className="text-white/40 text-sm mt-1">Transactions per second</p>
+                <CardContent className="p-4 text-center">
+                  <Zap className="w-4 h-4 text-yellow-500 mx-auto mb-2" />
+                  <p className="text-xs text-white/60">TPS</p>
+                  <p className="font-bold">171K+</p>
                 </CardContent>
               </Card>
-
               <Card className="glass-card border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Layers className="w-4 h-4 text-purple-500" />
-                    <span className="text-white/60 text-sm">Block Height</span>
-                  </div>
-                  <p className="text-2xl font-bold">12,847,293</p>
-                  <p className="text-white/40 text-sm mt-1">15s finality</p>
+                <CardContent className="p-4 text-center">
+                  <Layers className="w-4 h-4 text-purple-500 mx-auto mb-2" />
+                  <p className="text-xs text-white/60">Block</p>
+                  <p className="font-bold font-mono text-sm">{currentBlock ? currentBlock.toLocaleString() : '...'}</p>
                 </CardContent>
               </Card>
             </div>
@@ -640,48 +497,31 @@ export default function WalletDashboard() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#66D9E6] to-[#4DB3CC] flex items-center justify-center">
-                <span className="text-[#0a0014] font-bold text-sm">E</span>
-              </div>
+              <Image src="/etrid-logo.png" alt="ETRID" width={32} height={32} className="rounded-lg" />
               <span className="font-semibold">ETRID Protocol</span>
             </div>
             <div className="flex items-center gap-6 text-white/60 text-sm">
-              <a href="https://etrid.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                Website
-              </a>
-              <a href="https://docs.etrid.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                Docs
-              </a>
-              <a href="https://github.com/etrid" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                GitHub
-              </a>
-              <a href="https://twitter.com/etridprotocol" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                Twitter
-              </a>
+              <a href="https://etrid.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Website</a>
+              <a href="https://docs.etrid.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Docs</a>
+              <a href="https://github.com/EojEdred/Etrid" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+              <a href="https://twitter.com/etridprotocol" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Twitter</a>
             </div>
           </div>
         </div>
       </footer>
 
       {/* Modals */}
-      <CreateWallet
-        open={showCreateWallet}
-        onOpenChange={setShowCreateWallet}
-        onWalletCreated={handleWalletCreated}
-      />
-      <ImportWallet
-        open={showImportWallet}
-        onOpenChange={setShowImportWallet}
-        onWalletImported={handleWalletImported}
-      />
-      <SendReceive
-        open={showSendReceive}
-        onOpenChange={setShowSendReceive}
-        mode={sendReceiveMode}
-        address={address}
-        balance={etrBalance}
-        onSendTransaction={handleSendTransaction}
-      />
+      <WalletOnboarding open={showWalletOnboarding} onOpenChange={setShowWalletOnboarding} />
+      <SendReceive open={showSendReceive} onOpenChange={setShowSendReceive} mode={sendReceiveMode} address={address} balance={displayBalance + ' ' + displayToken} onSendTransaction={handleSendTransaction} />
+      <BuyETR open={showBuyETR} onOpenChange={setShowBuyETR} />
     </div>
+  )
+}
+
+export default function WalletDashboard() {
+  return (
+    <ChainSelectorProvider initialChainId="primearc-core">
+      <WalletDashboardContent />
+    </ChainSelectorProvider>
   )
 }

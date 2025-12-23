@@ -3,18 +3,30 @@
  *
  * Complete governance functionality for the ETRID web wallet
  * Connects to the real chain at wss://rpc.etrid.org
+ *
+ * *** UPDATED TO FETCH REAL DATA FROM DEMOCRACY PALLET ***
+ * - Uses api.query.democracy.publicProps() for pending proposals
+ * - Uses api.query.democracy.referendumInfoOf() for active/finished referendums
+ * - Uses api.query.democracy.votingOf() for vote information
+ * - Falls back gracefully if democracy pallet is not available
  */
 
 import { ApiPromise } from '@polkadot/api';
 import { primearcCoreChainApi } from '../api/primearc-core-chain';
-import type {
-  Proposal,
+import {
   ProposalCategory,
   ProposalStatus,
+  VoteType,
+  GovernanceErrorCode,
+  ConvictionLevel,
+  getConvictionConfig,
+  calculateVotingPower,
+} from './types';
+import type {
+  Proposal,
   ProposalFilters,
   CreateProposalParams,
   CastVoteParams,
-  VoteType,
   VoteRecord,
   VotingStats,
   VotingPower,
@@ -26,12 +38,9 @@ import type {
   CategoryStats,
   TransactionResult,
   GovernanceError,
-  GovernanceErrorCode,
-  ConvictionLevel,
   PaginatedResponse,
   PaginationParams,
 } from './types';
-import { getConvictionConfig, calculateVotingPower } from './types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GOVERNANCE SERVICE CLASS
@@ -125,36 +134,125 @@ export class GovernanceService {
 
   /**
    * Get all proposals with optional filters
+   * Fetches from democracy.publicProps() and democracy.referendumInfoOf()
    */
   async getProposals(filters?: ProposalFilters): Promise<Proposal[]> {
     try {
       const api = await this.ensureConnection();
 
-      // Query all proposals from storage
-      const proposalCount = await api.query.governance.proposalCount();
-      const count = proposalCount.toNumber();
-
       const proposals: Proposal[] = [];
 
-      for (let id = 0; id < count; id++) {
-        const proposal = await this.getProposal(id);
-        if (proposal) {
-          // Apply filters
-          if (filters?.categories && !filters.categories.includes(proposal.category)) {
-            continue;
-          }
-          if (filters?.statuses && !filters.statuses.includes(proposal.status)) {
-            continue;
-          }
-          if (filters?.proposer && proposal.proposer !== filters.proposer) {
-            continue;
-          }
-
-          proposals.push(proposal);
-        }
+      // Check if democracy pallet exists
+      if (!api.query.democracy) {
+        console.warn('Democracy pallet not found on chain');
+        return [];
       }
 
-      return proposals;
+      // Fetch public proposals (not yet referendums)
+      try {
+        const publicProps = await api.query.democracy.publicProps();
+
+        for (const [index, hash, proposer] of publicProps) {
+          const depositInfo = await api.query.democracy.depositOf(index.toNumber());
+          const deposit = depositInfo.isSome ? depositInfo.unwrap()[1].toString() : '0';
+
+          proposals.push({
+            id: index.toNumber(),
+            proposer: proposer.toString(),
+            title: `Proposal #${index.toNumber()}`,
+            description: `Democracy proposal ${hash.toHex()}`,
+            category: ProposalCategory.ParameterChange,
+            status: ProposalStatus.Pending,
+            createdAt: 0,
+            votingDeadline: 0,
+            votesFor: '0',
+            votesAgainst: '0',
+            votesAbstain: '0',
+            totalVotingPower: deposit,
+            approved: false,
+            executed: false,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching public proposals:', err);
+      }
+
+      // Fetch active and recent referendums
+      try {
+        const refCount = await api.query.democracy.referendumCount();
+        const count = refCount.toNumber();
+        const currentBlock = (await api.rpc.chain.getHeader()).number.toNumber();
+
+        // Query last 50 referendums or all if less
+        const startIndex = Math.max(0, count - 50);
+
+        for (let i = startIndex; i < count; i++) {
+          const refInfo = await api.query.democracy.referendumInfoOf(i);
+
+          if (refInfo.isNone) continue;
+
+          const info = refInfo.unwrap();
+
+          if (info.isOngoing) {
+            const ongoing = info.asOngoing;
+            const end = ongoing.end.toNumber();
+            const isPassed = currentBlock >= end;
+
+            proposals.push({
+              id: i + 10000, // Offset to distinguish from public proposals
+              proposer: 'Democracy',
+              title: `Referendum #${i}`,
+              description: `Active referendum ${ongoing.proposalHash.toHex()}`,
+              category: ProposalCategory.ParameterChange,
+              status: isPassed ? ProposalStatus.Passed : ProposalStatus.Active,
+              createdAt: 0,
+              votingDeadline: end,
+              votesFor: ongoing.tally.ayes.toString(),
+              votesAgainst: ongoing.tally.nays.toString(),
+              votesAbstain: '0',
+              totalVotingPower: ongoing.tally.turnout.toString(),
+              approved: isPassed,
+              executed: false,
+            });
+          } else if (info.isFinished) {
+            const finished = info.asFinished;
+
+            proposals.push({
+              id: i + 10000,
+              proposer: 'Democracy',
+              title: `Referendum #${i}`,
+              description: `Finished referendum`,
+              category: ProposalCategory.ParameterChange,
+              status: finished.approved.isTrue ? ProposalStatus.Passed : ProposalStatus.Rejected,
+              createdAt: 0,
+              votingDeadline: 0,
+              votesFor: '0',
+              votesAgainst: '0',
+              votesAbstain: '0',
+              totalVotingPower: '0',
+              approved: finished.approved.isTrue,
+              executed: true,
+              executedAt: finished.end.toNumber(),
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching referendums:', err);
+      }
+
+      // Apply filters
+      let filtered = proposals;
+      if (filters?.categories) {
+        filtered = filtered.filter(p => filters.categories!.includes(p.category));
+      }
+      if (filters?.statuses) {
+        filtered = filtered.filter(p => filters.statuses!.includes(p.status));
+      }
+      if (filters?.proposer) {
+        filtered = filtered.filter(p => p.proposer === filters.proposer);
+      }
+
+      return filtered;
     } catch (error) {
       console.error('Failed to fetch proposals:', error);
       return [];
@@ -163,44 +261,103 @@ export class GovernanceService {
 
   /**
    * Get a specific proposal by ID
+   * Handles both public proposals (<10000) and referendums (>=10000)
    */
   async getProposal(proposalId: number): Promise<Proposal | null> {
     try {
       const api = await this.ensureConnection();
 
-      // Query proposal from storage
-      const proposalData = await api.query.governance.proposals(proposalId);
-
-      if (proposalData.isNone) {
+      if (!api.query.democracy) {
+        console.warn('Democracy pallet not found');
         return null;
       }
 
-      const proposal = proposalData.unwrap();
-      const proposalJson = proposal.toJSON() as any;
+      // If ID >= 10000, it's a referendum
+      if (proposalId >= 10000) {
+        const refIndex = proposalId - 10000;
+        const refInfo = await api.query.democracy.referendumInfoOf(refIndex);
 
-      // Query vote tallies
-      const voteTallies = await api.query.governance.voteTallies(proposalId);
-      const talliesJson = voteTallies.toJSON() as any;
+        if (refInfo.isNone) {
+          return null;
+        }
 
-      return {
-        id: proposalId,
-        proposer: proposalJson.proposer,
-        title: proposalJson.title || `Proposal #${proposalId}`,
-        description: proposalJson.description || '',
-        category: this.parseCategory(proposalJson.category),
-        status: this.parseStatus(proposalJson.status),
-        createdAt: proposalJson.createdAt || 0,
-        votingDeadline: proposalJson.votingDeadline || 0,
-        executionBlock: proposalJson.executionBlock,
-        votesFor: talliesJson?.votesFor || '0',
-        votesAgainst: talliesJson?.votesAgainst || '0',
-        votesAbstain: talliesJson?.votesAbstain || '0',
-        totalVotingPower: talliesJson?.totalVotingPower || '0',
-        approved: proposalJson.approved || false,
-        executed: proposalJson.executed || false,
-        executedAt: proposalJson.executedAt,
-        metadata: proposalJson.metadata,
-      };
+        const info = refInfo.unwrap();
+        const currentBlock = (await api.rpc.chain.getHeader()).number.toNumber();
+
+        if (info.isOngoing) {
+          const ongoing = info.asOngoing;
+          const end = ongoing.end.toNumber();
+          const isPassed = currentBlock >= end;
+
+          return {
+            id: proposalId,
+            proposer: 'Democracy',
+            title: `Referendum #${refIndex}`,
+            description: `Active referendum ${ongoing.proposalHash.toHex()}`,
+            category: ProposalCategory.ParameterChange,
+            status: isPassed ? ProposalStatus.Passed : ProposalStatus.Active,
+            createdAt: 0,
+            votingDeadline: end,
+            votesFor: ongoing.tally.ayes.toString(),
+            votesAgainst: ongoing.tally.nays.toString(),
+            votesAbstain: '0',
+            totalVotingPower: ongoing.tally.turnout.toString(),
+            approved: isPassed,
+            executed: false,
+          };
+        } else if (info.isFinished) {
+          const finished = info.asFinished;
+
+          return {
+            id: proposalId,
+            proposer: 'Democracy',
+            title: `Referendum #${refIndex}`,
+            description: `Finished referendum`,
+            category: ProposalCategory.ParameterChange,
+            status: finished.approved.isTrue ? ProposalStatus.Passed : ProposalStatus.Rejected,
+            createdAt: 0,
+            votingDeadline: 0,
+            votesFor: '0',
+            votesAgainst: '0',
+            votesAbstain: '0',
+            totalVotingPower: '0',
+            approved: finished.approved.isTrue,
+            executed: true,
+            executedAt: finished.end.toNumber(),
+          };
+        }
+      } else {
+        // It's a public proposal
+        const publicProps = await api.query.democracy.publicProps();
+        const proposal = publicProps.find(([index]) => index.toNumber() === proposalId);
+
+        if (!proposal) {
+          return null;
+        }
+
+        const [index, hash, proposer] = proposal;
+        const depositInfo = await api.query.democracy.depositOf(index.toNumber());
+        const deposit = depositInfo.isSome ? depositInfo.unwrap()[1].toString() : '0';
+
+        return {
+          id: proposalId,
+          proposer: proposer.toString(),
+          title: `Proposal #${proposalId}`,
+          description: `Democracy proposal ${hash.toHex()}`,
+          category: ProposalCategory.ParameterChange,
+          status: ProposalStatus.Pending,
+          createdAt: 0,
+          votingDeadline: 0,
+          votesFor: '0',
+          votesAgainst: '0',
+          votesAbstain: '0',
+          totalVotingPower: deposit,
+          approved: false,
+          executed: false,
+        };
+      }
+
+      return null;
     } catch (error) {
       console.error(`Failed to fetch proposal ${proposalId}:`, error);
       return null;
@@ -307,21 +464,37 @@ export class GovernanceService {
 
   /**
    * Cast a vote on a proposal with conviction
+   * Uses democracy.vote() for referendums
    */
   async castVote(params: CastVoteParams, signer: any): Promise<TransactionResult> {
     try {
       const api = await this.ensureConnection();
 
-      // Encode vote type
-      const voteEncoded = this.encodeVoteType(params.voteType);
+      if (!api.tx.democracy) {
+        return {
+          success: false,
+          error: this.createError(
+            GovernanceErrorCode.NotConnected,
+            'Democracy pallet not available on chain'
+          ),
+        };
+      }
 
-      // Create vote extrinsic with conviction
-      const tx = api.tx.governance.vote(
-        params.proposalId,
-        voteEncoded,
-        params.conviction,
-        params.balance || null
-      );
+      // Referendum IDs are offset by 10000
+      const refIndex = params.proposalId >= 10000 ? params.proposalId - 10000 : params.proposalId;
+
+      // Create vote object for democracy pallet
+      const vote = {
+        Standard: {
+          vote: {
+            aye: params.voteType === VoteType.Aye,
+            conviction: params.conviction || ConvictionLevel.None,
+          },
+          balance: params.balance || '0',
+        },
+      };
+
+      const tx = api.tx.democracy.vote(refIndex, vote);
 
       return await this.signAndSend(tx, signer);
     } catch (error: any) {
@@ -350,29 +523,55 @@ export class GovernanceService {
   }
 
   /**
-   * Get votes for a proposal
+   * Get votes for a proposal/referendum
+   * Queries democracy.votingOf() to find all votes
    */
   async getVotes(proposalId: number): Promise<VoteRecord[]> {
     try {
       const api = await this.ensureConnection();
 
-      // Query all votes for proposal
-      const votes = await api.query.governance.votes.entries(proposalId);
+      if (!api.query.democracy) {
+        return [];
+      }
 
-      return votes.map(([key, value]) => {
-        const voter = key.args[1].toString();
-        const voteData = value.toJSON() as any;
+      const refIndex = proposalId >= 10000 ? proposalId - 10000 : proposalId;
+      const votes: VoteRecord[] = [];
 
-        return {
-          voter,
-          proposalId,
-          voteType: this.parseVoteType(voteData.voteType),
-          conviction: voteData.conviction || ConvictionLevel.None,
-          balance: voteData.balance || '0',
-          votingPower: voteData.votingPower || '0',
-          timestamp: voteData.timestamp || 0,
-        };
-      });
+      // Query all voting info entries
+      const votingInfo = await api.query.democracy.votingOf.entries();
+
+      for (const [key, value] of votingInfo) {
+        const voter = key.args[0].toString();
+
+        if (value.isDirect) {
+          const direct = value.asDirect;
+          const voterVotes = direct.votes;
+
+          // Find vote for this specific referendum
+          for (const [voteRefIndex, voteData] of voterVotes) {
+            if (voteRefIndex.toNumber() === refIndex) {
+              if (voteData.isStandard) {
+                const standard = voteData.asStandard;
+                const isAye = standard.vote.isAye;
+                const conviction = standard.vote.conviction.toNumber();
+                const balance = standard.balance.toString();
+
+                votes.push({
+                  voter,
+                  proposalId,
+                  voteType: isAye ? VoteType.Aye : VoteType.Nay,
+                  conviction: conviction as ConvictionLevel,
+                  balance,
+                  votingPower: balance, // Simple calculation, could apply conviction multiplier
+                  timestamp: 0,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      return votes;
     } catch (error) {
       console.error(`Failed to fetch votes for proposal ${proposalId}:`, error);
       return [];
@@ -425,13 +624,28 @@ export class GovernanceService {
   }
 
   /**
-   * Check if an account has voted on a proposal
+   * Check if an account has voted on a proposal/referendum
    */
   async hasVoted(proposalId: number, account: string): Promise<boolean> {
     try {
       const api = await this.ensureConnection();
-      const vote = await api.query.governance.votes(proposalId, account);
-      return vote.isSome;
+
+      if (!api.query.democracy) {
+        return false;
+      }
+
+      const refIndex = proposalId >= 10000 ? proposalId - 10000 : proposalId;
+      const votingInfo = await api.query.democracy.votingOf(account);
+
+      if (votingInfo.isDirect) {
+        const direct = votingInfo.asDirect;
+        const votes = direct.votes;
+
+        // Check if this account has voted on this referendum
+        return votes.some(([voteRefIndex]) => voteRefIndex.toNumber() === refIndex);
+      }
+
+      return false;
     } catch (error) {
       return false;
     }
@@ -700,13 +914,13 @@ export class GovernanceService {
 
   /**
    * Get overall governance statistics
+   * Fetches from democracy pallet and calculates based on real data
    */
   async getGovernanceStats(): Promise<GovernanceStats> {
     try {
       const api = await this.ensureConnection();
 
-      // Get proposal counts
-      const proposalCount = await api.query.governance.proposalCount();
+      // Get all proposals
       const proposals = await this.getProposals();
 
       const activeProposals = proposals.filter(p => p.status === ProposalStatus.Active);
@@ -714,30 +928,75 @@ export class GovernanceService {
       const rejectedProposals = proposals.filter(p => p.status === ProposalStatus.Rejected);
       const executedProposals = proposals.filter(p => p.status === ProposalStatus.Executed);
 
-      // Get voting stats
-      const totalVotesData = await api.query.governance.totalVotes();
-      const uniqueVotersData = await api.query.governance.uniqueVoters();
-      const totalVotingPowerData = await api.query.governance.totalVotingPower();
+      // Calculate unique voters from all referendums
+      const uniqueVotersSet = new Set<string>();
+      let totalVotes = 0;
+
+      if (api.query.democracy) {
+        try {
+          const refCount = await api.query.democracy.referendumCount();
+          const count = refCount.toNumber();
+
+          // Sample last 20 referendums for voter stats
+          const startIndex = Math.max(0, count - 20);
+          for (let i = startIndex; i < count; i++) {
+            try {
+              const votingInfo = await api.query.democracy.votingOf.entries();
+              for (const [key, value] of votingInfo) {
+                const address = key.args[0].toString();
+                if (value.isDirect) {
+                  const votes = value.asDirect.votes;
+                  for (const [refIndex] of votes) {
+                    if (refIndex.toNumber() === i) {
+                      uniqueVotersSet.add(address);
+                      totalVotes++;
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              // Skip if error querying specific referendum
+            }
+          }
+        } catch (err) {
+          console.error('Error calculating voter stats:', err);
+        }
+      }
 
       // Get treasury and supply
-      const treasuryBalance = await api.query.treasury.balance?.();
-      const totalIssuance = await api.query.balances.totalIssuance();
+      let treasuryBalance = '0';
+      try {
+        if (api.query.treasury?.pot) {
+          const pot = await api.query.treasury.pot();
+          treasuryBalance = pot.toString();
+        }
+      } catch (err) {
+        console.error('Error fetching treasury balance:', err);
+      }
+
+      let totalIssuance = '0';
+      try {
+        const issuance = await api.query.balances.totalIssuance();
+        totalIssuance = issuance.toString();
+      } catch (err) {
+        console.error('Error fetching total issuance:', err);
+      }
 
       return {
-        totalProposals: proposalCount.toNumber(),
+        totalProposals: proposals.length,
         activeProposals: activeProposals.length,
         passedProposals: passedProposals.length,
         rejectedProposals: rejectedProposals.length,
         executedProposals: executedProposals.length,
-        totalVotes: totalVotesData?.toNumber() || 0,
-        uniqueVoters: uniqueVotersData?.toNumber() || 0,
-        totalVotingPower: totalVotingPowerData?.toString() || '0',
-        participationRate: 0, // Calculate based on eligible voters
+        totalVotes,
+        uniqueVoters: uniqueVotersSet.size,
+        totalVotingPower: '0',
+        participationRate: 0,
         totalDelegations: 0,
         delegatedVotingPower: '0',
-        treasuryBalance: treasuryBalance?.toString() || '0',
+        treasuryBalance,
         totalDeposits: '0',
-        circulatingSupply: totalIssuance.toString(),
+        circulatingSupply: totalIssuance,
         stakedSupply: '0',
         inflationRate: 0,
       };

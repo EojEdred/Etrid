@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, ArrowDownLeft, Copy, Check, QrCode, AlertCircle, Loader2 } from 'lucide-react'
+import { transfer, isValidAddress } from '@/lib/polkadot'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -52,7 +53,7 @@ export default function SendReceive({
     if (currentMode === 'receive' && address) {
       // Generate QR code URL using a QR code API
       const qrData = encodeURIComponent(address)
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}&bgcolor=0A0E1A&color=FFFFFF`)
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&bgcolor=0A0E1A&color=FFFFFF`)
     }
   }, [currentMode, address])
 
@@ -63,9 +64,15 @@ export default function SendReceive({
   }
 
   const validateAddress = (addr: string): boolean => {
-    // Basic Ethereum address validation
-    const ethAddressPattern = /^0x[a-fA-F0-9]{40}$/
-    return ethAddressPattern.test(addr)
+    // SS58 address validation for Polkadot/Substrate
+    if (!addr || addr.length < 45 || addr.length > 50) return false;
+    try {
+      // Use the API's validation
+      return isValidAddress(addr);
+    } catch {
+      // Fallback basic check - SS58 addresses start with capital letter
+      return /^[A-Z][a-zA-Z0-9]{45,48}$/.test(addr);
+    }
   }
 
   const validateAmount = (amount: string): boolean => {
@@ -83,9 +90,8 @@ export default function SendReceive({
   const handleSend = async () => {
     setSendError('')
 
-    // Validation
     if (!validateAddress(recipientAddress)) {
-      setSendError('Invalid recipient address. Please enter a valid ETR address.')
+      setSendError('Invalid recipient address. Please enter a valid SS58 address.')
       return
     }
 
@@ -97,20 +103,20 @@ export default function SendReceive({
     setIsSending(true)
 
     try {
+      // Convert amount to chain units (12 decimals for ETR)
+      const amountInUnits = BigInt(Math.floor(parseFloat(sendAmount) * 1e12))
+
+      // Use Polkadot.js transfer (note: this requires wallet signing)
+      // For now, call the parent's onSendTransaction which will handle the actual signing
       if (onSendTransaction) {
         await onSendTransaction(recipientAddress, sendAmount)
-      } else {
-        // Placeholder for actual transaction sending
-        await new Promise(resolve => setTimeout(resolve, 2000))
       }
 
-      // Reset form on success
       setRecipientAddress('')
       setSendAmount('')
       onOpenChange(false)
     } catch (error: any) {
       setSendError(error?.message || 'Failed to send transaction. Please try again.')
-      console.error('Send transaction error:', error)
     } finally {
       setIsSending(false)
     }
@@ -118,7 +124,7 @@ export default function SendReceive({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-white/20 max-w-2xl">
+      <DialogContent className="glass-card border-white/20 max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl gradient-text">
             {currentMode === 'send' ? (
@@ -183,7 +189,7 @@ export default function SendReceive({
                 type="text"
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
-                placeholder="0x..."
+                placeholder="5..."
                 className="font-mono glass border-white/20 bg-transparent text-white placeholder:text-white/40"
               />
             </div>
@@ -255,24 +261,24 @@ export default function SendReceive({
             </Card>
           </div>
         ) : (
-          <div className="space-y-6 py-6">
+          <div className="space-y-4 py-4">
             {/* QR Code */}
             <div className="flex flex-col items-center">
-              <div className="p-4 glass-card rounded-2xl mb-4">
+              <div className="p-3 glass-card rounded-xl mb-3">
                 {qrCodeUrl ? (
                   <img
                     src={qrCodeUrl}
                     alt="Wallet QR Code"
-                    className="w-64 h-64 rounded-lg"
+                    className="w-40 h-40 rounded-lg"
                   />
                 ) : (
-                  <div className="w-64 h-64 glass rounded-lg flex items-center justify-center">
-                    <QrCode className="w-16 h-16 text-white/40" />
+                  <div className="w-40 h-40 glass rounded-lg flex items-center justify-center">
+                    <QrCode className="w-12 h-12 text-white/40" />
                   </div>
                 )}
               </div>
-              <p className="text-sm text-white/60 text-center">
-                Scan this QR code to get your wallet address
+              <p className="text-xs text-white/60 text-center">
+                Scan to get your wallet address
               </p>
             </div>
 
@@ -310,16 +316,11 @@ export default function SendReceive({
               </div>
             </Card>
 
-            {/* Network Info */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="glass border-white/10 p-4">
-                <div className="text-sm text-white/60 mb-1">Network</div>
-                <div className="font-semibold">ETRID Mainnet</div>
-              </Card>
-              <Card className="glass border-white/10 p-4">
-                <div className="text-sm text-white/60 mb-1">Chain ID</div>
-                <div className="font-semibold">1337</div>
-              </Card>
+            {/* Network Badge */}
+            <div className="flex justify-center">
+              <div className="px-3 py-1 glass rounded-full text-xs text-white/60">
+                ETRID Mainnet • Primearc Core
+              </div>
             </div>
           </div>
         )}
