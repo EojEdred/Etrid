@@ -6,32 +6,30 @@
 
 use super::*;
 use frame_benchmarking::v2::*;
-use frame_support::assert_ok;
 use frame_system::RawOrigin;
-use frame_support::traits::fungible::Mutate;
+use frame_support::traits::Currency;
+use frame_support::BoundedVec;
 
 #[benchmarks]
 mod benchmarks {
     use super::*;
+    type BalanceOf<T> =
+        <<T as crate::pallet::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     #[benchmark]
     fn fund_treasury() {
         let caller: T::AccountId = whitelisted_caller();
-        let amount: BalanceOf<T> = 10000u32.into();
-
-        // Setup: Give caller some balance
-        T::Currency::mint_into(&caller, amount * 2u32.into()).unwrap();
+        let amount: BalanceOf<T> = 10_000u32.into();
 
         #[extrinsic_call]
         fund_treasury(
             RawOrigin::Signed(caller.clone()),
-            FundingSource::ExternalDonation,
+            FundingSource::Other,
             amount
         );
 
-        // Verify treasury balance increased
-        let treasury_account = Pallet::<T>::account_id();
-        assert!(T::Currency::balance(&treasury_account) >= amount);
+        // Verify treasury balance increased (tracked in storage)
+        assert!(TreasuryBalance::<T>::get() >= amount);
     }
 
     #[benchmark]
@@ -47,20 +45,20 @@ mod benchmarks {
             Directors::<T>::put(directors);
         }
 
-        // Fund treasury first
-        let treasury_account = Pallet::<T>::account_id();
-        T::Currency::mint_into(&treasury_account, amount * 10u32.into()).unwrap();
+        // Seed treasury balance
+        TreasuryBalance::<T>::put(amount * 2u32.into());
 
         #[extrinsic_call]
         propose_disbursement(
             RawOrigin::Signed(caller.clone()),
+            BudgetCategory::Development,
             recipient.clone(),
             amount,
-            BudgetCategory::Development
+            b"dev funds".to_vec()
         );
 
-        // Verify proposal was created
-        assert!(ProposalCount::<T>::get() > 0);
+        // Verify disbursement was created
+        assert!(DisbursementCount::<T>::get() > 0);
     }
 
     #[benchmark]
@@ -78,88 +76,54 @@ mod benchmarks {
         directors.try_push(director3).ok();
         Directors::<T>::put(directors);
 
-        // Fund treasury
-        let treasury_account = Pallet::<T>::account_id();
-        T::Currency::mint_into(&treasury_account, amount * 10u32.into()).unwrap();
+        TreasuryBalance::<T>::put(amount * 2u32.into());
 
         // Create a proposal
-        let proposal_id = ProposalCount::<T>::get();
-        let proposal = DisbursementProposal {
-            proposer: director1.clone(),
+        let disbursement_id = DisbursementCount::<T>::get();
+        let disbursement = Disbursement {
+            id: disbursement_id,
+            category: BudgetCategory::Development,
             recipient: recipient.clone(),
             amount,
-            category: BudgetCategory::Development,
-            approvals: BoundedVec::new(),
-            status: ProposalStatus::Pending,
-            created_at: frame_system::Pallet::<T>::block_number(),
+            description: BoundedVec::default(),
+            proposer: director1.clone(),
+            status: DisbursementStatus::Pending,
+            proposed_at: frame_system::Pallet::<T>::block_number(),
+            approval_count: 0,
+            is_emergency: false,
         };
-        Proposals::<T>::insert(proposal_id, proposal);
-        ProposalCount::<T>::put(proposal_id + 1);
+        Disbursements::<T>::insert(disbursement_id, disbursement);
 
         #[extrinsic_call]
-        approve_disbursement(RawOrigin::Signed(director1.clone()), proposal_id);
+        approve_disbursement(RawOrigin::Signed(director1.clone()), disbursement_id);
 
         // Verify approval was recorded
-        let updated_proposal = Proposals::<T>::get(proposal_id).unwrap();
-        assert!(updated_proposal.approvals.len() > 0);
+        let approvals = DirectorApprovals::<T>::get(disbursement_id);
+        assert!(!approvals.is_empty());
     }
 
     #[benchmark]
     fn emergency_withdrawal() {
-        let director1: T::AccountId = whitelisted_caller();
-        let director2: T::AccountId = account("director2", 0, 0);
-        let director3: T::AccountId = account("director3", 0, 0);
-        let director4: T::AccountId = account("director4", 0, 0);
-        let director5: T::AccountId = account("director5", 0, 0);
-        let director6: T::AccountId = account("director6", 0, 0);
-        let director7: T::AccountId = account("director7", 0, 0);
+        let director: T::AccountId = whitelisted_caller();
         let recipient: T::AccountId = account("recipient", 0, 0);
-        let amount: BalanceOf<T> = 5000u32.into();
+        let amount: BalanceOf<T> = 1_000u32.into();
 
-        // Setup: Create enough directors for emergency threshold (7-of-9)
         let mut directors = BoundedVec::new();
-        directors.try_push(director1.clone()).ok();
-        directors.try_push(director2.clone()).ok();
-        directors.try_push(director3.clone()).ok();
-        directors.try_push(director4.clone()).ok();
-        directors.try_push(director5.clone()).ok();
-        directors.try_push(director6.clone()).ok();
-        directors.try_push(director7.clone()).ok();
+        let _ = directors.try_push(director.clone());
         Directors::<T>::put(directors);
 
-        // Fund treasury
-        let treasury_account = Pallet::<T>::account_id();
-        T::Currency::mint_into(&treasury_account, amount * 10u32.into()).unwrap();
-
-        // Create an emergency proposal
-        let proposal_id = ProposalCount::<T>::get();
-        let mut approvals = BoundedVec::new();
-        // Add 6 approvals (need 7 total with the benchmark call)
-        approvals.try_push(director2).ok();
-        approvals.try_push(director3).ok();
-        approvals.try_push(director4).ok();
-        approvals.try_push(director5).ok();
-        approvals.try_push(director6).ok();
-        approvals.try_push(director7).ok();
-
-        let proposal = DisbursementProposal {
-            proposer: director1.clone(),
-            recipient: recipient.clone(),
-            amount,
-            category: BudgetCategory::Emergency,
-            approvals,
-            status: ProposalStatus::Pending,
-            created_at: frame_system::Pallet::<T>::block_number(),
-        };
-        Proposals::<T>::insert(proposal_id, proposal);
-        ProposalCount::<T>::put(proposal_id + 1);
+        EmergencyReserve::<T>::put(amount * 2u32.into());
 
         #[extrinsic_call]
-        emergency_withdrawal(RawOrigin::Signed(director1.clone()), proposal_id);
+        emergency_withdrawal(
+            RawOrigin::Signed(director.clone()),
+            recipient.clone(),
+            amount,
+            b"emergency".to_vec()
+        );
 
-        // Verify emergency withdrawal was executed
-        let updated_proposal = Proposals::<T>::get(proposal_id).unwrap();
-        assert_eq!(updated_proposal.status, ProposalStatus::Executed);
+        let last_id = DisbursementCount::<T>::get().saturating_sub(1);
+        assert!(Disbursements::<T>::contains_key(last_id));
     }
 
     impl_benchmark_test_suite!(

@@ -157,6 +157,9 @@ pub enum VoteType {
     Abstain,
 }
 
+/// Type alias for backward compatibility with runtime code
+pub type Ballot = VoteType;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::{BudgetCategory, Phase, ProposalCategory, VoteType};
@@ -241,8 +244,8 @@ pub mod pallet {
     /// Vote record
     #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, MaxEncodedLen, RuntimeDebug)]
     pub struct VoteRecord {
-        /// Vote type
-        pub vote: VoteType,
+        /// Ballot (vote type: Yes/No/Abstain)
+        pub ballot: VoteType,
         /// Voting power used
         pub voting_power: u128,
         /// Is validator
@@ -849,7 +852,7 @@ pub mod pallet {
 
             // Record vote
             let vote_record = VoteRecord {
-                vote: vote.clone(),
+                ballot: vote.clone(),
                 voting_power: voting_power_info.voting_power,
                 is_validator,
             };

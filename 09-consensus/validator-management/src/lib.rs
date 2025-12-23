@@ -101,7 +101,17 @@ impl PeerType {
 }
 
 /// Validator information
-#[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Encode,
+    Decode,
+    TypeInfo,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize,
+)]
 pub struct ValidatorInfo {
     /// Validator account ID
     pub id: ValidatorId,
