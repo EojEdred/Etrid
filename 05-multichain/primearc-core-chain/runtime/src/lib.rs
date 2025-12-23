@@ -445,7 +445,7 @@ impl pallet_etwasm_vm::Config for Runtime {
 impl pallet_evm::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WasmBridge = EtwasmBridge<Runtime>;
-    type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = pallet_evm::weights::SubstrateWeight;
     type Currency = Balances;
     type Treasury = (); // No-op treasury for now (fees burned)
     type MaxCodeSize = ConstU32<1_048_576>; // 1 MB max contract size (aligned with vmw-runtime)
@@ -955,6 +955,9 @@ parameter_types! {
     pub const PrimearcTokenMessengerMinBurnAmount: u128 = 1_000_000_000_000_000_000;  // 1 EDSC minimum
     pub const PrimearcTokenMessengerBlocksPerDay: u32 = 14_400;  // ~24 hours at 6s blocks
     pub const PrimearcLocalDomain: u32 = 2;  // Domain::PrimearcCore = 2
+    pub const PrimearcTokenMessengerBridgeFeeRate: u32 = 30; // 0.3% fee
+    pub const PrimearcTokenMessengerMinBridgeFee: u128 = 1_000_000_000_000_000; // 0.001 ETR
+    pub PrimearcTokenMessengerFeeCollector: AccountId = treasury_account_id();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -970,12 +973,11 @@ pub struct PrimearcBridgeAttestationVerifier;
 impl pallet_token_messenger::AttestationVerifier for PrimearcBridgeAttestationVerifier {
     fn verify_message_attestation(
         message: &[u8],
-        attestation: &[u8],
+        _attestation: &[u8],
         message_hash: sp_core::H256,
     ) -> DispatchResult {
-        pallet_bridge_attestation::Pallet::<Runtime>::verify_attestation(
+        pallet_bridge_attestation::Pallet::<Runtime>::verify_attestation_for_message(
             message,
-            attestation,
             message_hash,
         )
     }
@@ -997,6 +999,7 @@ impl pallet_token_messenger::Config for Runtime {
     type TokenOperations = pallet_token_messenger::token_ops::PbcTokenOperations<Runtime>;
     type AttestationVerifier = PrimearcBridgeAttestationVerifier;
     type WeightInfo = pallet_token_messenger::weights::SubstrateWeight<Runtime>;
+    type Currency = Balances;
     type MaxMessageBodySize = ConstU32<512>;
     type MaxBurnAmount = ConstU128<1_000_000_000_000_000_000_000_000>; // 1M ÉTR
     type DailyBurnCap = ConstU128<10_000_000_000_000_000_000_000_000>; // 10M ÉTR
@@ -1004,6 +1007,9 @@ impl pallet_token_messenger::Config for Runtime {
     type MessageTimeout = ConstU32<1000>;
     type BlocksPerDay = ConstU32<14400>;
     type LocalDomain = ConstU32<2>;
+    type BridgeFeeRate = PrimearcTokenMessengerBridgeFeeRate;
+    type MinBridgeFee = PrimearcTokenMessengerMinBridgeFee;
+    type FeeCollector = PrimearcTokenMessengerFeeCollector;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1384,71 +1390,6 @@ impl pallet_edsc_stability::TreasuryInterface<AccountId, Balance> for EdscStabil
         )?;
 
         Ok(())
-    }
-}
-
-#[cfg(feature = "std")]
-pub type RuntimeGenesisConfig = GenesisConfig;
-
-#[cfg(feature = "std")]
-impl Default for RuntimeGenesisConfig {
-    fn default() -> Self {
-        Self {
-            system: Default::default(),
-            balances: Default::default(),
-            vesting: Default::default(),
-            multisig: Default::default(),
-            transaction_payment: Default::default(),
-            sudo: Default::default(),
-            node_authorization: Default::default(),
-            accounts: Default::default(),
-            etwasm_vm: Default::default(),
-            evm: Default::default(),
-            consensus: Default::default(),
-            governance: Default::default(),
-            pbc_router: Default::default(),
-            etrid_staking: Default::default(),
-            consensus_day_proposal_system: Default::default(),
-            consensus_day_voting_protocol: Default::default(),
-            consensus_day_distribution: Default::default(),
-            consensus_day_minting_logic: Default::default(),
-            tx_processor: Default::default(),
-            bitcoin_bridge: Default::default(),
-            ethereum_bridge: Default::default(),
-            doge_bridge: Default::default(),
-            stellar_bridge: Default::default(),
-            xrp_bridge: Default::default(),
-            solana_bridge: Default::default(),
-            cardano_bridge: Default::default(),
-            chainlink_bridge: Default::default(),
-            polygon_bridge: Default::default(),
-            bnb_bridge: Default::default(),
-            tron_bridge: Default::default(),
-            usdt_bridge: Default::default(),
-            etr_lock: Default::default(),
-            edsc_token: Default::default(),
-            edsc_receipts: Default::default(),
-            edsc_redemption: Default::default(),
-            edsc_oracle: Default::default(),
-            reserve_vault: Default::default(),
-            custodian_registry: Default::default(),
-            reserve_oracle: Default::default(),
-            multiasset_reserve: Default::default(),
-            reserve_backed_token: Default::default(),
-            xcm_bridge: Default::default(),
-            token_messenger: Default::default(),
-            bridge_attestation: Default::default(),
-            validator_committee: Default::default(),
-            validator_rewards: Default::default(),
-            oracle_network: Default::default(),
-            did_registry: Default::default(),
-            aidid: Default::default(),
-            ai_agents: Default::default(),
-            etrid_treasury: Default::default(),
-            consensus_day_pallet: Default::default(),
-            edsc_stability: Default::default(),
-            circuit_breaker: Default::default(),
-        }
     }
 }
 

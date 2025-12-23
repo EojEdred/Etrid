@@ -17,6 +17,7 @@ pub use etwasm_gas_metering as gas;
 pub use etwasm_opcodes as opcodes;
 pub use etwasm_runtime as runtime;
 pub use vmw_runtime as vmw;
+pub use pallet::*;
 
 use frame_support::dispatch::DispatchResult;
 

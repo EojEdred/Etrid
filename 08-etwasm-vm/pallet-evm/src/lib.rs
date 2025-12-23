@@ -2,6 +2,8 @@
 
 extern crate alloc;
 
+pub use pallet::*;
+
 use alloc::vec::Vec;
 use codec::{Decode, Encode, MaxEncodedLen};
 use core::marker::PhantomData;
@@ -107,7 +109,6 @@ pub mod pallet {
         pub bridge_targets: Vec<([u8; 4], BridgeTarget<T::AccountId>)>,
     }
 
-    #[cfg(feature = "std")]
     impl<T: Config> Default for GenesisConfig<T> {
         fn default() -> Self {
             Self {
