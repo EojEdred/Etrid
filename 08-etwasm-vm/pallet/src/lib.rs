@@ -12,8 +12,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use pallet::*;
-
 // Re-export ETWasm modules
 pub use etwasm_gas_metering as gas;
 pub use etwasm_opcodes as opcodes;
@@ -51,11 +49,12 @@ pub mod pallet {
         BoundedVec,
     };
     use frame_system::pallet_prelude::*;
-    use codec::Decode;
+    use codec::{Decode, Encode};
     use sp_std::prelude::*;
     use sp_std::collections::btree_set::BTreeSet;
     use sp_core::H256;
     use sp_runtime::traits::{SaturatedConversion, Zero, Saturating};
+	use sp_runtime::DispatchError;
 
     use etwasm_gas_metering::{VMw, WATTS_PER_ETRID};
     use etwasm_runtime::{
@@ -105,6 +104,17 @@ pub mod pallet {
             pallet_timestamp::Pallet::<T>::now().saturated_into()
         }
     }
+
+    /// Storage: Deploy nonce per account for CREATE-style address derivation
+    #[pallet::storage]
+    #[pallet::getter(fn deploy_nonce)]
+    pub type DeployNonce<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        u64,
+        ValueQuery,
+    >;
 
     /// Storage: Contract code hash by account
     #[pallet::storage]
@@ -325,8 +335,23 @@ pub mod pallet {
                 .map_err(|_| Error::<T>::CodeTooLarge)?;
             CodeStorage::<T>::insert(code_hash, bounded_code);
 
-            // Use sender as contract address (simplified)
-            let contract_address = sender.clone();
+            // Derive unique contract address using CREATE-style derivation:
+            // address = blake2_256(sender_bytes ++ nonce_bytes)[0..32]
+            let nonce = DeployNonce::<T>::get(&sender);
+            let sender_bytes = sender.encode();
+            let nonce_bytes = nonce.to_le_bytes();
+
+            // Concatenate sender and nonce for address derivation
+            let mut address_input = sender_bytes;
+            address_input.extend_from_slice(&nonce_bytes);
+
+            // Hash to derive unique contract address
+            let address_hash = sp_io::hashing::blake2_256(&address_input);
+            let contract_address = T::AccountId::decode(&mut &address_hash[..])
+                .map_err(|_| Error::<T>::InvalidBytecode)?;
+
+            // Increment nonce for next deployment
+            DeployNonce::<T>::insert(&sender, nonce.saturating_add(1));
 
             // Store contract metadata
             ContractCodeHash::<T>::insert(&contract_address, code_hash);
@@ -354,49 +379,12 @@ pub mod pallet {
         ) -> DispatchResult {
             let caller = ensure_signed(origin)?;
 
-            // Verify contract exists
-            let code_hash = ContractCodeHash::<T>::get(&contract_addr)
-                .ok_or(Error::<T>::ContractNotFound)?;
-
-            // Load bytecode
-            let code = CodeStorage::<T>::get(code_hash)
-                .ok_or(Error::<T>::ContractNotFound)?;
-
-            // Validate gas limit
             let gas_limit = gas_limit.unwrap_or_else(T::DefaultGasLimit::get);
-            ensure!(
-                gas_limit <= T::MaxGasLimit::get(),
-                Error::<T>::GasLimitExceeded
-            );
-
-            // Create execution context
-            let context = ExecutionContext {
-                caller: Self::account_to_bytes32(&caller),
-                address: Self::account_to_bytes32(&contract_addr),
-                value: 0, // No value transfer for now
-                gas_limit,
-                gas_price: 1,
-                block_number: frame_system::Pallet::<T>::block_number().saturated_into(),
-                timestamp: Self::current_timestamp(),
-                chain_id: 2, // Ëtrid chain ID
-                call_stack: BTreeSet::new(),
-                reentrancy_depth: 0,
-                max_depth: 10, // Max allowed reentrancy depth
-            };
-
-            // Create storage backend
-            let mut storage = PalletStorage::<T> {
-                contract_addr: contract_addr.clone(),
-                _phantom: Default::default(),
-            };
-
-            // Execute bytecode
-            let interpreter = Interpreter::new(context, code.to_vec(), storage);
-            let result = interpreter.execute();
+            let result = Self::execute_contract_inner(caller.clone(), contract_addr.clone(), input_data, gas_limit)?;
 
             // Handle execution result - collect fees and route to treasury
             match result {
-                ExecutionResult::Success { gas_used, return_data } => {
+                ExecutionResult::Success { gas_used, return_data: _ } => {
                     // Collect fee from caller and route 50% to treasury
                     Self::charge_gas_with_fee(&caller, gas_used)?;
                     Self::deposit_event(Event::ContractExecuted {
@@ -502,6 +490,87 @@ pub mod pallet {
 
     // Helper functions
     impl<T: Config> Pallet<T> {
+        pub fn execute_contract_inner(
+            caller: T::AccountId,
+            contract_addr: T::AccountId,
+            input_data: Vec<u8>,
+            gas_limit: VMw,
+        ) -> Result<ExecutionResult, Error<T>> {
+            let code_hash = ContractCodeHash::<T>::get(&contract_addr)
+                .ok_or(Error::<T>::ContractNotFound)?;
+
+            let code = CodeStorage::<T>::get(code_hash)
+                .ok_or(Error::<T>::ContractNotFound)?;
+
+            ensure!(
+                gas_limit <= T::MaxGasLimit::get(),
+                Error::<T>::GasLimitExceeded
+            );
+
+            let context = ExecutionContext {
+                caller: Self::account_to_bytes32(&caller),
+                address: Self::account_to_bytes32(&contract_addr),
+                value: 0,
+                gas_limit,
+                gas_price: 1,
+                block_number: frame_system::Pallet::<T>::block_number().saturated_into(),
+                timestamp: Self::current_timestamp(),
+                chain_id: 2,
+                call_stack: BTreeSet::new(),
+                reentrancy_depth: 0,
+                max_depth: 10,
+            };
+
+            let mut storage = PalletStorage::<T> {
+                contract_addr: contract_addr.clone(),
+                _phantom: Default::default(),
+            };
+
+            let interpreter = Interpreter::new(context, code.to_vec(), storage);
+            Ok(interpreter.execute())
+        }
+
+        /// Execute a contract call without going through an extrinsic origin.
+        pub fn call_from_bridge(
+            caller: &T::AccountId,
+            contract_addr: &T::AccountId,
+            input_data: Vec<u8>,
+            gas_limit: VMw,
+        ) -> Result<VMw, DispatchError> {
+            let result = Self::execute_contract_inner(caller.clone(), contract_addr.clone(), input_data, gas_limit)?;
+            match result {
+                ExecutionResult::Success { gas_used, .. } => {
+                    Self::charge_gas_with_fee(caller, gas_used)?;
+                    Self::deposit_event(Event::ContractExecuted {
+                        contract: contract_addr.clone(),
+                        gas_used,
+                        success: true,
+                    });
+                    Ok(gas_used)
+                }
+                ExecutionResult::Revert { gas_used, reason } => {
+                    Self::charge_gas_with_fee(caller, gas_used)?;
+                    Self::deposit_event(Event::ContractReverted {
+                        contract: contract_addr.clone(),
+                        reason,
+                        gas_used,
+                    });
+                    Err(Error::<T>::ExecutionFailed.into())
+                }
+                ExecutionResult::OutOfGas { gas_used } => {
+                    Self::charge_gas_with_fee(caller, gas_used)?;
+                    Err(Error::<T>::OutOfGas.into())
+                }
+                ExecutionResult::StackError => Err(Error::<T>::StackError.into()),
+                ExecutionResult::InvalidOpcode(_) => Err(Error::<T>::InvalidOpcode.into()),
+                ExecutionResult::InvalidJump => Err(Error::<T>::InvalidJump.into()),
+                ExecutionResult::ReentrancyDetected => Err(Error::<T>::ReentrancyDetected.into()),
+                ExecutionResult::MaxCallDepthExceeded => Err(Error::<T>::MaxCallDepthExceeded.into()),
+                ExecutionResult::AccountLocked => Err(Error::<T>::AccountLocked.into()),
+                ExecutionResult::Error(_) => Err(Error::<T>::ExecutionFailed.into()),
+            }
+        }
+
         /// Convert AccountId to 32-byte array for EVM compatibility
         fn account_to_bytes32(account: &T::AccountId) -> [u8; 32] {
             let encoded = account.encode();
