@@ -50,6 +50,20 @@ module.exports = {
       accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
       chainId: 97,
     },
+
+    // Base Mainnet (L2 - lower gas fees)
+    base: {
+      url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
+      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+      chainId: 8453,
+    },
+
+    // Arbitrum One (alternative L2)
+    arbitrum: {
+      url: process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc",
+      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+      chainId: 42161,
+    },
   },
 
   etherscan: {

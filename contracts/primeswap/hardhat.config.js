@@ -22,10 +22,21 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: false,
+      allowUnlimitedContractSize: true,  // Enable for large contracts
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+    },
+    // Primearc Core Chain (ËtwasmVM)
+    primearc: {
+      url: process.env.PRIMEARC_RPC_URL || "http://100.96.84.69:9944",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 2,  // Primearc chain ID
+    },
+    primearc_local: {
+      url: "http://127.0.0.1:9944",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 2,
     },
     goerli: {
       url: process.env.GOERLI_RPC_URL || "",

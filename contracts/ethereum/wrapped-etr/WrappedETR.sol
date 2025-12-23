@@ -67,6 +67,26 @@ contract WrappedETR is ERC20, ERC20Burnable, Pausable, AccessControl, Reentrancy
     }
 
     /**
+     * @dev Alias for mint() to maintain compatibility with EtridBridge contract
+     * The EtridBridge contract calls bridgeMint() via IEtridToken interface
+     * @param to Address to mint tokens to
+     * @param amount Amount of tokens to mint
+     * @param txHash Hash of the Etrid transaction that triggered this mint
+     */
+    function bridgeMint(address to, uint256 amount, bytes32 txHash)
+        external
+        nonReentrant
+        onlyRole(BRIDGE_ROLE)
+        whenNotPaused
+    {
+        require(to != address(0), "WrappedETR: mint to zero address");
+        require(amount > 0, "WrappedETR: mint amount must be greater than 0");
+
+        _mint(to, amount);
+        emit BridgeMint(to, amount, txHash);
+    }
+
+    /**
      * @dev Burns tokens from caller's account and emits event for bridge
      * @param amount Amount of tokens to burn
      * @param etridAddress Etrid address to receive the native ETR

@@ -24,8 +24,8 @@ const NETWORKS = {
     description: 'Ëtrid testnet'
   },
   mainnet: {
-    endpoint: 'wss://rpc.etrid.org',
-    description: 'Ëtrid mainnet'
+    endpoint: 'ws://100.96.84.69:9944',
+    description: 'Ëtrid mainnet (Tailscale)'
   }
 };
 
@@ -101,7 +101,7 @@ async function deployContract(api, signer, contractName, constructorArgs = []) {
   console.log(`  Deploying to ËtwasmVM...`);
 
   // Create deployment transaction
-  const tx = api.tx.etwasmVm.deployContract(codeBytes);
+  const tx = api.tx.etwasmVM.deployContract(codeBytes);
 
   return new Promise((resolve, reject) => {
     tx.signAndSend(signer, ({ status, events }) => {
@@ -115,7 +115,7 @@ async function deployContract(api, signer, contractName, constructorArgs = []) {
         // Find the ContractDeployed event
         let contractAddress = null;
         events.forEach(({ event }) => {
-          if (event.section === 'etwasmVm' && event.method === 'ContractDeployed') {
+          if (event.section === 'etwasmVM' && event.method === 'ContractDeployed') {
             const [deployer, address, codeHash] = event.data;
             contractAddress = address.toString();
             console.log(`  ✓ Contract deployed at: ${contractAddress}`);
@@ -143,7 +143,7 @@ async function deployContract(api, signer, contractName, constructorArgs = []) {
 async function callContract(api, signer, contractAddress, inputData, gasLimit = DEFAULT_GAS_LIMIT) {
   console.log(`📞 Calling contract ${contractAddress}...`);
 
-  const tx = api.tx.etwasmVm.callContract(
+  const tx = api.tx.etwasmVM.callContract(
     contractAddress,
     inputData,
     gasLimit
@@ -155,7 +155,7 @@ async function callContract(api, signer, contractAddress, inputData, gasLimit = 
         console.log(`  ✓ Call finalized`);
 
         events.forEach(({ event }) => {
-          if (event.section === 'etwasmVm' && event.method === 'ContractExecuted') {
+          if (event.section === 'etwasmVM' && event.method === 'ContractExecuted') {
             const [contract, gasUsed, success] = event.data;
             console.log(`  ✓ Gas used: ${gasUsed.toString()}`);
             console.log(`  ✓ Success: ${success.toString()}`);

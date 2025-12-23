@@ -9,6 +9,8 @@
     "deploy": "hardhat run scripts/deploy.js",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:testnet": "hardhat run scripts/deploy.js --network goerli",
+    "deploy:substrate": "node scripts/deploy-substrate.js",
+    "deploy:mainnet": "node scripts/deploy-substrate.js --network mainnet",
     "verify": "hardhat run scripts/verify.js",
     "node": "hardhat node",
     "clean": "hardhat clean"
@@ -36,6 +38,7 @@
     "solidity-coverage": "^0.8.5"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
     "@polkadot/api": "^16.4.9",
     "@polkadot/keyring": "^13.5.7",
     "@polkadot/util": "^13.5.7",

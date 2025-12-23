@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 /**
  * @title AttesterRegistry
@@ -257,7 +256,8 @@ contract AttesterRegistry is Ownable2Step {
 
         for (uint256 i = 0; i < _signatures.length; i++) {
             // Recover signer address from signature
-            address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), _signatures[i]);
+            bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _messageHash));
+            address signer = ECDSA.recover(ethSignedHash, _signatures[i]);
 
             // Check attester is registered and enabled
             if (attesters[signer].attesterAddress == address(0)) revert InvalidSignature();
