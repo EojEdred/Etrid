@@ -225,3 +225,4 @@ npx hardhat test --network localhost
 ## Conclusion
 
 This strategy provides a comprehensive, secure, and efficient path to deploying Ëtrid's multi-chain infrastructure. By leveraging ETH PBC's full EVM compatibility, we can use battle-tested Ethereum tooling and patterns while maintaining the benefits of Substrate's flexibility.
+## this implementation has changed as of 12-7-2025 so disregard old information about chain and deployed contracts
