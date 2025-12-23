@@ -5,30 +5,36 @@
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
+use crate::pallet::{AccountData, TokenType};
 use frame_benchmarking::v2::*;
-use frame_support::assert_ok;
 use frame_system::RawOrigin;
+use frame_system::Pallet as System;
+use frame_system::pallet_prelude::BlockNumberFor;
+use sp_std::vec;
+use sp_std::vec::Vec;
 
 #[benchmarks]
 mod benchmarks {
     use super::*;
+    use frame_support::BoundedVec;
 
     #[benchmark]
     fn transfer() {
         let caller: T::AccountId = whitelisted_caller();
         let recipient: T::AccountId = account("recipient", 0, 0);
-        let amount: BalanceOf<T> = 1000u32.into();
+        let amount: T::Balance = 1000u32.into();
 
         // Setup: Give caller some balance
-        Accounts::<T>::insert(&caller, AccountInfo {
+        Accounts::<T>::insert(&caller, AccountData {
             etr_balance: 10000u32.into(),
             etd_balance: 0u32.into(),
             nonce: 0,
-            recovery: None,
+            is_validator: false,
+            reputation: 0,
         });
 
         #[extrinsic_call]
-        transfer(RawOrigin::Signed(caller.clone()), recipient.clone(), amount);
+        transfer(RawOrigin::Signed(caller.clone()), recipient.clone(), TokenType::ETR, amount);
 
         // Verify transfer occurred
         assert!(Accounts::<T>::contains_key(&recipient));
@@ -36,187 +42,154 @@ mod benchmarks {
 
     #[benchmark]
     fn mint_etr() {
-        let caller: T::AccountId = whitelisted_caller();
+        let _caller: T::AccountId = whitelisted_caller();
         let recipient: T::AccountId = account("recipient", 0, 0);
-        let amount: BalanceOf<T> = 1000u32.into();
+        let amount: T::Balance = 1000u32.into();
 
         #[extrinsic_call]
         mint_etr(RawOrigin::Root, recipient.clone(), amount);
 
         // Verify minting occurred
-        let account_info = Accounts::<T>::get(&recipient).unwrap();
+        let account_info = Accounts::<T>::get(&recipient);
         assert_eq!(account_info.etr_balance, amount);
     }
 
     #[benchmark]
     fn mint_etd() {
-        let caller: T::AccountId = whitelisted_caller();
+        let _caller: T::AccountId = whitelisted_caller();
         let recipient: T::AccountId = account("recipient", 0, 0);
-        let amount: BalanceOf<T> = 1000u32.into();
+        let amount: T::Balance = 1000u32.into();
 
         #[extrinsic_call]
-        mint_etd(RawOrigin::Root, recipient.clone(), amount);
+        mint_etd(RawOrigin::Signed(_caller.clone()), recipient.clone(), amount);
 
         // Verify minting occurred
-        let account_info = Accounts::<T>::get(&recipient).unwrap();
+        let account_info = Accounts::<T>::get(&recipient);
         assert_eq!(account_info.etd_balance, amount);
     }
 
     #[benchmark]
     fn burn() {
         let caller: T::AccountId = whitelisted_caller();
-        let amount: BalanceOf<T> = 500u32.into();
+        let amount: T::Balance = 500u32.into();
 
         // Setup: Give caller some ETR balance
-        Accounts::<T>::insert(&caller, AccountInfo {
+        Accounts::<T>::insert(&caller, AccountData {
             etr_balance: 1000u32.into(),
             etd_balance: 0u32.into(),
             nonce: 0,
-            recovery: None,
+            is_validator: false,
+            reputation: 0,
         });
 
         #[extrinsic_call]
-        burn(RawOrigin::Signed(caller.clone()), amount);
+        burn(RawOrigin::Signed(caller.clone()), TokenType::ETR, amount);
 
         // Verify burn occurred
-        let account_info = Accounts::<T>::get(&caller).unwrap();
+        let account_info = Accounts::<T>::get(&caller);
         assert_eq!(account_info.etr_balance, 500u32.into());
     }
 
     #[benchmark]
     fn create_recovery() {
         let caller: T::AccountId = whitelisted_caller();
-        let friend1: T::AccountId = account("friend1", 0, 0);
-        let friend2: T::AccountId = account("friend2", 0, 0);
-        let friend3: T::AccountId = account("friend3", 0, 0);
-        let friends = vec![friend1, friend2, friend3];
-        let threshold = 2u32;
-
-        // Setup: Give caller an account
-        Accounts::<T>::insert(&caller, AccountInfo {
-            etr_balance: 1000u32.into(),
-            etd_balance: 0u32.into(),
-            nonce: 0,
-            recovery: None,
-        });
+        let guardians: Vec<T::AccountId> = vec![account("guardian", 0, 0)];
+        let delay: BlockNumberFor<T> = 10u32.into();
 
         #[extrinsic_call]
-        create_recovery(RawOrigin::Signed(caller.clone()), friends, threshold);
+        create_recovery(RawOrigin::Signed(caller.clone()), guardians.clone(), 1, delay);
 
-        // Verify recovery was created
-        let account_info = Accounts::<T>::get(&caller).unwrap();
-        assert!(account_info.recovery.is_some());
+        assert!(RecoveryConfigs::<T>::contains_key(&caller));
     }
 
     #[benchmark]
     fn initiate_recovery() {
-        let lost_account: T::AccountId = account("lost", 0, 0);
-        let friend1: T::AccountId = whitelisted_caller();
-        let friend2: T::AccountId = account("friend2", 0, 0);
-        let new_account: T::AccountId = account("new", 0, 0);
+        let guardian: T::AccountId = whitelisted_caller();
+        let lost: T::AccountId = account("lost", 0, 0);
+        let new_acct: T::AccountId = account("new", 0, 0);
+        let delay: BlockNumberFor<T> = 10u32.into();
 
-        // Setup: Create account with recovery
-        Accounts::<T>::insert(&lost_account, AccountInfo {
-            etr_balance: 1000u32.into(),
-            etd_balance: 0u32.into(),
-            nonce: 0,
-            recovery: Some(RecoveryConfig {
-                friends: vec![friend1.clone(), friend2],
-                threshold: 2,
-                approvals: vec![],
-                new_account_id: None,
-            }),
-        });
+        let guardians: BoundedVec<_, _> = vec![guardian.clone()].try_into().unwrap();
+        let config = RecoveryConfig { guardians, threshold: 1, delay_period: delay };
+        RecoveryConfigs::<T>::insert(&lost, config);
 
         #[extrinsic_call]
-        initiate_recovery(RawOrigin::Signed(friend1.clone()), lost_account.clone(), new_account);
+        initiate_recovery(RawOrigin::Signed(guardian.clone()), lost.clone(), new_acct.clone());
 
-        // Verify recovery was initiated
-        let account_info = Accounts::<T>::get(&lost_account).unwrap();
-        assert!(account_info.recovery.unwrap().new_account_id.is_some());
+        assert!(ActiveRecoveries::<T>::contains_key(&lost));
     }
 
     #[benchmark]
     fn approve_recovery() {
-        let lost_account: T::AccountId = account("lost", 0, 0);
-        let friend1: T::AccountId = account("friend1", 0, 0);
-        let friend2: T::AccountId = whitelisted_caller();
-        let new_account: T::AccountId = account("new", 0, 0);
+        let guardian1: T::AccountId = whitelisted_caller();
+        let guardian2: T::AccountId = account("guardian2", 0, 0);
+        let lost: T::AccountId = account("lost", 0, 0);
+        let new_acct: T::AccountId = account("new", 0, 0);
+        let delay: BlockNumberFor<T> = 10u32.into();
 
-        // Setup: Create account with recovery in progress
-        Accounts::<T>::insert(&lost_account, AccountInfo {
-            etr_balance: 1000u32.into(),
-            etd_balance: 0u32.into(),
-            nonce: 0,
-            recovery: Some(RecoveryConfig {
-                friends: vec![friend1.clone(), friend2.clone()],
-                threshold: 2,
-                approvals: vec![friend1.clone()],
-                new_account_id: Some(new_account.clone()),
-            }),
+        let guardians: BoundedVec<_, _> = vec![guardian1.clone(), guardian2.clone()].try_into().unwrap();
+        let config = RecoveryConfig { guardians, threshold: 2, delay_period: delay };
+        RecoveryConfigs::<T>::insert(&lost, config);
+
+        let approvals: BoundedVec<_, _> = vec![guardian1.clone()].try_into().unwrap();
+        ActiveRecoveries::<T>::insert(&lost, ActiveRecovery {
+            new_account: new_acct.clone(),
+            approvals,
+            created_at: System::<T>::block_number(),
+            executable_at: System::<T>::block_number(),
         });
 
         #[extrinsic_call]
-        approve_recovery(RawOrigin::Signed(friend2.clone()), lost_account.clone());
+        approve_recovery(RawOrigin::Signed(guardian2.clone()), lost.clone());
 
-        // Verify approval was recorded
-        let account_info = Accounts::<T>::get(&lost_account).unwrap();
-        let recovery = account_info.recovery.unwrap();
-        assert_eq!(recovery.approvals.len(), 2);
+        let recovery = ActiveRecoveries::<T>::get(&lost).unwrap();
+        assert!(recovery.approvals.contains(&guardian2));
     }
 
     #[benchmark]
     fn execute_recovery() {
-        let lost_account: T::AccountId = account("lost", 0, 0);
-        let friend1: T::AccountId = account("friend1", 0, 0);
-        let friend2: T::AccountId = account("friend2", 0, 0);
-        let new_account: T::AccountId = whitelisted_caller();
+        let guardian: T::AccountId = whitelisted_caller();
+        let lost: T::AccountId = account("lost", 0, 0);
+        let new_acct: T::AccountId = account("new", 0, 0);
+        let delay: BlockNumberFor<T> = 10u32.into();
 
-        // Setup: Create account with recovery ready to execute
-        Accounts::<T>::insert(&lost_account, AccountInfo {
-            etr_balance: 1000u32.into(),
-            etd_balance: 500u32.into(),
-            nonce: 0,
-            recovery: Some(RecoveryConfig {
-                friends: vec![friend1.clone(), friend2.clone()],
-                threshold: 2,
-                approvals: vec![friend1, friend2],
-                new_account_id: Some(new_account.clone()),
-            }),
+        let guardians: BoundedVec<_, _> = vec![guardian.clone()].try_into().unwrap();
+        let config = RecoveryConfig { guardians, threshold: 1, delay_period: delay };
+        RecoveryConfigs::<T>::insert(&lost, config);
+
+        let approvals: BoundedVec<_, _> = vec![guardian.clone()].try_into().unwrap();
+        ActiveRecoveries::<T>::insert(&lost, ActiveRecovery {
+            new_account: new_acct.clone(),
+            approvals,
+            created_at: System::<T>::block_number(),
+            executable_at: System::<T>::block_number(),
         });
 
-        #[extrinsic_call]
-        execute_recovery(RawOrigin::Signed(new_account.clone()), lost_account.clone());
+        // Ensure delay passed
+        System::<T>::set_block_number(System::<T>::block_number() + delay + 1u32.into());
 
-        // Verify recovery was executed (new account should have the balance)
-        assert!(Accounts::<T>::contains_key(&new_account));
+        #[extrinsic_call]
+        execute_recovery(RawOrigin::Signed(guardian.clone()), lost.clone());
+
+        assert!(!ActiveRecoveries::<T>::contains_key(&lost));
     }
 
     #[benchmark]
     fn cancel_recovery() {
         let caller: T::AccountId = whitelisted_caller();
-        let friend1: T::AccountId = account("friend1", 0, 0);
-        let friend2: T::AccountId = account("friend2", 0, 0);
 
-        // Setup: Create account with recovery
-        Accounts::<T>::insert(&caller, AccountInfo {
-            etr_balance: 1000u32.into(),
-            etd_balance: 0u32.into(),
-            nonce: 0,
-            recovery: Some(RecoveryConfig {
-                friends: vec![friend1, friend2],
-                threshold: 2,
-                approvals: vec![],
-                new_account_id: None,
-            }),
+        let approvals: BoundedVec<_, _> = vec![caller.clone()].try_into().unwrap();
+        ActiveRecoveries::<T>::insert(&caller, ActiveRecovery {
+            new_account: caller.clone(),
+            approvals,
+            created_at: System::<T>::block_number(),
+            executable_at: System::<T>::block_number(),
         });
 
         #[extrinsic_call]
-        cancel_recovery(RawOrigin::Signed(caller.clone()));
+        cancel_recovery(RawOrigin::Signed(caller.clone()), caller.clone());
 
-        // Verify recovery was cancelled
-        let account_info = Accounts::<T>::get(&caller).unwrap();
-        assert!(account_info.recovery.is_none());
+        assert!(!ActiveRecoveries::<T>::contains_key(&caller));
     }
 
     impl_benchmark_test_suite!(
