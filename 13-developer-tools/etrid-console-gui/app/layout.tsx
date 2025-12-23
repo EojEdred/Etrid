@@ -1,0 +1,34 @@
+import type React from "react"
+import type { Metadata } from "next"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
+import { Suspense } from "react"
+import { ThemeProvider } from "@/components/theme-provider"
+import { WalletProvider } from "@/contexts/WalletContext"
+import { Toaster } from "@/components/ui/toaster"
+import "./globals.css"
+
+export const metadata: Metadata = {
+  title: "Ëtridefi Bloc - DeFi Wallet",
+  description: "Multichain DeFi wallet with swap, staking, and consënsus governance",
+  generator: "Ëtridefi Bloc",
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <WalletProvider>
+            <Suspense fallback={null}>{children}</Suspense>
+            <Toaster />
+          </WalletProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}

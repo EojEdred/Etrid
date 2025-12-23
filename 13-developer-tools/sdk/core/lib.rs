@@ -507,7 +507,7 @@ pub mod p2p {
     #[cfg(feature = "p2p")]
     #[doc(inline)]
     /// Peer storage and caching
-    pub use etrid_p2p_stored as stored;
+    pub use detrp2p_peerstored as stored;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

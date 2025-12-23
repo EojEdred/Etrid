@@ -108,7 +108,7 @@ p2p = [
     "dep:dpeers",
     "dep:etrid-protocol",
     "dep:fluent",
-    "dep:etrid-p2p-stored",
+    "dep:detrp2p-peerstored",
 ]
 
 ## Decentralized identity (OpenDID)
@@ -242,7 +242,7 @@ detrp2p = { workspace = true, optional = true }
 dpeers = { workspace = true, optional = true }
 etrid-protocol = { workspace = true, optional = true }
 fluent = { workspace = true, optional = true }
-etrid-p2p-stored = { workspace = true, optional = true }
+detrp2p-peerstored = { workspace = true, optional = true }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 02-open-did

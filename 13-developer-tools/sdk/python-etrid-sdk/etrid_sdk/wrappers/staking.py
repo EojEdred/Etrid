@@ -26,7 +26,7 @@ class StakingWrapper:
     """
 
     # Staking constants
-    MIN_BOND_AMOUNT = 100 * 10**18  # Minimum 100 ÉTR
+    MIN_BOND_AMOUNT = 64 * 10**18  # Minimum 64 ÉTR
     UNBONDING_PERIOD_ERAS = 28      # 28 eras (~7 days)
     MAX_NOMINATIONS = 16            # Maximum validator nominations
 

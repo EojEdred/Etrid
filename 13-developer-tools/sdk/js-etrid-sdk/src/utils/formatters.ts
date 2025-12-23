@@ -28,7 +28,7 @@ export interface BalanceFormatOptions {
  */
 export const DECIMALS = {
   ETR: 18,
-  ETD: 18,
+  EDSC: 18,
 } as const;
 
 /**
@@ -138,10 +138,10 @@ export function formatETR(amount: bigint, options?: Omit<BalanceFormatOptions, '
 }
 
 /**
- * Format ETD balance
+ * Format EDSC balance
  */
-export function formatETD(amount: bigint, options?: Omit<BalanceFormatOptions, 'symbol'>): string {
-  return formatBalance(amount, { ...options, symbol: 'ETD' });
+export function formatEDSC(amount: bigint, options?: Omit<BalanceFormatOptions, 'symbol'>): string {
+  return formatBalance(amount, { ...options, symbol: 'EDSC' });
 }
 
 /**

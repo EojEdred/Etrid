@@ -200,14 +200,14 @@ describe('StakingWrapper', () => {
       mockApi.query = {
         staking: {
           minNominatorBond: jest.fn().mockResolvedValue({
-            toBigInt: () => 10n * 10n**18n,
+            toBigInt: () => 64n * 10n**18n,
           }),
         },
       };
 
       const minimum = await wrapper.getMinimumStake();
 
-      expect(minimum).toBe(10n * 10n**18n);
+      expect(minimum).toBe(64n * 10n**18n);
     });
   });
 

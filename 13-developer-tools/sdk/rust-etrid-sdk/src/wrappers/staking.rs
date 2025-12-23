@@ -417,7 +417,7 @@ impl StakingWrapper {
     pub async fn get_minimum_bond(&self) -> Result<u128> {
         // TODO: Query minimum bond from chain parameters
 
-        Ok(100_000_000_000) // 100 ETR
+        Ok(64_000_000_000) // 64 ETR
     }
 
     /// Get list of all active validators

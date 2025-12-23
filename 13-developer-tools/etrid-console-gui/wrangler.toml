@@ -1,0 +1,36 @@
+name = "etrid-wallet"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "out"
+
+[env.production]
+name = "etrid-wallet"
+routes = [
+  { pattern = "wallet.etrid.io", custom_domain = true }
+]
+
+[env.preview]
+name = "etrid-wallet-preview"
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Environment variables (non-secret)
+[vars]
+NEXT_PUBLIC_APP_NAME = "Ëtrid Wallet"
+NEXT_PUBLIC_NETWORK_NAME = "Ëtrid MainNet"
+NODE_ENV = "production"
+
+# Node.js compatibility for Next.js
+compatibility_flags = ["nodejs_compat"]
+
+# Headers for security
+[[headers]]
+for = "/*"
+[headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss: https:;"
