@@ -107,7 +107,7 @@ impl OnRuntimeUpgrade for MigrateSudoAndEdscMinter {
         // PART 2: Register All 9 Director Attesters for Bridge Protocol
         // ═══════════════════════════════════════════════════════════════════════════
 
-        use pallet_edsc_bridge_attestation::{
+        use pallet_bridge_attestation::{
             Attesters, AttesterByPubkey, NextAttesterId, ActiveAttesterCount,
             GlobalThreshold, AttesterInfo, AttesterStatus, ThresholdConfig,
         };

@@ -22,9 +22,14 @@
 //! - **MinValidatorStake**: 64 ETR (Validity Node minimum)
 //! - **SlashingInterface**: EtridStaking pallet
 
-use crate::{Runtime, EtridStaking, Balances, RuntimeEvent, AccountId, Balance, UNITS};
+// Note: Runtime types are imported where needed after construct_runtime!
+// These imports use types available before construct_runtime!
 use frame_support::parameter_types;
 use sp_runtime::Perbill;
+
+// Re-export UNITS for parameter_types
+const UNITS: u128 = 1_000_000_000_000_000_000;
+type Balance = u128;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ASF COMMITTEE PARAMETERS
@@ -128,36 +133,10 @@ parameter_types! {
 /// - Equivocation (double-signing blocks)
 /// - Offline/unresponsive behavior
 /// - Invalid certificate generation
+///
+/// NOTE: The SlashingInterface trait implementation is moved to lib.rs
+/// after construct_runtime! where Runtime types are available.
 pub struct AsfSlashingInterface;
-
-impl asf_algorithm::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
-    fn slash_validator(
-        validator: &AccountId,
-        amount: Balance,
-        reason: asf_algorithm::SlashReason,
-    ) -> Result<(), sp_runtime::DispatchError> {
-        use frame_support::traits::Currency;
-
-        log::warn!(
-            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
-            validator,
-            reason,
-            amount
-        );
-
-        let _ = Balances::slash_reserved(validator, amount);
-
-        Ok(())
-    }
-
-    fn is_validator_active(validator: &AccountId) -> bool {
-        crate::ValidatorCommittee::is_validator_active(validator)
-    }
-
-    fn get_validator_stake(validator: &AccountId) -> Balance {
-        EtridStaking::get_validator_stake(validator)
-    }
-}
 
 /// ASF Randomness Source - provides randomness for PPFA rotation
 ///

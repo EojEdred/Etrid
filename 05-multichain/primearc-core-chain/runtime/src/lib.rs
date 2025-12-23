@@ -1328,7 +1328,7 @@ impl pallet_consensus_day::TreasuryInterface<AccountId, Balance> for ConsensusDa
 
         // Transfer from Consensus Day pallet to Treasury pallet
         let treasury_account = EtridTreasury::account_id();
-        Balances::transfer(from, &treasury_account, amount, Preservation::Preserve)?;
+        <Balances as Mutate<AccountId>>::transfer(from, &treasury_account, amount, Preservation::Preserve)?;
 
         // Fund treasury with categorized allocations
         EtridTreasury::fund_treasury(
@@ -1365,7 +1365,7 @@ impl pallet_edsc_stability::TreasuryInterface<AccountId, Balance> for EdscStabil
 
         // Mint stability fees directly to treasury account
         let treasury_account = EtridTreasury::account_id();
-        let _ = Balances::mint_into(&treasury_account, amount)?;
+        let _ = <Balances as Mutate<AccountId>>::mint_into(&treasury_account, amount)?;
 
         // Record as stability fee income
         let _ = EtridTreasury::fund_treasury(
