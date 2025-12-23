@@ -11,6 +11,7 @@
 //! - Authorized minter control
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 pub use pallet::*;
 

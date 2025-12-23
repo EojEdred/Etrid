@@ -1,0 +1,127 @@
+{
+  "name": "ETRID Cross-Chain Bridge Configuration",
+  "version": "1.0.0",
+  "attestation": {
+    "threshold": 5,
+    "totalDirectors": 9,
+    "description": "5-of-9 Director attestation required for all bridge operations"
+  },
+  "domains": {
+    "primearc-core": {
+      "domainId": 1,
+      "name": "Primearc Core Chain",
+      "type": "substrate",
+      "description": "Primary relay chain"
+    },
+    "ethereum": {
+      "domainId": 100,
+      "chainId": 1,
+      "name": "Ethereum Mainnet",
+      "type": "evm",
+      "rpc": "https://eth.llamarpc.com"
+    },
+    "arbitrum": {
+      "domainId": 101,
+      "chainId": 42161,
+      "name": "Arbitrum One",
+      "type": "evm",
+      "rpc": "https://arb1.arbitrum.io/rpc"
+    },
+    "polygon": {
+      "domainId": 102,
+      "chainId": 137,
+      "name": "Polygon",
+      "type": "evm",
+      "rpc": "https://polygon-rpc.com"
+    },
+    "avalanche": {
+      "domainId": 103,
+      "chainId": 43114,
+      "name": "Avalanche C-Chain",
+      "type": "evm",
+      "rpc": "https://api.avax.network/ext/bc/C/rpc"
+    },
+    "base": {
+      "domainId": 104,
+      "chainId": 8453,
+      "name": "Base",
+      "type": "evm",
+      "rpc": "https://mainnet.base.org"
+    },
+    "bsc": {
+      "domainId": 105,
+      "chainId": 56,
+      "name": "BNB Chain",
+      "type": "evm",
+      "rpc": "https://bsc-dataseed.binance.org"
+    },
+    "optimism": {
+      "domainId": 106,
+      "chainId": 10,
+      "name": "Optimism",
+      "type": "evm",
+      "rpc": "https://mainnet.optimism.io"
+    },
+    "solana": {
+      "domainId": 200,
+      "name": "Solana",
+      "type": "svm",
+      "rpc": "https://api.mainnet-beta.solana.com"
+    },
+    "tron": {
+      "domainId": 195,
+      "chainId": 728126428,
+      "name": "TRON",
+      "type": "tvm",
+      "rpc": "https://api.trongrid.io"
+    },
+    "bitcoin": {
+      "domainId": 300,
+      "name": "Bitcoin",
+      "type": "utxo",
+      "description": "Off-chain multisig attestation"
+    },
+    "xrp": {
+      "domainId": 301,
+      "name": "XRP Ledger",
+      "type": "xrpl",
+      "rpc": "wss://xrplcluster.com"
+    },
+    "stellar": {
+      "domainId": 302,
+      "name": "Stellar",
+      "type": "stellar",
+      "rpc": "https://horizon.stellar.org"
+    }
+  },
+  "pbcDomains": {
+    "btc-pbc": { "domainId": 10, "name": "Bitcoin PBC" },
+    "eth-pbc": { "domainId": 11, "name": "Ethereum PBC" },
+    "sol-pbc": { "domainId": 12, "name": "Solana PBC" },
+    "xrp-pbc": { "domainId": 13, "name": "XRP PBC" },
+    "bnb-pbc": { "domainId": 14, "name": "BNB PBC" },
+    "trx-pbc": { "domainId": 15, "name": "TRON PBC" },
+    "xlm-pbc": { "domainId": 16, "name": "Stellar PBC" },
+    "doge-pbc": { "domainId": 17, "name": "Dogecoin PBC" },
+    "ada-pbc": { "domainId": 18, "name": "Cardano PBC" },
+    "ltc-pbc": { "domainId": 19, "name": "Litecoin PBC" },
+    "sc-usdt-pbc": { "domainId": 20, "name": "Stablecoin USDT PBC" }
+  },
+  "fees": {
+    "default": {
+      "bridgeFeesBps": 10,
+      "description": "0.1% bridge fee"
+    },
+    "minAmounts": {
+      "ETH": "0.001",
+      "BTC": "0.0001",
+      "SOL": "0.1",
+      "TRX": "10"
+    }
+  },
+  "security": {
+    "dailyLimitsEnabled": true,
+    "pausable": true,
+    "replayProtection": "nonce-based"
+  }
+}

@@ -1,10 +1,13 @@
-//! # EDSC Bridge Attestation Pallet
+//! # Generic Bridge Attestation Pallet
 //!
 //! ## Overview
 //!
-//! The EDSC Bridge Attestation pallet provides M-of-N threshold signature verification
-//! for cross-chain messages in the EDSC bridge protocol. It manages a registry of
+//! The Bridge Attestation pallet provides M-of-N threshold signature verification
+//! for cross-chain messages in any bridge protocol. It manages a registry of
 //! independent attesters who sign cross-chain messages to ensure their validity.
+//!
+//! This is a GENERIC, reusable pallet that can be used by ANY PBC (Partition Burst Chain)
+//! or bridge implementation in the Etrid ecosystem.
 //!
 //! ## Architecture
 //!
@@ -13,6 +16,7 @@
 //! - **Independent Attesters**: Each attester operates independently
 //! - **Byzantine Fault Tolerant**: Continues operating even if some attesters fail
 //! - **Governance Controlled**: Attesters can be added/removed via governance
+//! - **Multi-Chain Support**: Configurable ChainId for different source/destination chains
 //!
 //! ## Key Features
 //!
@@ -22,7 +26,7 @@
 //!    - Track attester status and metadata
 //!
 //! 2. **Signature Verification**
-//!    - Verify individual ECDSA/SR25519 signatures
+//!    - Verify individual ECDSA and SR25519 signatures
 //!    - Aggregate signature verification (M-of-N)
 //!    - Prevent signature reuse across messages
 //!
@@ -35,7 +39,22 @@
 //!    - Signature deduplication
 //!    - Attester rotation via governance
 //!    - Emergency pause controls
-//!    - Slashing for malicious attestations (future)
+//!    - Nonce-based replay protection
+//!
+//! ## Usage Example
+//!
+//! ```rust,ignore
+//! // In your PBC runtime configuration:
+//! impl pallet_bridge_attestation::Config for Runtime {
+//!     type RuntimeEvent = RuntimeEvent;
+//!     type ChainId = ConstU32<1>; // Your chain ID
+//!     type MaxAttesters = ConstU32<100>;
+//!     type MaxAttestersPerMessage = ConstU32<20>;
+//!     type MinSignatureThreshold = ConstU32<2>;
+//!     type AttestationMaxAge = ConstU32<1000>;
+//!     type WeightInfo = ();
+//! }
+//! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -47,8 +66,15 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
+pub mod genesis;
+pub use genesis::{GenesisAttester, GenesisConfig, GenesisThreshold};
+
 #[frame_support::pallet]
 pub mod pallet {
+	use super::WeightInfo;
 	use frame_support::{
 		pallet_prelude::*,
 		traits::Get,
@@ -80,10 +106,10 @@ pub mod pallet {
 		}
 	}
 
-	/// Signature type
+	/// Signature type (supports both ECDSA and SR25519)
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo)]
 	pub enum SignatureType {
-		/// ECDSA signature (Ethereum-compatible)
+		/// ECDSA signature (Ethereum-compatible, EVM bridges)
 		Ecdsa(ecdsa::Signature),
 		/// SR25519 signature (Substrate native)
 		Sr25519(sr25519::Signature),
@@ -93,7 +119,7 @@ pub mod pallet {
 	#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 	#[scale_info(skip_type_params(T))]
 	pub struct AttesterInfo<T: Config> {
-		/// Attester's public key (32 bytes for both ECDSA and SR25519)
+		/// Attester's public key (32 bytes for SR25519, 33 for ECDSA compressed)
 		pub public_key: BoundedVec<u8, ConstU32<64>>,
 		/// Current status
 		pub status: AttesterStatus,
@@ -117,6 +143,12 @@ pub mod pallet {
 		pub attested_at: BlockNumberFor<T>,
 		/// Number of valid signatures
 		pub signature_count: u32,
+		/// Source chain ID (for cross-chain verification)
+		pub source_chain_id: u32,
+		/// Destination chain ID
+		pub destination_chain_id: u32,
+		/// Nonce to prevent replay attacks
+		pub nonce: u64,
 	}
 
 	/// Threshold configuration per domain
@@ -138,6 +170,10 @@ pub mod pallet {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
+		/// Chain ID for this runtime (configurable per PBC)
+		#[pallet::constant]
+		type ChainId: Get<u32>;
+
 		/// Maximum number of attesters that can be registered
 		#[pallet::constant]
 		type MaxAttesters: Get<u32>;
@@ -155,8 +191,11 @@ pub mod pallet {
 		type AttestationMaxAge: Get<BlockNumberFor<Self>>;
 
 		/// Origin that can manage attesters (register, enable, disable, remove)
-		/// Can be set to root, a multisig, council, or specific account
-		type AdminOrigin: frame_support::traits::EnsureOrigin<Self::RuntimeOrigin>;
+		/// Defaults to root but can be configured to a specific account
+		type AdminOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
+		/// Weight information for extrinsics
+		type WeightInfo: WeightInfo;
 	}
 
 	/// Registered attesters (attester_id → AttesterInfo)
@@ -224,6 +263,22 @@ pub mod pallet {
 	#[pallet::getter(fn total_attestations)]
 	pub type TotalAttestations<T: Config> = StorageValue<_, u64, ValueQuery>;
 
+	/// Attestation nonce (incremented for each message to prevent replay)
+	#[pallet::storage]
+	#[pallet::getter(fn attestation_nonce)]
+	pub type AttestationNonce<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+	/// Used nonces to prevent replay attacks (nonce → bool)
+	#[pallet::storage]
+	#[pallet::getter(fn used_nonce)]
+	pub type UsedNonces<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		u64,
+		bool,
+		ValueQuery,
+	>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -242,20 +297,24 @@ pub mod pallet {
 		AttesterRemoved {
 			attester_id: u32,
 		},
-		/// Signature submitted [attester_id, message_hash]
+		/// Signature submitted [attester_id, message_hash, nonce]
 		SignatureSubmitted {
 			attester_id: u32,
 			message_hash: H256,
+			nonce: u64,
 		},
-		/// Attestation threshold reached [message_hash, signature_count]
+		/// Attestation threshold reached [message_hash, signature_count, nonce]
 		AttestationThresholdReached {
 			message_hash: H256,
 			signature_count: u32,
+			nonce: u64,
 		},
-		/// Attestation verified successfully [message_hash, signature_count]
+		/// Attestation verified successfully [message_hash, signature_count, source_chain, dest_chain]
 		AttestationVerified {
 			message_hash: H256,
 			signature_count: u32,
+			source_chain_id: u32,
+			destination_chain_id: u32,
 		},
 		/// Threshold configuration updated [domain_id, min_signatures, total_attesters]
 		ThresholdConfigUpdated {
@@ -267,6 +326,10 @@ pub mod pallet {
 		AttestationPaused,
 		/// Attestation service unpaused
 		AttestationUnpaused,
+		/// Threshold updated [new_threshold]
+		ThresholdUpdated {
+			new_threshold: u32,
+		},
 	}
 
 	#[pallet::error]
@@ -297,6 +360,14 @@ pub mod pallet {
 		InvalidThreshold,
 		/// Message hash mismatch
 		MessageHashMismatch,
+		/// Invalid chain ID
+		InvalidChainId,
+		/// Nonce already used (replay attack prevention)
+		NonceAlreadyUsed,
+		/// Invalid signature length
+		InvalidSignatureLength,
+		/// Unsupported signature type
+		UnsupportedSignatureType,
 	}
 
 	#[pallet::call]
@@ -304,11 +375,11 @@ pub mod pallet {
 		/// Register a new attester
 		///
 		/// # Arguments
-		/// * `public_key` - Attester's public key (32 or 33 bytes)
+		/// * `public_key` - Attester's public key (32 bytes for SR25519, 33 for ECDSA)
 		///
-		/// Requires root origin (governance)
+		/// Requires AdminOrigin (root or configured admin account)
 		#[pallet::call_index(0)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(4))]
+		#[pallet::weight(T::WeightInfo::register_attester())]
 		pub fn register_attester(
 			origin: OriginFor<T>,
 			public_key: Vec<u8>,
@@ -318,7 +389,7 @@ pub mod pallet {
 
 			// Validate public key length (32 bytes for SR25519, 33 for ECDSA compressed)
 			ensure!(
-				public_key.len() == 32 || public_key.len() == 33,
+				public_key.len() == 32 || public_key.len() == 33 || public_key.len() == 65,
 				Error::<T>::InvalidPublicKey
 			);
 
@@ -364,7 +435,7 @@ pub mod pallet {
 		///
 		/// Requires root origin (governance)
 		#[pallet::call_index(1)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(2))]
+		#[pallet::weight(T::WeightInfo::disable_attester())]
 		pub fn disable_attester(
 			origin: OriginFor<T>,
 			attester_id: u32,
@@ -398,7 +469,7 @@ pub mod pallet {
 		///
 		/// Requires root origin (governance)
 		#[pallet::call_index(2)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(2))]
+		#[pallet::weight(T::WeightInfo::enable_attester())]
 		pub fn enable_attester(
 			origin: OriginFor<T>,
 			attester_id: u32,
@@ -434,7 +505,7 @@ pub mod pallet {
 		///
 		/// Requires root origin (governance)
 		#[pallet::call_index(3)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(3))]
+		#[pallet::weight(T::WeightInfo::remove_attester())]
 		pub fn remove_attester(
 			origin: OriginFor<T>,
 			attester_id: u32,
@@ -462,19 +533,31 @@ pub mod pallet {
 		/// # Arguments
 		/// * `attester_id` - ID of the attester submitting the signature
 		/// * `message_hash` - Hash of the message being signed
-		/// * `signature` - The signature bytes
+		/// * `signature` - The signature bytes (65 for ECDSA, 64 for SR25519)
+		/// * `source_chain_id` - Source chain ID
+		/// * `destination_chain_id` - Destination chain ID
+		/// * `nonce` - Nonce to prevent replay attacks
 		///
 		/// Can be called by anyone (permissionless)
 		#[pallet::call_index(4)]
-		#[pallet::weight(Weight::from_parts(50_000, 0) + T::DbWeight::get().reads_writes(3, 2))]
+		#[pallet::weight(T::WeightInfo::submit_signature())]
 		pub fn submit_signature(
 			origin: OriginFor<T>,
 			attester_id: u32,
 			message_hash: H256,
 			signature: Vec<u8>,
+			source_chain_id: u32,
+			destination_chain_id: u32,
+			nonce: u64,
 		) -> DispatchResult {
 			let _submitter = ensure_signed(origin)?;
 			ensure!(!IsPaused::<T>::get(), Error::<T>::AttestationPaused);
+
+			// Verify nonce hasn't been used
+			ensure!(
+				!UsedNonces::<T>::get(nonce),
+				Error::<T>::NonceAlreadyUsed
+			);
 
 			// Verify attester exists and is active
 			let mut attester = Attesters::<T>::get(attester_id)
@@ -482,6 +565,12 @@ pub mod pallet {
 			ensure!(
 				attester.status == AttesterStatus::Active,
 				Error::<T>::AttesterNotActive
+			);
+
+			// Validate signature length (64 for SR25519, 65 for ECDSA)
+			ensure!(
+				signature.len() == 64 || signature.len() == 65,
+				Error::<T>::InvalidSignatureLength
 			);
 
 			let bounded_sig: BoundedVec<u8, ConstU32<65>> = signature.clone()
@@ -501,6 +590,9 @@ pub mod pallet {
 							signatures: BoundedVec::default(),
 							attested_at: current_block,
 							signature_count: 0,
+							source_chain_id,
+							destination_chain_id,
+							nonce,
 						});
 						maybe_attestation.as_mut().unwrap()
 					}
@@ -532,6 +624,7 @@ pub mod pallet {
 			Self::deposit_event(Event::SignatureSubmitted {
 				attester_id,
 				message_hash,
+				nonce,
 			});
 
 			// Check if threshold reached
@@ -542,6 +635,7 @@ pub mod pallet {
 				Self::deposit_event(Event::AttestationThresholdReached {
 					message_hash,
 					signature_count: attestation.signature_count,
+					nonce,
 				});
 			}
 
@@ -552,11 +646,11 @@ pub mod pallet {
 		///
 		/// # Arguments
 		/// * `message` - The original message bytes
-		/// * `attestation_data` - The attestation data (message_hash + signatures)
+		/// * `message_hash` - The message hash
 		///
-		/// This is typically called by pallet-edsc-bridge-token-messenger
+		/// This is typically called by other bridge pallets (token messenger, etc.)
 		#[pallet::call_index(5)]
-		#[pallet::weight(Weight::from_parts(100_000, 0) + T::DbWeight::get().reads(5))]
+		#[pallet::weight(T::WeightInfo::verify_attestation())]
 		pub fn verify_attestation(
 			origin: OriginFor<T>,
 			message: Vec<u8>,
@@ -584,6 +678,12 @@ pub mod pallet {
 				Error::<T>::AttestationExpired
 			);
 
+			// Verify nonce hasn't been used (prevent replay)
+			ensure!(
+				!UsedNonces::<T>::get(attestation.nonce),
+				Error::<T>::NonceAlreadyUsed
+			);
+
 			// Check threshold
 			let threshold = Self::get_threshold_for_message();
 			ensure!(
@@ -592,7 +692,6 @@ pub mod pallet {
 			);
 
 			// Verify signatures cryptographically
-			// For each signature, verify it's from an active attester
 			for (attester_id, signature) in attestation.signatures.iter() {
 				let attester = Attesters::<T>::get(attester_id)
 					.ok_or(Error::<T>::AttesterNotFound)?;
@@ -609,11 +708,15 @@ pub mod pallet {
 				)?;
 			}
 
+			// Mark nonce as used
+			UsedNonces::<T>::insert(attestation.nonce, true);
 			TotalAttestations::<T>::mutate(|count| *count = count.saturating_add(1));
 
 			Self::deposit_event(Event::AttestationVerified {
 				message_hash,
 				signature_count: attestation.signature_count,
+				source_chain_id: attestation.source_chain_id,
+				destination_chain_id: attestation.destination_chain_id,
 			});
 
 			Ok(())
@@ -628,7 +731,7 @@ pub mod pallet {
 		///
 		/// Requires root origin (governance)
 		#[pallet::call_index(6)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(1))]
+		#[pallet::weight(T::WeightInfo::update_threshold())]
 		pub fn configure_threshold(
 			origin: OriginFor<T>,
 			domain_id: Option<u32>,
@@ -663,11 +766,46 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Pause attestation service
+		/// Update the global threshold
+		///
+		/// # Arguments
+		/// * `new_threshold` - New minimum signature threshold
 		///
 		/// Requires root origin (governance)
 		#[pallet::call_index(7)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(1))]
+		#[pallet::weight(T::WeightInfo::update_threshold())]
+		pub fn update_threshold(
+			origin: OriginFor<T>,
+			new_threshold: u32,
+		) -> DispatchResult {
+			T::AdminOrigin::ensure_origin(origin)?;
+
+			let active_count = ActiveAttesterCount::<T>::get();
+			ensure!(
+				new_threshold > 0 && new_threshold <= active_count,
+				Error::<T>::InvalidThreshold
+			);
+
+			let config = ThresholdConfig {
+				min_signatures: new_threshold,
+				total_attesters: active_count,
+				enabled: true,
+			};
+
+			GlobalThreshold::<T>::put(config);
+
+			Self::deposit_event(Event::ThresholdUpdated {
+				new_threshold,
+			});
+
+			Ok(())
+		}
+
+		/// Pause attestation service
+		///
+		/// Requires root origin (governance)
+		#[pallet::call_index(8)]
+		#[pallet::weight(T::WeightInfo::pause_attestation())]
 		pub fn pause_attestation(origin: OriginFor<T>) -> DispatchResult {
 			T::AdminOrigin::ensure_origin(origin)?;
 			IsPaused::<T>::put(true);
@@ -678,62 +816,13 @@ pub mod pallet {
 		/// Unpause attestation service
 		///
 		/// Requires root origin (governance)
-		#[pallet::call_index(8)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(1))]
+		#[pallet::call_index(9)]
+		#[pallet::weight(T::WeightInfo::unpause_attestation())]
 		pub fn unpause_attestation(origin: OriginFor<T>) -> DispatchResult {
 			T::AdminOrigin::ensure_origin(origin)?;
 			IsPaused::<T>::put(false);
 			Self::deposit_event(Event::AttestationUnpaused);
 			Ok(())
-		}
-	}
-
-	/// Genesis configuration for pre-registering attesters
-	#[pallet::genesis_config]
-	#[derive(frame_support::DefaultNoBound)]
-	pub struct GenesisConfig<T: Config> {
-		/// Initial attesters to register (public_key bytes)
-		pub attesters: Vec<Vec<u8>>,
-		/// Initial threshold configuration
-		pub threshold: Option<(u32, u32)>,  // (min_signatures, total_attesters)
-		#[serde(skip)]
-		pub _phantom: core::marker::PhantomData<T>,
-	}
-
-	#[pallet::genesis_build]
-	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-		fn build(&self) {
-			// Register initial attesters
-			for (idx, public_key) in self.attesters.iter().enumerate() {
-				let attester_id = idx as u32;
-
-				if let Ok(bounded_key) = BoundedVec::<u8, ConstU32<64>>::try_from(public_key.clone()) {
-					let attester_info = AttesterInfo::<T> {
-						public_key: bounded_key.clone(),
-						status: AttesterStatus::Active,
-						registered_at: BlockNumberFor::<T>::default(),
-						messages_signed: 0,
-						last_signed_at: BlockNumberFor::<T>::default(),
-					};
-
-					Attesters::<T>::insert(attester_id, attester_info);
-					AttesterByPubkey::<T>::insert(bounded_key, attester_id);
-				}
-			}
-
-			// Set next attester ID and count
-			NextAttesterId::<T>::put(self.attesters.len() as u32);
-			ActiveAttesterCount::<T>::put(self.attesters.len() as u32);
-
-			// Configure threshold if provided
-			if let Some((min_sig, total)) = self.threshold {
-				let config = ThresholdConfig {
-					min_signatures: min_sig,
-					total_attesters: total,
-					enabled: true,
-				};
-				GlobalThreshold::<T>::put(config);
-			}
 		}
 	}
 
@@ -744,8 +833,20 @@ pub mod pallet {
 			H256::from(sp_io::hashing::blake2_256(message))
 		}
 
+		/// Get current chain ID from runtime configuration
+		pub fn get_chain_id() -> u32 {
+			T::ChainId::get()
+		}
+
+		/// Get current attestation nonce and increment it
+		pub fn get_and_increment_nonce() -> u64 {
+			let nonce = AttestationNonce::<T>::get();
+			AttestationNonce::<T>::put(nonce.saturating_add(1));
+			nonce
+		}
+
 		/// Get threshold for current message (uses global config)
-		fn get_threshold_for_message() -> u32 {
+		pub fn get_threshold_for_message() -> u32 {
 			if let Some(config) = GlobalThreshold::<T>::get() {
 				if config.enabled {
 					return config.min_signatures;
@@ -764,46 +865,115 @@ pub mod pallet {
 			Self::get_threshold_for_message()
 		}
 
-		/// Verify a single ECDSA signature cryptographically
+		/// Verify a signature (supports both ECDSA and SR25519)
 		fn verify_signature(
 			public_key: &[u8],
 			message_hash: &H256,
 			signature: &[u8],
 		) -> DispatchResult {
-			// Validate signature length (65 bytes for ECDSA: 64 sig + 1 recovery)
-			ensure!(
-				signature.len() == 65,
-				Error::<T>::InvalidSignature
-			);
+			// Determine signature type based on length
+			match (public_key.len(), signature.len()) {
+				// ECDSA: 33-byte compressed pubkey, 65-byte signature
+				(33, 65) => Self::verify_ecdsa_signature(public_key, message_hash, signature),
+				// ECDSA: 65-byte uncompressed pubkey, 65-byte signature
+				(65, 65) => Self::verify_ecdsa_signature(public_key, message_hash, signature),
+				// SR25519: 32-byte pubkey, 64-byte signature
+				(32, 64) => Self::verify_sr25519_signature(public_key, message_hash, signature),
+				// Invalid combination
+				_ => Err(Error::<T>::UnsupportedSignatureType.into()),
+			}
+		}
 
-			// Validate public key length (33 bytes compressed ECDSA)
-			ensure!(
-				public_key.len() == 33,
-				Error::<T>::InvalidPublicKey
-			);
+		/// Verify an ECDSA signature
+		fn verify_ecdsa_signature(
+			public_key: &[u8],
+			message_hash: &H256,
+			signature: &[u8],
+		) -> DispatchResult {
+			ensure!(signature.len() == 65, Error::<T>::InvalidSignatureLength);
 
-			// Convert to fixed arrays
 			let sig_array: [u8; 65] = signature
 				.try_into()
 				.map_err(|_| Error::<T>::InvalidSignature)?;
 
-			let pubkey_array: [u8; 33] = public_key
+			// Handle both compressed (33) and uncompressed (65) public keys
+			let ecdsa_sig = sp_core::ecdsa::Signature::from_raw(sig_array);
+
+			let is_valid = if public_key.len() == 33 {
+				let pubkey_array: [u8; 33] = public_key
+					.try_into()
+					.map_err(|_| Error::<T>::InvalidPublicKey)?;
+				let ecdsa_pubkey = sp_core::ecdsa::Public::from_raw(pubkey_array);
+
+				sp_io::crypto::ecdsa_verify(
+					&ecdsa_sig,
+					&message_hash.0,
+					&ecdsa_pubkey,
+				)
+			} else if public_key.len() == 65 {
+				// For uncompressed keys, we need to compress them first
+				// This is a simplified version - production code should use proper compression
+				let compressed = Self::compress_ecdsa_pubkey(public_key)?;
+				let ecdsa_pubkey = sp_core::ecdsa::Public::from_raw(compressed);
+
+				sp_io::crypto::ecdsa_verify(
+					&ecdsa_sig,
+					&message_hash.0,
+					&ecdsa_pubkey,
+				)
+			} else {
+				return Err(Error::<T>::InvalidPublicKey.into());
+			};
+
+			ensure!(is_valid, Error::<T>::InvalidSignature);
+			Ok(())
+		}
+
+		/// Verify an SR25519 signature
+		fn verify_sr25519_signature(
+			public_key: &[u8],
+			message_hash: &H256,
+			signature: &[u8],
+		) -> DispatchResult {
+			ensure!(signature.len() == 64, Error::<T>::InvalidSignatureLength);
+			ensure!(public_key.len() == 32, Error::<T>::InvalidPublicKey);
+
+			let sig_array: [u8; 64] = signature
+				.try_into()
+				.map_err(|_| Error::<T>::InvalidSignature)?;
+
+			let pubkey_array: [u8; 32] = public_key
 				.try_into()
 				.map_err(|_| Error::<T>::InvalidPublicKey)?;
 
-			// Convert to sp_core ECDSA types
-			let ecdsa_sig = sp_core::ecdsa::Signature::from_raw(sig_array);
-			let ecdsa_pubkey = sp_core::ecdsa::Public::from_raw(pubkey_array);
+			let sr25519_sig = sp_core::sr25519::Signature::from_raw(sig_array);
+			let sr25519_pubkey = sp_core::sr25519::Public::from_raw(pubkey_array);
 
-			// Perform ECDSA verification using Substrate's crypto primitives
-			let is_valid = sp_io::crypto::ecdsa_verify(
-				&ecdsa_sig,
+			let is_valid = sp_io::crypto::sr25519_verify(
+				&sr25519_sig,
 				&message_hash.0,
-				&ecdsa_pubkey,
+				&sr25519_pubkey,
 			);
 
 			ensure!(is_valid, Error::<T>::InvalidSignature);
 			Ok(())
+		}
+
+		/// Compress an ECDSA public key (65 bytes uncompressed → 33 bytes compressed)
+		fn compress_ecdsa_pubkey(uncompressed: &[u8]) -> Result<[u8; 33], DispatchError> {
+			ensure!(uncompressed.len() == 65, Error::<T>::InvalidPublicKey);
+			ensure!(uncompressed[0] == 0x04, Error::<T>::InvalidPublicKey);
+
+			let mut compressed = [0u8; 33];
+
+			// Prefix: 0x02 if Y is even, 0x03 if Y is odd
+			let y_last_byte = uncompressed[64];
+			compressed[0] = if y_last_byte % 2 == 0 { 0x02 } else { 0x03 };
+
+			// Copy X coordinate (bytes 1-32 from uncompressed)
+			compressed[1..33].copy_from_slice(&uncompressed[1..33]);
+
+			Ok(compressed)
 		}
 
 		/// Public verification function (called by other pallets)
@@ -829,13 +999,63 @@ pub mod pallet {
 				Error::<T>::AttestationExpired
 			);
 
+			// Verify nonce
+			ensure!(
+				!UsedNonces::<T>::get(attestation.nonce),
+				Error::<T>::NonceAlreadyUsed
+			);
+
 			let threshold = Self::get_threshold_for_message();
 			ensure!(
 				attestation.signature_count >= threshold,
 				Error::<T>::InsufficientSignatures
 			);
 
+			// Mark nonce as used
+			UsedNonces::<T>::insert(attestation.nonce, true);
+
 			Ok(())
+		}
+
+		/// Check if an attestation is valid without marking nonce as used
+		pub fn is_attestation_valid(message_hash: H256) -> bool {
+			if IsPaused::<T>::get() {
+				return false;
+			}
+
+			if let Some(attestation) = Attestations::<T>::get(message_hash) {
+				let current_block = <frame_system::Pallet<T>>::block_number();
+				let age = current_block.saturating_sub(attestation.attested_at);
+
+				if age > T::AttestationMaxAge::get() {
+					return false;
+				}
+
+				if UsedNonces::<T>::get(attestation.nonce) {
+					return false;
+				}
+
+				let threshold = Self::get_threshold_for_message();
+				return attestation.signature_count >= threshold;
+			}
+
+			false
+		}
+
+		/// Get active attesters (returns list of active attester IDs)
+		pub fn get_active_attesters() -> Vec<u32> {
+			let mut active = Vec::new();
+			let max_id = NextAttesterId::<T>::get();
+
+			for id in 0..max_id {
+				if let Some(attester) = Attesters::<T>::get(id) {
+					if attester.status == AttesterStatus::Active {
+						active.push(id);
+					}
+				}
+			}
+
+			active
 		}
 	}
 }

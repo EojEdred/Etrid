@@ -1,0 +1,30 @@
+{
+  "name": "etrid-bridge-evm",
+  "version": "1.0.0",
+  "description": "ETRID Cross-Chain Bridge for EVM Chains",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:ethereum": "hardhat run scripts/deploy.ts --network ethereum",
+    "deploy:arbitrum": "hardhat run scripts/deploy.ts --network arbitrum",
+    "deploy:polygon": "hardhat run scripts/deploy.ts --network polygon",
+    "deploy:avalanche": "hardhat run scripts/deploy.ts --network avalanche",
+    "deploy:base": "hardhat run scripts/deploy.ts --network base",
+    "deploy:bsc": "hardhat run scripts/deploy.ts --network bsc",
+    "deploy:optimism": "hardhat run scripts/deploy.ts --network optimism",
+    "deploy:all": "ts-node scripts/deploy-all.ts",
+    "create-wrapped-tokens": "hardhat run scripts/create-wrapped-tokens.ts",
+    "verify": "hardhat verify",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "ethers": "^6.9.0"
+  }
+}

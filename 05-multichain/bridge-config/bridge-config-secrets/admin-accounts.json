@@ -1,0 +1,364 @@
+{
+  "version": "2.0.0",
+  "network": "etrid-mainnet",
+  "last_updated": "2025-12-04T07:43:00Z",
+  "admin_accounts": {
+    "emergency_admin": {
+      "description": "Primary emergency admin with sudo/root access to pause bridge operations",
+      "account_type": "multisig",
+      "required_signatures": "5-of-9",
+      "permissions": [
+        "tokenMessenger.pauseBridge",
+        "tokenMessenger.unpauseBridge",
+        "bridgeAttestation.pauseAttestation",
+        "bridgeAttestation.unpauseAttestation",
+        "bridgeAttestation.disableAttester",
+        "bridgeAttestation.enableAttester",
+        "bridgeAttestation.removeAttester",
+        "bridgeAttestation.registerAttester",
+        "tokenMessenger.configureDomain",
+        "tokenMessenger.removeDomain",
+        "bridgeAttestation.configureThreshold",
+        "bridgeAttestation.updateThreshold"
+      ],
+      "accounts": {
+        "mainnet": {
+          "address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+          "type": "sr25519",
+          "note": "PRODUCTION: Replace with governance council multisig"
+        },
+        "testnet": {
+          "address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+          "type": "sr25519",
+          "note": "Testnet sudo account for testing"
+        },
+        "devnet": {
+          "address": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+          "type": "sr25519",
+          "note": "Development sudo (//Alice)"
+        }
+      },
+      "security": {
+        "storage": "Hardware Security Module (HSM) or Multi-Party Computation (MPC)",
+        "backup": "Encrypted backup in secure vault",
+        "rotation_frequency": "Every 90 days",
+        "last_rotation": "2025-12-04"
+      }
+    },
+    "fee_collector": {
+      "description": "Account that receives bridge fees from cross-chain transfers",
+      "account_type": "single",
+      "permissions": [
+        "receive_fees"
+      ],
+      "accounts": {
+        "mainnet": {
+          "address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+          "type": "sr25519",
+          "note": "Fee treasury account"
+        },
+        "testnet": {
+          "address": "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+          "type": "sr25519",
+          "note": "Testnet fee collector"
+        },
+        "devnet": {
+          "address": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+          "type": "sr25519",
+          "note": "Development fee collector (//Bob)"
+        }
+      },
+      "configuration": {
+        "runtime_constant": "type::FeeCollector",
+        "fee_rate_basis_points": 30,
+        "fee_rate_percentage": "0.3%",
+        "min_fee": "10000000000",
+        "min_fee_human": "0.01 ETRID"
+      }
+    },
+    "attestation_admin": {
+      "description": "Admin for managing bridge attester registry",
+      "account_type": "multisig",
+      "required_signatures": "5-of-9",
+      "permissions": [
+        "bridgeAttestation.registerAttester",
+        "bridgeAttestation.disableAttester",
+        "bridgeAttestation.enableAttester",
+        "bridgeAttestation.removeAttester",
+        "bridgeAttestation.configureThreshold",
+        "bridgeAttestation.updateThreshold"
+      ],
+      "note": "In production, this should be the same as emergency_admin (requires root origin)",
+      "accounts": {
+        "mainnet": {
+          "address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+          "type": "sr25519",
+          "note": "Same as emergency_admin (requires root)"
+        },
+        "testnet": {
+          "address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+          "type": "sr25519",
+          "note": "Testnet sudo account"
+        },
+        "devnet": {
+          "address": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+          "type": "sr25519",
+          "note": "Development sudo (//Alice)"
+        }
+      }
+    },
+    "domain_admin": {
+      "description": "Admin for configuring cross-chain domain settings",
+      "account_type": "multisig",
+      "required_signatures": "5-of-9",
+      "permissions": [
+        "tokenMessenger.configureDomain",
+        "tokenMessenger.removeDomain"
+      ],
+      "note": "Same as emergency_admin (requires root origin)",
+      "accounts": {
+        "mainnet": {
+          "address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+          "type": "sr25519",
+          "note": "Governance council multisig"
+        },
+        "testnet": {
+          "address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+          "type": "sr25519"
+        },
+        "devnet": {
+          "address": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+          "type": "sr25519"
+        }
+      }
+    }
+  },
+  "attesters": {
+    "description": "9 Decentralized Directors serving as bridge attesters for M-of-N signature verification",
+    "threshold": {
+      "current": "5-of-9",
+      "min_signatures": 5,
+      "total_attesters": 9,
+      "active_attesters": 8,
+      "emergency_backup": 1,
+      "recommended_production": "5-of-9 with Director-9 as emergency backup"
+    },
+    "attester_list": [
+      {
+        "attester_id": 1,
+        "name": "Attester-1 (Director-1)",
+        "public_key": "0x03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+        "evm_address": "0xA12d48dB2589cfe7ff11a595b80013CffFf5eE3d",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "ETRID Foundation (Director-1)",
+        "location": "vmi2896906 (100.93.43.18)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 2,
+        "name": "Attester-2 (Director-2)",
+        "public_key": "0x02bb133f8096effc1a2d6671f3797986fba0be082a978c5d15eafe2742f369644f",
+        "evm_address": "0x18a6034995CC0c6Db7fC9Ee53E535f5b1984f83e",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "ETRID Core Team (Director-2)",
+        "location": "vmi2896907 (100.71.127.127)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 3,
+        "name": "Attester-3 (Director-3)",
+        "public_key": "0x024e73743d02d4aedc8d08d444af3e608ba7168836a17b3126d1909432f757b41b",
+        "evm_address": "0x574B03172d7e637e2aA645eA9789Fe1E36DdBE33",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896908 (100.68.185.50)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 4,
+        "name": "Attester-4 (Director-4)",
+        "public_key": "0x03e5b448f4d78125a005b5cbdee8cf5acfcc99905f9e352f27cdf36b20a275b3b4",
+        "evm_address": "0x698AEdAd3550e716eDA5C923950caC3aA163883F",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896909 (100.70.73.10)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 5,
+        "name": "Attester-5 (Director-5)",
+        "public_key": "0x02c8c32311ae5480b65e9db6dd1059d53747117380b63aba243c4d6b8521795171",
+        "evm_address": "0xa27f49Bf5a5daa961fECF86526bDa0FD315bE988",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896910 (100.88.104.58)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 6,
+        "name": "Attester-6 (Director-6)",
+        "public_key": "0x022d2477d1388e282fa0c2987d7f16e68cf57ba15156f321533fb4b31eb79f6a9b",
+        "evm_address": "0x6250F01Ca6fcCeB81a1c7E5c2f8A114511188934",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896911 (100.117.43.53)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 7,
+        "name": "Attester-7 (Director-7)",
+        "public_key": "0x02886bbf04d83c7efcba263123da9c4e502b205f0ccf348dde95e6f81e80a80c72",
+        "evm_address": "0x56824F247Bbb54c353025306E860E8edA8877c7b",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896914 (100.109.252.56)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 8,
+        "name": "Attester-8 (Director-8)",
+        "public_key": "0x0295ff6d4a61254daa701439609e8dbfe99fd541f6e7d609a1229fc449d42209c6",
+        "evm_address": "0x64810209643c663D0505806e66Fe5dc0C5cEdB37",
+        "key_type": "ecdsa",
+        "status": "active",
+        "operator": "Director Node",
+        "location": "vmi2896915 (100.80.84.82)",
+        "registered_at": "2025-12-04"
+      },
+      {
+        "attester_id": 9,
+        "name": "Attester-9 (Director-9)",
+        "public_key": "0x0280cf1c15ea6b78f6a57b449016a0bd0c24bee322afbc5dcba44ea21e9c66abce",
+        "evm_address": "0x3D9f108A558f9DDDc3c0881d6eafF7292d64dF92",
+        "key_type": "ecdsa",
+        "status": "inactive",
+        "operator": "ETRID Foundation (Cold Storage)",
+        "location": "OFFLINE - Manual activation only",
+        "registered_at": "2025-12-04"
+      }
+    ],
+    "production_requirements": {
+      "min_attesters": 5,
+      "recommended_attesters": 9,
+      "max_attesters": 20,
+      "geographic_diversity": "Directors distributed across 9 VMs",
+      "operational_diversity": "9 independent Director nodes",
+      "key_rotation_frequency": "Every 180 days",
+      "monitoring": "24/7 uptime monitoring required"
+    }
+  },
+  "governance": {
+    "description": "Governance configuration for production",
+    "sudo_removal": {
+      "status": "pending",
+      "timeline": "Remove sudo after governance launch",
+      "replacement": "pallet-collective (council + technical committee)"
+    },
+    "council": {
+      "size": 9,
+      "voting_threshold": "5-of-9 for emergency actions",
+      "term_length": "180 days",
+      "election_frequency": "Every 90 days (rolling)"
+    },
+    "technical_committee": {
+      "size": 5,
+      "voting_threshold": "3-of-5 for emergency actions",
+      "fast_track_threshold": "4-of-5 for critical updates"
+    },
+    "democracy": {
+      "voting_period": "7 days",
+      "enactment_period": "2 days",
+      "emergency_fast_track": "24 hours with technical committee approval"
+    }
+  },
+  "security_procedures": {
+    "key_management": {
+      "storage": "HSM or MPC (Multi-Party Computation)",
+      "backup": "Encrypted shards distributed to 9 Directors",
+      "recovery": "5-of-9 Directors required for recovery",
+      "access_control": "Dual authorization required for key usage"
+    },
+    "emergency_contacts": {
+      "primary": {
+        "name": "Security Lead",
+        "email": "security@etrid.network",
+        "phone": "+1-XXX-XXX-XXXX",
+        "pgp_key": "0x..."
+      },
+      "secondary": {
+        "name": "Operations Lead",
+        "email": "ops@etrid.network",
+        "phone": "+1-XXX-XXX-XXXX",
+        "pgp_key": "0x..."
+      },
+      "escalation": {
+        "name": "CTO",
+        "email": "cto@etrid.network",
+        "phone": "+1-XXX-XXX-XXXX"
+      }
+    },
+    "incident_response": {
+      "severity_levels": {
+        "critical": "Bridge pause required immediately (< 5 minutes)",
+        "high": "Investigate and pause if confirmed (< 30 minutes)",
+        "medium": "Monitor closely and prepare mitigation (< 2 hours)",
+        "low": "Document and address in next maintenance window"
+      },
+      "escalation_path": [
+        "On-call Director",
+        "Security lead",
+        "CTO",
+        "CEO / Board"
+      ]
+    }
+  },
+  "deployment_checklist": {
+    "pre_mainnet": [
+      "Replace all placeholder addresses with actual multisig accounts",
+      "Generate production attester keys using HSM or MPC",
+      "Test emergency procedures on testnet",
+      "Document key recovery procedures",
+      "Set up 24/7 monitoring and alerting",
+      "Train emergency response team",
+      "Establish communication channels",
+      "Create runbooks for common scenarios",
+      "Conduct security audit of admin accounts",
+      "Set up key rotation schedule"
+    ],
+    "post_mainnet": [
+      "Remove sudo and transition to governance",
+      "Ensure all 9 Directors are operational",
+      "Implement time-locks for non-emergency changes",
+      "Conduct quarterly security reviews",
+      "Test emergency procedures monthly",
+      "Rotate keys according to schedule",
+      "Review and update this configuration quarterly"
+    ]
+  },
+  "notes": {
+    "important": [
+      "All 9 Directors serve as decentralized attesters",
+      "5-of-9 threshold ensures no single point of failure",
+      "Director-9 kept offline as emergency backup",
+      "Directors already have ETR in their accounts - can transfer for attestation fees",
+      "Test ALL emergency procedures on testnet before mainnet deployment",
+      "Keep this configuration file encrypted and access-controlled",
+      "Update this file whenever admin accounts or attesters change"
+    ],
+    "security_warnings": [
+      "NEVER commit private keys to git or any version control",
+      "NEVER use development accounts (//Alice, //Bob) on mainnet",
+      "ALWAYS use hardware wallets or HSM for mainnet keys",
+      "ALWAYS verify transaction details before signing",
+      "ALWAYS maintain offline backup of recovery information",
+      "CRITICAL: Attester keys distributed across 9 Directors for decentralization"
+    ]
+  }
+}

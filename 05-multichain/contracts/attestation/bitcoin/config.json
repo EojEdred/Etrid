@@ -1,0 +1,104 @@
+{
+  "name": "ETRID Bitcoin Attestation",
+  "description": "9-of-9 Director multisig for Bitcoin bridge attestations",
+  "network": "mainnet",
+  "threshold": 5,
+  "totalDirectors": 9,
+
+  "multisigConfig": {
+    "type": "P2WSH",
+    "redeemScriptType": "multisig",
+    "m": 5,
+    "n": 9,
+    "addressFormat": "bech32"
+  },
+
+  "directors": [
+    {
+      "index": 1,
+      "label": "Director-1",
+      "ecdsaPubkey": "03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 2,
+      "label": "Director-2",
+      "ecdsaPubkey": "03c4d7b1a2e3f5068c9a1b2d3e4f5068a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 3,
+      "label": "Director-3",
+      "ecdsaPubkey": "021a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 4,
+      "label": "Director-4",
+      "ecdsaPubkey": "022b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 5,
+      "label": "Director-5",
+      "ecdsaPubkey": "023c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 6,
+      "label": "Director-6",
+      "ecdsaPubkey": "024d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 7,
+      "label": "Director-7",
+      "ecdsaPubkey": "025e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 8,
+      "label": "Director-8",
+      "ecdsaPubkey": "026f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e",
+      "bitcoinPubkey": null
+    },
+    {
+      "index": 9,
+      "label": "Director-9",
+      "ecdsaPubkey": "0270819a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7",
+      "bitcoinPubkey": null
+    }
+  ],
+
+  "attestationFlow": {
+    "description": "Off-chain attestation with on-chain multisig execution",
+    "steps": [
+      "1. Bridge request detected on source chain",
+      "2. Relayer broadcasts request to all 9 Directors",
+      "3. Each Director signs the bridge request message",
+      "4. Signatures collected off-chain",
+      "5. When 5+ signatures collected, multisig transaction created",
+      "6. PSBT created and signed by available Directors",
+      "7. Transaction broadcast to Bitcoin network"
+    ]
+  },
+
+  "bridgeAddresses": {
+    "mainnet": {
+      "custodyAddress": null,
+      "hotWallet": null,
+      "coldStorage": null
+    },
+    "testnet": {
+      "custodyAddress": null,
+      "hotWallet": null
+    }
+  },
+
+  "feesConfig": {
+    "bridgeFeePercent": 0.1,
+    "minBtcAmount": 0.0001,
+    "maxBtcAmount": 10.0,
+    "dustThreshold": 546
+  }
+}

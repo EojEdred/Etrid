@@ -1,0 +1,130 @@
+{
+  "name": "ETRID Stellar Attestation",
+  "description": "9-Director attestation for Stellar (XLM) bridge",
+  "network": "mainnet",
+  "threshold": 5,
+  "totalDirectors": 9,
+
+  "stellarConfig": {
+    "networkPassphrase": "Public Global Stellar Network ; September 2015",
+    "horizonUrl": "https://horizon.stellar.org",
+    "description": "Stellar Mainnet - 3-5 second finality, low fees"
+  },
+
+  "multisigAccountConfig": {
+    "type": "Stellar Multi-Signature",
+    "medThreshold": 5,
+    "highThreshold": 5,
+    "masterWeight": 0,
+    "description": "Stellar multi-sig using SetOptions operation"
+  },
+
+  "directors": [
+    {
+      "index": 1,
+      "label": "Director-1",
+      "ecdsaPubkey": "03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 2,
+      "label": "Director-2",
+      "ecdsaPubkey": "03c4d7b1a2e3f5068c9a1b2d3e4f5068a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 3,
+      "label": "Director-3",
+      "ecdsaPubkey": "021a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 4,
+      "label": "Director-4",
+      "ecdsaPubkey": "022b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 5,
+      "label": "Director-5",
+      "ecdsaPubkey": "023c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 6,
+      "label": "Director-6",
+      "ecdsaPubkey": "024d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 7,
+      "label": "Director-7",
+      "ecdsaPubkey": "025e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 8,
+      "label": "Director-8",
+      "ecdsaPubkey": "026f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e",
+      "stellarPubkey": null,
+      "weight": 1
+    },
+    {
+      "index": 9,
+      "label": "Director-9",
+      "ecdsaPubkey": "0270819a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7",
+      "stellarPubkey": null,
+      "weight": 1
+    }
+  ],
+
+  "attestationFlow": [
+    "1. User sends XLM to ETRID custody account with memo",
+    "2. Stellar transaction confirmed (3-5 seconds)",
+    "3. Relayer detects payment via Horizon API",
+    "4. Directors sign attestation message",
+    "5. 5+ signatures collected",
+    "6. Attestation submitted to Primearc",
+    "7. Wrapped XLM minted on ETRID"
+  ],
+
+  "bridgeAccounts": {
+    "mainnet": {
+      "custodyAccount": null,
+      "minBalance": 1,
+      "baseReserve": 0.5
+    },
+    "testnet": {
+      "custodyAccount": null,
+      "friendbotUrl": "https://friendbot.stellar.org"
+    }
+  },
+
+  "assetsSupported": [
+    {
+      "code": "XLM",
+      "type": "native",
+      "enabled": true
+    },
+    {
+      "code": "USDC",
+      "issuer": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      "type": "credit_alphanum4",
+      "enabled": true
+    }
+  ],
+
+  "feesConfig": {
+    "bridgeFeePercent": 0.1,
+    "minXlmAmount": 1,
+    "maxXlmAmount": 1000000,
+    "stellarBaseFee": 100
+  }
+}

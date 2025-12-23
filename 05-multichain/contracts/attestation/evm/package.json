@@ -1,0 +1,29 @@
+{
+  "name": "etrid-attester-registry-evm",
+  "version": "1.0.0",
+  "description": "ETRID 9-Director AttesterRegistry for EVM chains",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:ethereum": "hardhat run scripts/deploy-all-networks.ts --network ethereum",
+    "deploy:arbitrum": "hardhat run scripts/deploy-all-networks.ts --network arbitrum",
+    "deploy:polygon": "hardhat run scripts/deploy-all-networks.ts --network polygon",
+    "deploy:avalanche": "hardhat run scripts/deploy-all-networks.ts --network avalanche",
+    "deploy:base": "hardhat run scripts/deploy-all-networks.ts --network base",
+    "deploy:bsc": "hardhat run scripts/deploy-all-networks.ts --network bsc",
+    "deploy:optimism": "hardhat run scripts/deploy-all-networks.ts --network optimism",
+    "deploy:all": "ts-node scripts/deploy-all-networks.ts",
+    "verify": "hardhat verify",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "ethers": "^6.9.0"
+  }
+}

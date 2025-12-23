@@ -22,6 +22,7 @@
 //! - ORACLE_STALE_TIMEOUT: 10 minutes (configurable)
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 pub use pallet::*;
 

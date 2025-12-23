@@ -1,0 +1,134 @@
+{
+  "attesters": [
+    {
+      "id": 1,
+      "name": "Attester-1 (Director-1)",
+      "public_key": "0x03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+      "enabled": true,
+      "description": "Primary Director - Foundation controlled",
+      "operator": "ETRID Foundation (Director-1)",
+      "endpoint": "http://100.93.43.18:3003",
+      "evm_address": "0xA12d48dB2589cfe7ff11a595b80013CffFf5eE3d"
+    },
+    {
+      "id": 2,
+      "name": "Attester-2 (Director-2)",
+      "public_key": "0x02bb133f8096effc1a2d6671f3797986fba0be082a978c5d15eafe2742f369644f",
+      "enabled": true,
+      "description": "Secondary Director - Eoj controlled",
+      "operator": "ETRID Core Team (Director-2)",
+      "endpoint": "http://100.71.127.127:3003",
+      "evm_address": "0x18a6034995CC0c6Db7fC9Ee53E535f5b1984f83e"
+    },
+    {
+      "id": 3,
+      "name": "Attester-3 (Director-3)",
+      "public_key": "0x024e73743d02d4aedc8d08d444af3e608ba7168836a17b3126d1909432f757b41b",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.68.185.50:3003",
+      "evm_address": "0x574B03172d7e637e2aA645eA9789Fe1E36DdBE33"
+    },
+    {
+      "id": 4,
+      "name": "Attester-4 (Director-4)",
+      "public_key": "0x03e5b448f4d78125a005b5cbdee8cf5acfcc99905f9e352f27cdf36b20a275b3b4",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.70.73.10:3003",
+      "evm_address": "0x698AEdAd3550e716eDA5C923950caC3aA163883F"
+    },
+    {
+      "id": 5,
+      "name": "Attester-5 (Director-5)",
+      "public_key": "0x02c8c32311ae5480b65e9db6dd1059d53747117380b63aba243c4d6b8521795171",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.88.104.58:3003",
+      "evm_address": "0xa27f49Bf5a5daa961fECF86526bDa0FD315bE988"
+    },
+    {
+      "id": 6,
+      "name": "Attester-6 (Director-6)",
+      "public_key": "0x022d2477d1388e282fa0c2987d7f16e68cf57ba15156f321533fb4b31eb79f6a9b",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.117.43.53:3003",
+      "evm_address": "0x6250F01Ca6fcCeB81a1c7E5c2f8A114511188934"
+    },
+    {
+      "id": 7,
+      "name": "Attester-7 (Director-7)",
+      "public_key": "0x02886bbf04d83c7efcba263123da9c4e502b205f0ccf348dde95e6f81e80a80c72",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.109.252.56:3003",
+      "evm_address": "0x56824F247Bbb54c353025306E860E8edA8877c7b"
+    },
+    {
+      "id": 8,
+      "name": "Attester-8 (Director-8)",
+      "public_key": "0x0295ff6d4a61254daa701439609e8dbfe99fd541f6e7d609a1229fc449d42209c6",
+      "enabled": true,
+      "description": "Director Node - Automated attester",
+      "operator": "Director Node",
+      "endpoint": "http://100.80.84.82:3003",
+      "evm_address": "0x64810209643c663D0505806e66Fe5dc0C5cEdB37"
+    },
+    {
+      "id": 9,
+      "name": "Attester-9 (Director-9)",
+      "public_key": "0x0280cf1c15ea6b78f6a57b449016a0bd0c24bee322afbc5dcba44ea21e9c66abce",
+      "enabled": false,
+      "description": "Emergency Director - Cold storage, manual activation only",
+      "operator": "ETRID Foundation (Cold)",
+      "endpoint": "OFFLINE",
+      "evm_address": "0x3D9f108A558f9DDDc3c0881d6eafF7292d64dF92"
+    }
+  ],
+  "threshold_config": {
+    "min_signatures": 5,
+    "total_attesters": 9,
+    "active_attesters": 8,
+    "description": "5-of-9 threshold (8 active, 1 emergency offline)"
+  },
+  "security_parameters": {
+    "attestation_max_age_blocks": 1000,
+    "signature_type": "ECDSA",
+    "key_length": "33 bytes (compressed)",
+    "signature_length": "65 bytes",
+    "curve": "secp256k1",
+    "hash_algorithm": "Keccak-256 (for EVM) / Blake2-256 (for Substrate)",
+    "replay_protection": "nonce-based"
+  },
+  "funding_requirements": {
+    "per_attester": {
+      "ETR_primearc": "1000 ETR - Transaction fees on Primearc",
+      "ETR_pbcs": "100 ETR each - Transaction fees on each PBC",
+      "ETH_mainnet": "0.1 ETH - Gas for Ethereum attestations",
+      "BNB_mainnet": "0.05 BNB - Gas for BNB Chain attestations"
+    },
+    "total_initial_funding": {
+      "ETR": "9000 ETR for all attesters",
+      "ETH": "0.9 ETH for all attesters",
+      "BNB": "0.45 BNB for all attesters"
+    },
+    "note": "Directors already have ETR in their VM accounts - can transfer as needed or sell wrapped ETR"
+  },
+  "director_vm_mapping": [
+    { "attester": 1, "director": "Director-1", "vm": "vmi2896906", "tailscale_ip": "100.93.43.18" },
+    { "attester": 2, "director": "Director-2", "vm": "vmi2896907", "tailscale_ip": "100.71.127.127" },
+    { "attester": 3, "director": "Director-3", "vm": "vmi2896908", "tailscale_ip": "100.68.185.50" },
+    { "attester": 4, "director": "Director-4", "vm": "vmi2896909", "tailscale_ip": "100.70.73.10" },
+    { "attester": 5, "director": "Director-5", "vm": "vmi2896910", "tailscale_ip": "100.88.104.58" },
+    { "attester": 6, "director": "Director-6", "vm": "vmi2896911", "tailscale_ip": "100.117.43.53" },
+    { "attester": 7, "director": "Director-7", "vm": "vmi2896914", "tailscale_ip": "100.109.252.56" },
+    { "attester": 8, "director": "Director-8", "vm": "vmi2896915", "tailscale_ip": "100.80.84.82" },
+    { "attester": 9, "director": "Director-9", "vm": "vmi2896917", "tailscale_ip": "100.86.111.37" }
+  ]
+}

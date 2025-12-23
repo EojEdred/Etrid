@@ -1,0 +1,211 @@
+{
+  "networks": {
+    "ethereum": {
+      "chainId": 1,
+      "name": "Ethereum Mainnet",
+      "rpcUrl": "https://eth.llamarpc.com",
+      "explorerUrl": "https://etherscan.io",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": null,
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "50000000000",
+        "maxPriorityFeePerGas": "2000000000"
+      }
+    },
+    "arbitrum": {
+      "chainId": 42161,
+      "name": "Arbitrum One",
+      "rpcUrl": "https://arb1.arbitrum.io/rpc",
+      "explorerUrl": "https://arbiscan.io",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": null,
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "1000000000",
+        "maxPriorityFeePerGas": "100000000"
+      }
+    },
+    "polygon": {
+      "chainId": 137,
+      "name": "Polygon PoS",
+      "rpcUrl": "https://polygon-rpc.com",
+      "explorerUrl": "https://polygonscan.com",
+      "nativeCurrency": {
+        "name": "MATIC",
+        "symbol": "MATIC",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": null,
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "100000000000",
+        "maxPriorityFeePerGas": "30000000000"
+      }
+    },
+    "avalanche": {
+      "chainId": 43114,
+      "name": "Avalanche C-Chain",
+      "rpcUrl": "https://api.avax.network/ext/bc/C/rpc",
+      "explorerUrl": "https://snowtrace.io",
+      "nativeCurrency": {
+        "name": "AVAX",
+        "symbol": "AVAX",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": null,
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "50000000000",
+        "maxPriorityFeePerGas": "2000000000"
+      }
+    },
+    "base": {
+      "chainId": 8453,
+      "name": "Base",
+      "rpcUrl": "https://mainnet.base.org",
+      "explorerUrl": "https://basescan.org",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": "DEPLOYED",
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "1000000000",
+        "maxPriorityFeePerGas": "100000000"
+      }
+    },
+    "bsc": {
+      "chainId": 56,
+      "name": "BNB Smart Chain",
+      "rpcUrl": "https://bsc-dataseed.binance.org",
+      "explorerUrl": "https://bscscan.com",
+      "nativeCurrency": {
+        "name": "BNB",
+        "symbol": "BNB",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": "DEPLOYED",
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "5000000000",
+        "maxPriorityFeePerGas": "1000000000"
+      }
+    },
+    "optimism": {
+      "chainId": 10,
+      "name": "Optimism",
+      "rpcUrl": "https://mainnet.optimism.io",
+      "explorerUrl": "https://optimistic.etherscan.io",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "deployment": {
+        "attesterRegistry": null,
+        "bridgeAdapter": null,
+        "deployedAt": null,
+        "txHash": null
+      },
+      "gasConfig": {
+        "maxFeePerGas": "1000000000",
+        "maxPriorityFeePerGas": "100000000"
+      }
+    }
+  },
+  "attesters": {
+    "threshold": 5,
+    "total": 9,
+    "directors": [
+      {
+        "index": 0,
+        "label": "Director-1",
+        "ecdsaPubkey": "0x03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+        "evmAddress": null
+      },
+      {
+        "index": 1,
+        "label": "Director-2",
+        "ecdsaPubkey": "0x03c4d7b1a2e3f5068c9a1b2d3e4f5068a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5",
+        "evmAddress": null
+      },
+      {
+        "index": 2,
+        "label": "Director-3",
+        "ecdsaPubkey": "0x021a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+        "evmAddress": null
+      },
+      {
+        "index": 3,
+        "label": "Director-4",
+        "ecdsaPubkey": "0x022b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a",
+        "evmAddress": null
+      },
+      {
+        "index": 4,
+        "label": "Director-5",
+        "ecdsaPubkey": "0x023c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b",
+        "evmAddress": null
+      },
+      {
+        "index": 5,
+        "label": "Director-6",
+        "ecdsaPubkey": "0x024d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c",
+        "evmAddress": null
+      },
+      {
+        "index": 6,
+        "label": "Director-7",
+        "ecdsaPubkey": "0x025e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+        "evmAddress": null
+      },
+      {
+        "index": 7,
+        "label": "Director-8",
+        "ecdsaPubkey": "0x026f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e",
+        "evmAddress": null
+      },
+      {
+        "index": 8,
+        "label": "Director-9",
+        "ecdsaPubkey": "0x0270819a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7",
+        "evmAddress": null
+      }
+    ]
+  }
+}

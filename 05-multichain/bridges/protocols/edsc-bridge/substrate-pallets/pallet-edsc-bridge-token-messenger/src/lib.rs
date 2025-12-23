@@ -45,6 +45,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+pub mod weights;
+pub use weights::*;
+
 /// Trait for token burn/mint operations
 pub trait TokenOperations<AccountId> {
 	/// Burn tokens from an account
@@ -52,6 +55,9 @@ pub trait TokenOperations<AccountId> {
 
 	/// Mint tokens to an account
 	fn mint_tokens(account: &AccountId, amount: u128) -> frame_support::dispatch::DispatchResult;
+
+	/// Get token balance of an account
+	fn balance_of(account: &AccountId) -> u128;
 }
 
 /// Default implementation (no-op for testing)
@@ -61,6 +67,9 @@ impl<AccountId> TokenOperations<AccountId> for () {
 	}
 	fn mint_tokens(_account: &AccountId, _amount: u128) -> frame_support::dispatch::DispatchResult {
 		Ok(())
+	}
+	fn balance_of(_account: &AccountId) -> u128 {
+		0
 	}
 }
 
@@ -228,6 +237,21 @@ pub mod pallet {
 		/// Message timeout (blocks)
 		#[pallet::constant]
 		type MessageTimeout: Get<BlockNumberFor<Self>>;
+
+		/// Minimum burn amount per transaction
+		#[pallet::constant]
+		type MinBurnAmount: Get<u128>;
+
+		/// Blocks per day (for daily limit reset calculations)
+		#[pallet::constant]
+		type BlocksPerDay: Get<u32>;
+
+		/// Local domain identifier for this chain
+		#[pallet::constant]
+		type LocalDomain: Get<u32>;
+
+		/// Weight information for extrinsics
+		type WeightInfo: crate::weights::WeightInfo;
 	}
 
 	/// Outbound messages (burned on Ëtrid, awaiting attestation)

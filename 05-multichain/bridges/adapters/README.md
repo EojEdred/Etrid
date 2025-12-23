@@ -95,7 +95,7 @@ Legend:
 - 🟡 **Ready** - Code complete, pending deployment
 - ⏸️ **Planned** - Scheduled for future development
 - ⏳ **Pending** - Awaiting deployment/configuration
-
+### i launched contracts after this was developed keep that in mind
 ---
 
 ## 💰 Cost Comparison: Adapters vs. PBCs

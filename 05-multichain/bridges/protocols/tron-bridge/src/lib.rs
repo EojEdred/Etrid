@@ -12,7 +12,6 @@ use sp_std::prelude::*;
 use sp_runtime::{traits::SaturatedConversion, RuntimeDebug};
 use sp_core::H256;
 
-#[cfg(feature = "std")]
 use serde::{Serialize, Deserialize};
 
 /// TRON address (34 bytes base58 encoded, stored as 21 bytes)
@@ -21,9 +20,9 @@ use serde::{Serialize, Deserialize};
 pub struct TronAddress(pub [u8; 21]);
 
 /// TRC-20 token contract address
-#[derive(Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen, Encode, Decode, DecodeWithMemTracking)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen, Encode, Decode, DecodeWithMemTracking, Serialize, Deserialize)]
 pub struct TokenContract(pub [u8; 21]);
+
 
 /// TRON transaction ID (32 bytes) - using H256 for compatibility
 pub type TronTxId = H256;

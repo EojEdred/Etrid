@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+#![allow(deprecated)]
 //! # EDSC Redemption Pallet
 //!
 //! 3-path redemption engine with dynamic fees and circuit breakers.

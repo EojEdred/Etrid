@@ -1,0 +1,117 @@
+{
+  "name": "ETRID TRON Attestation",
+  "description": "9-Director attestation for TRON (TRX) bridge",
+  "network": "mainnet",
+  "threshold": 5,
+  "totalDirectors": 9,
+
+  "tronConfig": {
+    "chainId": 728126428,
+    "fullNodeUrl": "https://api.trongrid.io",
+    "solidityNodeUrl": "https://api.trongrid.io",
+    "eventServerUrl": "https://api.trongrid.io",
+    "description": "TRON Mainnet - High throughput, low fees"
+  },
+
+  "shastaTestnet": {
+    "chainId": 2494104990,
+    "fullNodeUrl": "https://api.shasta.trongrid.io",
+    "faucet": "https://www.trongrid.io/shasta"
+  },
+
+  "directors": [
+    {
+      "index": 0,
+      "label": "Director-1",
+      "ecdsaPubkey": "0x03974b3a6408b7cec959215fbbbbf19af7c34eaa506b1420d89850662ef9af7d1f",
+      "tronAddress": null
+    },
+    {
+      "index": 1,
+      "label": "Director-2",
+      "ecdsaPubkey": "0x03c4d7b1a2e3f5068c9a1b2d3e4f5068a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c4d5",
+      "tronAddress": null
+    },
+    {
+      "index": 2,
+      "label": "Director-3",
+      "ecdsaPubkey": "0x021a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+      "tronAddress": null
+    },
+    {
+      "index": 3,
+      "label": "Director-4",
+      "ecdsaPubkey": "0x022b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a",
+      "tronAddress": null
+    },
+    {
+      "index": 4,
+      "label": "Director-5",
+      "ecdsaPubkey": "0x023c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b",
+      "tronAddress": null
+    },
+    {
+      "index": 5,
+      "label": "Director-6",
+      "ecdsaPubkey": "0x024d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c",
+      "tronAddress": null
+    },
+    {
+      "index": 6,
+      "label": "Director-7",
+      "ecdsaPubkey": "0x025e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+      "tronAddress": null
+    },
+    {
+      "index": 7,
+      "label": "Director-8",
+      "ecdsaPubkey": "0x026f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e",
+      "tronAddress": null
+    },
+    {
+      "index": 8,
+      "label": "Director-9",
+      "ecdsaPubkey": "0x0270819a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7",
+      "tronAddress": null
+    }
+  ],
+
+  "deployment": {
+    "mainnet": {
+      "attesterRegistry": null,
+      "bridgeAdapter": null
+    },
+    "shasta": {
+      "attesterRegistry": null,
+      "bridgeAdapter": null
+    }
+  },
+
+  "feesConfig": {
+    "bridgeFeePercent": 0.1,
+    "minTrxAmount": 10,
+    "maxTrxAmount": 1000000,
+    "energyPerTx": 100000,
+    "bandwidthPerTx": 500
+  },
+
+  "tokensSupported": [
+    {
+      "symbol": "TRX",
+      "type": "native",
+      "enabled": true
+    },
+    {
+      "symbol": "USDT",
+      "contract": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "type": "TRC20",
+      "enabled": true
+    },
+    {
+      "symbol": "USDC",
+      "contract": "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8",
+      "type": "TRC20",
+      "enabled": true
+    }
+  ]
+}
