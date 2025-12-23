@@ -92,7 +92,7 @@ members = [
     "05-multichain/partition-burst-chains/pbc-chains/ada-pbc/runtime",       # ADA PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/link-pbc/runtime",      # LINK PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/matic-pbc/runtime",     # MATIC PBC runtime
-    "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Smart Contract USDT PBC runtime
+    "05-multichain/partition-burst-chains/pbc-chains/sc-usdt-pbc/runtime",   # Stable Coin USDT PBC runtime
     "05-multichain/partition-burst-chains/pbc-chains/edsc-pbc/runtime",      # EDSC PBC runtime (Ëtrid Dollar Stablecoin)
     "05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/btc-pbc-collator",     # BTC PBC collator node
     # eth-pbc-collator excluded - has independent workspace (stable2506)
@@ -127,6 +127,8 @@ members = [
     "05-multichain/bridges/protocols/edsc-bridge/substrate-pallets/pallet-edsc-checkpoint",                   # State checkpoint synchronization
     "05-multichain/bridges/protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-token-messenger",       # CCTP-style token messenger (Phase 3)
     "05-multichain/bridges/protocols/edsc-bridge/substrate-pallets/pallet-edsc-bridge-attestation",           # M-of-N attestation verification (Phase 3)
+    "05-multichain/pallets-shared/pallet-bridge-attestation",            # Generic M-of-N attestation verification for all PBCs
+    "05-multichain/pallets-shared/pallet-token-messenger",               # Generic CCTP-style token messenger for all PBCs
     "05-multichain/pallets-shared/pallet-circuit-breaker",               # Emergency safety controls
     "06-native-currency/pallets/pallet-reserve-vault",                 # Multi-asset collateral vault
     "06-native-currency/pallets/pallet-custodian-registry",            # Bonded custodian registry
@@ -161,6 +163,8 @@ members = [
     "08-etwasm-vm/gas-metering",                        # VMW gas cost calculation
     "08-etwasm-vm/opcodes",                             # EVM opcode definitions
     "08-etwasm-vm/runtime",                             # EVM bytecode interpreter
+    "08-etwasm-vm/evm-adapter",                         # EVM compatibility adapter
+    "08-etwasm-vm/pallet-evm",                          # FRAME pallet wrapping adapter
     "08-etwasm-vm/pallet",                              # Smart contract VM pallet
     "08-etwasm-vm/vmw-runtime",                         # Comprehensive VMw metering runtime
 
@@ -224,6 +228,7 @@ exclude = [
     "apps",
     "docs",
     "scripts",
+    "13-developer-tools/etrid-console-gui/src-tauri",
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════

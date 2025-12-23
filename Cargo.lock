@@ -72,6 +72,7 @@ dependencies = [
 name = "ada-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -81,15 +82,21 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-cardano-bridge",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
@@ -251,6 +258,7 @@ name = "ai-compute-pbc-runtime"
 version = "1.0.0"
 dependencies = [
  "aidid",
+ "asf-algorithm",
  "etrid-primitives",
  "frame-executive",
  "frame-support",
@@ -259,10 +267,12 @@ dependencies = [
  "pallet-accounts",
  "pallet-ai-reputation",
  "pallet-balances",
+ "pallet-bridge-attestation",
  "pallet-compliance",
  "pallet-confidential-compute",
  "pallet-consensus",
  "pallet-dispute-arbitration",
+ "pallet-etrid-staking",
  "pallet-federated-learning",
  "pallet-gpu-nft",
  "pallet-gpu-registry",
@@ -271,12 +281,16 @@ dependencies = [
  "pallet-lightning-payment",
  "pallet-model-registry",
  "pallet-prompt-marketplace",
+ "pallet-session",
  "pallet-sla-insurance",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-tokenomics",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "scale-info",
  "sp-api",
@@ -1846,6 +1860,7 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
  "pallet-etrid-staking",
@@ -1854,6 +1869,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury 0.1.0",
@@ -2047,6 +2063,7 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
  "pallet-etrid-staking",
@@ -2055,6 +2072,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury 0.1.0",
@@ -3974,6 +3992,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "detrp2p-peerstored"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "rocksdb",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4151,6 +4180,7 @@ dependencies = [
 name = "doge-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -4160,15 +4190,21 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-doge-bridge",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
@@ -4373,6 +4409,7 @@ dependencies = [
 name = "edsc-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-primitives",
  "frame-executive",
  "frame-support",
@@ -4388,12 +4425,16 @@ dependencies = [
  "pallet-edsc-receipts",
  "pallet-edsc-redemption",
  "pallet-edsc-token",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "pallet-xcm-bridge",
  "parity-scale-codec",
  "pbc-common",
@@ -4854,13 +4895,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "etrid-p2p-stored"
-version = "0.1.0"
-dependencies = [
- "tokio",
-]
-
-[[package]]
 name = "etrid-post-quantum"
 version = "0.1.0"
 dependencies = [
@@ -5029,6 +5063,22 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener 5.4.1",
  "pin-project-lite",
+]
+
+[[package]]
+name = "evm-adapter"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "tiny-keccak",
 ]
 
 [[package]]
@@ -7962,6 +8012,7 @@ dependencies = [
 name = "link-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "chainlink-bridge",
  "etrid-bridge-common",
  "etrid-primitives",
@@ -7972,14 +8023,20 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
@@ -8306,6 +8363,7 @@ dependencies = [
 name = "matic-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -8315,14 +8373,20 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "polygon-bridge",
@@ -9390,6 +9454,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-bridge-attestation"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-broker"
 version = "0.22.0"
 source = "git+https://github.com/paritytech/polkadot-sdk.git?tag=polkadot-stable2509#5ab401310d2fbd808b3ffbcfc8735ad8f1c8fe10"
@@ -9831,6 +9911,28 @@ dependencies = [
  "sp-std",
  "vmw-runtime",
  "wasmi 0.31.2",
+]
+
+[[package]]
+name = "pallet-evm"
+version = "0.1.0"
+dependencies = [
+ "etwasm-gas-metering",
+ "evm-adapter",
+ "frame-support",
+ "frame-system",
+ "pallet-etwasm-vm",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-std",
+ "sp-tracing",
+ "sp-version",
 ]
 
 [[package]]
@@ -10370,6 +10472,23 @@ dependencies = [
  "sp-runtime",
  "sp-storage",
  "sp-timestamp",
+]
+
+[[package]]
+name = "pallet-token-messenger"
+version = "1.0.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-bridge-attestation",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -12535,9 +12654,12 @@ dependencies = [
  "block-production",
  "clap",
  "detrp2p",
+ "detrp2p-peerstored",
  "etrid-finality-gadget",
+ "etrid-p2p-dpeers",
  "etrid-protocol",
  "frame-benchmarking",
+ "frame-benchmarking-cli",
  "frame-system",
  "futures",
  "futures-timer",
@@ -12582,6 +12704,7 @@ dependencies = [
  "sp-transaction-pool",
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
+ "substrate-prometheus-endpoint",
  "tokio",
  "validator-management",
 ]
@@ -12604,6 +12727,7 @@ dependencies = [
  "etrid-smart-contract",
  "etrid-stake-deposit",
  "etrid-transactions-cross-chain",
+ "evm-adapter",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -12616,6 +12740,7 @@ dependencies = [
  "pallet-aidid",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-cardano-bridge",
  "pallet-circuit-breaker",
  "pallet-consensus",
@@ -12623,8 +12748,6 @@ dependencies = [
  "pallet-custodian-registry",
  "pallet-did-registry",
  "pallet-doge-bridge",
- "pallet-edsc-bridge-attestation",
- "pallet-edsc-bridge-token-messenger",
  "pallet-edsc-oracle",
  "pallet-edsc-receipts",
  "pallet-edsc-redemption",
@@ -12633,6 +12756,7 @@ dependencies = [
  "pallet-etr-lock",
  "pallet-etrid-staking",
  "pallet-etwasm-vm",
+ "pallet-evm",
  "pallet-governance",
  "pallet-insecure-randomness-collective-flip",
  "pallet-multiasset-reserve",
@@ -12646,6 +12770,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
@@ -12672,6 +12797,7 @@ dependencies = [
  "sp-offchain",
  "sp-runtime",
  "sp-session",
+ "sp-staking",
  "sp-std",
  "sp-storage",
  "sp-transaction-pool",
@@ -15257,6 +15383,7 @@ dependencies = [
 name = "sc-usdt-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -15266,14 +15393,20 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
@@ -16259,6 +16392,7 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
  "pallet-etrid-staking",
@@ -16267,6 +16401,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury 0.1.0",
@@ -18462,6 +18597,7 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
  "pallet-etrid-staking",
@@ -18470,6 +18606,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury 0.1.0",
@@ -20012,6 +20149,7 @@ dependencies = [
 name = "xlm-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -20021,14 +20159,20 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
@@ -20147,6 +20291,7 @@ dependencies = [
 name = "xrp-pbc-runtime"
 version = "0.1.0"
 dependencies = [
+ "asf-algorithm",
  "etrid-bridge-common",
  "etrid-primitives",
  "frame-executive",
@@ -20156,14 +20301,20 @@ dependencies = [
  "pallet-accounts",
  "pallet-balances",
  "pallet-bitcoin-bridge",
+ "pallet-bridge-attestation",
  "pallet-consensus",
  "pallet-etr-lock",
+ "pallet-etrid-staking",
  "pallet-insecure-randomness-collective-flip",
  "pallet-lightning-channels",
+ "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-validator-committee",
+ "pallet-validator-rewards",
  "parity-scale-codec",
  "pbc-common",
  "scale-info",
