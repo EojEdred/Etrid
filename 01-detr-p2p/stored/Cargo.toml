@@ -1,5 +1,5 @@
 [package]
-name = "etrid-p2p-stored"
+name = "detrp2p-peerstored"
 version = "0.1.0"
 edition = "2021"
 authors = ["Etrid Core Team"]
@@ -8,13 +8,16 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 tokio = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+hex = { workspace = true }
+rocksdb = { version = "0.21", optional = true, default-features = false, features = ["snappy"] }
 
 [dev-dependencies]
 tokio = { workspace = true }
 
+[features]
+default = []
+rocksdb-backend = ["rocksdb"]
 [lib]
-path = "src/lib.rs"
-
-[[test]]
-name = "integration"
 path = "src/lib.rs"

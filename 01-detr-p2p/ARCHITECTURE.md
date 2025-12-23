@@ -186,7 +186,7 @@ Defines all P2P protocol messages used across the Ëtrid network, including seri
 ### 7. stored (Rust) - Peer Storage & Caching
 
 **Location:** `01-detr-p2p/stored/`
-**Package:** `etrid-p2p-stored`
+**Package:** `detrp2p-peerstored`
 **Purpose:** Peer storage and caching module
 
 **Responsibilities:**
