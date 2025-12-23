@@ -105,23 +105,32 @@ For each PBC on each validator, run:
 
 Each service on a validator uses different ports:
 
+**IMPORTANT:** Main chain uses:
+- 30333 (libp2p P2P)
+- 30334 (DETR P2P for ASF consensus) ← RESERVED!
+- 9944 (RPC)
+- 9615 (Prometheus)
+
+PBCs must start at 30335 to avoid DETR P2P conflict.
+
 | Service | P2P Port | RPC Port | Prometheus |
 |---------|----------|----------|------------|
 | Primearc Core | 30333 | 9944 | 9615 |
-| BTC-PBC | 30334 | 9945 | 9616 |
-| ETH-PBC | 30335 | 9946 | 9617 |
-| SOL-PBC | 30336 | 9947 | 9618 |
-| XRP-PBC | 30337 | 9948 | 9619 |
-| BNB-PBC | 30338 | 9949 | 9620 |
-| TRX-PBC | 30339 | 9950 | 9621 |
-| ADA-PBC | 30340 | 9951 | 9622 |
-| DOGE-PBC | 30341 | 9952 | 9623 |
-| MATIC-PBC | 30342 | 9953 | 9624 |
-| XLM-PBC | 30343 | 9954 | 9625 |
-| LINK-PBC | 30344 | 9955 | 9626 |
-| SC-USDT-PBC | 30345 | 9956 | 9627 |
-| EDSC-PBC | 30346 | 9957 | 9628 |
-| AI-COMPUTE-PBC | 30347 | 9958 | 9629 |
+| DETR P2P (ASF) | 30334 | N/A | N/A |
+| ADA-PBC | 30335 | 9945 | 9616 |
+| BTC-PBC | 30336 | 9947 | 9617 |
+| DOGE-PBC | 30337 | 9948 | 9618 |
+| EDSC-PBC | 30338 | 9949 | 9619 |
+| ETH-PBC | 30339 | 9950 | 9620 |
+| LINK-PBC | 30340 | 9951 | 9621 |
+| MATIC-PBC | 30341 | 9952 | 9622 |
+| SC-USDT-PBC | 30342 | 9953 | 9623 |
+| SOL-PBC | 30343 | 9954 | 9624 |
+| TRX-PBC | 30344 | 9955 | 9625 |
+| XLM-PBC | 30345 | 9956 | 9626 |
+| XRP-PBC | 30346 | 9957 | 9627 |
+| BNB-PBC | 30350 | 9960 | 9630 |
+| AI-COMPUTE-PBC | 30351 | 9961 | 9631 |
 
 ---
 

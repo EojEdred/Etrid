@@ -130,6 +130,90 @@ export const ethereumGasPrice = new Gauge({
   registers: [register],
 });
 
+// ====== TRON-SPECIFIC METRICS ======
+
+// TRON connectivity
+export const tronConnected = new Gauge({
+  name: 'relayer_tron_connected',
+  help: 'Connected to TRON node (1 = connected, 0 = disconnected)',
+  registers: [register],
+});
+
+// TRON block height
+export const tronBlockHeight = new Gauge({
+  name: 'relayer_tron_block_height',
+  help: 'Latest TRON block height processed',
+  registers: [register],
+});
+
+// Last block timestamp
+export const lastBlockTimestamp = new Gauge({
+  name: 'relayer_last_block_timestamp',
+  help: 'Timestamp of last block processed',
+  labelNames: ['chain'],
+  registers: [register],
+});
+
+// Deposits seen from TRON
+export const depositsSeen = new Counter({
+  name: 'relayer_tron_deposits_seen_total',
+  help: 'Total deposits detected from TRON bridge',
+  labelNames: ['chain', 'token'],
+  registers: [register],
+});
+
+// TRON energy usage tracking
+export const tronEnergyUsed = new Counter({
+  name: 'relayer_tron_energy_used_total',
+  help: 'Total TRON energy consumed by bridge transactions',
+  registers: [register],
+});
+
+// TRON bandwidth usage tracking
+export const tronBandwidthUsed = new Counter({
+  name: 'relayer_tron_bandwidth_used_total',
+  help: 'Total TRON bandwidth consumed by bridge transactions',
+  registers: [register],
+});
+
+// TRON TRX deposits
+export const trxDepositsProcessed = new Counter({
+  name: 'relayer_tron_trx_deposits_total',
+  help: 'Total TRX deposits processed',
+  registers: [register],
+});
+
+// TRON TRC-20 deposits (by token)
+export const trc20DepositsProcessed = new Counter({
+  name: 'relayer_tron_trc20_deposits_total',
+  help: 'Total TRC-20 token deposits processed',
+  labelNames: ['token_symbol'],
+  registers: [register],
+});
+
+// USDT-specific counter (63% of global USDT on TRON)
+export const usdtDepositsProcessed = new Counter({
+  name: 'relayer_tron_usdt_deposits_total',
+  help: 'Total USDT deposits from TRON (high-priority stablecoin)',
+  registers: [register],
+});
+
+// TRON deposit amounts
+export const tronDepositAmount = new Counter({
+  name: 'relayer_tron_deposit_amount_sun',
+  help: 'Total amount deposited in SUN (1 TRX = 1,000,000 SUN)',
+  labelNames: ['token'],
+  registers: [register],
+});
+
+// Errors
+export const errors = new Counter({
+  name: 'relayer_errors_total',
+  help: 'Total errors encountered',
+  labelNames: ['type', 'source'],
+  registers: [register],
+});
+
 /**
  * Record a successful relay
  */
@@ -138,6 +222,43 @@ export function recordSuccessfulRelay(destination: string, duration: number): vo
   relayAttempts.inc({ destination });
   relayDuration.observe({ destination }, duration);
   lastRelayTimestamp.set({ destination }, Date.now() / 1000);
+}
+
+/**
+ * Record TRON TRX deposit
+ */
+export function recordTrxDeposit(amount: bigint, energyUsage: number, bandwidthUsage: number): void {
+  trxDepositsProcessed.inc();
+  tronDepositAmount.inc({ token: 'TRX' }, Number(amount));
+  tronEnergyUsed.inc(energyUsage);
+  tronBandwidthUsed.inc(bandwidthUsage);
+}
+
+/**
+ * Record TRON TRC-20 deposit
+ */
+export function recordTrc20Deposit(
+  tokenSymbol: string,
+  amount: bigint,
+  energyUsage: number,
+  bandwidthUsage: number,
+  isUsdt: boolean = false
+): void {
+  trc20DepositsProcessed.inc({ token_symbol: tokenSymbol });
+  tronDepositAmount.inc({ token: tokenSymbol }, Number(amount));
+  tronEnergyUsed.inc(energyUsage);
+  tronBandwidthUsed.inc(bandwidthUsage);
+
+  if (isUsdt) {
+    usdtDepositsProcessed.inc();
+  }
+}
+
+/**
+ * Record an error
+ */
+export function recordError(type: string, source: string): void {
+  errors.inc({ type, source });
 }
 
 /**

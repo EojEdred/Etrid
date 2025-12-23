@@ -21,19 +21,22 @@ echo ""
 KEY_DIR="/Users/macbook/Desktop/etrid/secrets/validator-keys"
 
 # PBC infrastructure mapping
+# IMPORTANT: Main chain uses 9944, PBCs start at 9945
+# Updated to match start-pbc-network-production.sh
 declare -A PBC_RPC_PORTS=(
-    ["btc"]="9944"
-    ["xrp"]="9945"
-    ["bnb"]="9946"
-    ["sol"]="9947"
-    ["ada"]="9948"
-    ["doge"]="9949"
-    ["trx"]="9950"
-    ["matic"]="9951"
-    ["xlm"]="9952"
-    ["link"]="9953"
-    ["usdt"]="9954"
-    ["edsc"]="9955"
+    ["ada"]="9945"
+    ["btc"]="9947"
+    ["bnb"]="9960"
+    ["doge"]="9948"
+    ["edsc"]="9949"
+    ["eth"]="9950"
+    ["link"]="9951"
+    ["matic"]="9952"
+    ["usdt"]="9953"
+    ["sol"]="9954"
+    ["trx"]="9955"
+    ["xlm"]="9956"
+    ["xrp"]="9957"
 )
 
 declare -A PBC_VM_IPS=(
