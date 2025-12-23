@@ -306,7 +306,7 @@ impl frame_support::traits::OnUnbalanced<frame_support::traits::fungible::Credit
 
         // Split the credit into two parts: 50% to treasury, 50% burn
         // We need to resolve the credit to get its value, then handle it
-        let treasury_account = EtridTreasury::account_id();
+        let treasury_account = treasury_account_id();
 
         // Deposit the credit to the treasury account
         // The credit represents fees that should be allocated
@@ -369,7 +369,15 @@ impl pallet_multisig::Config for Runtime {
     type BlockNumberProvider = System;
 }
 
-// Treasury PalletId is defined later with the custom treasury configuration
+// Treasury PalletId - defined early so it can be used before construct_runtime!
+parameter_types! {
+    pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+}
+
+/// Get treasury account ID from PalletId (available before construct_runtime!)
+pub fn treasury_account_id() -> AccountId {
+    TreasuryPalletId::get().into_account_truncating()
+}
 
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
 
@@ -408,7 +416,7 @@ impl pallet_accounts::Config for Runtime {
 }
 
 parameter_types! {
-    pub TreasuryAccountForStaking: AccountId = EtridTreasury::account_id();
+    pub TreasuryAccountForStaking: AccountId = treasury_account_id();
 }
 
 /// Configure the pallet-etrid-staking (peer roles staking system)
@@ -1075,38 +1083,8 @@ impl pallet_oracle_network::TreasuryNotifier<u128> for OracleTreasuryNotifier {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSENSUS DAY PALLET
 // ═══════════════════════════════════════════════════════════════════════════════
-
-/// Treasury interface implementation for Consensus Day
-pub struct ConsensusDayTreasuryInterface;
-impl pallet_consensus_day::TreasuryInterface<AccountId, Balance> for ConsensusDayTreasuryInterface {
-    fn fund_treasury(
-        from: &AccountId,
-        amount: Balance,
-        categories: sp_std::vec::Vec<(pallet_consensus_day::BudgetCategory, Balance)>,
-    ) -> DispatchResult {
-        use frame_support::traits::fungible::Mutate;
-        use frame_support::traits::tokens::Preservation;
-
-        // Transfer from Consensus Day pallet to Treasury pallet
-        let treasury_account = EtridTreasury::account_id();
-        Balances::transfer(from, &treasury_account, amount, Preservation::Preserve)?;
-
-        // Fund treasury with categorized allocations
-        EtridTreasury::fund_treasury(
-            frame_system::RawOrigin::Root.into(),
-            pallet_treasury_etrid::FundingSource::ConsensusDayMinting,
-            amount,
-        )?;
-
-        // Allocate to categories
-        EtridTreasury::allocate_to_categories(
-            frame_system::RawOrigin::Root.into(),
-            amount,
-        )?;
-
-        Ok(())
-    }
-}
+// Treasury interface implementations moved to after construct_runtime!
+// ═══════════════════════════════════════════════════════════════════════════════
 
 parameter_types! {
     pub const ConsensusRegistrationDuration: u32 = 3_600; // 6 hours at 6s blocks
@@ -1126,21 +1104,9 @@ parameter_types! {
     pub const ConsensusVotersShareBps: u32 = 1500; // 15% of participant pool
 }
 
-/// Treasury query interface for Consensus Day to check treasury balances
+/// Treasury interface structs - impls are after construct_runtime!
+pub struct ConsensusDayTreasuryInterface;
 pub struct ConsensusDayTreasuryQuery;
-impl pallet_consensus_day::TreasuryQueryInterface<Balance> for ConsensusDayTreasuryQuery {
-    fn get_transaction_fee_balance() -> Balance {
-        // Query the treasury's accumulated transaction fees
-        // Uses the pallet method that reads from FundingSourceTotals for TransactionFees
-        EtridTreasury::get_transaction_fee_balance()
-    }
-
-    fn withdraw_for_distribution(amount: Balance) -> sp_runtime::DispatchResult {
-        // Withdraw from treasury for participant distribution
-        // Uses the pallet method that handles the withdrawal and updates balances
-        EtridTreasury::withdraw_for_consensus_day_distribution(amount)
-    }
-}
 
 impl pallet_consensus_day::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -1168,26 +1134,8 @@ impl pallet_consensus_day::Config for Runtime {
 // EDSC STABILITY PALLET
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Treasury interface for EDSC Stability fees
+/// Treasury interface for EDSC Stability fees - impl is after construct_runtime!
 pub struct EdscStabilityTreasuryInterface;
-impl pallet_edsc_stability::TreasuryInterface<AccountId, Balance> for EdscStabilityTreasuryInterface {
-    fn receive_stability_fees(amount: Balance) -> Result<(), sp_runtime::DispatchError> {
-        use frame_support::traits::fungible::Mutate;
-
-        // Mint stability fees directly to treasury account
-        let treasury_account = EtridTreasury::account_id();
-        let _ = Balances::mint_into(&treasury_account, amount)?;
-
-        // Record as stability fee income
-        let _ = EtridTreasury::fund_treasury(
-            RuntimeOrigin::root(),
-            pallet_treasury_etrid::FundingSource::StabilityFees,
-            amount,
-        )?;
-
-        Ok(())
-    }
-}
 
 parameter_types! {
     pub const MinCollateralRatio: u16 = 15000; // 150%
@@ -1363,6 +1311,72 @@ construct_runtime!(
         CircuitBreaker: pallet_circuit_breaker,
     }
 );
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TREASURY INTERFACE IMPLEMENTATIONS (must be after construct_runtime!)
+// These use EtridTreasury which is only available after the macro above
+// ═══════════════════════════════════════════════════════════════════════════════
+
+impl pallet_consensus_day::TreasuryInterface<AccountId, Balance> for ConsensusDayTreasuryInterface {
+    fn fund_treasury(
+        from: &AccountId,
+        amount: Balance,
+        _categories: sp_std::vec::Vec<(pallet_consensus_day::BudgetCategory, Balance)>,
+    ) -> DispatchResult {
+        use frame_support::traits::fungible::Mutate;
+        use frame_support::traits::tokens::Preservation;
+
+        // Transfer from Consensus Day pallet to Treasury pallet
+        let treasury_account = EtridTreasury::account_id();
+        Balances::transfer(from, &treasury_account, amount, Preservation::Preserve)?;
+
+        // Fund treasury with categorized allocations
+        EtridTreasury::fund_treasury(
+            frame_system::RawOrigin::Root.into(),
+            pallet_treasury_etrid::FundingSource::ConsensusDayMinting,
+            amount,
+        )?;
+
+        // Allocate to categories
+        EtridTreasury::allocate_to_categories(
+            frame_system::RawOrigin::Root.into(),
+            amount,
+        )?;
+
+        Ok(())
+    }
+}
+
+impl pallet_consensus_day::TreasuryQueryInterface<Balance> for ConsensusDayTreasuryQuery {
+    fn get_transaction_fee_balance() -> Balance {
+        // Query the treasury's accumulated transaction fees
+        EtridTreasury::get_transaction_fee_balance()
+    }
+
+    fn withdraw_for_distribution(amount: Balance) -> sp_runtime::DispatchResult {
+        // Withdraw from treasury for participant distribution
+        EtridTreasury::withdraw_for_consensus_day_distribution(amount)
+    }
+}
+
+impl pallet_edsc_stability::TreasuryInterface<AccountId, Balance> for EdscStabilityTreasuryInterface {
+    fn receive_stability_fees(amount: Balance) -> Result<(), sp_runtime::DispatchError> {
+        use frame_support::traits::fungible::Mutate;
+
+        // Mint stability fees directly to treasury account
+        let treasury_account = EtridTreasury::account_id();
+        let _ = Balances::mint_into(&treasury_account, amount)?;
+
+        // Record as stability fee income
+        let _ = EtridTreasury::fund_treasury(
+            RuntimeOrigin::root(),
+            pallet_treasury_etrid::FundingSource::StabilityFees,
+            amount,
+        )?;
+
+        Ok(())
+    }
+}
 
 #[cfg(feature = "std")]
 pub type RuntimeGenesisConfig = GenesisConfig;
