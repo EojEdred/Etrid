@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 //! # ETR Lock Pallet
 //!
@@ -355,7 +356,7 @@ pub mod pallet {
     // Helper function for bridges to check if they can lock
     impl<T: Config> Pallet<T> {
         /// Check if enough ETR is available to lock
-        pub fn can_lock(chain_id: ChainId, amount: BalanceOf<T>) -> bool {
+        pub fn can_lock(_chain_id: ChainId, amount: BalanceOf<T>) -> bool {
             if let Some(lock_account) = LockAccount::<T>::get() {
                 let balance = T::Currency::free_balance(&lock_account);
                 balance >= amount && amount <= T::MaxLockAmount::get()

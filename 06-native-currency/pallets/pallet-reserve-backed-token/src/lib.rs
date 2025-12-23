@@ -25,6 +25,7 @@
 //! - sGold: Synthetic gold-backed token
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 pub use pallet::*;
 

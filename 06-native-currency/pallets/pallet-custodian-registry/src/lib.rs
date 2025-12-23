@@ -21,6 +21,7 @@
 //! - Other stable, auditable assets
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 pub use pallet::*;
 

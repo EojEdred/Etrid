@@ -43,6 +43,7 @@
 //!    - Ensures diversification and stability
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(deprecated)]
 
 pub use pallet::*;
 
