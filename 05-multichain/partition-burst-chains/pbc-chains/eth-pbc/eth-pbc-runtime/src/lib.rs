@@ -38,7 +38,7 @@ use frame_support::{
 	derive_impl,
 	genesis_builder_helper::{build_state, get_preset},
 	parameter_types,
-	traits::{ConstBool, ConstU32, ConstU64, ConstU8, FindAuthor, OnFinalize, OnTimestampSet},
+	traits::{ConstBool, ConstU32, ConstU64, ConstU8, EnsureRoot, FindAuthor, OnFinalize, OnTimestampSet},
 	weights::{constants::{RocksDbWeight, WEIGHT_REF_TIME_PER_MILLIS}, IdentityFee, Weight},
 };
 use pallet_transaction_payment::FungibleAdapter;
@@ -57,6 +57,11 @@ use pallet_evm::{
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
+
+// Import consensus-related pallets
+pub use pallet_validator_committee;
+pub use pallet_validator_rewards;
+pub use pallet_etrid_staking;
 
 mod precompiles;
 use precompiles::FrontierPrecompiles;
@@ -150,6 +155,35 @@ pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
 
+mod asf_config;
+use asf_config::*;
+
+/// Empty session handler for ASF consensus
+///
+/// ASF manages validator rotation internally via ValidatorCommittee pallet,
+/// so we don't need traditional session key management.
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+	type KeyTypeIdProviders = ();
+
+	fn on_genesis_session<TE: sp_runtime::traits::OpaqueKeys>(_validators: &[(AccountId, TE)]) {
+		// No-op: ValidatorCommittee handles initialization
+	}
+
+	fn on_new_session<TE: sp_runtime::traits::OpaqueKeys>(
+		_changed: bool,
+		_validators: &[(AccountId, TE)],
+		_queued_validators: &[(AccountId, TE)],
+	) {
+		// No-op: ValidatorCommittee handles rotation
+	}
+
+	fn on_disabled(_validator_index: u32) {
+		// No-op: ValidatorCommittee handles disabling
+	}
+}
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -168,7 +202,7 @@ pub mod opaque {
 
 	impl_opaque_keys! {
 		pub struct SessionKeys {
-			// ASF manages consensus internally - no session keys needed
+			// Empty - ASF manages validators without traditional session keys
 		}
 	}
 }
@@ -463,7 +497,123 @@ pub mod pallet_manual_seal {
 	}
 }
 
+// Disabling strategy for session pallet
+use frame_support::traits::U128CurrencyToVote;
+
+// Disabling strategy type
+pub struct UpToLimitDisablingStrategy;
+impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
+	fn get() -> u32 {
+		10  // Allow up to 10 validators to be disabled
+	}
+}
+
 impl pallet_manual_seal::Config for Runtime {}
+
+// ASF Consensus Configuration
+parameter_types! {
+    pub const SessionDuration: BlockNumber = 10 * MINUTES;
+}
+
+impl pallet_consensus_pbc::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type RandomnessSource = RandomnessCollectiveFlip;
+	type Time = Timestamp;
+	type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ETR
+	type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ETR per block
+	type CommitteeSize = ConstU32<21>; // PPFA committee size
+	type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
+	type BaseSlotDuration = ConstU64<6000>; // 6 seconds
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>;  // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>;     // 90% to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600;  // 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]);
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type KeyDeposit = ConstU128<0>;
+    type NextKeys = ();
+}
+
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>;  // ~2 days at 6s blocks
+    type MaxUnbondingEntries = ConstU32<32>;
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
+}
+
+// Bridge Attestation Configuration
+parameter_types! {
+	pub const LocalDomain: u32 = 101; // ETH-PBC domain ID
+	pub const MaxAttesters: u32 = 100;
+	pub const MaxAttestersPerMessage: u32 = 10;
+	pub const MinSignatureThreshold: u32 = 3;
+	pub const AttestationMaxAge: BlockNumber = 1000;
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type ChainId = LocalDomain;
+	type MaxAttesters = MaxAttesters;
+	type MaxAttestersPerMessage = MaxAttestersPerMessage;
+	type MinSignatureThreshold = MinSignatureThreshold;
+	type AttestationMaxAge = AttestationMaxAge;
+	type AdminOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
+}
+
+// Token Messenger Configuration
+parameter_types! {
+	pub const MaxMessageBodySize: u32 = 512;
+	pub const MaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000; // 1M tokens
+	pub const DailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000; // 10M tokens
+	pub const MinBurnAmount: u128 = 1_000_000_000_000; // 0.000001 tokens
+	pub const MessageTimeout: BlockNumber = 1000;
+	pub const BlocksPerDay: BlockNumber = DAYS;
+}
+
+impl pallet_token_messenger::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type TokenOperations = ();
+	type AttestationVerifier = ();
+	type WeightInfo = ();
+	type MaxMessageBodySize = MaxMessageBodySize;
+	type MaxBurnAmount = MaxBurnAmount;
+	type DailyBurnCap = DailyBurnCap;
+	type MinBurnAmount = MinBurnAmount;
+	type MessageTimeout = MessageTimeout;
+	type BlocksPerDay = BlocksPerDay;
+	type LocalDomain = LocalDomain;
+}
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 #[frame_support::runtime]
@@ -494,7 +644,7 @@ mod runtime {
 	#[runtime::pallet_index(3)]
 	pub type Balances = pallet_balances;
 
-	// Legacy pallets kept for compatibility but not used for consensus
+	// Legacy pallets kept for compatibility if needed
 	#[runtime::pallet_index(4)]
 	pub type Aura = pallet_aura;
 
@@ -511,20 +661,41 @@ mod runtime {
 	#[runtime::pallet_index(8)]
 	pub type Sudo = pallet_sudo;
 
+	// ASF Validator Management Pallets
 	#[runtime::pallet_index(9)]
-	pub type Ethereum = pallet_ethereum;
+	pub type Session = pallet_session;
 
 	#[runtime::pallet_index(10)]
-	pub type EVM = pallet_evm;
+	pub type ValidatorCommittee = pallet_validator_committee;
 
 	#[runtime::pallet_index(11)]
-	pub type EVMChainId = pallet_evm_chain_id;
+	pub type ValidatorRewards = pallet_validator_rewards;
 
 	#[runtime::pallet_index(12)]
+	pub type EtridStaking = pallet_etrid_staking;
+
+	// EVM Components
+	#[runtime::pallet_index(13)]
+	pub type Ethereum = pallet_ethereum;
+
+	#[runtime::pallet_index(14)]
+	pub type EVM = pallet_evm;
+
+	#[runtime::pallet_index(15)]
+	pub type EVMChainId = pallet_evm_chain_id;
+
+	#[runtime::pallet_index(16)]
 	pub type BaseFee = pallet_base_fee;
 
-	#[runtime::pallet_index(13)]
+	#[runtime::pallet_index(17)]
 	pub type ManualSeal = pallet_manual_seal;
+
+	// Shared Bridge Pallets
+	#[runtime::pallet_index(18)]
+	pub type BridgeAttestation = pallet_bridge_attestation;
+
+	#[runtime::pallet_index(19)]
+	pub type TokenMessenger = pallet_token_messenger;
 }
 
 #[derive(Clone)]

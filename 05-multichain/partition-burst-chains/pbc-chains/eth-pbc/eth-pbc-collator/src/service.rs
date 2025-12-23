@@ -125,10 +125,54 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
             metrics,
         })?;
 
-    if config.offchain_worker.enabled {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RPC SERVER INITIALIZATION - CRITICAL FIX
+    // ═══════════════════════════════════════════════════════════════════════════
+    log::info!("🔧 Initializing RPC server for ETH-PBC Collator...");
+
+    // Extract config values before spawn_tasks consumes config
+    let offchain_worker_enabled = config.offchain_worker.enabled;
+    let is_authority = config.role.is_authority();
+    let prometheus_registry = config.prometheus_registry().cloned();
+    let force_authoring = config.force_authoring;
+
+    // Build RPC extensions
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |_| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+            };
+
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
+    };
+
+    // Spawn RPC server tasks - THIS STARTS THE JSON-RPC SERVER
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        network: network.clone(),
+        client: client.clone(),
+        keystore: keystore_container.keystore(),
+        task_manager: &mut task_manager,
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder: rpc_extensions_builder,
+        backend: backend.clone(),
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        config,
+        telemetry: telemetry.as_mut(),
+    })?;
+
+    log::info!("✅ RPC server initialized successfully");
+
+    if offchain_worker_enabled {
         let offchain_workers = sc_offchain::OffchainWorkers::new(sc_offchain::OffchainWorkerOptions {
             runtime_api_provider: client.clone(),
-            is_validator: config.role.is_authority(),
+            is_validator: is_authority,
             keystore: Some(keystore_container.keystore()),
             offchain_db: backend.offchain_storage(),
             transaction_pool: Some(OffchainTransactionPoolFactory::new(
@@ -149,7 +193,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         task_manager.spawn_handle(),
         client.clone(),
         transaction_pool.clone(),
-        config.prometheus_registry(),
+        prometheus_registry.as_ref(),
         telemetry.as_ref().map(|x| x.handle()),
     );
 
@@ -167,7 +211,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
             let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
             Ok((timestamp,))
         },
-        force_authoring: config.force_authoring,
+        force_authoring,
         block_proposal_slot_portion: 2f32 / 3f32,
         max_block_proposal_slot_portion: None,
         justification_sync_link: sync_service.clone(),

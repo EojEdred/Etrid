@@ -297,6 +297,10 @@ fn current_slot(slot_duration: SlotDuration) -> Slot {
 ///
 /// This function checks if the local keystore contains the private key
 /// corresponding to the expected proposer's public key.
+///
+/// Supports both:
+/// - 20-byte AccountId20 (Ethereum-style addresses for eth-pbc)
+/// - 32-byte sr25519 public keys (standard Substrate)
 async fn check_if_we_are_proposer<AuthorityId>(
     keystore: &KeystorePtr,
     expected_proposer: &AuthorityId,
@@ -304,41 +308,115 @@ async fn check_if_we_are_proposer<AuthorityId>(
 where
     AuthorityId: Codec + Clone + AsRef<[u8]>,
 {
-    use sp_application_crypto::sr25519;
     use sp_core::crypto::ByteArray;
 
     // Get the public key bytes from the AuthorityId
     let proposer_bytes = expected_proposer.as_ref();
-
-    // Try to construct an sr25519 public key from the bytes
-    let public_key = match sr25519::Public::from_slice(proposer_bytes) {
-        Ok(key) => key,
-        Err(_) => {
-            log::warn!(
-                target: "asf",
-                "Failed to parse authority ID as sr25519 public key"
-            );
-            return false;
-        }
-    };
-
-    // Check if we have this key in the keystore
-    // We use the AURA key type for validator keys (standard in Substrate)
     let key_type = sp_core::crypto::key_types::AURA;
 
-    // has_keys returns a bool, not a Future, so no .await
-    if keystore.has_keys(&[(public_key.to_raw_vec(), key_type)]) {
-        log::debug!(
-            target: "asf",
-            "✓ We are the proposer - found matching key in keystore"
-        );
-        true
+    match proposer_bytes.len() {
+        // 20 bytes: AccountId20 (Ethereum-style address)
+        // Used by eth-pbc and other EVM-compatible PBCs
+        20 => {
+            // Get all ECDSA keys from keystore with AURA key type
+            let ecdsa_keys = keystore.ecdsa_public_keys(key_type);
+
+            for ecdsa_key in ecdsa_keys {
+                // Derive AccountId20 from ECDSA public key:
+                // 1. Get the uncompressed public key (without 0x04 prefix if present)
+                // 2. Hash with Keccak256
+                // 3. Take last 20 bytes
+                if let Some(derived_address) = derive_account_id20_from_ecdsa(&ecdsa_key) {
+                    if derived_address.as_slice() == proposer_bytes {
+                        log::debug!(
+                            target: "asf",
+                            "✓ We are the proposer - found matching ECDSA/AccountId20 key"
+                        );
+                        return true;
+                    }
+                }
+            }
+
+            log::trace!(
+                target: "asf",
+                "Not our turn - no matching AccountId20 key in keystore"
+            );
+            false
+        }
+
+        // 32 bytes: sr25519 public key (standard Substrate)
+        32 => {
+            use sp_application_crypto::sr25519;
+
+            let public_key = match sr25519::Public::from_slice(proposer_bytes) {
+                Ok(key) => key,
+                Err(_) => {
+                    log::warn!(
+                        target: "asf",
+                        "Failed to parse 32-byte authority ID as sr25519 public key"
+                    );
+                    return false;
+                }
+            };
+
+            if keystore.has_keys(&[(public_key.to_raw_vec(), key_type)]) {
+                log::debug!(
+                    target: "asf",
+                    "✓ We are the proposer - found matching sr25519 key"
+                );
+                true
+            } else {
+                log::trace!(
+                    target: "asf",
+                    "Not our turn - no matching sr25519 key in keystore"
+                );
+                false
+            }
+        }
+
+        // Unknown key length
+        other => {
+            log::warn!(
+                target: "asf",
+                "Unsupported authority ID length: {} bytes (expected 20 or 32)",
+                other
+            );
+            false
+        }
+    }
+}
+
+/// Derive AccountId20 (Ethereum address) from an ECDSA public key
+///
+/// This follows the Ethereum address derivation:
+/// 1. Take the uncompressed public key (64 bytes, without 0x04 prefix)
+/// 2. Hash with Keccak256
+/// 3. Take the last 20 bytes
+fn derive_account_id20_from_ecdsa(ecdsa_key: &sp_core::ecdsa::Public) -> Option<[u8; 20]> {
+    use sp_core::keccak_256;
+
+    // ECDSA public key is 33 bytes (compressed) or 65 bytes (uncompressed)
+    // We need to decompress to get the 64-byte public key for Ethereum address derivation
+
+    // For now, use libsecp256k1 to decompress the key
+    let compressed = ecdsa_key.as_ref();
+
+    // Try to parse as compressed secp256k1 public key
+    if let Ok(pubkey) = libsecp256k1::PublicKey::parse_slice(compressed, Some(libsecp256k1::PublicKeyFormat::Compressed)) {
+        // Get uncompressed format (65 bytes with 0x04 prefix)
+        let uncompressed = pubkey.serialize();
+        // Skip the 0x04 prefix byte, hash the remaining 64 bytes
+        let hash = keccak_256(&uncompressed[1..65]);
+        // Take last 20 bytes
+        let mut address = [0u8; 20];
+        address.copy_from_slice(&hash[12..32]);
+        Some(address)
     } else {
-        log::trace!(
+        log::warn!(
             target: "asf",
-            "Not our turn - no matching key in keystore"
+            "Failed to decompress ECDSA public key for AccountId20 derivation"
         );
-        false
+        None
     }
 }
 

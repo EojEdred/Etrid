@@ -408,7 +408,7 @@ async fn monitor_detr_p2p(conn_manager: Arc<ConnectionManager>) {
     }
 }
 
-/// Submit state roots to FlareChain relay
+/// Submit state roots to Primearc Core Chain relay
 async fn submit_state_roots(client: Arc<FullClient>) {
     log::info!("🔗 DOGE-PBC: State root submitter task started");
 

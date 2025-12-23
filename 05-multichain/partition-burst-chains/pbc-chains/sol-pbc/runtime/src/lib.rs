@@ -242,6 +242,7 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 /// Existential deposit.
@@ -278,12 +279,14 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 // ASF Consensus Configuration
@@ -307,6 +310,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
+    type Currency = Balances;
     type DisablingStrategy = UpToLimitDisablingStrategy;
     type Currency = Balances;
     type KeyDeposit = ConstU128<0>; // No deposit required for session keys
@@ -436,6 +440,56 @@ impl pallet_treasury_etrid::Config for Runtime {
     type EmergencyThreshold = TreasuryEmergencyThreshold;
     type ProposalExpiration = TreasuryProposalExpiration;
     type WeightInfo = ();
+    type Currency = Balances;
+}
+
+// Bridge Attestation Configuration
+parameter_types! {
+    pub const LocalDomain: u32 = 102; // SOL-PBC domain ID
+    pub const MaxAttesters: u32 = 100;
+    pub const MaxAttestersPerMessage: u32 = 10;
+    pub const MinSignatureThreshold: u32 = 3;
+    pub const AttestationMaxAge: BlockNumber = 1000;
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ChainId = LocalDomain;
+    type MaxAttesters = MaxAttesters;
+    type MaxAttestersPerMessage = MaxAttestersPerMessage;
+    type MinSignatureThreshold = MinSignatureThreshold;
+    type AttestationMaxAge = AttestationMaxAge;
+    type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
+    type Currency = Balances;
+}
+
+// Token Messenger Configuration
+parameter_types! {
+    pub const MaxMessageBodySize: u32 = 512;
+    pub const MaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000; // 1M tokens
+    pub const DailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000; // 10M tokens
+    pub const MinBurnAmount: u128 = 1_000_000_000_000; // 0.000001 tokens
+    pub const MessageTimeout: BlockNumber = 1000;
+    pub const BlocksPerDay: BlockNumber = DAYS;
+}
+
+impl pallet_token_messenger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type TokenOperations = ();
+    type AttestationVerifier = ();
+    type WeightInfo = ();
+    type Currency = Balances;
+    type MaxMessageBodySize = MaxMessageBodySize;
+    type MaxBurnAmount = MaxBurnAmount;
+    type DailyBurnCap = DailyBurnCap;
+    type MinBurnAmount = MinBurnAmount;
+    type MessageTimeout = MessageTimeout;
+    type BlocksPerDay = BlocksPerDay;
+    type LocalDomain = LocalDomain;
+    type BridgeFeeRate = BridgeFeeRate;
+    type MinBridgeFee = MinBridgeFee;
+    type FeeCollector = FeeCollector;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -465,6 +519,10 @@ construct_runtime!(
         // Solana Bridge & Lightning
         SolanaBridge: pallet_solana_bridge,
         LightningChannels: pallet_lightning_channels,
+
+        // Shared Bridge Pallets
+        BridgeAttestation: pallet_bridge_attestation,
+        TokenMessenger: pallet_token_messenger,
     }
 );
 

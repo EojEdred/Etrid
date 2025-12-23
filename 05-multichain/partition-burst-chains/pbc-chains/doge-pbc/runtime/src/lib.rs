@@ -347,10 +347,20 @@ construct_runtime!(
         // Ëtrid Core
         Consensus: pallet_consensus,
         EtrLock: pallet_etr_lock,
-        
+
+        // ASF Consensus
+        Session: pallet_session,
+        ValidatorCommittee: pallet_validator_committee,
+        ValidatorRewards: pallet_validator_rewards,
+        EtridStaking: pallet_etrid_staking,
+
         // Bitcoin Bridge & Lightning
         DogeBridge: pallet_doge_bridge,
         LightningChannels: pallet_lightning_channels,
+
+        // Shared Bridge Pallets
+        BridgeAttestation: pallet_bridge_attestation,
+        TokenMessenger: pallet_token_messenger,
     }
 );
 

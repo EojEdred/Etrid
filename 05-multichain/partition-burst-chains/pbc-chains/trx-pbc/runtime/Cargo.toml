@@ -12,6 +12,8 @@ pbc-common = { path = "../../../pbc-common", default-features = false }
 
 pallet_tron_bridge = { package = "trx-bridge", path = "../../../../../05-multichain/bridges/protocols/tron-bridge", default-features = false }
 etrid-bridge-common = { path = "../../../../bridges/protocols/common", default-features = false }
+pallet-bridge-attestation = { path = "../../../../../05-multichain/pallets-shared/pallet-bridge-attestation", default-features = false }
+pallet-token-messenger = { path = "../../../../../05-multichain/pallets-shared/pallet-token-messenger", default-features = false }
 # Substrate Core - Use workspace dependencies
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -106,6 +108,8 @@ std = [
     "pallet-lightning-channels/std",
     "pallet_tron_bridge/std",
     "etrid-bridge-common/std",
+    "pallet-bridge-attestation/std",
+    "pallet-token-messenger/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

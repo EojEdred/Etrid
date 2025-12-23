@@ -94,6 +94,35 @@ parameter_types! {
 /// - Invalid certificate generation
 pub struct AsfSlashingInterface;
 
+impl asf_algorithm::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
+    fn slash_validator(
+        validator: &AccountId,
+        amount: Balance,
+        reason: asf_algorithm::SlashReason,
+    ) -> Result<(), sp_runtime::DispatchError> {
+        use frame_support::traits::Currency;
+
+        log::warn!(
+            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
+            validator,
+            reason,
+            amount
+        );
+
+        let _ = Balances::slash_reserved(validator, amount);
+
+        Ok(())
+    }
+
+    fn is_validator_active(validator: &AccountId) -> bool {
+        crate::ValidatorCommittee::is_validator_active(validator)
+    }
+
+    fn get_validator_stake(validator: &AccountId) -> Balance {
+        EtridStaking::get_validator_stake(validator)
+    }
+}
+
 /// ASF Randomness Source - provides randomness for PPFA rotation
 ///
 /// Uses the same randomness source as other pallets for consistency.

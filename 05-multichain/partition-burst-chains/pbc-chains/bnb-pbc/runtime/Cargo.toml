@@ -59,6 +59,8 @@ pallet-treasury-etrid = { path = "../../../../../10-foundation/pallets/pallet-tr
 pallet-etr-lock = { path = "../../../../../06-native-currency/pallets/pallet-etr-lock", default-features = false }
 pallet-bitcoin-bridge = { path = "../../../../bridges/protocols/bitcoin-bridge", default-features = false }
 pallet-lightning-channels = { path = "../../../../lightning-bloc-networks/channel-manager", default-features = false }
+pallet-bridge-attestation = { path = "../../../../pallets-shared/pallet-bridge-attestation", default-features = false }
+pallet-token-messenger = { path = "../../../../pallets-shared/pallet-token-messenger", default-features = false }
 
 [build-dependencies]
 # Substrate WASM builder - NOT in workspace, so explicit
@@ -106,6 +108,8 @@ std = [
     "pallet-lightning-channels/std",
     "pallet_bnb_bridge/std",
     "etrid-bridge-common/std",
+    "pallet-bridge-attestation/std",
+    "pallet-token-messenger/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

@@ -33,6 +33,10 @@ pub use pbc_common::*;
 // Re-export Tron bridge pallet
 pub use pallet_tron_bridge;
 
+// Import shared bridge pallets
+use pallet_bridge_attestation;
+use pallet_token_messenger;
+
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
 
@@ -244,6 +248,7 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 /// Existential deposit.
@@ -282,12 +287,14 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 // ASF Consensus Configuration
@@ -336,6 +343,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
+    type Currency = Balances;
     type DisablingStrategy = UpToLimitDisablingStrategy;
     type Currency = Balances;
     type KeyDeposit = ConstU128<0>; // No deposit required for session keys
@@ -414,6 +422,59 @@ impl pallet_tron_bridge::Config for Runtime {
     type MaxWithdrawalsPerAccount = MaxTrxWithdrawalsPerAccount;
 }
 
+// Bridge Attestation Configuration
+parameter_types! {
+    pub const LocalDomain: u32 = 195; // TRX domain
+    pub const MaxAttesters: u32 = 100;
+    pub const MaxAttestersPerMessage: u32 = 20;
+    pub const MinSignatureThreshold: u32 = 3;
+    pub const AttestationMaxAge: BlockNumber = 100;
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ChainId = LocalDomain;
+    type MaxAttesters = MaxAttesters;
+    type MaxAttestersPerMessage = MaxAttestersPerMessage;
+    type MinSignatureThreshold = MinSignatureThreshold;
+    type AttestationMaxAge = AttestationMaxAge;
+    type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
+    type Currency = Balances;
+}
+
+// Token Messenger Configuration
+parameter_types! {
+    pub const MaxMessageBodySize: u32 = 8192;
+    pub const MaxBurnAmount: u128 = 1_000_000_000_000_000_000; // 1M tokens
+    pub const DailyBurnCap: u128 = 10_000_000_000_000_000_000; // 10M tokens
+    pub const MinBurnAmount: u128 = 1_000_000_000; // 1 token
+    pub const MessageTimeout: BlockNumber = 14400; // ~24 hours
+    pub const BlocksPerDay: BlockNumber = 14400;
+    // Bridge fee config
+    pub const BridgeFeeRate: u32 = 30; // 0.3% fee
+    pub const MinBridgeFee: u128 = 10_000_000_000; // 10 tokens minimum fee
+    pub FeeCollector: AccountId = AccountId::from([0u8; 32]); // Zero account for now (treasury)
+}
+
+impl pallet_token_messenger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type TokenOperations = ();
+    type AttestationVerifier = ();
+    type WeightInfo = ();
+    type Currency = Balances;
+    type MaxMessageBodySize = MaxMessageBodySize;
+    type MaxBurnAmount = MaxBurnAmount;
+    type DailyBurnCap = DailyBurnCap;
+    type MinBurnAmount = MinBurnAmount;
+    type MessageTimeout = MessageTimeout;
+    type BlocksPerDay = BlocksPerDay;
+    type LocalDomain = LocalDomain;
+    type BridgeFeeRate = BridgeFeeRate;
+    type MinBridgeFee = MinBridgeFee;
+    type FeeCollector = FeeCollector;
+}
+
 
 // Lightning Channels Configuration
 parameter_types! {
@@ -457,6 +518,10 @@ construct_runtime!(
         // Tron Bridge & Lightning
         TronBridge: pallet_tron_bridge,
         LightningChannels: pallet_lightning_channels,
+
+        // Shared Bridge Pallets
+        BridgeAttestation: pallet_bridge_attestation,
+        TokenMessenger: pallet_token_messenger,
     }
 );
 
@@ -475,6 +540,7 @@ impl pallet_treasury_etrid::Config for Runtime {
     type EmergencyThreshold = TreasuryEmergencyThreshold;
     type ProposalExpiration = TreasuryProposalExpiration;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 

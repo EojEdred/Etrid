@@ -12,6 +12,13 @@ pbc-common = { path = "../../../pbc-common", default-features = false }
 
 pallet_xrp_bridge = { package = "xrp-bridge", path = "../../../../../05-multichain/bridges/protocols/xrp-bridge", default-features = false }
 etrid-bridge-common = { path = "../../../../bridges/protocols/common", default-features = false }
+pallet-bridge-attestation = { path = "../../../../../05-multichain/pallets-shared/pallet-bridge-attestation", default-features = false }
+pallet-token-messenger = { path = "../../../../../05-multichain/pallets-shared/pallet-token-messenger", default-features = false }
+pallet-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-validator-committee = { path = "../../../../../11-peer-roles/pallet-validator-committee", default-features = false }
+pallet-validator-rewards = { path = "../../../../../11-peer-roles/pallet-validator-rewards", default-features = false }
+pallet-etrid-staking = { path = "../../../../../11-peer-roles/staking/pallet", default-features = false }
+asf-algorithm = { path = "../../../../../09-consensus/asf-algorithm", default-features = false }
 # Substrate Core - Use workspace dependencies
 codec = { workspace = true }
 scale-info = { workspace = true }
@@ -98,6 +105,13 @@ std = [
     "pallet-lightning-channels/std",
     "pallet_xrp_bridge/std",
     "etrid-bridge-common/std",
+    "pallet-bridge-attestation/std",
+    "pallet-token-messenger/std",
+    "pallet-session/std",
+    "pallet-validator-committee/std",
+    "pallet-validator-rewards/std",
+    "pallet-etrid-staking/std",
+    "asf-algorithm/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

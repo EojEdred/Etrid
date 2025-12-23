@@ -46,7 +46,7 @@ use frame_support::{
     traits::{ConstU128, ConstU32, ConstU64, ConstU8},
     weights::{IdentityFee, Weight},
 };
-use frame_system as system;
+use frame_system::{self as system, EnsureRoot};
 
 pub use frame_support::{
     traits::KeyOwnerProofSystem,
@@ -56,7 +56,19 @@ pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::CurrencyAdapter;
 
+// Re-export shared bridge pallets
+pub use pallet_bridge_attestation;
+pub use pallet_token_messenger;
+
+// Import consensus-related pallets
+pub use pallet_validator_committee;
+pub use pallet_validator_rewards;
+pub use pallet_etrid_staking;
+
 /// Opaque types for block + opaque_keys
+mod asf_config;
+use asf_config::*;
+
 pub mod opaque {
     use super::*;
     pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
@@ -67,7 +79,7 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // ASF manages consensus internally - no session keys needed
+            // Empty - ASF manages validators without traditional session keys
         }
     }
 }
@@ -167,6 +179,7 @@ impl pallet_balances::Config for Runtime {
     type ExistentialDeposit = ExistentialDeposit;
     type AccountStore = System;
     type WeightInfo = ();
+    type Currency = Balances;
     type RuntimeHoldReason = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ();
@@ -183,6 +196,7 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 // ASF Consensus Configuration
@@ -203,6 +217,7 @@ impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
+    type Currency = Balances;
 }
 
 // Configure pallet_insecure_randomness_collective_flip
@@ -325,6 +340,134 @@ impl pallet_sla_insurance::Config for Runtime {
     type RefundMultiplier = ConstU8<10>; // 10x refund on SLA violation
 }
 
+// Disabling strategy for session pallet
+use frame_support::traits::U128CurrencyToVote;
+
+// Disabling strategy type
+pub struct UpToLimitDisablingStrategy;
+impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
+    fn get() -> u32 {
+        10  // Allow up to 10 validators to be disabled
+    }
+}
+
+// ========================================
+// SHARED BRIDGE PALLETS
+// ========================================
+
+// Bridge Attestation Configuration
+parameter_types! {
+    pub const AiLocalDomain: u32 = 200; // AI-COMPUTE domain ID
+    pub const MaxAttesters: u32 = 100;
+    pub const MaxAttestersPerMessage: u32 = 20;
+    pub const MinSignatureThreshold: u32 = 3;
+    pub const AttestationMaxAge: BlockNumber = 100;
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ChainId = AiLocalDomain;
+    type MaxAttesters = MaxAttesters;
+    type MaxAttestersPerMessage = MaxAttestersPerMessage;
+    type MinSignatureThreshold = MinSignatureThreshold;
+    type AttestationMaxAge = AttestationMaxAge;
+    type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
+    type Currency = Balances;
+}
+
+// Token Messenger Configuration
+parameter_types! {
+    pub const MaxMessageBodySize: u32 = 8192;
+    pub const MaxBurnAmount: u128 = 1_000_000_000_000_000_000; // 1M tokens
+    pub const DailyBurnCap: u128 = 10_000_000_000_000_000_000; // 10M tokens
+    pub const MinBurnAmount: u128 = 1_000_000_000; // 1 token
+    pub const MessageTimeout: BlockNumber = 14400; // ~24 hours
+    pub const BlocksPerDay: BlockNumber = 14400;
+    // Bridge fee config
+    pub const BridgeFeeRate: u32 = 30; // 0.3% fee
+    pub const MinBridgeFee: u128 = 10_000_000_000; // 10 tokens minimum fee
+    pub FeeCollector: AccountId = AccountId::from([0u8; 32]); // Zero account for now (treasury)
+}
+
+impl pallet_token_messenger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type TokenOperations = ();
+    type AttestationVerifier = ();
+    type WeightInfo = ();
+    type Currency = Balances;
+    type MaxMessageBodySize = MaxMessageBodySize;
+    type MaxBurnAmount = MaxBurnAmount;
+    type DailyBurnCap = DailyBurnCap;
+    type MinBurnAmount = MinBurnAmount;
+    type MessageTimeout = MessageTimeout;
+    type BlocksPerDay = BlocksPerDay;
+    type LocalDomain = AiLocalDomain;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ASF CONSENSUS CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const SessionDuration: BlockNumber = 10 * MINUTES;
+}
+
+impl pallet_consensus::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type RandomnessSource = RandomnessCollectiveFlip;
+    type Time = Timestamp;
+    type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ÉTR
+    type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ÉTR per block
+    type CommitteeSize = ConstU32<21>;
+    type EpochDuration = ConstU32<2400>;
+    type BaseSlotDuration = ConstU64<6000>; // 6 seconds
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>;  // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>;     // 90% to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600;  // 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]);
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type KeyDeposit = ConstU128<0>;
+}
+
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>;  // ~2 days at 6s blocks
+    type MaxUnbondingEntries = ConstU32<32>;
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
+}
+
 // ========================================
 // CONSTRUCT RUNTIME
 // ========================================
@@ -343,6 +486,12 @@ construct_runtime!(
         Accounts: pallet_accounts,
         Consensus: pallet_consensus,
 
+        // ASF Consensus
+        Session: pallet_session,
+        ValidatorCommittee: pallet_validator_committee,
+        ValidatorRewards: pallet_validator_rewards,
+        EtridStaking: pallet_etrid_staking,
+
         // AI Compute PBC Core Pallets
         GpuRegistry: pallet_gpu_registry,
         JobMarketplace: pallet_job_marketplace,
@@ -359,12 +508,42 @@ construct_runtime!(
         GpuNft: pallet_gpu_nft,
         Compliance: pallet_compliance,
         SlaInsurance: pallet_sla_insurance,
+
+        // Shared Bridge Pallets
+        BridgeAttestation: pallet_bridge_attestation,
+        TokenMessenger: pallet_token_messenger,
     }
 );
 
 // ========================================
 // RUNTIME APIs
 // ========================================
+
+/// Empty session handler for ASF consensus
+///
+/// ASF manages validator rotation internally via ValidatorCommittee pallet,
+/// so we don't need traditional session key management.
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [sp_runtime::KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: sp_runtime::OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ValidatorCommittee handles initialization
+    }
+
+    fn on_new_session<Ks: sp_runtime::OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ValidatorCommittee handles rotation
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ValidatorCommittee handles disabling
+    }
+}
 
 /// Executive: handles dispatch to pallets
 pub type Executive = frame_executive::Executive<

@@ -114,7 +114,7 @@ futures = { version = "0.3", default-features = false }
 log = { version = "0.4", default-features = false }
 clap = { version = "4.0", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "time"] }
-jsonrpsee = { version = "0.16", features = ["server"] }
+jsonrpsee = { version = "0.24.3", features = ["server"] }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Patch crates.io to use stable2506 for eth-pbc workspace

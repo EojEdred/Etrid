@@ -13,6 +13,11 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 // Import common PBC runtime code from pbc-common
 pub use pbc_common::*;
 
+// Import consensus-related pallets
+pub use pallet_validator_committee;
+pub use pallet_validator_rewards;
+pub use pallet_etrid_staking;
+
 // Additional imports specific to EDSC
 use sp_runtime::FixedU128;
 use sp_arithmetic::Permill;
@@ -48,6 +53,32 @@ pub type SignedExtra = (
 pub type UncheckedExtrinsic =
     generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 
+/// Empty session handler for ASF consensus
+///
+/// ASF manages validator rotation internally via ValidatorCommittee pallet,
+/// so we don't need traditional session key management.
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [sp_runtime::KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: sp_runtime::OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ValidatorCommittee handles initialization
+    }
+
+    fn on_new_session<Ks: sp_runtime::OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ValidatorCommittee handles rotation
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ValidatorCommittee handles disabling
+    }
+}
+
 /// The payload being signed in transactions.
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 
@@ -61,6 +92,9 @@ pub type Executive = frame_executive::Executive<
 >;
 
 /// Opaque types.
+mod asf_config;
+use asf_config::*;
+
 pub mod opaque {
     use super::*;
 
@@ -75,7 +109,7 @@ pub mod opaque {
 
     impl_opaque_keys! {
         pub struct SessionKeys {
-            // ASF manages consensus internally - no session keys needed
+            // Empty - ASF manages validators without traditional session keys
         }
     }
 }
@@ -211,10 +245,24 @@ impl pallet_sudo::Config for Runtime {
     type WeightInfo = ();
 }
 
+// Disabling strategy for session pallet
+use frame_support::traits::U128CurrencyToVote;
+
+parameter_types! {
+    pub const SessionDuration: BlockNumber = 10 * MINUTES;
+}
+
+// Disabling strategy type
+pub struct UpToLimitDisablingStrategy;
+impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
+    fn get() -> u32 {
+        10  // Allow up to 10 validators to be disabled
+    }
+}
+
 // ASF Consensus Configuration
 parameter_types! {
     pub const MaxValidators: u32 = 100;
-    pub const SessionDuration: BlockNumber = 10 * MINUTES;
 }
 
 impl pallet_consensus::Config for Runtime {
@@ -389,6 +437,8 @@ impl pallet_edsc_bridge_token_messenger::Config for Runtime {
     type MaxBurnAmount = TokenMessengerMaxBurnAmount;
     type DailyBurnCap = TokenMessengerDailyBurnCap;
     type MessageTimeout = TokenMessengerMessageTimeout;
+    type TokenOperations = ();
+    type AttestationVerifier = ();
 }
 
 parameter_types! {
@@ -424,6 +474,69 @@ impl pallet_lightning_channels::Config for Runtime {
     type ChannelTimeout = ChannelTimeout;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ASF CONSENSUS CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+parameter_types! {
+    pub const SessionDuration: BlockNumber = 10 * MINUTES;
+}
+
+impl pallet_consensus::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type RandomnessSource = RandomnessCollectiveFlip;
+    type Time = Timestamp;
+    type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ÉTR
+    type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ÉTR per block
+    type CommitteeSize = ConstU32<21>;
+    type EpochDuration = ConstU32<2400>;
+    type BaseSlotDuration = ConstU64<6000>; // 6 seconds
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>;  // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>;     // 90% to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600;  // 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]);
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type KeyDeposit = ConstU128<0>;
+}
+
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>;  // ~2 days at 6s blocks
+    type MaxUnbondingEntries = ConstU32<32>;
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub struct Runtime
@@ -434,12 +547,19 @@ construct_runtime!(
     {
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
-        Timestamp: pallet_timestamp,Balances: pallet_balances,
+        Timestamp: pallet_timestamp,
+        Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Sudo: pallet_sudo,
 
         // Ëtrid Core
         Consensus: pallet_consensus,
+
+        // ASF Consensus
+        Session: pallet_session,
+        ValidatorCommittee: pallet_validator_committee,
+        ValidatorRewards: pallet_validator_rewards,
+        EtridStaking: pallet_etrid_staking,
 
         // EDSC pallets (Ëtrid Dollar Stablecoin system - PBC-specific pallets)
         EdscToken: pallet_edsc_token,

@@ -51,6 +51,9 @@ parking_lot = "0.12"
 thiserror = "2.0"
 derive_more = { version = "1.0", features = ["full"] }
 
+# Crypto for AccountId20 derivation
+libsecp256k1 = { version = "0.7", default-features = false }
+
 [features]
 default = ["std"]
 std = [
@@ -67,4 +70,5 @@ std = [
     "sp-application-crypto/std",
     "codec/std",
     "scale-info/std",
+    "libsecp256k1/std",
 ]
