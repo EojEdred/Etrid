@@ -162,3 +162,28 @@ frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch 
 sp-application-crypto = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # Note: Cannot patch paritytech/polkadot-sdk to itself - Frontier must use compatible stable2506 commit
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Patch stable2509 dependencies from 11-peer-roles pallets to use stable2506
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[patch."https://github.com/paritytech/polkadot-sdk"]
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-application-crypto = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-keystore = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-staking = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-runtime-interface = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-externalities = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-storage = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-tracing = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-wasm-interface = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+pallet-session = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+substrate-bip39 = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
