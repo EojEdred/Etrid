@@ -72,7 +72,7 @@ sp-consensus-asf-pbc = { path = "../consensus/primitives/consensus-asf", default
 
 # Validator Management Components (custom for stable2506 compatibility)
 pallet-session = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
-validator-committee-pbc = { path = "../consensus/validator-management", default-features = false }
+validator-management-pbc = { path = "../consensus/validator-management", default-features = false }
 pallet-validator-committee = { path = "../../../../../11-peer-roles/pallet-validator-committee", default-features = false }
 pallet-validator-rewards = { path = "../../../../../11-peer-roles/pallet-validator-rewards", default-features = false }
 pallet-etrid-staking = { path = "../../../../../11-peer-roles/staking/pallet", default-features = false }
