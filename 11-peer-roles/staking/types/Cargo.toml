@@ -7,11 +7,11 @@ license = "Apache-2.0"
 description = "Shared type definitions for Etrid peer roles and staking system"
 
 [dependencies]
-codec = { package = "parity-scale-codec", workspace = true }
-scale-info = { workspace = true }
-sp-runtime = { workspace = true }
-sp-std = { workspace = true }
-serde = { workspace = true, features = ["derive"], optional = true }
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+serde = { version = "1.0", features = ["derive"], default-features = false, optional = true }
 
 [features]
 default = ["std"]
@@ -20,5 +20,5 @@ std = [
     "scale-info/std",
     "sp-runtime/std",
     "sp-std/std",
-    "serde/std",
+    "serde?/std",
 ]

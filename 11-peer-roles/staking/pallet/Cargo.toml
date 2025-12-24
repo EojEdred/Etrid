@@ -7,17 +7,19 @@ description = "Staking & role assignment pallet for Ëtrid peer-roles system"
 license = "Apache-2.0"
 
 [dependencies]
-frame-support.workspace = true
-frame-system.workspace = true
-sp-runtime.workspace = true
-sp-std.workspace = true
-sp-io.workspace = true
-codec.workspace = true
-scale-info.workspace = true
-log.workspace = true
+# Substrate - use stable2506 for Frontier compatibility
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11", default-features = false, features = ["derive"] }
+log = { version = "0.4", default-features = false }
 
 # Serde for serialization
-serde = { workspace = true, features = ["alloc", "derive"], default-features = false }
+serde = { version = "1.0", features = ["alloc", "derive"], default-features = false }
 
 # Internal Ëtrid dependencies
 peer-roles-staking-types = { path = "../types", default-features = false }
@@ -25,8 +27,8 @@ pallet-validator-rewards = { path = "../../pallet-validator-rewards", default-fe
 pallet-treasury-etrid = { path = "../../../10-foundation/pallets/pallet-treasury", default-features = false, package = "pallet-treasury" }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 [features]
 default = ["std"]
