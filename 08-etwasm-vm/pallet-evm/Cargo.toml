@@ -46,7 +46,7 @@ pallet-etwasm-vm = { path = "../pallet", default-features = false }
 etwasm-gas-metering = { path = "../gas-metering", default-features = false }
 
 [dev-dependencies]
-sp-tracing = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-tracing = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-keystore = { workspace = true, default-features = false }
 sp-core = { workspace = true, default-features = false, features = ["std"] }
 frame-support = { workspace = true, features = ["std"] }

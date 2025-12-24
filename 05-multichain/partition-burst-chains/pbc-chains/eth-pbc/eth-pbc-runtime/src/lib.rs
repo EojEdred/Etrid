@@ -38,7 +38,10 @@ use frame_support::{
 	derive_impl,
 	genesis_builder_helper::{build_state, get_preset},
 	parameter_types,
-	traits::{ConstBool, ConstU32, ConstU64, ConstU8, EnsureRoot, FindAuthor, OnFinalize, OnTimestampSet},
+	traits::{ConstBool, ConstU32, ConstU64, ConstU8, FindAuthor, OnFinalize, OnTimestampSet},
+};
+use frame_system::EnsureRoot;
+use frame_support::{
 	weights::{constants::{RocksDbWeight, WEIGHT_REF_TIME_PER_MILLIS}, IdentityFee, Weight},
 };
 use pallet_transaction_payment::FungibleAdapter;
@@ -59,7 +62,8 @@ pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 
 // Import consensus-related pallets
-pub use pallet_validator_committee;
+// Note: pallet_validator_committee uses AccountId32 which conflicts with EVM's AccountId20
+// For EVM PBCs, we use pallet_consensus_pbc which is self-contained and works with AccountId20
 pub use pallet_validator_rewards;
 pub use pallet_etrid_staking;
 
@@ -156,7 +160,6 @@ pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
 
 mod asf_config;
-use asf_config::*;
 
 /// Empty session handler for ASF consensus
 ///
@@ -165,10 +168,10 @@ use asf_config::*;
 pub struct EmptySessionHandler;
 
 impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
-	type KeyTypeIdProviders = ();
+	const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
 
 	fn on_genesis_session<TE: sp_runtime::traits::OpaqueKeys>(_validators: &[(AccountId, TE)]) {
-		// No-op: ValidatorCommittee handles initialization
+		// No-op: pallet_consensus_pbc handles initialization
 	}
 
 	fn on_new_session<TE: sp_runtime::traits::OpaqueKeys>(
@@ -176,11 +179,11 @@ impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
 		_validators: &[(AccountId, TE)],
 		_queued_validators: &[(AccountId, TE)],
 	) {
-		// No-op: ValidatorCommittee handles rotation
+		// No-op: pallet_consensus_pbc handles rotation
 	}
 
 	fn on_disabled(_validator_index: u32) {
-		// No-op: ValidatorCommittee handles disabling
+		// No-op: pallet_consensus_pbc handles disabling
 	}
 }
 
@@ -299,18 +302,7 @@ impl pallet_grandpa::Config for Runtime {
 
 impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
 
-// ASF Consensus Configuration (replaces Aura/GRANDPA for block production)
-impl pallet_consensus_pbc::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
-	type RandomnessSource = RandomnessCollectiveFlip;
-	type Time = Timestamp;
-	type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ETR
-	type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ETR per block
-	type CommitteeSize = ConstU32<21>; // PPFA committee size
-	type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
-	type BaseSlotDuration = ConstU64<6000>; // 6 seconds
-}
+// ASF Consensus Configuration - see below after asf_config module
 
 impl cumulus_pallet_weight_reclaim::Config for Runtime {
 	type WeightInfo = ();
@@ -497,16 +489,7 @@ pub mod pallet_manual_seal {
 	}
 }
 
-// Disabling strategy for session pallet
-use frame_support::traits::U128CurrencyToVote;
-
-// Disabling strategy type
-pub struct UpToLimitDisablingStrategy;
-impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
-	fn get() -> u32 {
-		10  // Allow up to 10 validators to be disabled
-	}
-}
+// Session pallet configuration follows
 
 impl pallet_manual_seal::Config for Runtime {}
 
@@ -527,11 +510,9 @@ impl pallet_consensus_pbc::Config for Runtime {
 	type BaseSlotDuration = ConstU64<6000>; // 6 seconds
 }
 
-impl pallet_validator_committee::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
-    type MinValidatorStake = asf_config::AsfMinValidatorStake;
-}
+// Note: pallet_validator_committee is NOT used for EVM PBCs
+// It requires AccountId32 (ValidatorId) which conflicts with EVM's AccountId20
+// pallet_consensus_pbc provides its own committee management compatible with AccountId20
 
 impl pallet_validator_rewards::Config for Runtime {
     type Currency = Balances;
@@ -543,23 +524,41 @@ impl pallet_validator_rewards::Config for Runtime {
 parameter_types! {
     pub const Period: u32 = 600;  // 1 hour at 6s blocks
     pub const Offset: u32 = 0;
-    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]);
+    pub TreasuryAccountForStaking: AccountId = H160::from([42u8; 20]).into();
+}
+
+/// Simple identity conversion for EVM accounts
+/// Since we use AccountId20 throughout, ValidatorId = AccountId
+pub struct IdentityValidatorIdOf;
+impl sp_runtime::traits::Convert<AccountId, Option<AccountId>> for IdentityValidatorIdOf {
+    fn convert(account: AccountId) -> Option<AccountId> {
+        Some(account)
+    }
+}
+
+/// Stub session manager for EVM PBCs
+/// The actual validator management is handled by pallet_consensus_pbc
+pub struct ConsensusSessionManager;
+impl pallet_session::SessionManager<AccountId> for ConsensusSessionManager {
+    fn new_session(_new_index: u32) -> Option<Vec<AccountId>> {
+        // Return validators from pallet_consensus_pbc
+        Some(Consensus::committee())
+    }
+    fn end_session(_end_index: u32) {}
+    fn start_session(_start_index: u32) {}
 }
 
 impl pallet_session::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type ValidatorId = AccountId;
-    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ValidatorIdOf = IdentityValidatorIdOf;
     type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
     type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
-    type SessionManager = ValidatorCommittee;
+    type SessionManager = ConsensusSessionManager;
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type Currency = Balances;
-    type DisablingStrategy = UpToLimitDisablingStrategy;
-    type KeyDeposit = ConstU128<0>;
-    type NextKeys = ();
+    type DisablingStrategy = pallet_session::disabling::UpToLimitDisablingStrategy<10>;
 }
 
 impl pallet_etrid_staking::Config for Runtime {
@@ -599,6 +598,9 @@ parameter_types! {
 	pub const MinBurnAmount: u128 = 1_000_000_000_000; // 0.000001 tokens
 	pub const MessageTimeout: BlockNumber = 1000;
 	pub const BlocksPerDay: BlockNumber = DAYS;
+	pub const BridgeFeeRate: u32 = 30; // 0.3% fee
+	pub const MinBridgeFee: u128 = 1_000_000_000_000_000_000; // 1 token minimum fee
+	pub FeeCollector: AccountId = H160::from([0u8; 20]).into(); // Treasury address
 }
 
 impl pallet_token_messenger::Config for Runtime {
@@ -606,6 +608,7 @@ impl pallet_token_messenger::Config for Runtime {
 	type TokenOperations = ();
 	type AttestationVerifier = ();
 	type WeightInfo = ();
+	type Currency = Balances;
 	type MaxMessageBodySize = MaxMessageBodySize;
 	type MaxBurnAmount = MaxBurnAmount;
 	type DailyBurnCap = DailyBurnCap;
@@ -613,6 +616,9 @@ impl pallet_token_messenger::Config for Runtime {
 	type MessageTimeout = MessageTimeout;
 	type BlocksPerDay = BlocksPerDay;
 	type LocalDomain = LocalDomain;
+	type BridgeFeeRate = BridgeFeeRate;
+	type MinBridgeFee = MinBridgeFee;
+	type FeeCollector = FeeCollector;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -662,11 +668,13 @@ mod runtime {
 	pub type Sudo = pallet_sudo;
 
 	// ASF Validator Management Pallets
+	// Note: pallet_validator_committee is NOT included for EVM PBCs
+	// It uses AccountId32 which conflicts with EVM's AccountId20
+	// pallet_consensus_pbc (index 6) handles committee management
 	#[runtime::pallet_index(9)]
 	pub type Session = pallet_session;
 
-	#[runtime::pallet_index(10)]
-	pub type ValidatorCommittee = pallet_validator_committee;
+	// Index 10 reserved (was ValidatorCommittee, incompatible with EVM)
 
 	#[runtime::pallet_index(11)]
 	pub type ValidatorRewards = pallet_validator_rewards;

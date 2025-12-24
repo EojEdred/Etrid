@@ -37,11 +37,9 @@ mod tests;
 pub mod pallet {
 	use frame_support::{
 		pallet_prelude::*,
-		traits::{Currency, ExistenceRequirement},
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_arithmetic::{FixedPointNumber, FixedU128, Permill, traits::{SaturatedConversion, Saturating}};
-	use sp_runtime::traits::CheckedSub;
 	use sp_std::vec::Vec;
 
 	/// Supported collateral asset types
@@ -157,13 +155,13 @@ pub mod pallet {
 		CollateralDeposited {
 			asset_type: u8,
 			amount: u128,
-			depositor: T::AccountId,
+			depositor: <T as frame_system::Config>::AccountId,
 		},
 		/// Collateral withdrawn [asset_type, amount, recipient]
 		CollateralWithdrawn {
 			asset_type: u8,
 			amount: u128,
-			recipient: T::AccountId,
+			recipient: <T as frame_system::Config>::AccountId,
 		},
 		/// Reserve ratio updated [new_ratio]
 		ReserveRatioUpdated { ratio: FixedU128 },
@@ -181,7 +179,7 @@ pub mod pallet {
 		ReserveOptimal { ratio: FixedU128 },
 		/// Payout executed [recipient, usd_amount, assets_paid]
 		PayoutExecuted {
-			recipient: T::AccountId,
+			recipient: <T as frame_system::Config>::AccountId,
 			usd_amount: u128,
 			assets_paid: Vec<(u8, u128)>,
 		},
@@ -304,7 +302,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			asset_type: u8,
 			amount: u128,
-			recipient: T::AccountId,
+			recipient: <T as frame_system::Config>::AccountId,
 		) -> DispatchResult {
 			ensure_root(origin)?;
 			let asset = AssetType::from_u8(asset_type).ok_or(Error::<T>::AssetNotSupported)?;
@@ -462,7 +460,7 @@ pub mod pallet {
 		/// # Returns
 		/// - Ok(()) if payout successful
 		/// - Err if insufficient reserves or arithmetic errors
-		pub fn do_payout(recipient: &T::AccountId, usd_amount: u128) -> DispatchResult {
+		pub fn do_payout(recipient: &<T as frame_system::Config>::AccountId, usd_amount: u128) -> DispatchResult {
 			// Check if we have sufficient vault value
 			let total_vault_value = Self::calculate_total_vault_value()?;
 			ensure!(total_vault_value >= usd_amount, Error::<T>::InsufficientVaultBalance);
@@ -697,7 +695,8 @@ pub mod pallet {
 
 			Self::deposit_event(Event::ReserveRatioUpdated { ratio });
 
-			// Update redemption pallet
+			// Update redemption pallet - this should work if both pallets use compatible FixedU128 types
+			// If there's still a type mismatch, we need to ensure both pallets use the same SDK version
 			let _ = pallet_edsc_redemption::Pallet::<T>::do_update_reserve_ratio(ratio);
 
 			// Check circuit breakers

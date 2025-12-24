@@ -3,7 +3,7 @@
 //! This module configures the ASF (Adaptive Scale of Finality) consensus
 //! for the Ethereum Partition Burst Chain, maintaining stable2506 compatibility.
 
-use crate::{Runtime, Balances, RuntimeEvent, AccountId, Balance};
+use crate::Balance;
 use frame_support::parameter_types;
 use sp_runtime::Perbill;
 
@@ -43,51 +43,12 @@ parameter_types! {
     pub const AsfCertificateExpiry: u32 = 14400;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SLASHING INTERFACE (Active - connects to custom ETH-PBC implementation)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-pub struct AsfSlashingInterface;
-
-impl sp_consensus_asf_pbc::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
-    fn slash_validator(
-        validator: &AccountId,
-        amount: Balance,
-        reason: sp_consensus_asf_pbc::SlashReason,
-    ) -> Result<(), sp_runtime::DispatchError> {
-        use frame_support::traits::Currency;
-
-        log::warn!(
-            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
-            validator,
-            reason,
-            amount
-        );
-
-        // Call the pallet_consensus_pbc's internal slash_validator via storage access
-        // Since we can't directly call internal functions, we'll make the pallet handle it via proper interface
-        // The actual slashing should be handled by the custom pallet
-        Ok(())
-    }
-
-    fn is_validator_active(validator: &AccountId) -> bool {
-        // Check if validator exists in the pallet's Validators storage
-        if let Some(validator_info) = pallet_consensus_pbc::Validators::<Runtime>::get(validator) {
-            validator_info.active
-        } else {
-            false
-        }
-    }
-
-    fn get_validator_stake(validator: &AccountId) -> Balance {
-        // Access validator stake from pallet's storage
-        if let Some(validator_info) = pallet_consensus_pbc::Validators::<Runtime>::get(validator) {
-            validator_info.stake
-        } else {
-            0
-        }
-    }
-}
+// Note: Slashing is handled directly by pallet_consensus_pbc which has its own
+// SlashReason enum and slash_validator function. The pallet manages:
+// - Validator registration and stake
+// - Committee rotation
+// - Slashing for misbehavior (downtime, equivocation, etc.)
+// See pallet_consensus_pbc::slash_validator() for the implementation.
 
 #[cfg(test)]
 mod tests {

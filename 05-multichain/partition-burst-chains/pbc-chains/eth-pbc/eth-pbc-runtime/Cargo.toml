@@ -71,9 +71,10 @@ pallet-consensus-pbc = { path = "../consensus/pallet", default-features = false 
 sp-consensus-asf-pbc = { path = "../consensus/primitives/consensus-asf", default-features = false }
 
 # Validator Management Components (custom for stable2506 compatibility)
+# Note: pallet-validator-committee NOT included - uses AccountId32 which conflicts with EVM's AccountId20
+# pallet_consensus_pbc provides its own committee management compatible with AccountId20
 pallet-session = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
 validator-management-pbc = { path = "../consensus/validator-management", default-features = false }
-pallet-validator-committee = { path = "../../../../../11-peer-roles/pallet-validator-committee", default-features = false }
 pallet-validator-rewards = { path = "../../../../../11-peer-roles/pallet-validator-rewards", default-features = false }
 pallet-etrid-staking = { path = "../../../../../11-peer-roles/staking/pallet", default-features = false }
 asf-algorithm-pbc = { path = "../consensus/asf-algorithm", default-features = false }
@@ -140,7 +141,6 @@ std = [
 
     # Validator Management Pallets
     "pallet-session/std",
-    "pallet-validator-committee/std",
     "pallet-validator-rewards/std",
     "pallet-etrid-staking/std",
     "asf-algorithm-pbc/std",
