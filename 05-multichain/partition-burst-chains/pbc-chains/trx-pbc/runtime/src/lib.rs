@@ -248,7 +248,6 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 /// Existential deposit.
@@ -268,7 +267,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = RuntimeHoldReason;
+    type RuntimeHoldReason = pallet_session::HoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -287,14 +286,12 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // ASF Consensus Configuration
@@ -345,7 +342,6 @@ impl pallet_session::Config for Runtime {
     type WeightInfo = ();
     type Currency = Balances;
     type DisablingStrategy = UpToLimitDisablingStrategy;
-    type Currency = Balances;
     type KeyDeposit = ConstU128<0>; // No deposit required for session keys
 }
 
@@ -440,7 +436,6 @@ impl pallet_bridge_attestation::Config for Runtime {
     type AttestationMaxAge = AttestationMaxAge;
     type AdminOrigin = EnsureRoot<AccountId>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // Token Messenger Configuration
@@ -540,7 +535,6 @@ impl pallet_treasury_etrid::Config for Runtime {
     type EmergencyThreshold = TreasuryEmergencyThreshold;
     type ProposalExpiration = TreasuryProposalExpiration;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 

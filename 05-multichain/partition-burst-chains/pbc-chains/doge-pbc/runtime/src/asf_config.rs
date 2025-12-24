@@ -3,7 +3,7 @@
 //! This module configures the ASF (Adaptive Scale of Finality) consensus
 //! for the Dogecoin Partition Burst Chain.
 
-use crate::{Runtime, Balances, RuntimeEvent, AccountId, Balance};
+use crate::Balance;
 use frame_support::parameter_types;
 use sp_runtime::Perbill;
 

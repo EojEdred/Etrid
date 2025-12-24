@@ -91,36 +91,6 @@ parameter_types! {
 /// - Equivocation (double-signing blocks)
 /// - Offline/unresponsive behavior
 /// - Invalid certificate generation
-pub struct AsfSlashingInterface;
-
-impl asf_algorithm::SlashingInterface<crate::AccountId, crate::Balance> for AsfSlashingInterface {
-    fn slash_validator(
-        validator: &crate::AccountId,
-        amount: crate::Balance,
-        reason: asf_algorithm::SlashReason,
-    ) -> Result<(), sp_runtime::DispatchError> {
-        use frame_support::traits::Currency;
-
-        log::warn!(
-            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
-            validator,
-            reason,
-            amount
-        );
-
-        let _ = crate::Balances::slash_reserved(validator, amount);
-
-        Ok(())
-    }
-
-    fn is_validator_active(validator: &crate::AccountId) -> bool {
-        crate::ValidatorCommittee::is_validator_active(validator)
-    }
-
-    fn get_validator_stake(validator: &crate::AccountId) -> crate::Balance {
-        crate::EtridStaking::get_validator_stake(validator)
-    }
-}
 
 /// ASF Randomness Source - provides randomness for PPFA rotation
 ///

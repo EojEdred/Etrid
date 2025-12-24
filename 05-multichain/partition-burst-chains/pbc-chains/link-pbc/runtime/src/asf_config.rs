@@ -3,7 +3,7 @@
 //! This module configures the ASF (Adaptive Scale of Finality) consensus
 //! for the Chainlink Partition Burst Chain.
 
-use crate::{Runtime, Balances, RuntimeEvent, AccountId, Balance};
+use crate::Balance;
 use crate::constants::UNITS;
 use frame_support::parameter_types;
 use sp_runtime::Perbill;
@@ -48,35 +48,6 @@ parameter_types! {
 // SLASHING INTERFACE (Active - not commented)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-pub struct AsfSlashingInterface;
-
-impl asf_algorithm::SlashingInterface<AccountId, Balance> for AsfSlashingInterface {
-    fn slash_validator(
-        validator: &AccountId,
-        amount: Balance,
-        reason: asf_algorithm::SlashReason,
-    ) -> Result<(), sp_runtime::DispatchError> {
-        use frame_support::traits::Currency;
-
-        log::warn!(
-            "🔴 ASF: Slashing validator {:?} for {:?}, amount: {}",
-            validator,
-            reason,
-            amount
-        );
-
-        let _ = Balances::slash_reserved(validator, amount);
-        Ok(())
-    }
-
-    fn is_validator_active(validator: &AccountId) -> bool {
-        crate::ValidatorCommittee::is_validator_active(validator)
-    }
-
-    fn get_validator_stake(validator: &AccountId) -> Balance {
-        EtridStaking::get_validator_stake(validator)
-    }
-}
 
 #[cfg(test)]
 mod tests {

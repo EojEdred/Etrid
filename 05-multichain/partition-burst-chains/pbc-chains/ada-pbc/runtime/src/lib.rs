@@ -26,6 +26,8 @@ use pallet_token_messenger;
 pub use pallet_validator_committee;
 pub use pallet_validator_rewards;
 pub use pallet_etrid_staking;
+use pallet_session::disabling::UpToLimitDisablingStrategy;
+use sp_runtime::traits::OpaqueKeys;
 
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
@@ -86,11 +88,11 @@ pub struct EmptySessionHandler;
 impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
     const KEY_TYPE_IDS: &'static [sp_runtime::KeyTypeId] = &[];
 
-    fn on_genesis_session<Ks: sp_runtime::OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
         // No-op: ValidatorCommittee handles initialization
     }
 
-    fn on_new_session<Ks: sp_runtime::OpaqueKeys>(
+    fn on_new_session<Ks: OpaqueKeys>(
         _changed: bool,
         _validators: &[(AccountId, Ks)],
         _queued_validators: &[(AccountId, Ks)],
@@ -260,7 +262,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = pallet_session::HoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -286,16 +288,8 @@ impl pallet_sudo::Config for Runtime {
 }
 
 // Disabling strategy for session pallet
-use frame_support::traits::U128CurrencyToVote;
 
 // Disabling strategy type
-pub struct UpToLimitDisablingStrategy;
-impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
-    fn get() -> u32 {
-        10  // Allow up to 10 validators to be disabled
-    }
-}
-
 // ASF Consensus Configuration
 parameter_types! {
     pub const SessionDuration: BlockNumber = 10 * MINUTES;

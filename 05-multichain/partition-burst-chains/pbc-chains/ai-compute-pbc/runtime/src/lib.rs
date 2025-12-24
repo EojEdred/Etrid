@@ -72,6 +72,8 @@ use asf_config::*;
 pub mod opaque {
     use super::*;
     pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+use pallet_session::disabling::UpToLimitDisablingStrategy;
+use sp_runtime::traits::OpaqueKeys;
 
     pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
     pub type Block = generic::Block<Header, UncheckedExtrinsic>;
@@ -180,7 +182,7 @@ impl pallet_balances::Config for Runtime {
     type AccountStore = System;
     type WeightInfo = ();
     type Currency = Balances;
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = pallet_session::HoldReason;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
     type RuntimeFreezeReason = ();
@@ -196,28 +198,15 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // ASF Consensus Configuration
-impl pallet_consensus::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type RandomnessSource = RandomnessCollectiveFlip;
-    type Time = Timestamp;
-    type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ETR
-    type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ETR per block
-    type CommitteeSize = ConstU32<21>; // PPFA committee size
-    type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
-    type BaseSlotDuration = ConstU64<6000>; // 6 seconds
-}
 
 // Configure pallet_sudo
 impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // Configure pallet_insecure_randomness_collective_flip
@@ -341,16 +330,8 @@ impl pallet_sla_insurance::Config for Runtime {
 }
 
 // Disabling strategy for session pallet
-use frame_support::traits::U128CurrencyToVote;
 
 // Disabling strategy type
-pub struct UpToLimitDisablingStrategy;
-impl frame_support::traits::Get<u32> for UpToLimitDisablingStrategy {
-    fn get() -> u32 {
-        10  // Allow up to 10 validators to be disabled
-    }
-}
-
 // ========================================
 // SHARED BRIDGE PALLETS
 // ========================================
@@ -373,7 +354,6 @@ impl pallet_bridge_attestation::Config for Runtime {
     type AttestationMaxAge = AttestationMaxAge;
     type AdminOrigin = EnsureRoot<AccountId>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // Token Messenger Configuration
@@ -528,11 +508,11 @@ pub struct EmptySessionHandler;
 impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
     const KEY_TYPE_IDS: &'static [sp_runtime::KeyTypeId] = &[];
 
-    fn on_genesis_session<Ks: sp_runtime::OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
         // No-op: ValidatorCommittee handles initialization
     }
 
-    fn on_new_session<Ks: sp_runtime::OpaqueKeys>(
+    fn on_new_session<Ks: OpaqueKeys>(
         _changed: bool,
         _validators: &[(AccountId, Ks)],
         _queued_validators: &[(AccountId, Ks)],
