@@ -23,7 +23,7 @@ pub mod pallet {
         BoundedVec,
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Zero, Saturating};
+    use sp_runtime::traits::{Saturating, UniqueSaturatedFrom, UniqueSaturatedInto, Zero};
     use sp_std::vec::Vec;
     use codec::{Encode, Decode};
 
@@ -106,6 +106,64 @@ pub mod pallet {
     impl Default for ConsensusPhase {
         fn default() -> Self {
             ConsensusPhase::Prepare
+        }
+    }
+
+    /// Slashing reasons aligned with staking pallet offense types (basis points).
+    #[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+    pub enum SlashReason {
+        Downtime,
+        MissedBlocks,
+        Equivocation,
+        InvalidFinalityVote,
+        Censorship,
+        MaliciousAttack,
+    }
+
+    impl SlashReason {
+        fn basis_points(&self) -> u32 {
+            match self {
+                SlashReason::Downtime => 100,            // 1%
+                SlashReason::MissedBlocks => 50,         // 0.5%
+                SlashReason::Equivocation => 1000,       // 10%
+                SlashReason::InvalidFinalityVote => 500, // 5%
+                SlashReason::Censorship => 500,          // 5%
+                SlashReason::MaliciousAttack => 5000,    // 50%
+            }
+        }
+
+        fn from_bytes(reason: &[u8]) -> Self {
+            let text = core::str::from_utf8(reason).unwrap_or("").trim();
+            if text.eq_ignore_ascii_case("downtime") || text.eq_ignore_ascii_case("offline") {
+                SlashReason::Downtime
+            } else if text.eq_ignore_ascii_case("missed_blocks")
+                || text.eq_ignore_ascii_case("missed blocks")
+                || text.eq_ignore_ascii_case("missedblocks")
+            {
+                SlashReason::MissedBlocks
+            } else if text.eq_ignore_ascii_case("equivocation")
+                || text.eq_ignore_ascii_case("double_sign")
+                || text.eq_ignore_ascii_case("double-sign")
+                || text.eq_ignore_ascii_case("double_vote")
+                || text.eq_ignore_ascii_case("double vote")
+            {
+                SlashReason::Equivocation
+            } else if text.eq_ignore_ascii_case("invalid_finality_vote")
+                || text.eq_ignore_ascii_case("invalid finality vote")
+            {
+                SlashReason::InvalidFinalityVote
+            } else if text.eq_ignore_ascii_case("censorship") {
+                SlashReason::Censorship
+            } else if text.eq_ignore_ascii_case("malicious")
+                || text.eq_ignore_ascii_case("malicious_attack")
+                || text.eq_ignore_ascii_case("malicious attack")
+                || text.eq_ignore_ascii_case("byzantine")
+                || text.eq_ignore_ascii_case("attack")
+            {
+                SlashReason::MaliciousAttack
+            } else {
+                SlashReason::Downtime
+            }
         }
     }
 
@@ -822,8 +880,22 @@ pub mod pallet {
 
         /// Slash validator for misbehavior
         pub fn slash_validator(who: T::AccountId, reason: &[u8]) -> DispatchResult {
+            let slash_reason = SlashReason::from_bytes(reason);
             Validators::<T>::mutate_exists(&who, |v| {
                 if let Some(mut val) = v.take() {
+                    let stake_u128: u128 = val.stake.unique_saturated_into();
+                    let slash_u128 = stake_u128
+                        .saturating_mul(slash_reason.basis_points() as u128)
+                        / 10_000u128;
+                    let mut slash_amount = BalanceOf::<T>::unique_saturated_from(slash_u128);
+                    let reserved = T::Currency::reserved_balance(&who);
+                    slash_amount = slash_amount.min(reserved).min(val.stake);
+
+                    if !slash_amount.is_zero() {
+                        let _ = T::Currency::slash_reserved(&who, slash_amount);
+                        val.stake = val.stake.saturating_sub(slash_amount);
+                    }
+
                     val.reputation = 0;
                     val.active = false;
                     *v = Some(val);
