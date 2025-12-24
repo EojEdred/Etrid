@@ -9,11 +9,22 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod asf_config;
+
+use pallet_session::disabling::UpToLimitDisablingStrategy;
+use sp_core::crypto::KeyTypeId;
+use sp_runtime::traits::OpaqueKeys;
+
 // Import common PBC runtime code from pbc-common
 pub use pbc_common::*;
 
 // Re-export Dogecoin bridge pallet
 pub use pallet_doge_bridge;
+pub use pallet_validator_committee;
+pub use pallet_validator_rewards;
+pub use pallet_etrid_staking;
+pub use pallet_bridge_attestation;
+pub use pallet_token_messenger;
 
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
@@ -78,6 +89,29 @@ pub mod opaque {
         pub struct SessionKeys {
             // ASF manages consensus internally - no session keys needed
         }
+    }
+}
+
+/// Empty session handler for ASF consensus
+pub struct EmptySessionHandler;
+
+impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
+    const KEY_TYPE_IDS: &'static [KeyTypeId] = &[];
+
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+        // No-op: ASF handles validator initialization via ValidatorCommittee
+    }
+
+    fn on_new_session<Ks: OpaqueKeys>(
+        _changed: bool,
+        _validators: &[(AccountId, Ks)],
+        _queued_validators: &[(AccountId, Ks)],
+    ) {
+        // No-op: ASF handles validator rotation via ValidatorCommittee
+    }
+
+    fn on_disabled(_validator_index: u32) {
+        // No-op: ASF handles validator disabling via ValidatorCommittee
     }
 }
 
@@ -219,7 +253,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = pallet_session::HoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -260,6 +294,49 @@ impl pallet_consensus::Config for Runtime {
     type CommitteeSize = ConstU32<21>; // PPFA committee size
     type EpochDuration = ConstU32<2400>; // ~4 hours at 6s/block
     type BaseSlotDuration = ConstU64<6000>; // 6 seconds
+}
+
+impl pallet_validator_committee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxCommitteeSize = asf_config::AsfMaxCommitteeSize;
+    type MinValidatorStake = asf_config::AsfMinValidatorStake;
+}
+
+impl pallet_validator_rewards::Config for Runtime {
+    type Currency = Balances;
+    type EpochDuration = asf_config::AsfEpochDuration;
+    type AnnualRewardPoolBps = ConstU32<1_000>; // 10% annual reward pool
+    type ValidatorShareBps = ConstU32<9_000>; // 90% of reward pool goes to validators
+}
+
+parameter_types! {
+    pub const Period: u32 = 600; // 600 blocks = 1 hour at 6s blocks
+    pub const Offset: u32 = 0;
+    pub TreasuryAccountForStaking: AccountId = AccountId::new([42u8; 32]);
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = AccountId;
+    type ValidatorIdOf = pallet_validator_committee::ValidatorIdOf<Self>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type SessionManager = ValidatorCommittee;
+    type SessionHandler = EmptySessionHandler;
+    type Keys = opaque::SessionKeys;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type DisablingStrategy = UpToLimitDisablingStrategy;
+    type KeyDeposit = ConstU128<0>;
+}
+
+impl pallet_etrid_staking::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type UnbondPeriod = ConstU32<28800>; // ~2 days at 6 second blocks
+    type MaxUnbondingEntries = ConstU32<32>; // Max unbonding entries per account
+    type TreasuryAccount = TreasuryAccountForStaking;
+    type ValidatorRewards = Runtime;
 }
 // DogeBridge Configuration
 use frame_support::PalletId;
@@ -328,6 +405,57 @@ impl pallet_lightning_channels::Config for Runtime {
     type MinChannelCapacity = MinChannelCapacity;
     type MaxChannelCapacity = MaxChannelCapacity;
     type ChannelTimeout = ChannelTimeout;
+}
+
+// Bridge Attestation Configuration
+parameter_types! {
+    pub const LocalDomain: u32 = 107; // DOGE-PBC domain ID
+    pub const MaxAttesters: u32 = 100;
+    pub const MaxAttestersPerMessage: u32 = 10;
+    pub const MinSignatureThreshold: u32 = 3;
+    pub const AttestationMaxAge: BlockNumber = 1000;
+}
+
+impl pallet_bridge_attestation::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ChainId = LocalDomain;
+    type MaxAttesters = MaxAttesters;
+    type MaxAttestersPerMessage = MaxAttestersPerMessage;
+    type MinSignatureThreshold = MinSignatureThreshold;
+    type AttestationMaxAge = AttestationMaxAge;
+    type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
+}
+
+// Token Messenger Configuration
+parameter_types! {
+    pub const MaxMessageBodySize: u32 = 512;
+    pub const MaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000; // 1M tokens
+    pub const DailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000; // 10M tokens
+    pub const MinBurnAmount: u128 = 1_000_000_000_000; // 0.000001 tokens
+    pub const MessageTimeout: BlockNumber = 1000;
+    pub const BlocksPerDay: BlockNumber = DAYS;
+    pub const BridgeFeeRate: u32 = 30; // 0.3% fee
+    pub const MinBridgeFee: u128 = 1_000_000_000_000; // 0.000001 tokens minimum fee
+    pub FeeCollector: AccountId = AccountId::new([0u8; 32]);
+}
+
+impl pallet_token_messenger::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type TokenOperations = ();
+    type AttestationVerifier = ();
+    type WeightInfo = ();
+    type Currency = Balances;
+    type MaxMessageBodySize = MaxMessageBodySize;
+    type MaxBurnAmount = MaxBurnAmount;
+    type DailyBurnCap = DailyBurnCap;
+    type MinBurnAmount = MinBurnAmount;
+    type MessageTimeout = MessageTimeout;
+    type BlocksPerDay = BlocksPerDay;
+    type LocalDomain = LocalDomain;
+    type BridgeFeeRate = BridgeFeeRate;
+    type MinBridgeFee = MinBridgeFee;
+    type FeeCollector = FeeCollector;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
