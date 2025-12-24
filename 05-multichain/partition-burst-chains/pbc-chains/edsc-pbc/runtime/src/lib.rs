@@ -222,7 +222,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = pallet_session::HoldReason;
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -412,6 +412,9 @@ parameter_types! {
     pub const TokenMessengerMaxBurnAmount: u128 = 1_000_000_000_000_000_000_000_000;  // 1M EDSC per tx
     pub const TokenMessengerDailyBurnCap: u128 = 10_000_000_000_000_000_000_000_000;  // 10M EDSC per day
     pub const TokenMessengerMessageTimeout: u32 = 1000;
+    pub const TokenMessengerMinBurnAmount: u128 = 1_000_000_000_000_000_000;  // 1 EDSC minimum
+    pub const TokenMessengerBlocksPerDay: u32 = 14400;  // 24 hours at 6s blocks
+    pub const TokenMessengerLocalDomain: u32 = 5;  // EDSC-PBC domain ID
 }
 
 impl pallet_edsc_bridge_token_messenger::Config for Runtime {
@@ -420,8 +423,12 @@ impl pallet_edsc_bridge_token_messenger::Config for Runtime {
     type MaxBurnAmount = TokenMessengerMaxBurnAmount;
     type DailyBurnCap = TokenMessengerDailyBurnCap;
     type MessageTimeout = TokenMessengerMessageTimeout;
+    type MinBurnAmount = TokenMessengerMinBurnAmount;
+    type BlocksPerDay = TokenMessengerBlocksPerDay;
+    type LocalDomain = TokenMessengerLocalDomain;
     type TokenOperations = ();
     type AttestationVerifier = ();
+    type WeightInfo = ();
 }
 
 parameter_types! {
@@ -437,6 +444,7 @@ impl pallet_edsc_bridge_attestation::Config for Runtime {
     type MaxAttestersPerMessage = MaxAttestersPerMessage;
     type MinSignatureThreshold = MinSignatureThreshold;
     type AttestationMaxAge = AttestationMaxAge;
+    type AdminOrigin = EnsureRoot<AccountId>;
 }
 
 // Lightning Bloc Channels Configuration
@@ -460,10 +468,6 @@ impl pallet_lightning_channels::Config for Runtime {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ASF CONSENSUS CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
-
-parameter_types! {
-    pub const SessionDuration: BlockNumber = 10 * MINUTES;
-}
 
 impl pallet_consensus::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -506,9 +510,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type Currency = Balances;
-    type DisablingStrategy = UpToLimitDisablingStrategy;
-    type KeyDeposit = ConstU128<0>;
+    type DisablingStrategy = pallet_session::disabling::UpToLimitDisablingStrategy;
 }
 
 impl pallet_etrid_staking::Config for Runtime {
