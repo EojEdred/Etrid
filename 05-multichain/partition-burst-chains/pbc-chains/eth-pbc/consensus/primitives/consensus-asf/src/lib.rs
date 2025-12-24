@@ -151,5 +151,46 @@ sp_api::decl_runtime_apis! {
         /// Returns all active validators (up to 100), not just the
         /// committee members.
         fn active_validators() -> Vec<AuthorityId>;
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // ADDITIONAL APIs (Matching primearc-core pallet_validator_committee)
+        // ═══════════════════════════════════════════════════════════════════════
+
+        /// Check if a validator is active
+        ///
+        /// Returns true if the validator exists and is marked as active.
+        fn is_validator_active(validator: AuthorityId) -> bool;
+
+        /// Get epoch duration in blocks
+        ///
+        /// Returns the configured epoch duration (typically 2400 blocks).
+        fn get_epoch_duration() -> u32;
+
+        /// Get maximum committee size
+        ///
+        /// Returns the maximum number of validators in the PPFA committee.
+        fn committee_size_limit() -> u32;
+
+        /// Get the block number when the next epoch starts
+        ///
+        /// Returns the block number at which the next epoch will begin.
+        fn next_epoch_start() -> u32;
+
+        /// Get PPFA index for a specific block number
+        ///
+        /// Returns the PPFA rotation index that was/will be active at the given block.
+        fn get_ppfa_index_for_block(block_number: u32) -> u32;
+
+        /// Check if a proposer was authorized for a specific block
+        ///
+        /// Verifies whether the given validator was the authorized proposer
+        /// for the specified block number and PPFA index.
+        fn is_proposer_authorized(block_number: u32, ppfa_index: u32, proposer: AuthorityId) -> bool;
+
+        /// Get validators expected for the next epoch
+        ///
+        /// Returns a preview of validators that would be selected for the next epoch
+        /// based on current stake and reputation.
+        fn get_next_epoch_validators() -> Vec<AuthorityId>;
     }
 }

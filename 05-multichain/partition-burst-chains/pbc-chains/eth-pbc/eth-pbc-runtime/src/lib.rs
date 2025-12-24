@@ -1263,6 +1263,39 @@ impl_runtime_apis! {
 		fn active_validators() -> Vec<AccountId> {
 			Consensus::active_validators()
 		}
+
+		// ═══════════════════════════════════════════════════════════════════════
+		// ADDITIONAL APIs (Matching primearc-core pallet_validator_committee)
+		// ═══════════════════════════════════════════════════════════════════════
+
+		fn is_validator_active(validator: AccountId) -> bool {
+			Consensus::is_validator_active(&validator)
+		}
+
+		fn get_epoch_duration() -> u32 {
+			Consensus::get_epoch_duration()
+		}
+
+		fn committee_size_limit() -> u32 {
+			Consensus::committee_size_limit()
+		}
+
+		fn next_epoch_start() -> u32 {
+			let block_number: BlockNumber = Consensus::next_epoch_start();
+			block_number
+		}
+
+		fn get_ppfa_index_for_block(block_number: u32) -> u32 {
+			Consensus::get_ppfa_index_for_block(block_number.into())
+		}
+
+		fn is_proposer_authorized(block_number: u32, ppfa_index: u32, proposer: AccountId) -> bool {
+			Consensus::is_proposer_authorized(block_number.into(), ppfa_index, &proposer)
+		}
+
+		fn get_next_epoch_validators() -> Vec<AccountId> {
+			Consensus::get_next_epoch_validators()
+		}
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]

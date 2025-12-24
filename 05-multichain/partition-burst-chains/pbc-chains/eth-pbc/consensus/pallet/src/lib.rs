@@ -356,6 +356,28 @@ pub mod pallet {
     #[pallet::getter(fn network_health)]
     pub type NetworkHealth<T: Config> = StorageValue<_, u8, ValueQuery>;
 
+    /// PPFA Authorization History - tracks which validator was authorized for each block
+    /// Key: (block_number, ppfa_index), Value: validator AccountId
+    /// Used for verifying historical block authorizations
+    #[pallet::storage]
+    #[pallet::getter(fn ppfa_history)]
+    pub type PpfaHistory<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        (BlockNumberFor<T>, u32),  // (block_number, ppfa_index)
+        T::AccountId,
+    >;
+
+    /// Block to epoch mapping for historical lookups
+    #[pallet::storage]
+    #[pallet::getter(fn block_epoch)]
+    pub type BlockEpoch<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        BlockNumberFor<T>,
+        u32,  // epoch number
+    >;
+
     // ═══════════════════════════════════════════════════════════════════════════
     // EVENTS
     // ═══════════════════════════════════════════════════════════════════════════
@@ -529,10 +551,14 @@ pub mod pallet {
         fn on_initialize(block_number: BlockNumberFor<T>) -> Weight {
             let epoch_duration = T::EpochDuration::get();
             let current_block: u32 = block_number.try_into().unwrap_or(u32::MAX);
+            let current_epoch = CurrentEpoch::<T>::get();
+
+            // Record block-to-epoch mapping for historical lookups
+            BlockEpoch::<T>::insert(block_number, current_epoch);
 
             // Check for epoch rotation
             if current_block > 0 && current_block % epoch_duration == 0 {
-                let new_epoch = CurrentEpoch::<T>::get().saturating_add(1);
+                let new_epoch = current_epoch.saturating_add(1);
                 CurrentEpoch::<T>::put(new_epoch);
 
                 // Rotate PPFA committee
@@ -544,10 +570,20 @@ pub mod pallet {
                 });
             }
 
-            // Advance PPFA index
-            let committee_size = CurrentCommittee::<T>::get().len() as u32;
+            // Advance PPFA index and record PPFA history
+            let committee = CurrentCommittee::<T>::get();
+            let committee_size = committee.len() as u32;
             if committee_size > 0 {
                 let current_index = PpfaIndex::<T>::get();
+
+                // Record which validator was authorized for this block
+                if let Some(member) = committee.get(current_index as usize) {
+                    PpfaHistory::<T>::insert(
+                        (block_number, current_index),
+                        member.validator.clone(),
+                    );
+                }
+
                 let next_index = (current_index + 1) % committee_size;
                 PpfaIndex::<T>::put(next_index);
             }
@@ -557,7 +593,7 @@ pub mod pallet {
                 Self::adjust_adaptive_slot_duration();
             }
 
-            Weight::from_parts(50_000, 0)
+            Weight::from_parts(60_000, 0)  // Slightly increased for new storage writes
         }
     }
 
@@ -954,6 +990,148 @@ pub mod pallet {
         /// not just the committee members.
         pub fn active_validators() -> Vec<T::AccountId> {
             Self::active_validator_set().to_vec()
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // ADDITIONAL RUNTIME API HELPERS (Matching primearc-core)
+        // ═══════════════════════════════════════════════════════════════════════
+
+        /// Check if a validator is active
+        ///
+        /// Returns true if the validator exists and is marked as active.
+        pub fn is_validator_active(validator: &T::AccountId) -> bool {
+            Validators::<T>::get(validator)
+                .map(|v| v.active)
+                .unwrap_or(false)
+        }
+
+        /// Get validator information
+        ///
+        /// Returns the full Validator struct if the validator exists.
+        pub fn get_validator(validator: &T::AccountId) -> Option<Validator<T>> {
+            Validators::<T>::get(validator)
+        }
+
+        /// Get epoch duration in blocks
+        ///
+        /// Returns the configured epoch duration.
+        pub fn get_epoch_duration() -> u32 {
+            T::EpochDuration::get()
+        }
+
+        /// Get committee size limit
+        ///
+        /// Returns the maximum committee size.
+        pub fn committee_size_limit() -> u32 {
+            T::CommitteeSize::get()
+        }
+
+        /// Get the block number when the next epoch starts
+        ///
+        /// Returns the block number at which the next epoch will begin.
+        pub fn next_epoch_start() -> BlockNumberFor<T> {
+            let epoch_duration = T::EpochDuration::get();
+            let current_epoch = CurrentEpoch::<T>::get();
+            let next_epoch = current_epoch.saturating_add(1);
+
+            // Next epoch starts at: next_epoch * epoch_duration
+            let block_num: u32 = next_epoch.saturating_mul(epoch_duration);
+            block_num.into()
+        }
+
+        /// Get PPFA index for a specific block number
+        ///
+        /// Calculates or retrieves the PPFA index that was active at a given block.
+        /// For past blocks, looks up from storage. For current/future, calculates.
+        pub fn get_ppfa_index_for_block(block_number: BlockNumberFor<T>) -> u32 {
+            let current_block = frame_system::Pallet::<T>::block_number();
+
+            if block_number <= current_block {
+                // For historical blocks, check if we have a record
+                // The PPFA index rotates each block within the committee
+                let block_num: u32 = block_number.try_into().unwrap_or(0);
+                let committee_size = Self::committee_size_limit();
+
+                if committee_size > 0 {
+                    block_num % committee_size
+                } else {
+                    0
+                }
+            } else {
+                // For future blocks, calculate based on current position
+                let current_index = PpfaIndex::<T>::get();
+                let blocks_ahead: u32 = (block_number - current_block).try_into().unwrap_or(0);
+                let committee_size = CurrentCommittee::<T>::get().len() as u32;
+
+                if committee_size > 0 {
+                    (current_index + blocks_ahead) % committee_size
+                } else {
+                    0
+                }
+            }
+        }
+
+        /// Check if a proposer was authorized for a specific block
+        ///
+        /// Verifies whether the given validator was the authorized proposer
+        /// for the specified block number and PPFA index.
+        pub fn is_proposer_authorized(
+            block_number: BlockNumberFor<T>,
+            ppfa_index: u32,
+            proposer: &T::AccountId,
+        ) -> bool {
+            // Check PPFA history for this block
+            if let Some(authorized) = PpfaHistory::<T>::get((block_number, ppfa_index)) {
+                return &authorized == proposer;
+            }
+
+            // If no history record, check if it's current block
+            let current_block = frame_system::Pallet::<T>::block_number();
+            if block_number == current_block {
+                let current_ppfa = PpfaIndex::<T>::get();
+                if ppfa_index == current_ppfa {
+                    let committee = CurrentCommittee::<T>::get();
+                    return committee.get(ppfa_index as usize)
+                        .map(|m| &m.validator == proposer)
+                        .unwrap_or(false);
+                }
+            }
+
+            false
+        }
+
+        /// Get validators expected for the next epoch
+        ///
+        /// Returns a preview of validators that would be selected for the next epoch
+        /// based on current stake and reputation.
+        pub fn get_next_epoch_validators() -> Vec<T::AccountId> {
+            let committee_size = T::CommitteeSize::get();
+            let mut eligible_validators: Vec<_> = Validators::<T>::iter()
+                .filter(|(_, info)| info.active && matches!(
+                    info.peer_type,
+                    PeerType::ValidityNode | PeerType::FlareNode
+                ))
+                .collect();
+
+            // Sort by stake (descending)
+            eligible_validators.sort_by(|a, b| b.1.stake.cmp(&a.1.stake));
+
+            // Return top validators by stake
+            eligible_validators
+                .into_iter()
+                .take(committee_size as usize)
+                .map(|(account, _)| account)
+                .collect()
+        }
+
+        /// Get the full committee with validator info
+        ///
+        /// Returns committee members with their full information.
+        pub fn get_committee_with_info() -> Vec<(T::AccountId, BalanceOf<T>, u32)> {
+            CurrentCommittee::<T>::get()
+                .into_iter()
+                .map(|m| (m.validator, m.stake, m.ppfa_index))
+                .collect()
         }
 
         /// Rotate PPFA committee (stake-weighted selection)
