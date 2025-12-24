@@ -18,6 +18,7 @@ pub use pallet_xrp_bridge;
 // Import shared bridge pallets
 use pallet_bridge_attestation;
 use pallet_token_messenger;
+use sp_runtime::traits::OpaqueKeys;
 
 // Import consensus-related pallets
 pub use pallet_validator_committee;
@@ -64,11 +65,11 @@ pub struct EmptySessionHandler;
 impl pallet_session::SessionHandler<AccountId> for EmptySessionHandler {
     const KEY_TYPE_IDS: &'static [sp_runtime::KeyTypeId] = &[];
 
-    fn on_genesis_session<Ks: sp_runtime::OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
+    fn on_genesis_session<Ks: OpaqueKeys>(_validators: &[(AccountId, Ks)]) {
         // No-op: ValidatorCommittee handles initialization
     }
 
-    fn on_new_session<Ks: sp_runtime::OpaqueKeys>(
+    fn on_new_session<Ks: OpaqueKeys>(
         _changed: bool,
         _validators: &[(AccountId, Ks)],
         _queued_validators: &[(AccountId, Ks)],
@@ -238,7 +239,6 @@ impl pallet_timestamp::Config for Runtime {
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 /// Existential deposit.
@@ -258,7 +258,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -275,18 +275,15 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // Disabling strategy for session pallet
-use frame_support::traits::U128CurrencyToVote;
 
 parameter_types! {
     pub const SessionDuration: BlockNumber = 10 * MINUTES;
@@ -379,7 +376,6 @@ impl pallet_bridge_attestation::Config for Runtime {
     type AttestationMaxAge = AttestationMaxAge;
     type AdminOrigin = EnsureRoot<AccountId>;
     type WeightInfo = ();
-    type Currency = Balances;
 }
 
 // Token Messenger Configuration
@@ -431,24 +427,8 @@ impl pallet_lightning_channels::Config for Runtime {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ASF CONSENSUS CONFIGURATION
+// VALIDATOR COMMITTEE CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
-
-parameter_types! {
-    pub const SessionDuration: BlockNumber = 10 * MINUTES;
-}
-
-impl pallet_consensus::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type RandomnessSource = RandomnessCollectiveFlip;
-    type Time = Timestamp;
-    type MinValidityStake = ConstU128<64_000_000_000_000_000_000_000>; // 64 ÉTR
-    type ValidatorReward = ConstU128<100_000_000_000_000_000_000>; // 0.1 ÉTR per block
-    type CommitteeSize = ConstU32<21>;
-    type EpochDuration = ConstU32<2400>;
-    type BaseSlotDuration = ConstU64<6000>; // 6 seconds
-}
 
 impl pallet_validator_committee::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -479,9 +459,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type Currency = Balances;
-    type DisablingStrategy = UpToLimitDisablingStrategy;
-    type KeyDeposit = ConstU128<0>;
+    type DisablingStrategy = pallet_session::disabling::UpToLimitDisablingStrategy;
 }
 
 impl pallet_etrid_staking::Config for Runtime {

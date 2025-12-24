@@ -266,11 +266,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type DisablingStrategy = UpToLimitDisablingStrategy;
-    // pallet_session requires Currency and KeyDeposit for validator key management
-    // Using Balances pallet satisfies trait bounds without needing RuntimeHoldReason
-    type Currency = Balances;
-    type KeyDeposit = ConstU128<0>; // No deposit required for session keys
+    type DisablingStrategy = pallet_session::disabling::UpToLimitDisablingStrategy;
 }
 
 /// Existential deposit - minimum balance to keep an account alive
