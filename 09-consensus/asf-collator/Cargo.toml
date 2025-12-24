@@ -30,11 +30,11 @@ thiserror = { version = "1.0", optional = true }
 asf-algorithm = { path = "../asf-algorithm", default-features = false }
 
 # Cumulus primitives (for parachain/collator support)
-cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
-cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+cumulus-primitives-parachain-inherent = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
 
 # Polkadot primitives (for relay chain coordination)
-polkadot-primitives = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+polkadot-primitives = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
 
 [dev-dependencies]
 sp-io = { workspace = true }

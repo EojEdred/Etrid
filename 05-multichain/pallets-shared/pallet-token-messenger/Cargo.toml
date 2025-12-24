@@ -11,26 +11,26 @@ repository = "https://github.com/etrid/etrid"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", workspace = true, features = ["derive"] }
-scale-info = { workspace = true, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = ["derive"] }
+scale-info = { version = "2.11.3", default-features = false, features = ["derive"] }
 
-# Substrate dependencies
-frame-benchmarking = { workspace = true, optional = true }
-frame-support = { workspace = true }
-frame-system = { workspace = true }
-pallet-balances = { workspace = true }
-sp-core = { workspace = true }
-sp-io = { workspace = true }
-sp-runtime = { workspace = true }
-sp-std = { workspace = true }
+# Substrate dependencies - use stable2506 for Frontier compatibility
+frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false, optional = true }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
 
 # Etrid pallets
 pallet-bridge-attestation = { path = "../pallet-bridge-attestation", default-features = false }
 
 [dev-dependencies]
-sp-io = { workspace = true, features = ["std"] }
-sp-runtime = { workspace = true, features = ["std"] }
-pallet-balances = { workspace = true, features = ["std"] }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", features = ["std"] }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", features = ["std"] }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", features = ["std"] }
 
 [features]
 default = ["std"]

@@ -31,7 +31,7 @@ asf-collator = { path = "../asf-collator", default-features = false }
 asf-algorithm = { path = "../asf-algorithm", default-features = false }
 
 # Cumulus (for parachain support)
-cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506", default-features = false }
 
 [dev-dependencies]
 sp-io = { workspace = true }

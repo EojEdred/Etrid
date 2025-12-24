@@ -20,7 +20,7 @@ sp-block-builder = { workspace = true }
 sp-transaction-pool = { workspace = true }
 sp-inherents = { workspace = true }
 sp-offchain = { workspace = true }
-sp-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-version = { workspace = true }
 
 # Substrate Frame
@@ -33,11 +33,11 @@ pallet-transaction-payment = { workspace = true }
 pallet-insecure-randomness-collective-flip = { workspace = true }
 
 # Balances
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # RPC Runtime APIs
-frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # Ëtrid Primitives & Existing Pallets
 etrid-primitives = { path = "../../../../primitives", default-features = false }
@@ -50,7 +50,7 @@ pallet-bridge-attestation = { path = "../../../../pallets-shared/pallet-bridge-a
 pallet-token-messenger = { path = "../../../../pallets-shared/pallet-token-messenger", default-features = false }
 
 # ASF Consensus Pallets
-pallet-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+pallet-session = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 pallet-validator-committee = { path = "../../../../../11-peer-roles/pallet-validator-committee", default-features = false }
 pallet-validator-rewards = { path = "../../../../../11-peer-roles/pallet-validator-rewards", default-features = false }
 pallet-etrid-staking = { path = "../../../../../11-peer-roles/staking/pallet", default-features = false }
@@ -74,7 +74,7 @@ pallet-compliance = { path = "../pallets/compliance", default-features = false }
 pallet-sla-insurance = { path = "../pallets/sla-insurance", default-features = false }
 
 [build-dependencies]
-substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 [features]
 default = ["std"]

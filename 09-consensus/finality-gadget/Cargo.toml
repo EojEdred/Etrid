@@ -11,8 +11,8 @@ sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 sp-keystore = { workspace = true }
 sp-application-crypto = { workspace = true }
-sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
-sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 codec = { workspace = true }
 scale-info = { workspace = true }
 
@@ -36,7 +36,7 @@ hex = "0.4"
 
 [dev-dependencies]
 sp-io = { workspace = true }
-substrate-test-runtime-client = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2509" }
+substrate-test-runtime-client = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 [features]
 default = ["std"]
