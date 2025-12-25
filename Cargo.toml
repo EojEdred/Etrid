@@ -4,32 +4,12 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # Phase 1: Only components with actual code
 # ═══════════════════════════════════════════════════════════════════════════════
-
-[package]
-name = "etrid"
-version = "0.1.0"
-authors = ["ËTRID Foundation"]
-edition = "2021"
-license = "Apache-2.0"
-description = "ËTRID Multichain Protocol - Unified Node Binary (Primearc Core Chain + PBC Collators)"
-homepage = "https://etrid.org"
-repository = "https://github.com/etrid/etrid"
-
-[[bin]]
-name = "etrid"
-path = "src/main.rs"
-
-[dependencies]
-clap = { workspace = true }
-log = { workspace = true }
-futures = { workspace = true }
-
-# Substrate Client
-sc-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
-sc-service = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
-
-# ËTRID Node Libraries
-primearc_core_node = { package = "primearc-core-node", path = "05-multichain/primearc-core-chain/node" }
+#
+# Node Binaries:
+#   - primearc-core-node: 05-multichain/primearc-core-chain/node/
+#   - PBC collators: 05-multichain/partition-burst-chains/pbc-node/pbc-collator-nodes/*/
+#
+# ═══════════════════════════════════════════════════════════════════════════════
 
 [workspace]
 resolver = "2"

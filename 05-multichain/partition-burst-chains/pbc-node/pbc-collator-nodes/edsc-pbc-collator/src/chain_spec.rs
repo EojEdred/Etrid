@@ -5,7 +5,6 @@
 
 use sc_service::ChainType;
 use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
 
 // EDSC-PBC Runtime imports
 use edsc_pbc_runtime::{AccountId, WASM_BINARY};
@@ -19,36 +18,6 @@ pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Pu
         .expect("static values are valid; qed")
         .public()
 }
-fn production_genesis() -> serde_json::Value {
-    let endowed_accounts: Vec<AccountId> = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-    ];
-
-    let initial_authorities: Vec<(AccountId, AuraId, GrandpaId)> = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_from_seed::<AuraId>("Alice"),
-            get_from_seed::<GrandpaId>("Alice"),
-        ),
-    ];
-
-    serde_json::json!({
-        "balances": {
-            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
-        },
-        "aura": {
-            "authorities": initial_authorities.iter().map(|x| (x.1.clone())).collect::<Vec<_>>(),
-        },
-        "grandpa": {
-            "authorities": initial_authorities.iter().map(|x| (x.2.clone(), 1)).collect::<Vec<_>>(),
-        },
-        "sudo": {
-            "key": Some(endowed_accounts[0].clone()),
-        },
-    })
-}
 
 /// Generate an account ID from seed
 pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
@@ -58,6 +27,7 @@ where
     let public = get_from_seed::<sr25519::Public>(seed);
     public.into()
 }
+
 fn production_genesis() -> serde_json::Value {
     let endowed_accounts: Vec<AccountId> = vec![
         get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -65,27 +35,10 @@ fn production_genesis() -> serde_json::Value {
         get_account_id_from_seed::<sr25519::Public>("Charlie"),
     ];
 
-    let initial_authorities: Vec<(AccountId, AuraId, GrandpaId)> = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_from_seed::<AuraId>("Alice"),
-            get_from_seed::<GrandpaId>("Alice"),
-        ),
-    ];
-
     serde_json::json!({
         "balances": {
             "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
-        },
-        "aura": {
-            "authorities": initial_authorities.iter().map(|x| (x.1.clone())).collect::<Vec<_>>(),
-        },
-        "grandpa": {
-            "authorities": initial_authorities.iter().map(|x| (x.2.clone(), 1)).collect::<Vec<_>>(),
-        },
-        "sudo": {
-            "key": Some(endowed_accounts[0].clone()),
-        },
+        }
     })
 }
 
@@ -103,36 +56,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
     .with_genesis_config_preset_name(sp_genesis_builder::DEV_RUNTIME_PRESET)
     .build())
 }
-fn production_genesis() -> serde_json::Value {
-    let endowed_accounts: Vec<AccountId> = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-    ];
-
-    let initial_authorities: Vec<(AccountId, AuraId, GrandpaId)> = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_from_seed::<AuraId>("Alice"),
-            get_from_seed::<GrandpaId>("Alice"),
-        ),
-    ];
-
-    serde_json::json!({
-        "balances": {
-            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
-        },
-        "aura": {
-            "authorities": initial_authorities.iter().map(|x| (x.1.clone())).collect::<Vec<_>>(),
-        },
-        "grandpa": {
-            "authorities": initial_authorities.iter().map(|x| (x.2.clone(), 1)).collect::<Vec<_>>(),
-        },
-        "sudo": {
-            "key": Some(endowed_accounts[0].clone()),
-        },
-    })
-}
 
 /// Local testnet config (two collators)
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
@@ -149,38 +72,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     .with_genesis_config_preset_name(sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET)
     .build())
 }
-fn production_genesis() -> serde_json::Value {
-    let endowed_accounts: Vec<AccountId> = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-    ];
 
-    let initial_authorities: Vec<(AccountId, AuraId, GrandpaId)> = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_from_seed::<AuraId>("Alice"),
-            get_from_seed::<GrandpaId>("Alice"),
-        ),
-    ];
-
-    serde_json::json!({
-        "balances": {
-            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
-        },
-        "aura": {
-            "authorities": initial_authorities.iter().map(|x| (x.1.clone())).collect::<Vec<_>>(),
-        },
-        "grandpa": {
-            "authorities": initial_authorities.iter().map(|x| (x.2.clone(), 1)).collect::<Vec<_>>(),
-        },
-        "sudo": {
-            "key": Some(endowed_accounts[0].clone()),
-        },
-    })
-}
-
-/// Production mainnet config with 20 validators
+/// Production mainnet config
 pub fn production_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 
@@ -201,34 +94,3 @@ pub fn production_config() -> Result<ChainSpec, String> {
     })
     .build())
 }
-fn production_genesis() -> serde_json::Value {
-    let endowed_accounts: Vec<AccountId> = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-    ];
-
-    let initial_authorities: Vec<(AccountId, AuraId, GrandpaId)> = vec![
-        (
-            get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_from_seed::<AuraId>("Alice"),
-            get_from_seed::<GrandpaId>("Alice"),
-        ),
-    ];
-
-    serde_json::json!({
-        "balances": {
-            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1_000_000_000_000_000_000_000u128)).collect::<Vec<_>>(),
-        },
-        "aura": {
-            "authorities": initial_authorities.iter().map(|x| (x.1.clone())).collect::<Vec<_>>(),
-        },
-        "grandpa": {
-            "authorities": initial_authorities.iter().map(|x| (x.2.clone(), 1)).collect::<Vec<_>>(),
-        },
-        "sudo": {
-            "key": Some(endowed_accounts[0].clone()),
-        },
-    })
-}
-
