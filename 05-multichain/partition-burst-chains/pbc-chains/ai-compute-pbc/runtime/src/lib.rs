@@ -182,7 +182,7 @@ impl pallet_balances::Config for Runtime {
     type AccountStore = System;
     type WeightInfo = ();
     type Currency = Balances;
-    type RuntimeHoldReason = pallet_session::HoldReason;
+    type RuntimeHoldReason = RuntimeHoldReason;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
     type RuntimeFreezeReason = ();
@@ -434,9 +434,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type Currency = Balances;
     type DisablingStrategy = UpToLimitDisablingStrategy;
-    type KeyDeposit = ConstU128<0>;
 }
 
 impl pallet_etrid_staking::Config for Runtime {
