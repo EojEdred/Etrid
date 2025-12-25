@@ -78,7 +78,7 @@ pub mod pallet {
     >;
 
     /// AI Identity structure
-    #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo)]
+    #[derive(Clone, Encode, Decode, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct AIIdentity<T: Config> {
         /// DID identifier (e.g., "gpt4-turbo")

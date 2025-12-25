@@ -4564,18 +4564,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "etrid"
-version = "0.1.0"
-dependencies = [
- "clap",
- "futures",
- "log",
- "primearc-core-node",
- "sc-cli",
- "sc-service",
-]
-
-[[package]]
 name = "etrid-aecomms"
 version = "0.1.0"
 dependencies = [

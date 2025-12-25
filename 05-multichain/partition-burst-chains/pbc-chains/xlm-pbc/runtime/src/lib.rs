@@ -257,7 +257,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type RuntimeHoldReason = pallet_session::HoldReason;
+    type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = ();
     type DoneSlashHandler = ();
 }
@@ -396,6 +396,9 @@ impl pallet_token_messenger::Config for Runtime {
     type MessageTimeout = MessageTimeout;
     type BlocksPerDay = BlocksPerDay;
     type LocalDomain = XlmLocalDomain;
+    type BridgeFeeRate = BridgeFeeRate;
+    type MinBridgeFee = MinBridgeFee;
+    type FeeCollector = FeeCollector;
 }
 
 
@@ -417,10 +420,6 @@ impl pallet_lightning_channels::Config for Runtime {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ASF CONSENSUS CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
-
-parameter_types! {
-    pub const SessionDuration: BlockNumber = 10 * MINUTES;
-}
 
 impl pallet_consensus::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -463,9 +462,7 @@ impl pallet_session::Config for Runtime {
     type SessionHandler = EmptySessionHandler;
     type Keys = opaque::SessionKeys;
     type WeightInfo = ();
-    type Currency = Balances;
     type DisablingStrategy = UpToLimitDisablingStrategy;
-    type KeyDeposit = ConstU128<0>;
 }
 
 impl pallet_etrid_staking::Config for Runtime {
