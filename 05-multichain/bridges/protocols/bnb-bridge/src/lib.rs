@@ -62,13 +62,14 @@ pub enum WithdrawalStatus {
 }
 
 #[frame_support::pallet]
-pub mod pallet {
-	use super::*;
-	use frame_support::{
-		pallet_prelude::*,
-		traits::{Currency, ExistenceRequirement},
-		BoundedVec,
-	};
+	pub mod pallet {
+		use super::*;
+		use etrid_bridge_common::relayer::{RelayerAuthorization, RelayerOperation, RelayerRole};
+		use frame_support::{
+			pallet_prelude::*,
+			traits::{Currency, ExistenceRequirement},
+			BoundedVec,
+		};
 	use frame_system::pallet_prelude::*;
 
 	type BalanceOf<T> = <<T as pallet_etr_lock::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -208,6 +209,17 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn authorized_relayers)]
 	pub type AuthorizedRelayers<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		RelayerRole,
+		OptionQuery,
+	>;
+
+	/// Relayer active status flags
+	#[pallet::storage]
+	#[pallet::getter(fn relayer_active)]
+	pub type RelayerActive<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
 		T::AccountId,
@@ -381,6 +393,10 @@ pub mod pallet {
 		LockAccountNotSet,
 		/// Caller is not an authorized relayer
 		NotAuthorizedRelayer,
+		/// Relayer is inactive
+		RelayerInactive,
+		/// Relayer lacks permission for this operation
+		InsufficientRelayerPermissions,
 	}
 
 	#[pallet::call]
@@ -397,7 +413,8 @@ pub mod pallet {
 			block_number: u64,
 			confirmations: u32,
 		) -> DispatchResult {
-			let _relayer = ensure_signed(origin)?;
+			let relayer = ensure_signed(origin)?;
+			Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
 			// Validate inputs
 			ensure!(amount > Zero::zero(), Error::<T>::InvalidAmount);
@@ -445,7 +462,8 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			tx_hash: BnbTxHash,
 		) -> DispatchResult {
-			let _relayer = ensure_signed(origin)?;
+			let relayer = ensure_signed(origin)?;
+			Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
 			// Get pending deposit
 			let mut deposit = PendingDeposits::<T>::get(&tx_hash)
@@ -507,7 +525,8 @@ pub mod pallet {
 			block_number: u64,
 			confirmations: u32,
 		) -> DispatchResult {
-			let _relayer = ensure_signed(origin)?;
+			let relayer = ensure_signed(origin)?;
+			Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
 			// Validate token is supported
 			ensure!(
@@ -818,11 +837,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			// Should be called by authorized relayer/oracle
 			let relayer = ensure_signed(origin)?;
-			// Verify relayer is authorized
-			ensure!(
-				AuthorizedRelayers::<T>::get(&relayer),
-				Error::<T>::NotAuthorizedRelayer
-			);
+			Self::ensure_authorized_relayer(&relayer, RelayerOperation::ProcessBurn)?;
 
 			// Verify burn hasn't been processed
 			ensure!(
@@ -868,9 +883,11 @@ pub mod pallet {
 		pub fn register_relayer(
 			origin: OriginFor<T>,
 			relayer: T::AccountId,
+			role: RelayerRole,
 		) -> DispatchResult {
 			ensure_root(origin)?;
-			AuthorizedRelayers::<T>::insert(&relayer, true);
+			AuthorizedRelayers::<T>::insert(&relayer, role);
+			RelayerActive::<T>::insert(&relayer, true);
 			Ok(())
 		}
 
@@ -883,11 +900,51 @@ pub mod pallet {
 		) -> DispatchResult {
 			ensure_root(origin)?;
 			AuthorizedRelayers::<T>::remove(&relayer);
+			RelayerActive::<T>::remove(&relayer);
 			Ok(())
 		}
 	}
 
+	impl<T: Config> RelayerAuthorization<T::AccountId> for Pallet<T> {
+		fn is_authorized_relayer(relayer: &T::AccountId) -> bool {
+			AuthorizedRelayers::<T>::contains_key(relayer)
+				&& RelayerActive::<T>::get(relayer)
+		}
+
+		fn can_confirm_deposit(relayer: &T::AccountId) -> bool {
+			let role = AuthorizedRelayers::<T>::get(relayer);
+			RelayerActive::<T>::get(relayer)
+				&& matches!(role, Some(RelayerRole::Oracle | RelayerRole::RelayNode))
+		}
+
+		fn can_process_burn(relayer: &T::AccountId) -> bool {
+			let role = AuthorizedRelayers::<T>::get(relayer);
+			RelayerActive::<T>::get(relayer)
+				&& matches!(role, Some(RelayerRole::Oracle))
+		}
+	}
+
 	impl<T: Config> Pallet<T> {
+		fn ensure_authorized_relayer(
+			relayer: &T::AccountId,
+			operation: RelayerOperation,
+		) -> DispatchResult {
+			let role = AuthorizedRelayers::<T>::get(relayer)
+				.ok_or(Error::<T>::NotAuthorizedRelayer)?;
+
+			ensure!(RelayerActive::<T>::get(relayer), Error::<T>::RelayerInactive);
+
+			let allowed = match operation {
+				RelayerOperation::ConfirmDeposit => {
+					matches!(role, RelayerRole::Oracle | RelayerRole::RelayNode)
+				}
+				RelayerOperation::ProcessBurn => matches!(role, RelayerRole::Oracle),
+			};
+
+			ensure!(allowed, Error::<T>::InsufficientRelayerPermissions);
+			Ok(())
+		}
+
 		/// Convert BNB amount to ËTR using exchange rate
 		fn convert_bnb_to_etr(bnb_amount: BalanceOf<T>, rate: u128) -> Result<BalanceOf<T>, DispatchError> {
 			let bnb_u128: u128 = bnb_amount.saturated_into();

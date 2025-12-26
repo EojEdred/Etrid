@@ -4,7 +4,7 @@
 //! for the Chainlink Partition Burst Chain.
 
 use crate::Balance;
-use crate::constants::UNITS;
+use crate::UNITS;
 use frame_support::parameter_types;
 use sp_runtime::Perbill;
 

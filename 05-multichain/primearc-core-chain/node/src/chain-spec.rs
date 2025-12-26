@@ -89,7 +89,7 @@ pub fn primearc_core_chain_config() -> Result<ChainSpec, String> {
         properties.insert("finality".into(), "ASF".into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 
@@ -158,7 +158,7 @@ pub fn directors_9_config() -> Result<ChainSpec, String> {
         properties.insert("ss58Format".into(), 42.into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 
@@ -204,7 +204,7 @@ pub fn session_fixed_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("ss58Format".into(), 42.into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 
@@ -228,7 +228,7 @@ pub fn asf_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("consensusMode".into(), "pure_asf".into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 
@@ -254,7 +254,7 @@ pub fn hybrid_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("finality".into(), "Pure ASF".into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 
@@ -281,7 +281,7 @@ pub fn pure_asf_mainnet_config() -> Result<ChainSpec, String> {
         properties.insert("finality".into(), "ASF".into());
         properties
     })
-    .with_genesis_config_preset_name("primearc_core_mainnet_v1_pure_asf")
+    .with_genesis_config_preset_name("mainnet")
     .build())
 }
 

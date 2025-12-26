@@ -61,7 +61,8 @@
 //!     ├─ version: u32
 //!     ├─ burn_token: BoundedVec<u8, 64>      (token identifier)
 //!     ├─ mint_recipient: BoundedVec<u8, 64>  (recipient on destination)
-//!     └─ amount: u128                        (amount with decimals)
+//!     ├─ amount: u128                        (amount with decimals)
+//!     └─ memo: BoundedVec<u8, 128>           (optional metadata)
 //! ```
 //!
 //! ## Domain IDs
@@ -338,6 +339,26 @@ pub mod pallet {
 		pub amount: u128,
 		/// Optional memo/metadata
 		pub memo: BoundedVec<u8, ConstU32<128>>,
+	}
+
+	#[derive(Decode)]
+	struct LegacyBurnMessage {
+		version: u32,
+		burn_token: BoundedVec<u8, ConstU32<64>>,
+		mint_recipient: BoundedVec<u8, ConstU32<64>>,
+		amount: u128,
+	}
+
+	impl LegacyBurnMessage {
+		fn into_current(self) -> BurnMessage {
+			BurnMessage {
+				version: self.version,
+				burn_token: self.burn_token,
+				mint_recipient: self.mint_recipient,
+				amount: self.amount,
+				memo: BoundedVec::default(),
+			}
+		}
 	}
 
 	/// Message status tracking
@@ -946,8 +967,7 @@ pub mod pallet {
 				.map_err(|_| Error::<T>::AttestationFailed)?;
 
 			// Decode burn message from body
-			let burn_msg = BurnMessage::decode(&mut &cross_chain_msg.message_body[..])
-				.map_err(|_| Error::<T>::InvalidMessageFormat)?;
+			let burn_msg = Self::decode_burn_message(&cross_chain_msg.message_body[..])?;
 
 			// Validate amount
 			ensure!(burn_msg.amount > 0, Error::<T>::InvalidAmount);
@@ -1093,6 +1113,15 @@ pub mod pallet {
 		/// Convert account to bytes for cross-chain addressing
 		fn account_to_bytes(account: &T::AccountId) -> BoundedVec<u8, ConstU32<64>> {
 			account.encode().try_into().unwrap_or_default()
+		}
+
+		fn decode_burn_message(data: &[u8]) -> Result<BurnMessage, Error<T>> {
+			BurnMessage::decode(&mut &data[..])
+				.or_else(|_| {
+					LegacyBurnMessage::decode(&mut &data[..])
+						.map(LegacyBurnMessage::into_current)
+				})
+				.map_err(|_| Error::<T>::InvalidMessageFormat)
 		}
 
 		/// Check and update daily burn limit for a domain

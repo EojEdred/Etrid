@@ -126,7 +126,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("btc-pbc"),
     impl_name: create_runtime_str!("btc-pbc"),
     authoring_version: 1,
-    spec_version: 100,
+    spec_version: 101,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -376,9 +376,9 @@ parameter_types! {
 
 impl pallet_token_messenger::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type TokenOperations = ();
-    type AttestationVerifier = ();
-    type WeightInfo = ();
+    type TokenOperations = pallet_token_messenger::token_ops::PbcTokenOperations<Runtime>;
+    type AttestationVerifier = pallet_token_messenger::attestation::BridgeAttestationVerifier<Runtime>;
+    type WeightInfo = pallet_token_messenger::weights::SubstrateWeight<Runtime>;
     type Currency = Balances;
     type MaxMessageBodySize = MaxMessageBodySize;
     type MaxBurnAmount = MaxBurnAmount;

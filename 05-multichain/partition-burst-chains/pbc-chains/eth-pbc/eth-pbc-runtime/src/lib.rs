@@ -215,7 +215,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: Cow::Borrowed("eth-pbc"),
 	impl_name: Cow::Borrowed("eth-pbc"),
 	authoring_version: 1,
-	spec_version: 1,
+	spec_version: 2,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -605,9 +605,9 @@ parameter_types! {
 
 impl pallet_token_messenger::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type TokenOperations = ();
-	type AttestationVerifier = ();
-	type WeightInfo = ();
+	type TokenOperations = pallet_token_messenger::token_ops::PbcTokenOperations<Runtime>;
+	type AttestationVerifier = pallet_token_messenger::attestation::BridgeAttestationVerifier<Runtime>;
+	type WeightInfo = pallet_token_messenger::weights::SubstrateWeight<Runtime>;
 	type Currency = Balances;
 	type MaxMessageBodySize = MaxMessageBodySize;
 	type MaxBurnAmount = MaxBurnAmount;

@@ -62,6 +62,30 @@ coverage/
 !.env.*.example
 
 # ============================================================================
+# SECURE CONFIGURATION FILES - DO NOT COMMIT!
+# ============================================================================
+
+# Secure environment configuration
+config/secure/
+**/config/secure/
+config/secure/.env.secure
+config/secure/*.env
+config/secure/*key*
+config/secure/*secret*
+
+# Sensitive configuration files
+**/secure/*.json
+**/secure/*.txt
+**/secure/*.pem
+**/secure/*.key
+
+# Environment files with actual secrets (only templates are tracked)
+.env.local
+.env.production
+.env.*.local
+.env.*.production
+
+# ============================================================================
 # VALIDATOR KEYS AND SENSITIVE DATA - DO NOT COMMIT!
 # ============================================================================
 

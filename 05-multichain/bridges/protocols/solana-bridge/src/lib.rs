@@ -74,6 +74,7 @@ pub mod pallet {
     };
     use frame_system::pallet_prelude::*;
     use sp_runtime::traits::{Zero, SaturatedConversion};
+    use etrid_bridge_common::relayer::{RelayerAuthorization, RelayerOperation, RelayerRole};
     use etrid_bridge_common::treasury::TreasuryInterface;
 
     // Currency type for handling ËTR tokens
@@ -207,6 +208,17 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn authorized_relayers)]
     pub type AuthorizedRelayers<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        RelayerRole,
+        OptionQuery,
+    >;
+
+    /// Relayer active status flags
+    #[pallet::storage]
+    #[pallet::getter(fn relayer_active)]
+    pub type RelayerActive<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
         T::AccountId,
@@ -394,6 +406,10 @@ pub mod pallet {
         LockAccountNotSet,
         /// Caller is not an authorized relayer
         NotAuthorizedRelayer,
+        /// Relayer is inactive
+        RelayerInactive,
+        /// Relayer lacks permission for this operation
+        InsufficientRelayerPermissions,
     }
 
     #[pallet::call]
@@ -410,7 +426,8 @@ pub mod pallet {
             slot: u64,
             confirmations: u32,
         ) -> DispatchResult {
-            let _relayer = ensure_signed(origin)?;
+            let relayer = ensure_signed(origin)?;
+            Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
             // Validate inputs
             ensure!(!amount.is_zero(), Error::<T>::InvalidAmount);
@@ -456,7 +473,8 @@ pub mod pallet {
             origin: OriginFor<T>,
             signature: SolanaSignature,
         ) -> DispatchResult {
-            let _relayer = ensure_signed(origin)?;
+            let relayer = ensure_signed(origin)?;
+            Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
             // Get pending deposit
             let mut deposit = PendingDeposits::<T>::get(&signature)
@@ -518,7 +536,8 @@ pub mod pallet {
             slot: u64,
             confirmations: u32,
         ) -> DispatchResult {
-            let _relayer = ensure_signed(origin)?;
+            let relayer = ensure_signed(origin)?;
+            Self::ensure_authorized_relayer(&relayer, RelayerOperation::ConfirmDeposit)?;
 
             // Validate token is supported
             ensure!(
@@ -797,11 +816,7 @@ pub mod pallet {
         ) -> DispatchResult {
             // Should be called by authorized relayer/oracle
             let relayer = ensure_signed(origin)?;
-            // Verify relayer is authorized
-            ensure!(
-                AuthorizedRelayers::<T>::get(&relayer),
-                Error::<T>::NotAuthorizedRelayer
-            );
+            Self::ensure_authorized_relayer(&relayer, RelayerOperation::ProcessBurn)?;
 
             // Verify burn hasn't been processed
             ensure!(
@@ -847,9 +862,11 @@ pub mod pallet {
         pub fn register_relayer(
             origin: OriginFor<T>,
             relayer: T::AccountId,
+            role: RelayerRole,
         ) -> DispatchResult {
             ensure_root(origin)?;
-            AuthorizedRelayers::<T>::insert(&relayer, true);
+            AuthorizedRelayers::<T>::insert(&relayer, role);
+            RelayerActive::<T>::insert(&relayer, true);
             Ok(())
         }
 
@@ -862,11 +879,51 @@ pub mod pallet {
         ) -> DispatchResult {
             ensure_root(origin)?;
             AuthorizedRelayers::<T>::remove(&relayer);
+            RelayerActive::<T>::remove(&relayer);
             Ok(())
         }
     }
 
+    impl<T: Config> RelayerAuthorization<T::AccountId> for Pallet<T> {
+        fn is_authorized_relayer(relayer: &T::AccountId) -> bool {
+            AuthorizedRelayers::<T>::contains_key(relayer)
+                && RelayerActive::<T>::get(relayer)
+        }
+
+        fn can_confirm_deposit(relayer: &T::AccountId) -> bool {
+            let role = AuthorizedRelayers::<T>::get(relayer);
+            RelayerActive::<T>::get(relayer)
+                && matches!(role, Some(RelayerRole::Oracle | RelayerRole::RelayNode))
+        }
+
+        fn can_process_burn(relayer: &T::AccountId) -> bool {
+            let role = AuthorizedRelayers::<T>::get(relayer);
+            RelayerActive::<T>::get(relayer)
+                && matches!(role, Some(RelayerRole::Oracle))
+        }
+    }
+
     impl<T: Config> Pallet<T> {
+        fn ensure_authorized_relayer(
+            relayer: &T::AccountId,
+            operation: RelayerOperation,
+        ) -> DispatchResult {
+            let role = AuthorizedRelayers::<T>::get(relayer)
+                .ok_or(Error::<T>::NotAuthorizedRelayer)?;
+
+            ensure!(RelayerActive::<T>::get(relayer), Error::<T>::RelayerInactive);
+
+            let allowed = match operation {
+                RelayerOperation::ConfirmDeposit => {
+                    matches!(role, RelayerRole::Oracle | RelayerRole::RelayNode)
+                }
+                RelayerOperation::ProcessBurn => matches!(role, RelayerRole::Oracle),
+            };
+
+            ensure!(allowed, Error::<T>::InsufficientRelayerPermissions);
+            Ok(())
+        }
+
         /// Convert SOL amount to ËTR using exchange rate
         fn convert_sol_to_etr(sol_amount: BalanceOf<T>, rate: u128) -> Result<BalanceOf<T>, DispatchError> {
             let sol_u128: u128 = sol_amount.saturated_into();

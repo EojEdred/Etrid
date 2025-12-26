@@ -1632,8 +1632,8 @@ impl_runtime_apis! {
                     "ember_testnet" => {
                         Some(include_bytes!("../presets/ember_testnet.json").to_vec())
                     },
-                    "primearc_core_mainnet_v1_pure_asf" => {
-                        Some(include_bytes!("../presets/primearc_core_mainnet_v1_pure_asf.json").to_vec())
+                    "mainnet" => {
+                        Some(include_bytes!("../presets/mainnet.json").to_vec())
                     },
                     _ => None,
                 }
@@ -1645,7 +1645,7 @@ impl_runtime_apis! {
                 sp_genesis_builder::DEV_RUNTIME_PRESET.into(),
                 sp_genesis_builder::LOCAL_TESTNET_RUNTIME_PRESET.into(),
                 "ember_testnet".into(),
-                "primearc_core_mainnet_v1_pure_asf".into(),
+                "mainnet".into(),
             ]
         }
     }

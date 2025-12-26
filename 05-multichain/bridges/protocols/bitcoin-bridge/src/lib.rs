@@ -28,6 +28,7 @@ pub mod pallet {
     use sp_runtime::traits::{Saturating, SaturatedConversion, Hash};
     use sp_std::vec::Vec;
     use etrid_bridge_common::multisig::{MultiSigCustodian, PendingApproval};
+    use etrid_bridge_common::relayer::{RelayerAuthorization, RelayerOperation, RelayerRole};
     use etrid_bridge_common::treasury::TreasuryInterface;
 
     // Import the generic Bridge trait
@@ -178,6 +179,17 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         T::AccountId,
+        RelayerRole,
+        OptionQuery,
+    >;
+
+    /// Relayer active status flags
+    #[pallet::storage]
+    #[pallet::getter(fn relayer_active)]
+    pub type RelayerActive<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
         bool,
         ValueQuery,
     >;
@@ -279,6 +291,10 @@ pub mod pallet {
         LockAccountNotSet,
         /// Caller is not an authorized relayer
         NotAuthorizedRelayer,
+        /// Relayer is inactive
+        RelayerInactive,
+        /// Relayer lacks permission for this operation
+        InsufficientRelayerPermissions,
     }
 
     #[pallet::genesis_config]
@@ -650,11 +666,7 @@ pub mod pallet {
         ) -> DispatchResult {
             // Should be called by authorized relayer/oracle
             let relayer = ensure_signed(origin)?;
-            // Verify relayer is authorized
-            ensure!(
-                AuthorizedRelayers::<T>::get(&relayer),
-                Error::<T>::NotAuthorizedRelayer
-            );
+            Self::ensure_authorized_relayer(&relayer, RelayerOperation::ProcessBurn)?;
 
             // Convert to bounded vec for storage lookup
             let burn_tx_bounded: BoundedVec<u8, ConstU32<64>> = bitcoin_burn_tx.clone().try_into()
@@ -704,9 +716,11 @@ pub mod pallet {
         pub fn register_relayer(
             origin: OriginFor<T>,
             relayer: T::AccountId,
+            role: RelayerRole,
         ) -> DispatchResult {
             ensure_root(origin)?;
-            AuthorizedRelayers::<T>::insert(&relayer, true);
+            AuthorizedRelayers::<T>::insert(&relayer, role);
+            RelayerActive::<T>::insert(&relayer, true);
             Ok(())
         }
 
@@ -719,12 +733,52 @@ pub mod pallet {
         ) -> DispatchResult {
             ensure_root(origin)?;
             AuthorizedRelayers::<T>::remove(&relayer);
+            RelayerActive::<T>::remove(&relayer);
             Ok(())
+        }
+    }
+
+    impl<T: Config> RelayerAuthorization<T::AccountId> for Pallet<T> {
+        fn is_authorized_relayer(relayer: &T::AccountId) -> bool {
+            AuthorizedRelayers::<T>::contains_key(relayer)
+                && RelayerActive::<T>::get(relayer)
+        }
+
+        fn can_confirm_deposit(relayer: &T::AccountId) -> bool {
+            let role = AuthorizedRelayers::<T>::get(relayer);
+            RelayerActive::<T>::get(relayer)
+                && matches!(role, Some(RelayerRole::Oracle | RelayerRole::RelayNode))
+        }
+
+        fn can_process_burn(relayer: &T::AccountId) -> bool {
+            let role = AuthorizedRelayers::<T>::get(relayer);
+            RelayerActive::<T>::get(relayer)
+                && matches!(role, Some(RelayerRole::Oracle))
         }
     }
 
     // Helper functions
     impl<T: Config> Pallet<T> {
+        fn ensure_authorized_relayer(
+            relayer: &T::AccountId,
+            operation: RelayerOperation,
+        ) -> DispatchResult {
+            let role = AuthorizedRelayers::<T>::get(relayer)
+                .ok_or(Error::<T>::NotAuthorizedRelayer)?;
+
+            ensure!(RelayerActive::<T>::get(relayer), Error::<T>::RelayerInactive);
+
+            let allowed = match operation {
+                RelayerOperation::ConfirmDeposit => {
+                    matches!(role, RelayerRole::Oracle | RelayerRole::RelayNode)
+                }
+                RelayerOperation::ProcessBurn => matches!(role, RelayerRole::Oracle),
+            };
+
+            ensure!(allowed, Error::<T>::InsufficientRelayerPermissions);
+            Ok(())
+        }
+
         /// Execute withdrawal confirmation (internal helper)
         fn execute_withdrawal_confirmation(
             withdrawer: T::AccountId,

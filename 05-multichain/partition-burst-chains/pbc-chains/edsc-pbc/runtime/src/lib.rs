@@ -24,6 +24,8 @@ use sp_arithmetic::Permill;
 use pallet_session::disabling::UpToLimitDisablingStrategy;
 use sp_runtime::traits::OpaqueKeys;
 
+mod migrations;
+
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
 
@@ -126,7 +128,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("edsc-pbc"),
     impl_name: create_runtime_str!("edsc-pbc"),
     authoring_version: 1,
-    spec_version: 100,
+    spec_version: 102,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -191,7 +193,7 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
     type Block = Block;
     type RuntimeTask = ();
-    type SingleBlockMigrations = ();
+    type SingleBlockMigrations = (migrations::EdscBridgeMigrations,);
     type MultiBlockMigrator = ();
     type PreInherents = ();
     type PostInherents = ();
@@ -415,20 +417,42 @@ parameter_types! {
     pub const TokenMessengerMinBurnAmount: u128 = 1_000_000_000_000_000_000;  // 1 EDSC minimum
     pub const TokenMessengerBlocksPerDay: u32 = 14400;  // 24 hours at 6s blocks
     pub const TokenMessengerLocalDomain: u32 = 5;  // EDSC-PBC domain ID
+    pub const TokenMessengerBridgeFeeRate: u32 = 30; // 0.3% fee
+    pub const TokenMessengerMinBridgeFee: u128 = 1_000_000_000_000_000; // 0.001 EDSC
+    pub FeeCollector: AccountId = AccountId::new([0u8; 32]);
 }
 
-impl pallet_edsc_bridge_token_messenger::Config for Runtime {
+pub struct EdscTokenBridgeOps;
+impl pallet_token_messenger::TokenOperations<AccountId> for EdscTokenBridgeOps {
+    fn burn_tokens(account: &AccountId, amount: u128) -> frame_support::dispatch::DispatchResult {
+        pallet_edsc_token::Pallet::<Runtime>::do_burn(account, amount)
+    }
+
+    fn mint_tokens(account: &AccountId, amount: u128) -> frame_support::dispatch::DispatchResult {
+        pallet_edsc_token::Pallet::<Runtime>::do_mint(account, amount)
+    }
+
+    fn balance_of(account: &AccountId) -> u128 {
+        pallet_edsc_token::Pallet::<Runtime>::balance_of(account)
+    }
+}
+
+impl pallet_token_messenger::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+    type TokenOperations = EdscTokenBridgeOps;
+    type AttestationVerifier = pallet_token_messenger::attestation::BridgeAttestationVerifier<Runtime>;
+    type WeightInfo = pallet_token_messenger::weights::SubstrateWeight<Runtime>;
+    type Currency = Balances;
     type MaxMessageBodySize = TokenMessengerMaxMessageBodySize;
     type MaxBurnAmount = TokenMessengerMaxBurnAmount;
     type DailyBurnCap = TokenMessengerDailyBurnCap;
-    type MessageTimeout = TokenMessengerMessageTimeout;
     type MinBurnAmount = TokenMessengerMinBurnAmount;
+    type MessageTimeout = TokenMessengerMessageTimeout;
     type BlocksPerDay = TokenMessengerBlocksPerDay;
     type LocalDomain = TokenMessengerLocalDomain;
-    type TokenOperations = ();
-    type AttestationVerifier = ();
-    type WeightInfo = ();
+    type BridgeFeeRate = TokenMessengerBridgeFeeRate;
+    type MinBridgeFee = TokenMessengerMinBridgeFee;
+    type FeeCollector = FeeCollector;
 }
 
 parameter_types! {
@@ -438,13 +462,15 @@ parameter_types! {
     pub const AttestationMaxAge: u32 = 1000;  // 1000 blocks (~100 minutes)
 }
 
-impl pallet_edsc_bridge_attestation::Config for Runtime {
+impl pallet_bridge_attestation::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+    type ChainId = TokenMessengerLocalDomain;
     type MaxAttesters = MaxAttesters;
     type MaxAttestersPerMessage = MaxAttestersPerMessage;
     type MinSignatureThreshold = MinSignatureThreshold;
     type AttestationMaxAge = AttestationMaxAge;
     type AdminOrigin = EnsureRoot<AccountId>;
+    type WeightInfo = ();
 }
 
 // Lightning Bloc Channels Configuration
@@ -556,8 +582,8 @@ construct_runtime!(
         XcmBridge: pallet_xcm_bridge,
 
         // Phase 3: External Bridge Protocol (CCTP-style)
-        TokenMessenger: pallet_edsc_bridge_token_messenger,
-        BridgeAttestation: pallet_edsc_bridge_attestation,
+        TokenMessenger: pallet_token_messenger,
+        BridgeAttestation: pallet_bridge_attestation,
 
         // Lightning Bloc Channels for instant EDSC transfers
         LightningChannels: pallet_lightning_channels,

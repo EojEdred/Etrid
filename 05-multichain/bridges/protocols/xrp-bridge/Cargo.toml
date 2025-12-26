@@ -23,6 +23,7 @@ sp-std = { workspace = true }
 
 # Etrid Core Dependencies
 pallet-etr-lock = { workspace = true }
+etrid-bridge-common = { path = "../common", default-features = false }
 
 # XRP-specific dependencies
 bs58 = { version = "0.5.0", default-features = false }
@@ -54,6 +55,7 @@ std = [
     "ethereum?/std",
     "ethereum-types?/std",
     "serde/std",
+    "etrid-bridge-common/std",
 ]
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
 try-runtime = ["frame-support/try-runtime"]
