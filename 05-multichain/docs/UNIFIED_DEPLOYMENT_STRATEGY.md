@@ -27,9 +27,9 @@ Deploy foundational token contracts needed for the entire ecosystem:
    - ETH PBC: EDSC token (ERC20)
    - External chains: EDSC token (ERC20)
 
-3. **TokenMessenger** (Bridge infrastructure)
-   - ETH PBC: TokenMessenger contract
-   - External chains: TokenMessenger contracts
+3. **EDSC Bridge Contracts** (Bridge infrastructure)
+   - ETH PBC: EDSCTokenMessenger + EDSCMessageTransmitter
+   - External chains: EDSCTokenMessenger + EDSCMessageTransmitter
 
 ### Phase 2: DeFi Infrastructure
 1. **MasterChef** (Yield Farming)
@@ -39,7 +39,7 @@ Deploy foundational token contracts needed for the entire ecosystem:
 
 2. **Bridge Adapter**
    - Deploy ETHPBCBridgeAdapter
-   - Connect to TokenMessenger
+   - Connect to EDSC bridge contracts
    - Link to MasterChef
 
 ### Phase 3: Multi-Chain Expansion
@@ -65,20 +65,21 @@ Deploy bridge adapters to all 7 external chains:
 ```
 contracts/
 ├── tokens/
-│   ├── WrappedETR.sol          # ERC20 wrapper for ETR
-│   ├── EDSC.sol                 # Stablecoin token
-│   └── TokenMessenger.sol       # Bridge messaging
-├── bridges/
-│   ├── ETHPBCBridgeAdapter.sol  # ETH PBC bridge
-│   ├── EVMBridgeAdapter.sol     # Generic EVM bridge
-│   └── attestation/
-│       └── OracleRegistry.sol   # 3-of-5 multisig oracles
+│   ├── WrappedETR.sol               # ERC20 wrapper for ETR
+│   └── EDSC.sol                     # Stablecoin token
+├── bridge/
+│   ├── EDSCTokenMessenger.sol       # Burn-and-send
+│   ├── EDSCMessageTransmitter.sol   # Receive-and-mint
+│   └── AttesterRegistry.sol         # 3-of-5 attester threshold
+├── adapters/
+│   ├── ETHPBCBridgeAdapter.sol      # ETH PBC bridge
+│   └── EVMBridgeAdapter.sol         # Generic EVM bridge
 ├── defi/
-│   ├── MasterChef.sol           # Yield farming
-│   ├── UniswapV2Factory.sol     # DEX factory
-│   └── UniswapV2Router.sol      # DEX router
+│   ├── MasterChef.sol               # Yield farming
+│   ├── UniswapV2Factory.sol         # DEX factory
+│   └── UniswapV2Router.sol          # DEX router
 └── governance/
-    └── Timelock.sol             # Governance timelock
+    └── Timelock.sol                 # Governance timelock
 ```
 
 ### Environment Configuration
@@ -97,7 +98,9 @@ DEPLOYER_PRIVATE_KEY=0x...
 # Contract Addresses (filled after each deployment)
 ETR_TOKEN_ETH_PBC=
 EDSC_TOKEN_ETH_PBC=
-TOKEN_MESSENGER_ETH_PBC=
+EDSC_TOKEN_MESSENGER_ETH_PBC=
+EDSC_MESSAGE_TRANSMITTER_ETH_PBC=
+ATTESTER_REGISTRY_ETH_PBC=
 MASTERCHEF_ETH_PBC=
 ```
 
@@ -110,7 +113,7 @@ const chains = ['eth-pbc', 'ethereum', 'bsc', 'polygon', ...]
 
 for (const chain of chains) {
   await deployToChain(chain, {
-    contracts: ['WrappedETR', 'EDSC', 'TokenMessenger'],
+    contracts: ['WrappedETR', 'EDSC', 'EDSCTokenMessenger', 'EDSCMessageTransmitter', 'AttesterRegistry'],
     verify: true,
     saveToDisk: true
   })
@@ -139,7 +142,7 @@ const address = ethers.utils.getCreate2Address(
 - Hardware wallet signers
 
 ### 2. Bridge Security
-- 3-of-5 oracle attestation required
+- 3-of-5 attester signatures required
 - Rate limiting on bridges
 - Emergency pause functionality
 - Time-delayed admin actions (24-48hr)
@@ -183,7 +186,7 @@ npx hardhat test --network localhost
 - Bridge transaction monitoring
 - TVL tracking
 - Gas optimization alerts
-- Oracle health checks
+- Attester health checks
 
 ### Off-Chain Infrastructure
 - Relayer uptime monitoring
@@ -193,7 +196,7 @@ npx hardhat test --network localhost
 ## Next Steps
 
 ### Immediate Actions
-1. Create missing smart contracts (WrappedETR, EDSC, TokenMessenger)
+1. Review bridge contracts (EDSCTokenMessenger + EDSCMessageTransmitter + AttesterRegistry)
 2. Set up hardhat workspace with multi-chain configs
 3. Write deployment scripts with CREATE2
 4. Configure test environments

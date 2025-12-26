@@ -92,7 +92,7 @@ The **05-multichain** component is the **core infrastructure** of the Ëtrid Pro
 │   └── edsc-bridge/               # EDSC native stablecoin bridge
 │       ├── substrate-pallets/     # 7 Substrate pallets
 │       ├── ethereum-contracts/    # 4 Solidity contracts
-│       └── services/              # Attestation & relayer services
+│       └── services/              # Attestation & relayer services (external)
 │
 ├── primitives/                    # Shared type definitions
 │   └── src/
@@ -620,13 +620,13 @@ The **EDSC Bridge** is Ëtrid's **native stablecoin bridge** enabling cross-chai
 
 #### 1. Substrate Pallets (7 pallets)
 
-**Location**: `bridge-protocols/edsc-bridge/substrate-pallets/`
+**Location**: `bridge-protocols/edsc-bridge/substrate-pallets/` (EDSC-specific) + `pallets-shared/` (generic bridge pallets)
 
 | Pallet | Purpose | Status |
 |--------|---------|--------|
 | pallet-edsc-token | ERC-20 compatible EDSC token on Substrate | ✅ Complete |
-| pallet-edsc-bridge-token-messenger | Burn/mint operations, nonce management | ✅ Complete |
-| pallet-edsc-bridge-attestation | M-of-N signature validation (3-of-5) | ✅ Complete |
+| pallet-token-messenger | Burn/mint operations, nonce management (generic) | ✅ Complete |
+| pallet-bridge-attestation | M-of-N signature validation (3-of-5, generic) | ✅ Complete |
 | pallet-edsc-receipts | Soulbound Token (SBT) receipt system | ✅ Complete |
 | pallet-edsc-redemption | 3-path redemption system, dynamic fees | ✅ Complete |
 | pallet-edsc-oracle | TWAP price oracle, multi-source aggregation | ✅ Complete |
@@ -650,23 +650,23 @@ total_supply()
 max_supply: 2.5B EDSC
 ```
 
-**pallet-edsc-bridge-token-messenger**:
+**pallet-token-messenger**:
 ```rust
 // Burn tokens on source chain
-burn_and_send(
-    destination_domain: u32,  // Ethereum=0, Solana=1, Ëtrid=2
-    recipient: Vec<u8>,
+deposit_for_burn(
     amount: Balance,
+    destination_domain: u32,  // Ethereum=0, Solana=1, Ëtrid=2
+    mint_recipient: Vec<u8>,
 ) -> DispatchResult
 
 // Mint tokens on destination chain
 receive_message(
     message: Vec<u8>,
-    attestations: Vec<Signature>,  // 3-of-5 signatures
+    attestation: Vec<u8>,  // AttestationData (SCALE-encoded)
 ) -> DispatchResult
 ```
 
-**pallet-edsc-bridge-attestation**:
+**pallet-bridge-attestation**:
 ```rust
 // M-of-N signature validation
 pub const ATTESTATION_THRESHOLD: u32 = 3;  // 3 out of 5 attesters
@@ -676,11 +676,18 @@ pub const TOTAL_ATTESTERS: u32 = 5;
 register_attester(attester: AccountId)
 remove_attester(attester: AccountId)
 
-// Message verification
-verify_attestations(
+// Submit signature for a message
+submit_signature(
+    attester_id: u32,
     message_hash: H256,
-    signatures: Vec<Signature>,
-) -> bool
+    signature: Vec<u8>,
+    source_chain_id: u32,
+    destination_chain_id: u32,
+    nonce: u64,
+) -> DispatchResult
+
+// Message verification (called by pallet-token-messenger)
+verify_attestation_for_message(message: Vec<u8>, message_hash: H256) -> DispatchResult
 ```
 
 **pallet-edsc-receipts** (Soulbound Token System):
@@ -812,49 +819,64 @@ function receiveMessage(
 
 #### 3. Services (TypeScript)
 
-**Location**: `bridge-protocols/edsc-bridge/services/` (symlink to `/services`)
+**Location**: External services repo (not tracked here); this section documents required interfaces.
 
 **attestation-service** (TypeScript + ethers.js):
 ```typescript
-// Monitors burn events on both chains
+// Monitors burn events and submits on-chain signatures
 async function monitorBurnEvents() {
-    // Listen to Ethereum MessageSent events
+    // Listen to Ethereum MessageSent events (off-chain signatures)
     ethereumContract.on('MessageSent', async (message) => {
         const messageHash = keccak256(message);
         const signature = await wallet.signMessage(messageHash);
-        await submitAttestation(messageHash, signature);
+        await submitOffchainSignature(messageHash, signature);
     });
 
-    // Listen to Ëtrid burn_and_send events
-    substrateApi.query.system.events((events) => {
-        events.forEach(async ({ event }) => {
-            if (event.method === 'BurnAndSend') {
-                const messageHash = blake2b(event.data);
+    // Listen to Ëtrid MessageSent events
+    substrateApi.query.system.events(async (events) => {
+        for (const { event } of events) {
+            if (event.method === 'MessageSent') {
+                const { nonce } = event.data;
+                const message = await substrateApi.query.tokenMessenger.outboundMessages(nonce);
+                const decoded = decodeCrossChainMessage(message.toU8a());
+                const messageHash = blake2b(message.toU8a());
                 const signature = await wallet.signMessage(messageHash);
-                await submitAttestation(messageHash, signature);
+
+                await substrateApi.tx.bridgeAttestation.submitSignature(
+                    attesterId,
+                    messageHash,
+                    signature,
+                    decoded.sourceDomain,
+                    decoded.destinationDomain,
+                    decoded.nonce
+                ).signAndSend(attesterAccount);
             }
-        });
+        }
     });
 }
 ```
 
 **relayer-service** (TypeScript + ethers.js):
 ```typescript
-// Polls for fully-attested messages
+// Polls for fully-attested messages and relays them
 async function relayMessages() {
     const attestedMessages = await getAttestedMessages();
 
     for (const msg of attestedMessages) {
-        if (msg.attestations.length >= THRESHOLD) {
+        if (msg.signatures.length >= THRESHOLD) {
             try {
+                const attestation = encodeAttestationData({
+                    version: 1,
+                    signatureCount: msg.signatures.length,
+                    signatures: msg.signatures, // [{ attesterId, signature }]
+                });
+
+                // Relayer must be registered with RelayerRole before submitting.
                 // Submit to destination chain
-                const tx = await messageTransmitter.receiveMessage(
+                await substrateApi.tx.tokenMessenger.receiveMessage(
                     msg.message,
-                    msg.attestations,
-                    { gasLimit: 500000 }
-                );
-                await tx.wait();
-                console.log(`Relayed message ${msg.nonce}`);
+                    attestation
+                ).signAndSend(relayerAccount);
             } catch (err) {
                 console.error(`Failed to relay: ${err}`);
                 // Automatic retry with exponential backoff
@@ -871,10 +893,10 @@ async function relayMessages() {
 ```
 1. User calls burnAndSendTo() on Ethereum
 2. EDSC burned, MessageSent event emitted
-3. 3 attestation services detect event and sign message
-4. Relayer collects 3 signatures
-5. Relayer calls receive_message() on Ëtrid
-6. Substrate pallet verifies signatures and mints EDSC
+3. Attestation services detect event and sign message
+4. Attesters submit signatures on-chain (submit_signature)
+5. Relayer builds AttestationData + calls receive_message() on Ëtrid
+6. Substrate pallets verify attestation and mint EDSC
 ```
 
 #### Ëtrid → Ethereum
@@ -882,8 +904,8 @@ async function relayMessages() {
 ```
 1. User calls burn_and_send() extrinsic
 2. EDSC burned, event emitted
-3. 3 attestation services detect and sign
-4. Relayer submits to Ethereum MessageTransmitter
+3. Attestation services detect and sign
+4. Relayer submits to Ethereum MessageTransmitter with signatures
 5. MessageTransmitter verifies signatures and mints
 ```
 
@@ -1850,7 +1872,7 @@ final btcBalance = await api.query.btcPbc.balances(accountId);
 final ethBalance = await api.query.ethPbc.balances(accountId);
 ```
 
-**services/attestation-service** (EDSC Bridge):
+**attestation-service** (EDSC Bridge, external):
 ```typescript
 // Monitor Primearc Core Chain events
 api.query.system.events((events) => {
@@ -1883,7 +1905,7 @@ IEDSCTokenMessenger(messenger).burnAndSendTo(
 
 ```bash
 # Build Primearc Core Chain node
-cd /Users/macbook/Desktop/etrid/05-multichain/primearc-core-chain
+cd /Users/macbook/Desktop/etrid-workspace/etrid/05-multichain/primearc-core-chain
 cargo build --release
 
 # Output
@@ -1902,7 +1924,7 @@ cargo build --release
 
 ```bash
 # Build all PBCs in parallel (recommended)
-cd /Users/macbook/Desktop/etrid
+cd /Users/macbook/Desktop/etrid-workspace/etrid
 ./build_all_remaining_pbcs.sh
 
 # Or build individual PBC
@@ -2050,7 +2072,7 @@ docker-compose -f docker-compose.bridge.yml up
 
 ### Testing Scripts
 
-**Location**: `/Users/macbook/Desktop/etrid/`
+**Location**: `/Users/macbook/Desktop/etrid-workspace/etrid/`
 
 | Script | Purpose | Status |
 |--------|---------|--------|

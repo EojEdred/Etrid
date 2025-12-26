@@ -24,20 +24,20 @@ This guide explains how the new unified deployment system integrates with ETH PB
 │  • WrappedETR (ERC20)                                        │
 │  • MasterChef (yield farming)                                │
 │  • Bridge Adapter (cross-chain rewards)                      │
-│  • EDSC TokenMessenger                                       │
+│  • EDSC bridge (EDSCTokenMessenger + EDSCMessageTransmitter) │
 └──────────────────┬──────────────────────────────────────────┘
                    │
-                   │ EDSC Bridge (3-of-5 oracles)
+                   │ EDSC Bridge (3-of-5 attesters)
                    ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                  External EVM Chains                         │
-│  • Ethereum      → WrappedETR + EDSC + TokenMessenger        │
-│  • BNB Chain     → WrappedETR + EDSC + TokenMessenger        │
-│  • Polygon       → WrappedETR + EDSC + TokenMessenger        │
-│  • Arbitrum      → WrappedETR + EDSC + TokenMessenger        │
-│  • Base          → WrappedETR + EDSC + TokenMessenger        │
-│  • Optimism      → WrappedETR + EDSC + TokenMessenger        │
-│  • Avalanche     → WrappedETR + EDSC + TokenMessenger        │
+│  • Ethereum      → WrappedETR + EDSC + EDSC bridge contracts │
+│  • BNB Chain     → WrappedETR + EDSC + EDSC bridge contracts │
+│  • Polygon       → WrappedETR + EDSC + EDSC bridge contracts │
+│  • Arbitrum      → WrappedETR + EDSC + EDSC bridge contracts │
+│  • Base          → WrappedETR + EDSC + EDSC bridge contracts │
+│  • Optimism      → WrappedETR + EDSC + EDSC bridge contracts │
+│  • Avalanche     → WrappedETR + EDSC + EDSC bridge contracts │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,28 +54,32 @@ This guide explains how the new unified deployment system integrates with ETH PB
 - Reverse flow: burn WrappedETR → unlock native ETR
 
 **Code location**:
-- Bridge pallets: `/Desktop/etrid/05-multichain/bridge-pallets/`
+- Bridge pallets: `/Users/macbook/Desktop/etrid-workspace/etrid/05-multichain/bridges/`
 - Bridge operator: Account `5GZaEegZ4nUUeg9X6xUe5pdPgSnntdakSuykoNNr2FTsuL3m`
 - RPC endpoint: `ws://163.192.125.23:9944`
 
 ### 2. ETH PBC ↔ External Chains (EDSC Bridge)
 
-**New Component**: TokenMessenger with 3-of-5 oracle attestation
+**New Component**: EDSC bridge contracts (EDSCTokenMessenger + EDSCMessageTransmitter) with 3-of-5 attester attestation
 
 **How it works**:
 - User burns tokens on source chain (e.g., Ethereum)
-- 5 oracle nodes observe the burn event
-- 3 oracles sign attestation
-- User submits attestation to destination chain (ETH PBC)
+- 5 attester nodes observe the burn event
+- 3 attesters sign the message hash
+- Attesters submit signatures on-chain (ETH PBC via `bridgeAttestation.submit_signature`)
+- Relayer builds `AttestationData` and calls `tokenMessenger.receive_message`
 - Destination chain mints tokens
 
 **Security**:
-- 3-of-5 multisig required (cannot be forged)
+- 3-of-5 attester threshold required (cannot be forged)
 - Nonce tracking prevents replay attacks
 - Rate limiting per address (100k EDSC/hour)
 - Emergency pause by multi-sig admin
 
-**Code location**: `/Desktop/etrid/05-multichain/unified-contracts/contracts/bridges/TokenMessenger.sol`
+**Code location**:
+- `/Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum/src/EDSCTokenMessenger.sol`
+- `/Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum/src/EDSCMessageTransmitter.sol`
+- `/Users/macbook/Desktop/etrid-workspace/etrid/05-multichain/pallets-shared/pallet-token-messenger/src/lib.rs`
 
 ### 3. MasterChef Yield Farming
 
@@ -97,7 +101,7 @@ bridgeAdapter.harvestAndBridge(
 )
 ```
 
-**Code location**: `/Desktop/etrid/05-multichain/unified-contracts/contracts/defi/MasterChef.sol`
+**Code location**: `/Users/macbook/Desktop/etrid-workspace/etrid/contracts/primeswap/src/farming/MasterChef.sol`
 
 ## Deployment Workflow
 
@@ -113,15 +117,17 @@ bridgeAdapter.harvestAndBridge(
 
 **Deploy to ETH PBC**:
 ```bash
-cd /Users/macbook/Desktop/etrid/05-multichain/unified-contracts
+cd /Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum
 npm install
-npm run deploy:eth-pbc
+npx hardhat run scripts/deploy.js --network ethPBC
 ```
+
+**Note**: Add an `ethPBC` network entry in `hardhat.config.js` with the correct RPC URL and chain ID.
 
 This deploys:
 1. WrappedETR (ERC20)
 2. EDSC stablecoin
-3. TokenMessenger
+3. EDSC bridge contracts (EDSCTokenMessenger + EDSCMessageTransmitter)
 4. MasterChef
 5. ETHPBCBridgeAdapter
 
@@ -132,34 +138,37 @@ This deploys:
 
 **Deploy to all chains**:
 ```bash
-npm run deploy:all-mainnets
+npx hardhat run scripts/deploy.js --network mainnet
+npx hardhat run scripts/deploy.js --network bsc
+npx hardhat run scripts/deploy.js --network base
+npx hardhat run scripts/deploy.js --network arbitrum
 ```
 
-Or individually:
+Or individually (add Polygon/Optimism/Avalanche networks in `hardhat.config.js` if needed):
 ```bash
-npm run deploy:ethereum
-npm run deploy:bsc
-npm run deploy:polygon
+npx hardhat run scripts/deploy.js --network mainnet
+npx hardhat run scripts/deploy.js --network bsc
 ```
 
 **Time**: ~40 minutes (7 chains × ~5 min each)
 **Cost**: ~$1,500 total ($200 per chain)
 
-### Phase 4: Oracle Configuration
+### Phase 4: Attester Configuration
 
-**Set up oracle network**:
+**Set up attester network**:
 ```bash
-npx hardhat run scripts/configure-oracles.js --network ethPBC
-npx hardhat run scripts/configure-oracles.js --network ethereum
+cd /Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum
+npx hardhat run scripts/deploy-attester-registry.js --network ethPBC
+npx hardhat run scripts/register-attesters.js --network ethPBC
 # ... repeat for each chain
 ```
 
-**Oracle addresses** (from .env):
-- Oracle 1: `0x...`
-- Oracle 2: `0x...`
-- Oracle 3: `0x...`
-- Oracle 4: `0x...`
-- Oracle 5: `0x...`
+**Attester addresses** (from .env):
+- Attester 1: `0x...`
+- Attester 2: `0x...`
+- Attester 3: `0x...`
+- Attester 4: `0x...`
+- Attester 5: `0x...`
 
 ### Phase 5: Integration Testing
 
@@ -276,15 +285,16 @@ curl -X POST http://163.192.125.23:9944 \
   -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
 ```
 
-### Oracle Monitoring
+### Attester Monitoring
 
-Query oracle status on each chain:
+Query attester status on each chain:
 ```javascript
-const tokenMessenger = await ethers.getContractAt("TokenMessenger", address);
-const oracleCount = await tokenMessenger.oracleCount();
-for (let i = 0; i < oracleCount; i++) {
-  const oracle = await tokenMessenger.oracles(i);
-  console.log(`Oracle ${i+1}: ${oracle}`);
+const attesterRegistry = await ethers.getContractAt("AttesterRegistry", address);
+const attesterCount = await attesterRegistry.getAttesterCount();
+for (let i = 0; i < attesterCount; i++) {
+  const attester = await attesterRegistry.attesterList(i);
+  const enabled = await attesterRegistry.isEnabledAttester(attester);
+  console.log(`Attester ${i+1}: ${attester} (enabled=${enabled})`);
 }
 ```
 
@@ -292,14 +302,16 @@ for (let i = 0; i < oracleCount; i++) {
 
 Track cross-chain transfers:
 ```javascript
-// Listen for burn events
-tokenMessenger.on("TokensBurned", (sender, destinationDomain, recipient, token, amount, nonce) => {
-  console.log(`Burned: ${amount} tokens from ${sender} to domain ${destinationDomain}`);
+// Listen for burn events (EVM source)
+const edscTokenMessenger = await ethers.getContractAt("EDSCTokenMessenger", address);
+edscTokenMessenger.on("MessageSent", (destinationDomain, nonce, sender, recipient, amount) => {
+  console.log(`Burned: ${amount} EDSC from ${sender} to domain ${destinationDomain}`);
 });
 
-// Listen for mint events
-tokenMessenger.on("TokensMinted", (recipient, sourceDomain, token, amount, messageHash) => {
-  console.log(`Minted: ${amount} tokens to ${recipient} from domain ${sourceDomain}`);
+// Listen for mint events (EVM destination)
+const edscMessageTransmitter = await ethers.getContractAt("EDSCMessageTransmitter", address);
+edscMessageTransmitter.on("MessageReceived", (sourceDomain, nonce, recipient, amount) => {
+  console.log(`Minted: ${amount} EDSC to ${recipient} from domain ${sourceDomain}`);
 });
 ```
 
@@ -313,10 +325,10 @@ tokenMessenger.on("TokensMinted", (recipient, sourceDomain, token, amount, messa
 - Hardware wallet signers
 - Time-delayed transactions (24-48hr)
 
-### 2. Oracle Security
+### 2. Attester Security
 
 **Best Practices**:
-- Run oracle nodes in different geographic regions
+- Run attester nodes in different geographic regions
 - Use different cloud providers
 - Hardware security modules (HSM) for keys
 - Monitoring and alerting
@@ -324,13 +336,12 @@ tokenMessenger.on("TokensMinted", (recipient, sourceDomain, token, amount, messa
 ### 3. Rate Limiting
 
 **Current Limits**:
-- TokenMessenger: 100k EDSC per hour per address
-- EDSC mint: 1M EDSC per day globally
+- EDSCTokenMessenger: max burn per tx + daily burn cap
+- Destination minting: controlled by attester threshold + nonce replay protection
 
 **Adjust if needed**:
 ```javascript
-await tokenMessenger.setDailyMintLimit(newLimit);
-await edsc.setDailyMintLimit(newLimit);
+await edscTokenMessenger.updateBurnLimits(newMaxBurnAmount, newDailyBurnLimit);
 ```
 
 ### 4. Emergency Procedures
@@ -342,7 +353,8 @@ await wrappedETR.pause();
 await edsc.pause();
 
 // Pause bridge operations
-await tokenMessenger.pause();
+await edscTokenMessenger.pause();
+await edscMessageTransmitter.pause();
 await bridgeAdapter.pause();
 ```
 
@@ -350,7 +362,9 @@ await bridgeAdapter.pause();
 ```javascript
 await wrappedETR.unpause();
 await edsc.unpause();
-await tokenMessenger.unpause();
+await edscTokenMessenger.unpause();
+await edscMessageTransmitter.unpause();
+await bridgeAdapter.unpause();
 ```
 
 ## Cost Analysis
@@ -394,7 +408,7 @@ await tokenMessenger.unpause();
 ### Week 3-4: Mainnet Launch
 - [ ] Deploy to ETH PBC mainnet
 - [ ] Deploy to external mainnets
-- [ ] Configure oracle network
+- [ ] Configure attester network
 - [ ] Launch monitoring dashboard
 
 ### Month 2: Expansion
@@ -423,4 +437,4 @@ The system is production-ready and can be deployed to all 7 target chains in les
 
 ---
 
-**Ready to deploy?** See [QUICKSTART.md](./unified-contracts/QUICKSTART.md) for step-by-step instructions.
+**Ready to deploy?** See `/Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum/README.md` and `/Users/macbook/Desktop/etrid-workspace/etrid/contracts/ethereum/EMBER_DEPLOYMENT_PLAN.md` for step-by-step instructions.

@@ -1699,6 +1699,7 @@ version = "0.1.0"
 dependencies = [
  "ethereum",
  "ethereum-types 0.14.1",
+ "etrid-bridge-common",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
@@ -4252,10 +4253,9 @@ dependencies = [
  "frame-system",
  "frame-system-rpc-runtime-api",
  "pallet-balances",
+ "pallet-bridge-attestation",
  "pallet-circuit-breaker",
  "pallet-consensus",
- "pallet-edsc-bridge-attestation",
- "pallet-edsc-bridge-token-messenger",
  "pallet-edsc-checkpoint",
  "pallet-edsc-oracle",
  "pallet-edsc-receipts",
@@ -4267,6 +4267,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
+ "pallet-token-messenger",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-validator-committee",
@@ -12316,6 +12317,7 @@ dependencies = [
 name = "polygon-bridge"
 version = "0.1.0"
 dependencies = [
+ "etrid-bridge-common",
  "frame-support",
  "frame-system",
  "pallet-etr-lock",
@@ -19916,6 +19918,7 @@ dependencies = [
  "bs58",
  "ethereum",
  "ethereum-types 0.14.1",
+ "etrid-bridge-common",
  "frame-benchmarking",
  "frame-support",
  "frame-system",

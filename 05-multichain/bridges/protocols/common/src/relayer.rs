@@ -2,7 +2,7 @@
 //!
 //! Defines common relayer roles and authorization hooks used by bridge pallets.
 
-use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen, DecodeWithMemTracking};
 use scale_info::TypeInfo;
 use sp_runtime::RuntimeDebug;
 
@@ -17,6 +17,8 @@ pub enum RelayerRole {
     Custodian,
 }
 
+impl DecodeWithMemTracking for RelayerRole {}
+
 /// Operations that require relayer authorization
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, RuntimeDebug)]
 pub enum RelayerOperation {
@@ -25,6 +27,8 @@ pub enum RelayerOperation {
     /// Process burns and unlocks
     ProcessBurn,
 }
+
+impl DecodeWithMemTracking for RelayerOperation {}
 
 /// Authorization interface for bridge relayers
 pub trait RelayerAuthorization<AccountId> {

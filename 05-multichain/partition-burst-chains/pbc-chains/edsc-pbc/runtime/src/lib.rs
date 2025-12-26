@@ -24,8 +24,6 @@ use sp_arithmetic::Permill;
 use pallet_session::disabling::UpToLimitDisablingStrategy;
 use sp_runtime::traits::OpaqueKeys;
 
-mod migrations;
-
 /// The address format for describing accounts.
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
 
@@ -128,7 +126,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("edsc-pbc"),
     impl_name: create_runtime_str!("edsc-pbc"),
     authoring_version: 1,
-    spec_version: 102,
+    spec_version: 101,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -193,7 +191,7 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
     type Block = Block;
     type RuntimeTask = ();
-    type SingleBlockMigrations = (migrations::EdscBridgeMigrations,);
+    type SingleBlockMigrations = ();
     type MultiBlockMigrator = ();
     type PreInherents = ();
     type PostInherents = ();
