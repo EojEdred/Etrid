@@ -8,14 +8,14 @@
 
 <!-- Mark the relevant option with an 'x' -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🔧 Configuration change
-- [ ] ♻️ Code refactoring
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test addition/update
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+- [ ] Configuration change
+- [ ] Code refactoring
+- [ ] Performance improvement
+- [ ] Test addition/update
 
 ## Changes Made
 
@@ -29,39 +29,43 @@
 
 <!-- Describe the tests you ran to verify your changes -->
 
-- [ ] Unit tests pass (`npm test`)
-- [ ] Integration tests pass (if applicable)
-- [ ] Deployed to testnet and verified
-- [ ] Gas usage checked and acceptable
-- [ ] Security audit considerations addressed
+- [ ] Unit tests pass (`cargo test`)
+- [ ] Build succeeds (`cargo build --release`)
+- [ ] Clippy passes (`cargo clippy`)
+- [ ] Format check passes (`cargo fmt --check`)
+- [ ] Runtime benchmarks run (if applicable)
 
 ## Checklist
 
-<!-- Mark completed items with an 'x' -->
+### For Runtime/Pallet Changes
 
-### For Smart Contract Changes
-
-- [ ] Contracts compile without errors (`npm run compile`)
-- [ ] All tests pass (`npm test`)
-- [ ] Gas report reviewed (if applicable)
-- [ ] Security best practices followed
-- [ ] NatSpec documentation added/updated
+- [ ] Runtime compiles without errors
+- [ ] All tests pass (`cargo test -p <pallet-name>`)
+- [ ] Weights updated via benchmarks
+- [ ] Storage migrations handled (if applicable)
+- [ ] Runtime upgrade tested on devnet
 - [ ] No new compiler warnings
 
-### For Script/Tooling Changes
+### For Node Changes
 
-- [ ] Code follows project style guidelines
-- [ ] TypeScript compiles without errors
-- [ ] Error handling implemented
-- [ ] Logging added for important operations
-- [ ] Documentation updated (README, guides, etc.)
+- [ ] Node builds successfully
+- [ ] Chainspec generation works
+- [ ] RPC endpoints tested
+- [ ] P2P networking verified
+
+### For PBC Changes
+
+- [ ] Collator builds and runs
+- [ ] Connects to relay chain correctly
+- [ ] Cross-chain messaging tested
+- [ ] Bridge functionality verified
 
 ### General
 
-- [ ] Branch is up to date with main/develop
-- [ ] Commit messages follow conventional commits format
+- [ ] Branch is up to date with main
+- [ ] Commit messages are descriptive
 - [ ] No sensitive information (private keys, secrets) in code
-- [ ] CI/CD checks passing
+- [ ] CI checks passing
 
 ## Related Issues
 
@@ -70,41 +74,15 @@
 Closes #
 Related to #
 
-## Screenshots/Logs
-
-<!-- If applicable, add screenshots or relevant logs -->
-
 ## Deployment Notes
 
 <!-- Any special considerations for deployment? -->
 
-- [ ] Requires environment variable changes
-- [ ] Requires contract migration
-- [ ] Requires testnet deployment first
-- [ ] Requires multi-sig approval
-- [ ] Breaking changes requiring coordination
-
-## Post-Deployment Checklist
-
-<!-- For changes that require post-deployment verification -->
-
-- [ ] Health checks pass
-- [ ] Monitoring alerts configured
-- [ ] Documentation updated
-- [ ] Team notified
-- [ ] Community announcement made (if applicable)
+- [ ] Requires chainspec update
+- [ ] Requires runtime upgrade
+- [ ] Requires validator coordination
+- [ ] Breaking changes requiring hard fork
 
 ## Additional Context
 
 <!-- Add any other context about the PR here -->
-
----
-
-**Reviewer Guidelines:**
-
-- Verify all checklist items are completed
-- Check for security vulnerabilities
-- Validate gas usage for contract changes
-- Ensure tests provide adequate coverage
-- Review documentation updates
-- Verify deployment plan is sound

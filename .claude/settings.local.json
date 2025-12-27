@@ -1,30 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nAdd generic bootstrap system for validator nodes\n\n- New bootstrap-validator.sh: Auto-generates all keys (network, AURA, GRANDPA, ASF)\n- New start-validator.sh: Simple one-command validator startup with auto-bootstrap\n- New add-bootnode.sh: Utility to update chain specs with bootnode addresses\n- Updated validator scripts with peer discovery and bootnode configuration\n- Added VALIDATOR_QUICKSTART.md with complete deployment guide\n\nThis replaces VM-specific scripts with a generic system that works for any\nnode operator. Keys are automatically saved to /var/lib/etrid/keys/ for\npersistence and backup. Supports bootnode-based peer discovery for network\nformation.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push:*)",
-      "Read(//Users/macbook/.ssh/**)",
-      "Bash(ssh-add:*)",
-      "Bash(cat:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run build:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clean:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(zip:*)",
-      "Bash(timeout 10 ssh:*)",
+      "Bash(git push:*)",
+      "Bash(git status:*)",
       "Bash(ssh:*)",
-      "Bash(cargo build:*)",
-      "Bash(tee:*)",
-      "Bash(xargs:*)",
-      "Bash(/usr/local/bin/npm --version)",
-      "Bash(/dev/null)",
-      "Bash(pkill:*)",
-      "Bash(grep:*)",
       "Bash(scp:*)",
-      "Bash(rsync:*)",
-      "Bash(git remote:*)",
-      "Read(//Users/macbook/Downloads/**)"
+      "Bash(rsync:*)"
     ],
     "deny": [],
     "ask": []
