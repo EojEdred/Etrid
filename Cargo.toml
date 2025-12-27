@@ -312,6 +312,7 @@ jsonrpsee = { version = "0.24.3", features = ["server", "client", "ws-client", "
 
 detrp2p = { path = "01-detr-p2p/detrp2p" }
 etrid-aecomms = { path = "01-detr-p2p/aecomms" }
+etrid-protocol = { path = "01-detr-p2p/etrid-protocol" }
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ WASM Runtime                                                                 │

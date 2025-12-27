@@ -3,7 +3,7 @@
 //! This module bridges DETR P2P networking with Substrate's block sync
 //! and provides message handling for distributed consensus.
 
-use codec::{Decode, Encode};
+use sp_runtime::codec::{Decode, Encode};
 use detrp2p::{P2PNetwork, Message, PeerId};
 use etrid_protocol::{
     BlockAnnounceMessage,
@@ -21,7 +21,7 @@ use std::time::Duration;
 
 use crate::service::FullClient;
 
-type Block = <FullClient as BlockBackend>::Block;
+type Block = link_pbc_runtime::opaque::Block;
 
 /// P2P Bridge manages the interaction between DETR P2P and Substrate
 pub struct P2PBridge {

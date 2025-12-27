@@ -79,6 +79,7 @@ link-pbc-runtime = { path = "../../../pbc-chains/link-pbc/runtime" }
 # DETR P2P Networking
 detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
+etrid-protocol = { workspace = true }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }

@@ -76,6 +76,7 @@ cumulus-relay-chain-interface = { git = "https://github.com/paritytech/polkadot-
 # DETR P2P Networking
 detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
+etrid-protocol = { workspace = true }
 
 # TRX-PBC Runtime
 trx-pbc-runtime = { path = "../../../pbc-chains/trx-pbc/runtime" }

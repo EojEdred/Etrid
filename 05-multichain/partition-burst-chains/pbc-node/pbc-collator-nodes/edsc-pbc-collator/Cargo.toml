@@ -79,6 +79,7 @@ edsc-pbc-runtime = { path = "../../../pbc-chains/edsc-pbc/runtime" }
 # DETR P2P Integration
 detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
+etrid-protocol = { workspace = true }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }

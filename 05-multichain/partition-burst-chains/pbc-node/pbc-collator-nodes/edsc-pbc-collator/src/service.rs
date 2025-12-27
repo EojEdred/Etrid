@@ -7,7 +7,7 @@
 //! - Proof-of-reserves tracking
 //! - DETR P2P networking with encryption and auto-discovery
 
-use codec::{Decode, Encode};
+use sp_runtime::codec::{Decode, Encode};
 use futures::FutureExt;
 use sc_client_api::{Backend, BlockBackend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};

@@ -78,6 +78,7 @@ sc-usdt-pbc-runtime = { path = "../../../pbc-chains/sc-usdt-pbc/runtime" }
 # DETR P2P Networking
 detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
+etrid-protocol = { workspace = true }
 hex = "0.4"
 
 [build-dependencies]
