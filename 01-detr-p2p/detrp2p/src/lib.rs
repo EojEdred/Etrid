@@ -7,11 +7,21 @@ use std::collections::{HashMap, VecDeque, HashSet};
 use std::cmp::Ordering;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 use tokio::sync::{Mutex, RwLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{Duration, Instant, sleep};
 use serde::{Serialize, Deserialize};
+use sha2::{Digest, Sha256};
+use etrid_protocol::{
+    BlockAnnounceMessage,
+    BlockRequestMessage,
+    BlockResponseMessage,
+    StatusRequestMessage,
+    StatusResponseMessage,
+    BlockSyncMessage,
+};
 
 // Use Etrid's own aecomms for proper X25519 + ChaCha20-Poly1305 encryption
 use etrid_aecomms::CipherSession;
@@ -268,12 +278,159 @@ pub struct PeerAddr {
     pub address: SocketAddr,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct PowSettings {
+    pub difficulty: u8,
+    pub max_nonce: u64,
+}
+
+impl PowSettings {
+    pub fn from_env() -> Self {
+        let difficulty = std::env::var("DETR_P2P_POW_DIFFICULTY")
+            .ok()
+            .and_then(|val| val.parse::<u8>().ok())
+            .unwrap_or(0);
+        let max_nonce = std::env::var("DETR_P2P_POW_MAX_NONCE")
+            .ok()
+            .and_then(|val| val.parse::<u64>().ok())
+            .unwrap_or(5_000_000);
+
+        Self {
+            difficulty,
+            max_nonce: max_nonce.max(1),
+        }
+    }
+
+    pub fn enabled(&self) -> bool {
+        self.difficulty > 0
+    }
+
+    pub fn compute_nonce(&self, peer: &PeerAddr) -> Option<u64> {
+        if !self.enabled() {
+            return None;
+        }
+
+        for nonce in 0..self.max_nonce {
+            let hash = pow_hash(peer, nonce);
+            if meets_difficulty(&hash, self.difficulty) {
+                return Some(nonce);
+            }
+        }
+
+        None
+    }
+
+    pub fn verify_nonce(&self, peer: &PeerAddr, nonce: u64) -> bool {
+        if !self.enabled() {
+            return true;
+        }
+        let hash = pow_hash(peer, nonce);
+        meets_difficulty(&hash, self.difficulty)
+    }
+}
+
+fn pow_hash(peer: &PeerAddr, nonce: u64) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(peer.id.as_bytes());
+    match peer.address.ip() {
+        std::net::IpAddr::V4(ip) => hasher.update(ip.octets()),
+        std::net::IpAddr::V6(ip) => hasher.update(ip.octets()),
+    }
+    hasher.update(peer.address.port().to_be_bytes());
+    hasher.update(nonce.to_be_bytes());
+    let digest = hasher.finalize();
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&digest);
+    out
+}
+
+fn meets_difficulty(hash: &[u8; 32], difficulty: u8) -> bool {
+    if difficulty == 0 {
+        return true;
+    }
+
+    let mut remaining = difficulty;
+    for byte in hash {
+        if remaining == 0 {
+            return true;
+        }
+        let leading = byte.leading_zeros() as u8;
+        if leading >= remaining {
+            return true;
+        }
+        if leading < 8 {
+            return false;
+        }
+        remaining = remaining.saturating_sub(8);
+    }
+
+    remaining == 0
+}
+
+#[derive(Debug, Default)]
+pub struct NetworkMetrics {
+    messages_sent: AtomicU64,
+    messages_received: AtomicU64,
+    bytes_sent: AtomicU64,
+    bytes_received: AtomicU64,
+    invalid_messages: AtomicU64,
+    decode_failures: AtomicU64,
+    oversized_messages: AtomicU64,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct NetworkMetricsSnapshot {
+    pub messages_sent: u64,
+    pub messages_received: u64,
+    pub bytes_sent: u64,
+    pub bytes_received: u64,
+    pub invalid_messages: u64,
+    pub decode_failures: u64,
+    pub oversized_messages: u64,
+}
+
+impl NetworkMetrics {
+    pub fn record_send(&self, bytes: usize) {
+        self.messages_sent.fetch_add(1, AtomicOrdering::Relaxed);
+        self.bytes_sent.fetch_add(bytes as u64, AtomicOrdering::Relaxed);
+    }
+
+    pub fn record_receive(&self, bytes: usize) {
+        self.messages_received.fetch_add(1, AtomicOrdering::Relaxed);
+        self.bytes_received.fetch_add(bytes as u64, AtomicOrdering::Relaxed);
+    }
+
+    pub fn record_invalid(&self) {
+        self.invalid_messages.fetch_add(1, AtomicOrdering::Relaxed);
+    }
+
+    pub fn record_decode_failure(&self) {
+        self.decode_failures.fetch_add(1, AtomicOrdering::Relaxed);
+    }
+
+    pub fn record_oversized(&self) {
+        self.oversized_messages.fetch_add(1, AtomicOrdering::Relaxed);
+    }
+
+    pub fn snapshot(&self) -> NetworkMetricsSnapshot {
+        NetworkMetricsSnapshot {
+            messages_sent: self.messages_sent.load(AtomicOrdering::Relaxed),
+            messages_received: self.messages_received.load(AtomicOrdering::Relaxed),
+            bytes_sent: self.bytes_sent.load(AtomicOrdering::Relaxed),
+            bytes_received: self.bytes_received.load(AtomicOrdering::Relaxed),
+            invalid_messages: self.invalid_messages.load(AtomicOrdering::Relaxed),
+            decode_failures: self.decode_failures.load(AtomicOrdering::Relaxed),
+            oversized_messages: self.oversized_messages.load(AtomicOrdering::Relaxed),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Message {
     Ping { nonce: u64 },
     Pong { nonce: u64 },
     /// Announce our listening address to a peer (sent on connect)
-    Announce { peer: PeerAddr },
+    Announce { peer: PeerAddr, pow_nonce: Option<u64> },
     FindNode { target: PeerId },
     FindNodeReply { peers: Vec<PeerAddr> },
     Store { key: [u8; 32], value: Vec<u8> },
@@ -322,6 +479,158 @@ impl Message {
 
     pub fn decode(data: &[u8]) -> Result<Self, String> {
         bincode::deserialize(data).map_err(|e| format!("Decode failed: {}", e))
+    }
+
+    pub fn as_block_sync(&self) -> Option<BlockSyncMessage> {
+        match self {
+            Message::BlockAnnounce {
+                block_number,
+                block_hash,
+                parent_hash,
+                encoded_block,
+            } => Some(BlockSyncMessage::BlockAnnounce(BlockAnnounceMessage {
+                block_number: *block_number,
+                block_hash: *block_hash,
+                parent_hash: *parent_hash,
+                encoded_block: encoded_block.clone(),
+            })),
+            Message::BlockRequest {
+                request_id,
+                by_number,
+                by_hash,
+            } => Some(BlockSyncMessage::BlockRequest(BlockRequestMessage {
+                request_id: *request_id,
+                by_number: *by_number,
+                by_hash: *by_hash,
+            })),
+            Message::BlockResponse {
+                request_id,
+                block_number,
+                block_hash,
+                parent_hash,
+                encoded_block,
+            } => Some(BlockSyncMessage::BlockResponse(BlockResponseMessage {
+                request_id: *request_id,
+                block_number: *block_number,
+                block_hash: *block_hash,
+                parent_hash: *parent_hash,
+                encoded_block: encoded_block.clone(),
+            })),
+            Message::StatusRequest { request_id } => {
+                Some(BlockSyncMessage::StatusRequest(StatusRequestMessage {
+                    request_id: *request_id,
+                }))
+            }
+            Message::StatusResponse {
+                request_id,
+                best_number,
+                best_hash,
+                genesis_hash,
+            } => Some(BlockSyncMessage::StatusResponse(StatusResponseMessage {
+                request_id: *request_id,
+                best_number: *best_number,
+                best_hash: *best_hash,
+                genesis_hash: *genesis_hash,
+            })),
+            _ => None,
+        }
+    }
+}
+
+impl From<BlockAnnounceMessage> for Message {
+    fn from(msg: BlockAnnounceMessage) -> Self {
+        Message::BlockAnnounce {
+            block_number: msg.block_number,
+            block_hash: msg.block_hash,
+            parent_hash: msg.parent_hash,
+            encoded_block: msg.encoded_block,
+        }
+    }
+}
+
+impl From<BlockRequestMessage> for Message {
+    fn from(msg: BlockRequestMessage) -> Self {
+        Message::BlockRequest {
+            request_id: msg.request_id,
+            by_number: msg.by_number,
+            by_hash: msg.by_hash,
+        }
+    }
+}
+
+impl From<BlockResponseMessage> for Message {
+    fn from(msg: BlockResponseMessage) -> Self {
+        Message::BlockResponse {
+            request_id: msg.request_id,
+            block_number: msg.block_number,
+            block_hash: msg.block_hash,
+            parent_hash: msg.parent_hash,
+            encoded_block: msg.encoded_block,
+        }
+    }
+}
+
+impl From<StatusRequestMessage> for Message {
+    fn from(msg: StatusRequestMessage) -> Self {
+        Message::StatusRequest {
+            request_id: msg.request_id,
+        }
+    }
+}
+
+impl From<StatusResponseMessage> for Message {
+    fn from(msg: StatusResponseMessage) -> Self {
+        Message::StatusResponse {
+            request_id: msg.request_id,
+            best_number: msg.best_number,
+            best_hash: msg.best_hash,
+            genesis_hash: msg.genesis_hash,
+        }
+    }
+}
+
+impl From<BlockSyncMessage> for Message {
+    fn from(msg: BlockSyncMessage) -> Self {
+        match msg {
+            BlockSyncMessage::BlockAnnounce(inner) => inner.into(),
+            BlockSyncMessage::BlockRequest(inner) => inner.into(),
+            BlockSyncMessage::BlockResponse(inner) => inner.into(),
+            BlockSyncMessage::StatusRequest(inner) => inner.into(),
+            BlockSyncMessage::StatusResponse(inner) => inner.into(),
+        }
+    }
+}
+
+fn validate_message(msg: &Message, pow_settings: PowSettings) -> Result<(), String> {
+    match msg {
+        Message::Announce { peer, pow_nonce } => {
+            if pow_settings.enabled() {
+                let nonce = pow_nonce.ok_or_else(|| "Missing PoW nonce".to_string())?;
+                if !pow_settings.verify_nonce(peer, nonce) {
+                    return Err("Invalid PoW nonce".to_string());
+                }
+            }
+            Ok(())
+        }
+        Message::BlockRequest { by_number, by_hash, .. } => {
+            if by_number.is_none() && by_hash.is_none() {
+                return Err("BlockRequest missing hash or number".to_string());
+            }
+            Ok(())
+        }
+        Message::BlockResponse { encoded_block, .. } => {
+            if encoded_block.is_empty() {
+                return Err("BlockResponse missing encoded block".to_string());
+            }
+            Ok(())
+        }
+        Message::BlockAnnounce { encoded_block, .. } => {
+            if encoded_block.is_empty() {
+                return Err("BlockAnnounce missing encoded block".to_string());
+            }
+            Ok(())
+        }
+        _ => Ok(()),
     }
 }
 
@@ -1144,6 +1453,7 @@ pub struct Connection {
     pub last_activity: Instant,
 }
 
+#[derive(Clone)]
 pub struct ConnectionManager {
     active_connections: Arc<RwLock<HashMap<PeerId, Connection>>>,
     active_streams: Arc<RwLock<HashMap<PeerId, Arc<Mutex<tokio::net::tcp::OwnedWriteHalf>>>>>,
@@ -1153,6 +1463,7 @@ pub struct ConnectionManager {
     idle_timeout: Duration,
     reputation: Arc<ReputationManager>,
     encryption: Arc<EncryptionManager>,
+    metrics: Arc<NetworkMetrics>,
     /// Message router for bidirectional communication on outgoing connections
     message_router: Arc<RwLock<Option<Arc<MessageRouter>>>>,
 }
@@ -1172,8 +1483,13 @@ impl ConnectionManager {
             idle_timeout,
             reputation: Arc::new(ReputationManager::new()),
             encryption: Arc::new(EncryptionManager::new()),
+            metrics: Arc::new(NetworkMetrics::default()),
             message_router: Arc::new(RwLock::new(None)),
         }
+    }
+
+    pub fn metrics_snapshot(&self) -> NetworkMetricsSnapshot {
+        self.metrics.snapshot()
     }
 
     /// Set the message router for handling responses on outgoing connections
@@ -1223,7 +1539,8 @@ impl ConnectionManager {
                     // Previous V3 fix discarded all data - this broke bidirectional communication.
                     // Now we properly decode and route messages from the remote peer.
                     let msg_router = self.message_router.read().await.clone();
-                    let conn_manager_clone = self.active_connections.clone();
+                    let conn_manager_clone = self.clone();
+                    let pow_settings = PowSettings::from_env();
                     let peer_id = peer.id;
 
                     tokio::spawn(async move {
@@ -1246,6 +1563,14 @@ impl ConnectionManager {
                             // Validate message size (prevent DoS)
                             if len > 10_000_000 { // 10MB limit
                                 log::warn!("⚠️ Oversized message from outgoing {:?}: {} bytes", peer_id, len);
+                                conn_manager_clone.metrics.record_oversized();
+                                conn_manager_clone
+                                    .reputation
+                                    .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                    .await;
+                                if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                    conn_manager_clone.disconnect(peer_id).await;
+                                }
                                 break;
                             }
 
@@ -1258,7 +1583,7 @@ impl ConnectionManager {
 
                             // Update last activity
                             {
-                                let mut conns = conn_manager_clone.write().await;
+                                let mut conns = conn_manager_clone.active_connections.write().await;
                                 if let Some(conn) = conns.get_mut(&peer_id) {
                                     conn.last_activity = Instant::now();
                                 }
@@ -1267,6 +1592,23 @@ impl ConnectionManager {
                             // Decode and route message
                             match Message::decode(&data) {
                                 Ok(msg) => {
+                                    if let Err(err) = validate_message(&msg, pow_settings) {
+                                        log::warn!("Invalid message from outgoing {:?}: {}", peer_id, err);
+                                        conn_manager_clone.metrics.record_invalid();
+                                        conn_manager_clone
+                                            .reputation
+                                            .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                            .await;
+                                        if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                            conn_manager_clone.disconnect(peer_id).await;
+                                        }
+                                        continue;
+                                    }
+                                    conn_manager_clone.metrics.record_receive(len);
+                                    conn_manager_clone
+                                        .reputation
+                                        .record_event(peer_id, ReputationEvent::ValidMessage)
+                                        .await;
                                     match &msg {
                                         Message::Vote { .. } => {
                                             log::info!("📥 [OUTGOING] Received VOTE from {:?}", peer_id);
@@ -1289,6 +1631,15 @@ impl ConnectionManager {
                                 }
                                 Err(e) => {
                                     log::warn!("Failed to decode message from outgoing {:?}: {}", peer_id, e);
+                                    conn_manager_clone.metrics.record_decode_failure();
+                                    conn_manager_clone.metrics.record_invalid();
+                                    conn_manager_clone
+                                        .reputation
+                                        .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                        .await;
+                                    if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                        conn_manager_clone.disconnect(peer_id).await;
+                                    }
                                 }
                             }
                         }
@@ -1447,6 +1798,8 @@ impl ConnectionManager {
             .await
             .map_err(|e| format!("Failed to flush stream: {}", e))?;
 
+        self.metrics.record_send(data.len());
+
         // Update last activity
         let mut conns = self.active_connections.write().await;
         if let Some(conn) = conns.get_mut(&peer_id) {
@@ -1522,6 +1875,8 @@ pub struct P2PNetwork {
     local_address: SocketAddr,
     /// Our public-facing peer info (ID + listening address) for announcing to others
     local_peer_info: PeerAddr,
+    announce_pow_nonce: Option<u64>,
+    pow_settings: PowSettings,
     kademlia: Arc<KademliaNetwork>,
     connection_manager: Arc<ConnectionManager>,
     message_router: Arc<MessageRouter>,
@@ -1569,10 +1924,32 @@ impl P2PNetwork {
             address: announce_addr,
         };
 
+        let pow_settings = PowSettings::from_env();
+        let announce_pow_nonce = pow_settings.compute_nonce(&local_peer_info);
+        if pow_settings.enabled() {
+            match announce_pow_nonce {
+                Some(_) => {
+                    log::info!(
+                        "🧩 DETR P2P PoW enabled (difficulty: {})",
+                        pow_settings.difficulty
+                    );
+                }
+                None => {
+                    log::warn!(
+                        "⚠️ DETR P2P PoW enabled but nonce not found (difficulty: {}, max_nonce: {})",
+                        pow_settings.difficulty,
+                        pow_settings.max_nonce
+                    );
+                }
+            }
+        }
+
         Self {
             local_node_id,
             local_address,
             local_peer_info,
+            announce_pow_nonce,
+            pow_settings,
             kademlia,
             connection_manager,
             message_router,
@@ -1588,6 +1965,10 @@ impl P2PNetwork {
     /// Get our full peer info (ID + listening address)
     pub fn local_peer_info(&self) -> &PeerAddr {
         &self.local_peer_info
+    }
+
+    pub fn metrics_snapshot(&self) -> NetworkMetricsSnapshot {
+        self.connection_manager.metrics_snapshot()
     }
 
     pub async fn start(&self) -> Result<(), String> {
@@ -1622,9 +2003,13 @@ impl P2PNetwork {
         log::info!("🔍 Initiating Kademlia peer discovery...");
         let local_id = self.local_node_id;
         let local_peer_info = self.local_peer_info.clone();
+        let announce_pow_nonce = self.announce_pow_nonce;
 
         // First announce ourselves so they know our listening address
-        let announce_msg = Message::Announce { peer: local_peer_info.clone() };
+        let announce_msg = Message::Announce {
+            peer: local_peer_info.clone(),
+            pow_nonce: announce_pow_nonce,
+        };
         let announce_encoded = announce_msg.encode().map_err(|e| format!("Encode failed: {}", e))?;
 
         // Then send FindNode for our own ID
@@ -1668,6 +2053,8 @@ impl P2PNetwork {
         let _msg_router = self.message_router.clone();
         let _local_node_id = self.local_node_id;
         let _local_peer_info = self.local_peer_info.clone();
+        let _announce_pow_nonce = self.announce_pow_nonce;
+        let _pow_settings = self.pow_settings;
 
         // Spawn TCP listener with bidirectional message handling
         tokio::spawn(async move {
@@ -1718,6 +2105,8 @@ impl P2PNetwork {
                         let kademlia_clone = _kademlia.clone();
                         let local_node_id_clone = _local_node_id;
                         let local_peer_info_clone = _local_peer_info.clone();
+                        let announce_pow_nonce_clone = _announce_pow_nonce;
+                        let pow_settings_clone = _pow_settings;
 
                         tokio::spawn(async move {
                             let mut read_stream = read_half;
@@ -1739,6 +2128,14 @@ impl P2PNetwork {
                                 // Validate message size (prevent DoS)
                                 if len > 10_000_000 { // 10MB limit
                                     log::warn!("⚠️ Oversized message from {:?}: {} bytes", peer_id, len);
+                                    conn_manager_clone.metrics.record_oversized();
+                                    conn_manager_clone
+                                        .reputation
+                                        .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                        .await;
+                                    if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                        conn_manager_clone.disconnect(peer_id).await;
+                                    }
                                     break;
                                 }
 
@@ -1760,6 +2157,23 @@ impl P2PNetwork {
                                 // Decode message
                                 match Message::decode(&data) {
                                     Ok(msg) => {
+                                        if let Err(err) = validate_message(&msg, pow_settings_clone) {
+                                            log::warn!("Invalid message from {:?}: {}", peer_id, err);
+                                            conn_manager_clone.metrics.record_invalid();
+                                            conn_manager_clone
+                                                .reputation
+                                                .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                                .await;
+                                            if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                                conn_manager_clone.disconnect(peer_id).await;
+                                            }
+                                            continue;
+                                        }
+                                        conn_manager_clone.metrics.record_receive(len);
+                                        conn_manager_clone
+                                            .reputation
+                                            .record_event(peer_id, ReputationEvent::ValidMessage)
+                                            .await;
                                         // V5 DIAGNOSTIC: Log ALL received messages at INFO level
                                         match &msg {
                                             Message::Vote { .. } => {
@@ -1772,7 +2186,7 @@ impl P2PNetwork {
                                                 // CRITICAL: Route to inbox for application layer processing
                                                 msg_router_clone.route_message(peer_id, msg.clone()).await;
                                             }
-                                            Message::Announce { peer } => {
+                                            Message::Announce { peer, pow_nonce: _ } => {
                                                 log::info!("📢 Received Announce from {:?} - listening at {:?}", peer.id, peer.address);
 
                                                 // CRITICAL V5 FIX: Remap socket-derived PeerId to real cryptographic PeerId
@@ -1818,7 +2232,10 @@ impl P2PNetwork {
                                                                 log::info!("    ✅ Connected to {:?}", peer.address);
 
                                                                 // First announce ourselves so they know our listening address
-                                                                let announce_msg = Message::Announce { peer: local_peer_info_clone.clone() };
+                                                                let announce_msg = Message::Announce {
+                                                                    peer: local_peer_info_clone.clone(),
+                                                                    pow_nonce: announce_pow_nonce_clone,
+                                                                };
                                                                 if let Ok(encoded) = announce_msg.encode() {
                                                                     match conn_manager_clone.send_message(peer.id, &encoded).await {
                                                                         Ok(()) => log::debug!("    📢 Announced ourselves to {:?}", peer.address),
@@ -1866,6 +2283,15 @@ impl P2PNetwork {
                                     }
                                     Err(e) => {
                                         log::warn!("Failed to decode message from {:?}: {}", peer_id, e);
+                                        conn_manager_clone.metrics.record_decode_failure();
+                                        conn_manager_clone.metrics.record_invalid();
+                                        conn_manager_clone
+                                            .reputation
+                                            .record_event(peer_id, ReputationEvent::InvalidMessage)
+                                            .await;
+                                        if !conn_manager_clone.reputation.should_connect(peer_id).await {
+                                            conn_manager_clone.disconnect(peer_id).await;
+                                        }
                                     }
                                 }
                             }
@@ -2073,6 +2499,7 @@ impl P2PNetwork {
         let conn_manager = self.connection_manager.clone();
         let local_peer_info = self.local_peer_info.clone();
         let local_node_id = self.local_node_id;
+        let announce_pow_nonce = self.announce_pow_nonce;
 
         tokio::spawn(async move {
             // Initial delay to let network stabilize
@@ -2121,7 +2548,10 @@ impl P2PNetwork {
                                 reconnected += 1;
 
                                 // Send Announce to re-establish identity
-                                let announce_msg = Message::Announce { peer: local_peer_info.clone() };
+                                let announce_msg = Message::Announce {
+                                    peer: local_peer_info.clone(),
+                                    pow_nonce: announce_pow_nonce,
+                                };
                                 if let Ok(encoded) = announce_msg.encode() {
                                     let _ = conn_manager.send_message(peer.id, &encoded).await;
                                 }

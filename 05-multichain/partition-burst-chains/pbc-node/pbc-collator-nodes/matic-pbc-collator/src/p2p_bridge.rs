@@ -3,13 +3,25 @@
 //! This module bridges DETR P2P networking with Substrate's block sync
 //! and provides message handling for distributed consensus.
 
+use codec::{Decode, Encode};
 use detrp2p::{P2PNetwork, Message, PeerId};
-use sc_client_api::HeaderBackend;
-use sp_runtime::traits::Header as HeaderT;
+use etrid_protocol::{
+    BlockAnnounceMessage,
+    BlockRequestMessage,
+    BlockResponseMessage,
+    BlockSyncMessage,
+    StatusRequestMessage,
+    StatusResponseMessage,
+};
+use sc_client_api::{BlockBackend, HeaderBackend};
+use sp_runtime::generic::SignedBlock;
+use sp_runtime::traits::{Header as HeaderT, NumberFor, SaturatedConversion, Zero};
 use std::sync::Arc;
 use std::time::Duration;
 
 use crate::service::FullClient;
+
+type Block = <FullClient as BlockBackend>::Block;
 
 /// P2P Bridge manages the interaction between DETR P2P and Substrate
 pub struct P2PBridge {
@@ -78,16 +90,30 @@ impl P2PBridge {
                             let parent_hash_bytes: [u8; 32] = parent_hash.as_ref().try_into()
                                 .unwrap_or([0u8; 32]);
 
-                            // Get encoded block (in production, fetch from client)
-                            let encoded_block = Vec::new(); // Simplified for now
+                            let encoded_block = match client.block(best_hash) {
+                                Ok(Some(signed_block)) => signed_block.encode(),
+                                Ok(None) => {
+                                    log::warn!("⚠️ Block #{} not found for announce", block_number);
+                                    Vec::new()
+                                }
+                                Err(e) => {
+                                    log::error!("❌ Error fetching block #{}: {:?}", block_number, e);
+                                    Vec::new()
+                                }
+                            };
 
-                            // Create block announcement message
-                            let message = Message::BlockAnnounce {
+                            if encoded_block.is_empty() {
+                                log::warn!("⚠️ Skipping BlockAnnounce #{} (empty block)", block_number);
+                                continue;
+                            }
+
+                            let message = BlockAnnounceMessage {
                                 block_number,
                                 block_hash: block_hash_bytes,
                                 parent_hash: parent_hash_bytes,
                                 encoded_block,
                             };
+                            let message: Message = message.into();
 
                             // Broadcast to all connected peers
                             match network.broadcast(message).await {
@@ -150,54 +176,108 @@ impl P2PBridge {
         peer_id: PeerId,
         message: Message,
     ) {
+        if let Some(block_sync) = message.as_block_sync() {
+            match block_sync {
+                BlockSyncMessage::BlockAnnounce(msg) => {
+                    log::info!(
+                        "📥 Received block announcement #{} from peer {:?}",
+                        msg.block_number,
+                        peer_id
+                    );
+                    log::debug!("  Block hash: {}", hex::encode(msg.block_hash));
+                    log::debug!("  Parent hash: {}", hex::encode(msg.parent_hash));
+
+                    match SignedBlock::<Block>::decode(&mut &msg.encoded_block[..]) {
+                        Ok(signed_block) => {
+                            let decoded_hash = signed_block.block.header.hash();
+                            log::debug!(
+                                "  Decoded block #{} (hash: {})",
+                                msg.block_number,
+                                hex::encode(decoded_hash.as_ref())
+                            );
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "⚠️ Failed to decode BlockAnnounce #{} from {:?}: {:?}",
+                                msg.block_number,
+                                peer_id,
+                                e
+                            );
+                        }
+                    }
+                }
+                BlockSyncMessage::BlockRequest(req) => {
+                    log::info!(
+                        "📥 Received block request (id: {}) from peer {:?}",
+                        req.request_id,
+                        peer_id
+                    );
+                    Self::handle_block_request(network, client, peer_id, req).await;
+                }
+                BlockSyncMessage::BlockResponse(resp) => {
+                    log::info!(
+                        "📥 Received block response #{} from peer {:?}",
+                        resp.block_number,
+                        peer_id
+                    );
+                    match SignedBlock::<Block>::decode(&mut &resp.encoded_block[..]) {
+                        Ok(signed_block) => {
+                            let decoded_hash = signed_block.block.header.hash();
+                            if decoded_hash.as_ref() != resp.block_hash.as_ref() {
+                                log::warn!(
+                                    "⚠️ BlockResponse hash mismatch (expected {}, got {})",
+                                    hex::encode(resp.block_hash),
+                                    hex::encode(decoded_hash.as_ref())
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "⚠️ Failed to decode BlockResponse #{} from {:?}: {:?}",
+                                resp.block_number,
+                                peer_id,
+                                e
+                            );
+                        }
+                    }
+                }
+                BlockSyncMessage::StatusRequest(req) => {
+                    let info = client.info();
+                    let best_number: u64 = info.best_number.saturated_into();
+                    let best_hash = info.best_hash;
+                    let genesis_hash = client.hash(Zero::zero()).ok().flatten().unwrap_or(best_hash);
+                    let mut best_hash_bytes = [0u8; 32];
+                    best_hash_bytes.copy_from_slice(best_hash.as_ref());
+                    let mut genesis_bytes = [0u8; 32];
+                    genesis_bytes.copy_from_slice(genesis_hash.as_ref());
+
+                    let response = StatusResponseMessage {
+                        request_id: req.request_id,
+                        best_number,
+                        best_hash: best_hash_bytes,
+                        genesis_hash: genesis_bytes,
+                    };
+                    let response: Message = response.into();
+                    if let Err(e) = network.unicast(peer_id, response).await {
+                        log::warn!("⚠️ Failed to send status response: {}", e);
+                    }
+                }
+                BlockSyncMessage::StatusResponse(resp) => {
+                    let our_best: u64 = client.info().best_number.saturated_into();
+                    if resp.best_number > our_best + 2 {
+                        log::info!(
+                            "Peer {:?} ahead (their best #{}, ours #{})",
+                            peer_id,
+                            resp.best_number,
+                            our_best
+                        );
+                    }
+                }
+            }
+            return;
+        }
+
         match message {
-            Message::BlockAnnounce {
-                block_number,
-                block_hash,
-                parent_hash,
-                encoded_block: _,
-            } => {
-                log::info!(
-                    "📥 Received block announcement #{} from peer {:?}",
-                    block_number,
-                    peer_id
-                );
-
-                // In production: validate and import the block
-                // For now, just log it
-                log::debug!(
-                    "  Block hash: {}",
-                    hex::encode(block_hash)
-                );
-                log::debug!(
-                    "  Parent hash: {}",
-                    hex::encode(parent_hash)
-                );
-            }
-
-            Message::BlockRequest {
-                request_id,
-                by_number,
-                by_hash,
-            } => {
-                log::info!(
-                    "📥 Received block request (id: {}) from peer {:?}",
-                    request_id,
-                    peer_id
-                );
-
-                // Handle block request
-                Self::handle_block_request(
-                    network,
-                    client,
-                    peer_id,
-                    request_id,
-                    by_number,
-                    by_hash,
-                )
-                .await;
-            }
-
             Message::Vote { data } => {
                 log::info!(
                     "🗳️ Received vote message from peer {:?} ({} bytes)",
@@ -228,7 +308,7 @@ impl P2PBridge {
                 // Pong received, connection is alive
             }
 
-            Message::Announce { peer } => {
+            Message::Announce { peer, pow_nonce: _ } => {
                 log::info!(
                     "📢 Received peer announcement from {:?}: {:?}",
                     peer_id,
@@ -253,14 +333,13 @@ impl P2PBridge {
         network: &Arc<P2PNetwork>,
         client: &Arc<FullClient>,
         peer_id: PeerId,
-        request_id: u64,
-        by_number: Option<u64>,
-        by_hash: Option<[u8; 32]>,
+        request: BlockRequestMessage,
     ) {
         // Try to fetch the block
-        let block_result = if let Some(number) = by_number {
+        let block_result = if let Some(number) = request.by_number {
             // Fetch by number
-            match client.hash(number as u32) {
+            let number_nf: NumberFor<Block> = number.saturated_into();
+            match client.hash(number_nf) {
                 Ok(Some(hash)) => {
                     log::debug!("Found block #{} with hash {:?}", number, hash);
                     Some((number, hash))
@@ -274,12 +353,12 @@ impl P2PBridge {
                     None
                 }
             }
-        } else if let Some(hash_bytes) = by_hash {
+        } else if let Some(hash_bytes) = request.by_hash {
             // Fetch by hash
             let hash = sp_core::H256::from_slice(&hash_bytes);
             match client.header(hash) {
                 Ok(Some(header)) => {
-                    let number = *header.number() as u64;
+                    let number: u64 = (*header.number()).saturated_into();
                     log::debug!("Found block with hash {:?} at #{}", hash, number);
                     Some((number, hash))
                 }
@@ -309,16 +388,31 @@ impl P2PBridge {
                 })
                 .unwrap_or([0u8; 32]);
 
-            // In production: encode the full block
-            let encoded_block = Vec::new();
+            let encoded_block = match client.block(hash) {
+                Ok(Some(signed_block)) => signed_block.encode(),
+                Ok(None) => {
+                    log::warn!("Block #{} not found for response", number);
+                    Vec::new()
+                }
+                Err(e) => {
+                    log::error!("Error fetching block #{}: {:?}", number, e);
+                    Vec::new()
+                }
+            };
 
-            let response = Message::BlockResponse {
-                request_id,
+            if encoded_block.is_empty() {
+                log::warn!("Skipping BlockResponse #{} (empty block)", number);
+                return;
+            }
+
+            let response = BlockResponseMessage {
+                request_id: request.request_id,
                 block_number: number,
                 block_hash: hash_bytes,
                 parent_hash,
                 encoded_block,
             };
+            let response: Message = response.into();
 
             // Send response to peer using unicast
             if let Err(e) = network.unicast(peer_id, response).await {

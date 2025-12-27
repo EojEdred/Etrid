@@ -4,7 +4,6 @@
 //! and protocol validation logic.
 
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 // Gadget Network Bridge module (integration with finality gadget)
 #[path = "../gadget-network-bridge/src/lib.rs"]
@@ -25,6 +24,11 @@ pub enum MessageType {
     Certificate = 13,
     StateSync = 14,
     HeartBeat = 15,
+    BlockAnnounce = 16,
+    BlockRequest = 17,
+    BlockResponse = 18,
+    StatusRequest = 19,
+    StatusResponse = 20,
     Error = 255,
 }
 
@@ -40,6 +44,11 @@ impl MessageType {
             13 => Some(MessageType::Certificate),
             14 => Some(MessageType::StateSync),
             15 => Some(MessageType::HeartBeat),
+            16 => Some(MessageType::BlockAnnounce),
+            17 => Some(MessageType::BlockRequest),
+            18 => Some(MessageType::BlockResponse),
+            19 => Some(MessageType::StatusRequest),
+            20 => Some(MessageType::StatusResponse),
             255 => Some(MessageType::Error),
             _ => None,
         }
@@ -313,6 +322,58 @@ impl StateSyncMessage {
     }
 }
 
+/// Block announcement message for P2P sync
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockAnnounceMessage {
+    pub block_number: u64,
+    pub block_hash: [u8; 32],
+    pub parent_hash: [u8; 32],
+    pub encoded_block: Vec<u8>,
+}
+
+/// Block request message for P2P sync
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockRequestMessage {
+    pub request_id: u64,
+    pub by_number: Option<u64>,
+    pub by_hash: Option<[u8; 32]>,
+}
+
+/// Block response message for P2P sync
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlockResponseMessage {
+    pub request_id: u64,
+    pub block_number: u64,
+    pub block_hash: [u8; 32],
+    pub parent_hash: [u8; 32],
+    pub encoded_block: Vec<u8>,
+}
+
+/// Status request message for P2P sync
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatusRequestMessage {
+    pub request_id: u64,
+}
+
+/// Status response message for P2P sync
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatusResponseMessage {
+    pub request_id: u64,
+    pub best_number: u64,
+    pub best_hash: [u8; 32],
+    pub genesis_hash: [u8; 32],
+}
+
+/// Block sync message envelope
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum BlockSyncMessage {
+    BlockAnnounce(BlockAnnounceMessage),
+    BlockRequest(BlockRequestMessage),
+    BlockResponse(BlockResponseMessage),
+    StatusRequest(StatusRequestMessage),
+    StatusResponse(StatusResponseMessage),
+}
+
 /// Heartbeat message
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HeartBeatMessage {
@@ -390,6 +451,7 @@ mod tests {
     #[test]
     fn test_message_type_conversion() {
         assert_eq!(MessageType::from_u8(0), Some(MessageType::Ping));
+        assert_eq!(MessageType::from_u8(16), Some(MessageType::BlockAnnounce));
         assert_eq!(MessageType::from_u8(255), Some(MessageType::Error));
         assert_eq!(MessageType::from_u8(99), None);
     }

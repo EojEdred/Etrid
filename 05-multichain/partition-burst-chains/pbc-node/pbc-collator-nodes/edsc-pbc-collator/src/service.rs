@@ -7,17 +7,27 @@
 //! - Proof-of-reserves tracking
 //! - DETR P2P networking with encryption and auto-discovery
 
+use codec::{Decode, Encode};
 use futures::FutureExt;
-use sc_client_api::{Backend, HeaderBackend};
+use sc_client_api::{Backend, BlockBackend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
-use sp_runtime::traits::Header as HeaderT;
+use sp_runtime::generic::SignedBlock;
+use sp_runtime::traits::{Header as HeaderT, NumberFor, SaturatedConversion, Zero};
 use std::{marker::PhantomData, sync::Arc, time::Duration};
 
 use edsc_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
+use etrid_protocol::{
+    BlockAnnounceMessage,
+    BlockRequestMessage,
+    BlockResponseMessage,
+    BlockSyncMessage,
+    StatusRequestMessage,
+    StatusResponseMessage,
+};
 
 use crate::cli::Cli;
 use crate::p2p_config::{P2PConfig, parse_bootstrap_peer};
@@ -413,41 +423,163 @@ fn generate_node_id() -> detrp2p::PeerId {
 /// Process incoming P2P messages
 async fn process_p2p_messages(
     p2p_network: Arc<detrp2p::P2PNetwork>,
-    _client: Arc<FullClient>,
+    client: Arc<FullClient>,
 ) {
     log::info!("📨 P2P message processor started");
 
     loop {
         // Check for incoming messages
         if let Some((peer_id, message)) = p2p_network.receive_message().await {
+            if let Some(block_sync) = message.as_block_sync() {
+                match block_sync {
+                    BlockSyncMessage::BlockAnnounce(msg) => {
+                        log::info!(
+                            "📦 Received BlockAnnounce from {:?}: block #{} hash {:?}",
+                            peer_id,
+                            msg.block_number,
+                            hex::encode(&msg.block_hash)
+                        );
+                        match SignedBlock::<Block>::decode(&mut &msg.encoded_block[..]) {
+                            Ok(signed_block) => {
+                                let decoded_hash = signed_block.block.header.hash();
+                                log::debug!(
+                                    "  Decoded block #{} (hash: {})",
+                                    msg.block_number,
+                                    hex::encode(decoded_hash.as_ref())
+                                );
+                            }
+                            Err(e) => {
+                                log::warn!(
+                                    "⚠️ Failed to decode BlockAnnounce #{} from {:?}: {:?}",
+                                    msg.block_number,
+                                    peer_id,
+                                    e
+                                );
+                            }
+                        }
+                    }
+                    BlockSyncMessage::BlockRequest(req) => {
+                        log::info!(
+                            "📥 Received BlockRequest from {:?}: request_id={} by_number={:?} by_hash={:?}",
+                            peer_id,
+                            req.request_id,
+                            req.by_number,
+                            req.by_hash.map(|h| hex::encode(&h))
+                        );
+
+                        let block_result = if let Some(number) = req.by_number {
+                            let number_nf: NumberFor<Block> = number.saturated_into();
+                            match client.hash(number_nf) {
+                                Ok(Some(hash)) => Some((number, hash)),
+                                _ => None,
+                            }
+                        } else if let Some(hash_bytes) = req.by_hash {
+                            let hash = sp_core::H256::from_slice(&hash_bytes);
+                            match client.header(hash) {
+                                Ok(Some(header)) => {
+                                    let number: u64 = (*header.number()).saturated_into();
+                                    Some((number, hash))
+                                }
+                                _ => None,
+                            }
+                        } else {
+                            None
+                        };
+
+                        if let Some((number, hash)) = block_result {
+                            let encoded_block = match client.block(hash) {
+                                Ok(Some(signed_block)) => signed_block.encode(),
+                                _ => Vec::new(),
+                            };
+
+                            if encoded_block.is_empty() {
+                                log::warn!("⚠️ Skipping BlockResponse #{} (empty block)", number);
+                                continue;
+                            }
+
+                            let mut hash_bytes = [0u8; 32];
+                            hash_bytes.copy_from_slice(hash.as_ref());
+                            let parent_hash = client
+                                .header(hash)
+                                .ok()
+                                .flatten()
+                                .map(|header| {
+                                    let mut parent_bytes = [0u8; 32];
+                                    parent_bytes.copy_from_slice(header.parent_hash().as_ref());
+                                    parent_bytes
+                                })
+                                .unwrap_or([0u8; 32]);
+
+                            let response = BlockResponseMessage {
+                                request_id: req.request_id,
+                                block_number: number,
+                                block_hash: hash_bytes,
+                                parent_hash,
+                                encoded_block,
+                            };
+                            let response: detrp2p::Message = response.into();
+                            if let Err(e) = p2p_network.unicast(peer_id, response).await {
+                                log::warn!("⚠️ Failed to send BlockResponse: {}", e);
+                            }
+                        }
+                    }
+                    BlockSyncMessage::BlockResponse(resp) => {
+                        log::info!(
+                            "📥 Received BlockResponse from {:?}: block #{}",
+                            peer_id,
+                            resp.block_number
+                        );
+                        if let Err(e) = SignedBlock::<Block>::decode(&mut &resp.encoded_block[..]) {
+                            log::warn!(
+                                "⚠️ Failed to decode BlockResponse #{} from {:?}: {:?}",
+                                resp.block_number,
+                                peer_id,
+                                e
+                            );
+                        }
+                    }
+                    BlockSyncMessage::StatusRequest(req) => {
+                        log::info!(
+                            "📊 Received StatusRequest from {:?}: request_id={}",
+                            peer_id,
+                            req.request_id
+                        );
+                        let info = client.info();
+                        let best_number: u64 = info.best_number.saturated_into();
+                        let best_hash = info.best_hash;
+                        let genesis_hash = client.hash(Zero::zero()).ok().flatten().unwrap_or(best_hash);
+                        let mut best_hash_bytes = [0u8; 32];
+                        best_hash_bytes.copy_from_slice(best_hash.as_ref());
+                        let mut genesis_bytes = [0u8; 32];
+                        genesis_bytes.copy_from_slice(genesis_hash.as_ref());
+
+                        let response = StatusResponseMessage {
+                            request_id: req.request_id,
+                            best_number,
+                            best_hash: best_hash_bytes,
+                            genesis_hash: genesis_bytes,
+                        };
+                        let response: detrp2p::Message = response.into();
+                        if let Err(e) = p2p_network.unicast(peer_id, response).await {
+                            log::warn!("⚠️ Failed to send StatusResponse: {}", e);
+                        }
+                    }
+                    BlockSyncMessage::StatusResponse(resp) => {
+                        let our_best: u64 = client.info().best_number.saturated_into();
+                        if resp.best_number > our_best + 2 {
+                            log::info!(
+                                "Peer {:?} ahead (their best #{}, ours #{})",
+                                peer_id,
+                                resp.best_number,
+                                our_best
+                            );
+                        }
+                    }
+                }
+                continue;
+            }
+
             match message {
-                detrp2p::Message::BlockAnnounce { block_number, block_hash, .. } => {
-                    log::info!(
-                        "📦 Received BlockAnnounce from {:?}: block #{} hash {:?}",
-                        peer_id,
-                        block_number,
-                        hex::encode(&block_hash)
-                    );
-                    // In production: Process block announcement, request block if needed
-                }
-                detrp2p::Message::BlockRequest { request_id, by_number, by_hash } => {
-                    log::info!(
-                        "📥 Received BlockRequest from {:?}: request_id={} by_number={:?} by_hash={:?}",
-                        peer_id,
-                        request_id,
-                        by_number,
-                        by_hash.map(|h| hex::encode(&h))
-                    );
-                    // In production: Fetch block from client and send BlockResponse
-                }
-                detrp2p::Message::StatusRequest { request_id } => {
-                    log::info!(
-                        "📊 Received StatusRequest from {:?}: request_id={}",
-                        peer_id,
-                        request_id
-                    );
-                    // In production: Send StatusResponse with our current best block
-                }
                 detrp2p::Message::Vote { data } => {
                     log::info!(
                         "🗳️ Received Vote from {:?}: {} bytes",
@@ -473,6 +605,13 @@ async fn process_p2p_messages(
                 }
                 detrp2p::Message::Pong { nonce } => {
                     log::debug!("🏓 Received Pong from {:?}: nonce={}", peer_id, nonce);
+                }
+                detrp2p::Message::Announce { peer, pow_nonce: _ } => {
+                    log::debug!(
+                        "📢 Received Announce from {:?}: {:?}",
+                        peer_id,
+                        peer.address
+                    );
                 }
                 _ => {
                     log::debug!("📬 Received message from {:?}: {:?}", peer_id, message);

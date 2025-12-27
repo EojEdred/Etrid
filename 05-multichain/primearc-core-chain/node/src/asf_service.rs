@@ -73,11 +73,16 @@ use pallet_validator_committee_runtime_api::ValidatorCommitteeApi;
 // ÉTRID P2P Networking
 use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
 use detrp2p_peerstored::StoredPeer;
-use etrid_protocol::gadget_network_bridge::{
-    GadgetNetworkBridge,
-    VoteData,
-    CertificateData,
-    ConsensusBridgeMessage,
+use etrid_protocol::{
+    BlockAnnounceMessage,
+    BlockResponseMessage,
+    StatusResponseMessage,
+    gadget_network_bridge::{
+        GadgetNetworkBridge,
+        VoteData,
+        CertificateData,
+        ConsensusBridgeMessage,
+    },
 };
 
 // ASF Finality Components (Phases 3-9 Integration)
@@ -2562,39 +2567,44 @@ pub fn new_full_with_params(
                     // and encode it for transmission. This ensures receiving nodes
                     // can import the complete block, not just the header.
                     let encoded_full_block = match block_import_client.block(substrate_hash) {
-                        Ok(Some(signed_block)) => {
-                            // Encode the full SignedBlock
-                            signed_block.encode()
-                        }
+                        Ok(Some(signed_block)) => Some(signed_block.encode()),
                         Ok(None) => {
                             log::warn!("V119: Block #{} not found in storage for broadcast", block_number);
-                            notification.header.encode() // Fallback to header only
+                            None
                         }
                         Err(e) => {
                             log::warn!("V119: Failed to fetch block #{}: {:?}", block_number, e);
-                            notification.header.encode() // Fallback to header only
+                            None
                         }
                     };
 
-                    let block_announce_msg = detrp2p::Message::BlockAnnounce {
-                        block_number: block_number as u64,
-                        block_hash: block_hash_bytes,
-                        parent_hash: parent_hash_bytes,
-                        encoded_block: encoded_full_block,
-                    };
+                    if let Some(encoded_full_block) = encoded_full_block {
+                        let block_announce_msg = BlockAnnounceMessage {
+                            block_number: block_number as u64,
+                            block_hash: block_hash_bytes,
+                            parent_hash: parent_hash_bytes,
+                            encoded_block: encoded_full_block,
+                        };
 
-                    // Broadcast asynchronously (don't block on this)
-                    let p2p_for_announce = block_import_p2p_network.clone();
-                    tokio::spawn(async move {
-                        if let Err(e) = p2p_for_announce.broadcast(block_announce_msg).await {
-                            log::debug!("V118: BlockAnnounce broadcast failed: {}", e);
-                        } else {
-                            log::debug!(
-                                "📢 V118: Broadcast BlockAnnounce #{} via DETR P2P",
-                                block_number
-                            );
-                        }
-                    });
+                        // Broadcast asynchronously (don't block on this)
+                        let p2p_for_announce = block_import_p2p_network.clone();
+                        tokio::spawn(async move {
+                            let p2p_msg: P2PMessage = block_announce_msg.into();
+                            if let Err(e) = p2p_for_announce.broadcast(p2p_msg).await {
+                                log::debug!("V118: BlockAnnounce broadcast failed: {}", e);
+                            } else {
+                                log::debug!(
+                                    "📢 V118: Broadcast BlockAnnounce #{} via DETR P2P",
+                                    block_number
+                                );
+                            }
+                        });
+                    } else {
+                        log::debug!(
+                            "📢 V118: Skipping BlockAnnounce #{} (no full block)",
+                            block_number
+                        );
+                    }
                 }
 
                 log::warn!("⚠️  Block import notification stream ended");
@@ -3202,7 +3212,7 @@ pub fn new_full_with_params(
                                             let mut parent_bytes = [0u8; 32];
                                             parent_bytes.copy_from_slice(parent_hash.as_ref());
 
-                                            let response = P2PMessage::BlockResponse {
+                                            let response = BlockResponseMessage {
                                                 request_id,
                                                 block_number,
                                                 block_hash: hash_bytes,
@@ -3210,6 +3220,7 @@ pub fn new_full_with_params(
                                                 encoded_block,
                                             };
 
+                                            let response: P2PMessage = response.into();
                                             if let Err(e) = bridge_p2p_network.unicast(peer_id, response).await {
                                                 log::warn!("Failed to send BlockResponse to {:?}: {:?}", peer_id, e);
                                             } else {
@@ -3305,12 +3316,13 @@ pub fn new_full_with_params(
                                 let mut genesis_bytes = [0u8; 32];
                                 genesis_bytes.copy_from_slice(genesis_hash.as_ref());
 
-                                let response = P2PMessage::StatusResponse {
+                                let response = StatusResponseMessage {
                                     request_id,
                                     best_number,
                                     best_hash: best_hash_bytes,
                                     genesis_hash: genesis_bytes,
                                 };
+                                let response: P2PMessage = response.into();
                                 if let Err(e) = bridge_p2p_network.unicast(peer_id, response).await {
                                     log::warn!("Failed to send StatusResponse to {:?}: {:?}", peer_id, e);
                                 } else {

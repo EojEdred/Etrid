@@ -3820,11 +3820,13 @@ dependencies = [
  "bincode",
  "ecies",
  "etrid-aecomms",
+ "etrid-protocol",
  "futures",
  "hex",
  "log",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tokio",
 ]
 

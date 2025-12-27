@@ -19,6 +19,8 @@ bincode = "1.3"
 # Cryptography - use Etrid's own aecomms module
 ecies = { version = "0.2", default-features = false, features = ["pure"] }
 etrid-aecomms = { path = "../aecomms" }
+etrid-protocol = { path = "../etrid-protocol" }
+sha2 = { version = "0.10", default-features = false }
 
 # Utilities
 log = { version = "0.4", default-features = false }
