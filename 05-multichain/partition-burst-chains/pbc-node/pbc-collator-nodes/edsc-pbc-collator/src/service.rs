@@ -7,7 +7,6 @@
 //! - Proof-of-reserves tracking
 //! - DETR P2P networking with encryption and auto-discovery
 
-use sp_runtime::codec::{Decode, Encode};
 use futures::FutureExt;
 use sc_client_api::{Backend, BlockBackend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
@@ -439,7 +438,7 @@ async fn process_p2p_messages(
                             msg.block_number,
                             hex::encode(&msg.block_hash)
                         );
-                        match SignedBlock::<Block>::decode(&mut &msg.encoded_block[..]) {
+                        match <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &msg.encoded_block[..]) {
                             Ok(signed_block) => {
                                 let decoded_hash = signed_block.block.header.hash();
                                 log::debug!(
@@ -488,7 +487,7 @@ async fn process_p2p_messages(
 
                         if let Some((number, hash)) = block_result {
                             let encoded_block = match client.block(hash) {
-                                Ok(Some(signed_block)) => signed_block.encode(),
+                                Ok(Some(signed_block)) => sp_runtime::codec::Encode::encode(&signed_block),
                                 _ => Vec::new(),
                             };
 
@@ -529,7 +528,7 @@ async fn process_p2p_messages(
                             peer_id,
                             resp.block_number
                         );
-                        if let Err(e) = SignedBlock::<Block>::decode(&mut &resp.encoded_block[..]) {
+                        if let Err(e) = <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &resp.encoded_block[..]) {
                             log::warn!(
                                 "⚠️ Failed to decode BlockResponse #{} from {:?}: {:?}",
                                 resp.block_number,

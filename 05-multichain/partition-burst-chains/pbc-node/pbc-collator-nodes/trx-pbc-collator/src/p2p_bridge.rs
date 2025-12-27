@@ -3,7 +3,6 @@
 //! This module bridges DETR P2P networking with Substrate's block sync
 //! and provides message handling for distributed consensus.
 
-use sp_runtime::codec::{Decode, Encode};
 use detrp2p::{P2PNetwork, Message, PeerId};
 use etrid_protocol::{
     BlockAnnounceMessage,
@@ -85,13 +84,13 @@ impl P2PBridge {
                             let block_number = *header.number() as u64;
 
                             // Create block hash array
-                            let block_hash_bytes: [u8; 32] = best_hash.as_ref().try_into()
+                            let block_hash_bytes: [u8; 32] = <[u8; 32]>::try_from(best_hash.as_ref())
                                 .unwrap_or([0u8; 32]);
-                            let parent_hash_bytes: [u8; 32] = parent_hash.as_ref().try_into()
+                            let parent_hash_bytes: [u8; 32] = <[u8; 32]>::try_from(parent_hash.as_ref())
                                 .unwrap_or([0u8; 32]);
 
                             let encoded_block = match client.block(best_hash) {
-                                Ok(Some(signed_block)) => signed_block.encode(),
+                                Ok(Some(signed_block)) => sp_runtime::codec::Encode::encode(&signed_block),
                                 Ok(None) => {
                                     log::warn!("⚠️ Block #{} not found for announce", block_number);
                                     Vec::new()
@@ -187,7 +186,7 @@ impl P2PBridge {
                     log::debug!("  Block hash: {}", hex::encode(msg.block_hash));
                     log::debug!("  Parent hash: {}", hex::encode(msg.parent_hash));
 
-                    match SignedBlock::<Block>::decode(&mut &msg.encoded_block[..]) {
+                    match <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &msg.encoded_block[..]) {
                         Ok(signed_block) => {
                             let decoded_hash = signed_block.block.header.hash();
                             log::debug!(
@@ -220,7 +219,7 @@ impl P2PBridge {
                         resp.block_number,
                         peer_id
                     );
-                    match SignedBlock::<Block>::decode(&mut &resp.encoded_block[..]) {
+                    match <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &resp.encoded_block[..]) {
                         Ok(signed_block) => {
                             let decoded_hash = signed_block.block.header.hash();
                             if decoded_hash.as_ref() != resp.block_hash.as_ref() {
@@ -378,18 +377,18 @@ impl P2PBridge {
 
         // Send response only if block was found
         if let Some((number, hash)) = block_result {
-            let hash_bytes: [u8; 32] = hash.as_ref().try_into().unwrap_or([0u8; 32]);
+            let hash_bytes: [u8; 32] = <[u8; 32]>::try_from(hash.as_ref()).unwrap_or([0u8; 32]);
             let parent_hash = client.header(hash)
                 .ok()
                 .flatten()
                 .map(|h| {
-                    let p: [u8; 32] = h.parent_hash().as_ref().try_into().unwrap_or([0u8; 32]);
+                    let p: [u8; 32] = <[u8; 32]>::try_from(h.parent_hash().as_ref()).unwrap_or([0u8; 32]);
                     p
                 })
                 .unwrap_or([0u8; 32]);
 
             let encoded_block = match client.block(hash) {
-                Ok(Some(signed_block)) => signed_block.encode(),
+                Ok(Some(signed_block)) => sp_runtime::codec::Encode::encode(&signed_block),
                 Ok(None) => {
                     log::warn!("Block #{} not found for response", number);
                     Vec::new()
