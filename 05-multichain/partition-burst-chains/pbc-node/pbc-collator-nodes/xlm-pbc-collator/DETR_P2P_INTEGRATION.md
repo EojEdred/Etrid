@@ -159,7 +159,7 @@ The P2P bridge:
 
 1. Monitors the local chain for new blocks
 2. Broadcasts `BlockAnnounce` messages to all connected peers
-3. Processes incoming `BlockRequest` messages (full implementation pending)
+3. Processes incoming `BlockRequest` messages and returns full encoded blocks
 4. Handles consensus votes and certificates
 
 ## Implementation Details

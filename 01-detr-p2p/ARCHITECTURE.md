@@ -92,6 +92,7 @@ Main Rust implementation of the DETR P2P protocol, providing high-level distribu
 - Async I/O with Tokio
 - ECIES encryption
 - Binary serialization
+- Announce PoW admission gate (default difficulty 14, increase-only override)
 
 **Status:** 🟡 Implemented
 
@@ -229,6 +230,19 @@ Application Layer
     Network I/O
 ```
 
+### Network Admission (PoW Announce)
+
+DETR P2P applies a lightweight proof-of-work check on `Announce` messages to deter spam/Sybil peers.
+Defaults are baked into the binary and can only be increased via environment variables.
+
+**Defaults:**
+- `DETR_P2P_POW_DIFFICULTY`: `14` (increase-only via env)
+- `DETR_P2P_POW_MAX_NONCE`: `5_000_000`
+
+**Notes:**
+- This PoW gate affects peer admission only; it does **not** affect PoS consensus.
+- Nodes compute a nonce once on startup and reuse it on reconnect.
+
 ### Peer Discovery Flow
 
 ```
@@ -291,20 +305,24 @@ pub fn update_reputation(peer_id: &PeerId, score: i32) -> Result<()>;
 
 ```rust
 #[derive(Serialize, Deserialize)]
-pub enum Message {
-    Handshake(HandshakeMessage),
-    Transaction(TransactionMessage),
-    Block(BlockMessage),
-    Consensus(ConsensusMessage),
-    Bridge(BridgeMessage),
-    Custom(Vec<u8>),
+pub enum BlockSyncMessage {
+    BlockAnnounce(BlockAnnounceMessage),
+    BlockRequest(BlockRequestMessage),
+    BlockResponse(BlockResponseMessage),
+    StatusRequest(StatusRequestMessage),
+    StatusResponse(StatusResponseMessage),
 }
 
-pub trait Protocol {
-    fn serialize(&self) -> Result<Vec<u8>>;
-    fn deserialize(data: &[u8]) -> Result<Self>;
+#[derive(Serialize, Deserialize)]
+pub struct ProtocolMessage {
+    pub version: u16,
+    pub msg_type: u8,
+    pub payload: Vec<u8>,
 }
 ```
+
+Block sync message definitions live in `etrid-protocol`, while `detrp2p::Message` provides
+conversion helpers (`as_block_sync`) to interop with `BlockSyncMessage`.
 
 ### Flow Control (fluent)
 

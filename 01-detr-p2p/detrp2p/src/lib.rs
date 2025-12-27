@@ -286,10 +286,22 @@ pub struct PowSettings {
 
 impl PowSettings {
     pub fn from_env() -> Self {
-        let difficulty = std::env::var("DETR_P2P_POW_DIFFICULTY")
+        const DEFAULT_DIFFICULTY: u8 = 14;
+        let difficulty = match std::env::var("DETR_P2P_POW_DIFFICULTY")
             .ok()
             .and_then(|val| val.parse::<u8>().ok())
-            .unwrap_or(0);
+        {
+            Some(value) if value > DEFAULT_DIFFICULTY => value,
+            Some(value) => {
+                log::warn!(
+                    "DETR_P2P_POW_DIFFICULTY={} ignored (default is {} and only increases are allowed)",
+                    value,
+                    DEFAULT_DIFFICULTY
+                );
+                DEFAULT_DIFFICULTY
+            }
+            None => DEFAULT_DIFFICULTY,
+        };
         let max_nonce = std::env::var("DETR_P2P_POW_MAX_NONCE")
             .ok()
             .and_then(|val| val.parse::<u64>().ok())
