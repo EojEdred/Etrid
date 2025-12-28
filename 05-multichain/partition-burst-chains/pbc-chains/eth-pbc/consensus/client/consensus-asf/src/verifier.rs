@@ -10,7 +10,7 @@
 
 use codec::Codec;
 use sc_client_api::backend::AuxStore;
-use sc_consensus::BlockImportParams;
+use sc_consensus::{BlockImportParams, ForkChoiceStrategy};
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_consensus_asf_pbc::{AsfApi, SlotDuration};
@@ -132,6 +132,9 @@ where
         block_params.post_digests.push(DigestItem::Other(
             b"asf_verified".to_vec(),
         ));
+
+        // Ensure fork choice is set so the import pipeline is complete.
+        block_params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 
         log::debug!(
             target: "asf",

@@ -108,7 +108,11 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
     log::info!("🌐 Initializing DETR P2P Network for BNB PBC Collator...");
 
     // Generate deterministic node ID from keystore
-    let node_id = if let Some(local_key) = keystore_container.keystore().sr25519_public_keys(sp_core::crypto::key_types::AURA).first() {
+    let node_id = if let Some(local_key) = keystore_container
+        .keystore()
+        .sr25519_public_keys(sp_core::crypto::KeyTypeId(*b"asfk"))
+        .first()
+    {
         generate_node_id_from_validator_key(local_key.as_ref())
     } else {
         log::warn!("⚠️ No validator key found, using random node ID");

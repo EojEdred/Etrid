@@ -23,7 +23,9 @@
 use codec::{Codec, Encode};
 use futures_timer::Delay;
 use sc_client_api::{backend::AuxStore, BlockBackend};
-use sc_consensus::{BlockImport, BlockImportParams, StateAction, StorageChanges};
+use sc_consensus::{
+    BlockImport, BlockImportParams, ForkChoiceStrategy, StateAction, StorageChanges,
+};
 use sc_consensus_slots::BackoffAuthoringBlocksStrategy;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
@@ -243,17 +245,17 @@ where
         )
         .await
         {
-            Ok(block) => {
+            Ok(proposal) => {
                 log::info!(
                     target: "asf",
                     "Authored block #{} at slot {:?}",
-                    block.header().number(),
+                    proposal.block.header().number(),
                     current_slot
                 );
 
                 // Import the block
                 let block_import_params = build_block_import_params(
-                    block,
+                    proposal,
                     current_slot,
                 );
 
@@ -312,13 +314,14 @@ where
 
     // Get the public key bytes from the AuthorityId
     let proposer_bytes = expected_proposer.as_ref();
-    let key_type = sp_core::crypto::key_types::AURA;
+    // Align PBCs with Primearc Core: ASF keys use "asfk" key type.
+    let key_type = sp_core::crypto::KeyTypeId(*b"asfk");
 
     match proposer_bytes.len() {
         // 20 bytes: AccountId20 (Ethereum-style address)
         // Used by eth-pbc and other EVM-compatible PBCs
         20 => {
-            // Get all ECDSA keys from keystore with AURA key type
+            // Get all ECDSA keys from keystore with ASF key type
             let ecdsa_keys = keystore.ecdsa_public_keys(key_type);
 
             for ecdsa_key in ecdsa_keys {
@@ -424,14 +427,14 @@ fn derive_account_id20_from_ecdsa(ecdsa_key: &sp_core::ecdsa::Public) -> Option<
 async fn author_block<B, C, E, AuthorityId, CIDP>(
     _client: &Arc<C>,
     env: &mut E,
-    _slot: Slot,
+    slot: Slot,
     parent_header: &B::Header,
     create_inherent_data_providers: &CIDP,
     block_proposal_slot_portion: f32,
     max_block_proposal_slot_portion: Option<f32>,
     slot_duration: SlotDuration,
     _proposer_id: AuthorityId,
-) -> Result<B>
+) -> Result<sp_consensus::Proposal<B, <E::Proposer as Proposer<B>>::Proof>>
 where
     B: BlockT,
     C: ProvideRuntimeApi<B> + HeaderBackend<B> + Send + Sync,
@@ -473,6 +476,12 @@ where
         Duration::from_millis((slot_duration.as_millis() as f32 * portion) as u64)
     });
 
+    // Create pre-runtime digest with slot information
+    let mut pre_digest_data = Vec::new();
+    slot.encode_to(&mut pre_digest_data);
+    let pre_digest = DigestItem::PreRuntime(*b"asf0", pre_digest_data);
+    let digest = sp_runtime::Digest { logs: vec![pre_digest] };
+
     // Create proposer
     let proposer = env
         .init(parent_header)
@@ -483,49 +492,45 @@ where
     let proposal = proposer
         .propose(
             inherent_data,
-            Default::default(), // Default digest
+            digest,
             proposal_duration,
             None, // No max duration
         )
         .await
         .map_err(|e| Error::Other(format!("Failed to propose block: {:?}", e)))?;
 
-    let block = proposal.block;
-
     log::info!(
         target: "asf",
         "Proposed block #{} with {} extrinsics",
-        block.header().number(),
-        block.extrinsics().len()
+        proposal.block.header().number(),
+        proposal.block.extrinsics().len()
     );
 
-    Ok(block)
+    Ok(proposal)
 }
 
 /// Build block import parameters for a newly authored block
-fn build_block_import_params<B>(
-    block: B,
-    slot: Slot,
+fn build_block_import_params<B, Proof>(
+    proposal: sp_consensus::Proposal<B, Proof>,
+    _slot: Slot,
 ) -> BlockImportParams<B>
 where
     B: BlockT,
 {
-    let (header, body) = block.deconstruct();
-    let post_hash = header.hash();
-
-    // Create pre-runtime digest with slot information
-    let mut pre_digest = Vec::new();
-    slot.encode_to(&mut pre_digest);
+    let (header, body) = proposal.block.deconstruct();
+    let block_hash = header.hash();
 
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
-    block_import_params.state_action = StateAction::ApplyChanges(StorageChanges::Changes(Default::default()));
-    block_import_params.post_digests.push(DigestItem::PreRuntime(*b"asf0", pre_digest));
+    block_import_params.state_action = StateAction::ApplyChanges(
+        StorageChanges::Changes(proposal.storage_changes),
+    );
+    block_import_params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 
     log::debug!(
         target: "asf",
         "Built import params for block {:?}",
-        post_hash
+        block_hash
     );
 
     block_import_params
