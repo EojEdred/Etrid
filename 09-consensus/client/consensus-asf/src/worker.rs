@@ -243,17 +243,17 @@ where
         )
         .await
         {
-            Ok(block) => {
+            Ok(proposal) => {
                 log::info!(
                     target: "asf",
                     "Authored block #{} at slot {:?}",
-                    block.header().number(),
+                    proposal.block.header().number(),
                     current_slot
                 );
 
-                // Import the block
+                // Import the block with its storage changes
                 let block_import_params = build_block_import_params(
-                    block,
+                    proposal,
                     current_slot,
                 );
 
@@ -343,6 +343,7 @@ where
 }
 
 /// Author a block using the proposer environment
+/// Returns both the block and its storage changes for proper import
 async fn author_block<B, C, E, AuthorityId, CIDP>(
     _client: &Arc<C>,
     env: &mut E,
@@ -353,7 +354,7 @@ async fn author_block<B, C, E, AuthorityId, CIDP>(
     max_block_proposal_slot_portion: Option<f32>,
     slot_duration: SlotDuration,
     _proposer_id: AuthorityId,
-) -> Result<B>
+) -> Result<sp_consensus::Proposal<B, <E::Proposer as Proposer<B>>::Proof>>
 where
     B: BlockT,
     C: ProvideRuntimeApi<B> + HeaderBackend<B> + Send + Sync,
@@ -391,7 +392,7 @@ where
         (slot_duration.as_millis() as f32 * block_proposal_slot_portion) as u64,
     );
 
-    let max_proposal_duration = max_block_proposal_slot_portion.map(|portion| {
+    let _max_proposal_duration = max_block_proposal_slot_portion.map(|portion| {
         Duration::from_millis((slot_duration.as_millis() as f32 * portion) as u64)
     });
 
@@ -412,27 +413,25 @@ where
         .await
         .map_err(|e| Error::Other(format!("Failed to propose block: {:?}", e)))?;
 
-    let block = proposal.block;
-
     log::info!(
         target: "asf",
         "Proposed block #{} with {} extrinsics",
-        block.header().number(),
-        block.extrinsics().len()
+        proposal.block.header().number(),
+        proposal.block.extrinsics().len()
     );
 
-    Ok(block)
+    Ok(proposal)
 }
 
 /// Build block import parameters for a newly authored block
-fn build_block_import_params<B>(
-    block: B,
+fn build_block_import_params<B, Proof>(
+    proposal: sp_consensus::Proposal<B, Proof>,
     slot: Slot,
 ) -> BlockImportParams<B>
 where
     B: BlockT,
 {
-    let (header, body) = block.deconstruct();
+    let (header, body) = proposal.block.deconstruct();
     let post_hash = header.hash();
 
     // Create pre-runtime digest with slot information
@@ -441,7 +440,10 @@ where
 
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
-    block_import_params.state_action = StateAction::ApplyChanges(StorageChanges::Changes(Default::default()));
+
+    // Use the actual storage changes from block authorship
+    // Wrap in StorageChanges::Changes as required by BlockImportParams
+    block_import_params.state_action = StateAction::ApplyChanges(StorageChanges::Changes(proposal.storage_changes));
     block_import_params.post_digests.push(DigestItem::PreRuntime(*b"asf0", pre_digest));
 
     log::debug!(
