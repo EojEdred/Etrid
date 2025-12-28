@@ -728,31 +728,69 @@ impl FinalityGadget {
 
     // ========== CONSENSUS OPERATIONS ==========
 
-    pub async fn propose_block(&mut self, block_hash: BlockHash) -> Result<Vote, String> {
-        // V9 TEMPORARY FIX: Use dummy signature to unblock finality
-        // TODO: Implement proper Sr25519 signing with validator keystore
+    /// Propose a block for finality voting
+    ///
+    /// V123 FIX: View is now tied to block_number to prevent fork-causing race conditions.
+    /// Previously, all validators started at View(0) and locked to whichever block they
+    /// saw first, causing vote splits and consensus failures.
+    ///
+    /// Now: View = block_number ensures each block has its own view, preventing conflicts.
+    pub async fn propose_block(&mut self, block_hash: BlockHash, block_number: u64) -> Result<Vote, String> {
+        // V123 FIX: Use block_number as view to prevent race conditions
+        // This ensures all validators voting for the same block use the same view,
+        // eliminating the "first block seen wins" problem at View(0).
+        let view = View(block_number);
+
         let dummy_signature = {
             let mut sig = Vec::with_capacity(64);
-            // V9: Create deterministic signature from full AccountId32 + block_hash for uniqueness
-            sig.extend_from_slice(self.validator_id.0.as_ref()); // 32 bytes from AccountId32
-            sig.extend_from_slice(&block_hash.0[0..32]); // + 32 bytes from block_hash = 64 bytes total
+            sig.extend_from_slice(self.validator_id.0.as_ref());
+            sig.extend_from_slice(&block_hash.0[0..32]);
             sig
         };
 
         let vote = Vote {
             validator_id: self.validator_id.clone(),
-            view: self.view_timer.get_current_view(),
+            view,  // V123: Use block_number as view
             block_hash,
-            signature: dummy_signature,  // V7: Dummy signature for testing BFT consensus
+            signature: dummy_signature,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
         };
 
-        // Reset view timer when proposing - blocks are progressing, don't change view
-        self.view_timer.reset();
+        // Sync view timer to current block
+        self.view_timer.set_view(view);
 
+        self.broadcast_vote(vote.clone()).await?;
+        Ok(vote)
+    }
+
+    /// Legacy propose_block without block_number (for backwards compatibility)
+    /// Deprecated: Use propose_block(block_hash, block_number) instead
+    pub async fn propose_block_legacy(&mut self, block_hash: BlockHash) -> Result<Vote, String> {
+        // Fall back to view timer for legacy callers
+        let view = self.view_timer.get_current_view();
+
+        let dummy_signature = {
+            let mut sig = Vec::with_capacity(64);
+            sig.extend_from_slice(self.validator_id.0.as_ref());
+            sig.extend_from_slice(&block_hash.0[0..32]);
+            sig
+        };
+
+        let vote = Vote {
+            validator_id: self.validator_id.clone(),
+            view,
+            block_hash,
+            signature: dummy_signature,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        };
+
+        self.view_timer.reset();
         self.broadcast_vote(vote.clone()).await?;
         Ok(vote)
     }
