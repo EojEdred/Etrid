@@ -23,7 +23,7 @@
 use codec::{Codec, Encode};
 use futures_timer::Delay;
 use sc_client_api::{backend::AuxStore, BlockBackend};
-use sc_consensus::{BlockImport, BlockImportParams, StateAction, StorageChanges};
+use sc_consensus::{BlockImport, BlockImportParams, StateAction};
 use sc_consensus_slots::BackoffAuthoringBlocksStrategy;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
@@ -441,9 +441,10 @@ where
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
 
-    // Use the actual storage changes from block authorship
-    // Wrap in StorageChanges::Changes as required by BlockImportParams
-    block_import_params.state_action = StateAction::ApplyChanges(StorageChanges::Changes(proposal.storage_changes));
+    // For locally authored blocks, use Execute to let the client
+    // compute and apply state changes during import. This is more
+    // compatible with the standard Substrate block import pipeline.
+    block_import_params.state_action = StateAction::Execute;
     block_import_params.post_digests.push(DigestItem::PreRuntime(*b"asf0", pre_digest));
 
     log::debug!(
