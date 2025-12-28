@@ -2,7 +2,7 @@
 //!
 //! Core types for AI Decentralized Identity
 
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{Decode, Encode, MaxEncodedLen, DecodeWithMemTracking};
 use frame_support::{BoundedVec, pallet_prelude::ConstU32};
 use scale_info::TypeInfo;
 use sp_std::prelude::*;
@@ -105,6 +105,9 @@ impl AIType {
     }
 }
 
+impl DecodeWithMemTracking for AIType {}
+impl DecodeWithMemTracking for AIDid {}
+
 /// AI Task Categories
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -126,6 +129,8 @@ pub enum Task {
     PlanningExecution,
     DataAnalysis,
 }
+
+impl DecodeWithMemTracking for Task {}
 
 /// AI Capabilities
 #[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
@@ -159,6 +164,8 @@ impl Capabilities {
     }
 }
 
+impl DecodeWithMemTracking for Capabilities {}
+
 /// Input/Output Modality
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -170,6 +177,8 @@ pub enum Modality {
     StructuredData,
     Code,
 }
+
+impl DecodeWithMemTracking for Modality {}
 
 /// AI Restrictions
 #[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
@@ -189,6 +198,8 @@ pub struct Restrictions {
     pub rate_limit: Option<u32>,
 }
 
+impl DecodeWithMemTracking for Restrictions {}
+
 /// Model Attestation
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -207,6 +218,8 @@ pub struct ModelAttestation {
     pub benchmarks: BoundedVec<Benchmark, ConstU32<16>>,
 }
 
+impl DecodeWithMemTracking for ModelAttestation {}
+
 /// Benchmark Result
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -216,6 +229,8 @@ pub struct Benchmark {
     /// Score (0-10000 representing 0.00% - 100.00%)
     pub score: u32,
 }
+
+impl DecodeWithMemTracking for Benchmark {}
 
 /// AI Profile - Complete metadata for an AI entity
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
@@ -237,6 +252,8 @@ pub struct AIProfile {
     pub safety: SafetyProfile,
 }
 
+impl DecodeWithMemTracking for AIProfile {}
+
 /// Safety Profile
 #[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -251,6 +268,8 @@ pub struct SafetyProfile {
     pub toxicity_score: u32,
 }
 
+impl DecodeWithMemTracking for SafetyProfile {}
+
 /// Authorization Permission
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -262,6 +281,8 @@ pub struct Permission {
     /// Conditions that must be met
     pub conditions: BoundedVec<BoundedVec<u8, ConstU32<128>>, ConstU32<8>>,
 }
+
+impl DecodeWithMemTracking for Permission {}
 
 /// Reputation Score
 #[derive(Debug, Clone, Default, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
@@ -321,6 +342,8 @@ impl Reputation {
     }
 }
 
+impl DecodeWithMemTracking for Reputation {}
+
 /// Pricing Model
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -335,6 +358,8 @@ pub struct PricingModel {
     pub billing_method: BillingMethod,
 }
 
+impl DecodeWithMemTracking for PricingModel {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum BillingMethod {
@@ -343,6 +368,8 @@ pub enum BillingMethod {
     Subscription,
     PayAsYouGo,
 }
+
+impl DecodeWithMemTracking for BillingMethod {}
 
 #[cfg(test)]
 mod tests {
