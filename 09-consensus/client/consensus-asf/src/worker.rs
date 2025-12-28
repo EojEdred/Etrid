@@ -347,7 +347,7 @@ where
 async fn author_block<B, C, E, AuthorityId, CIDP>(
     _client: &Arc<C>,
     env: &mut E,
-    _slot: Slot,
+    slot: Slot,
     parent_header: &B::Header,
     create_inherent_data_providers: &CIDP,
     block_proposal_slot_portion: f32,
@@ -366,6 +366,8 @@ where
     CIDP::InherentDataProviders: sp_inherents::InherentDataProvider,
     AuthorityId: Codec + Clone,
 {
+    use sp_runtime::Digest;
+
     let parent_hash = parent_header.hash();
 
     log::debug!(
@@ -396,17 +398,24 @@ where
         Duration::from_millis((slot_duration.as_millis() as f32 * portion) as u64)
     });
 
+    // Create pre-runtime digest with slot information
+    // This must be included in the block header before hashing
+    let mut pre_digest_data = Vec::new();
+    slot.encode_to(&mut pre_digest_data);
+    let pre_digest = DigestItem::PreRuntime(*b"asf0", pre_digest_data);
+    let digest = Digest { logs: vec![pre_digest] };
+
     // Create proposer
     let proposer = env
         .init(parent_header)
         .await
         .map_err(|e| Error::Other(format!("Failed to create proposer: {:?}", e)))?;
 
-    // Propose block
+    // Propose block with the pre-runtime digest included in header
     let proposal = proposer
         .propose(
             inherent_data,
-            Default::default(), // Default digest
+            digest,
             proposal_duration,
             None, // No max duration
         )
@@ -426,17 +435,13 @@ where
 /// Build block import parameters for a newly authored block
 fn build_block_import_params<B, Proof>(
     proposal: sp_consensus::Proposal<B, Proof>,
-    slot: Slot,
+    _slot: Slot,
 ) -> BlockImportParams<B>
 where
     B: BlockT,
 {
     let (header, body) = proposal.block.deconstruct();
-    let post_hash = header.hash();
-
-    // Create pre-runtime digest with slot information
-    let mut pre_digest = Vec::new();
-    slot.encode_to(&mut pre_digest);
+    let block_hash = header.hash();
 
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
@@ -444,13 +449,13 @@ where
     // For locally authored blocks, use Execute to let the client
     // compute and apply state changes during import. This is more
     // compatible with the standard Substrate block import pipeline.
+    // The pre-runtime digest is already included in the header from author_block.
     block_import_params.state_action = StateAction::Execute;
-    block_import_params.post_digests.push(DigestItem::PreRuntime(*b"asf0", pre_digest));
 
     log::debug!(
         target: "asf",
         "Built import params for block {:?}",
-        post_hash
+        block_hash
     );
 
     block_import_params
