@@ -17,6 +17,8 @@ name = "ada-pbc-collator"
 version = "0.1.0"
 dependencies = [
  "ada-pbc-runtime",
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -27,6 +29,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -203,6 +206,8 @@ name = "ai-compute-pbc-collator"
 version = "1.0.0"
 dependencies = [
  "ai-compute-pbc-runtime",
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -213,6 +218,8 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
+ "etrid-protocol",
  "frame-system",
  "futures",
  "hex",
@@ -1719,6 +1726,8 @@ dependencies = [
 name = "bnb-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "bnb-pbc-runtime",
  "clap",
  "cumulus-client-cli",
@@ -1730,6 +1739,8 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
+ "etrid-protocol",
  "frame-system",
  "futures",
  "hex",
@@ -1900,6 +1911,8 @@ dependencies = [
 name = "btc-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "btc-pbc-runtime",
  "clap",
  "cumulus-client-cli",
@@ -1911,6 +1924,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -3966,6 +3980,8 @@ dependencies = [
 name = "doge-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -3974,13 +3990,18 @@ dependencies = [
  "cumulus-client-service",
  "cumulus-primitives-core",
  "cumulus-relay-chain-interface",
+ "detrp2p",
  "doge-pbc-runtime",
+ "etrid-finality-gadget",
+ "etrid-protocol",
  "frame-system",
  "futures",
+ "hex",
  "jsonrpsee",
  "log",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "rand 0.8.5",
  "sc-basic-authorship",
  "sc-cli",
  "sc-client-api",
@@ -4194,6 +4215,8 @@ dependencies = [
 name = "edsc-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -4205,6 +4228,7 @@ dependencies = [
  "detrp2p",
  "edsc-pbc-runtime",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -7828,6 +7852,8 @@ dependencies = [
 name = "link-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -7838,6 +7864,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -8199,6 +8226,8 @@ dependencies = [
 name = "matic-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -8209,6 +8238,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -14962,6 +14992,8 @@ dependencies = [
 name = "sc-usdt-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -14972,6 +15004,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -16071,6 +16104,8 @@ dependencies = [
 name = "sol-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -16081,6 +16116,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -18296,6 +18332,8 @@ dependencies = [
 name = "trx-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -18306,6 +18344,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -19806,6 +19845,8 @@ dependencies = [
 name = "xlm-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -19816,6 +19857,7 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
  "etrid-protocol",
  "frame-system",
  "futures",
@@ -19949,6 +19991,8 @@ dependencies = [
 name = "xrp-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -19959,6 +20003,8 @@ dependencies = [
  "cumulus-relay-chain-interface",
  "detrp2p",
  "etrid-aecomms",
+ "etrid-finality-gadget",
+ "etrid-protocol",
  "frame-system",
  "futures",
  "hex",
