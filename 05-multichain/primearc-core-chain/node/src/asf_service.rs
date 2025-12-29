@@ -38,11 +38,12 @@ use futures::executor::block_on;
 use futures::StreamExt;
 use futures::channel::mpsc;
 use sc_consensus::BlockImport;
+use sc_consensus::import_queue::{ImportQueue, IncomingBlock};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
-use sp_consensus::{Environment, Proposer};
+use sp_consensus::{BlockOrigin, Environment, Proposer};
 use sp_core::Encode;
 use substrate_prometheus_endpoint::{register, Gauge, Registry, U64, Counter};
 use codec::Decode;
@@ -50,7 +51,7 @@ use sp_runtime::traits::{Header, IdentifyAccount, NumberFor, Zero};
 use sp_runtime::MultiSigner;
 use sp_core::crypto::AccountId32;
 use sp_timestamp;
-use std::{collections::HashMap, sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
+use std::{collections::{HashMap, HashSet}, sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 use detrp2p_peerstored::PeerStore;
 use serde_json;
 use tokio::fs;
@@ -75,6 +76,7 @@ use detrp2p::{P2PNetwork, PeerId, PeerAddr, Message as P2PMessage};
 use detrp2p_peerstored::StoredPeer;
 use etrid_protocol::{
     BlockAnnounceMessage,
+    BlockRequestMessage,
     BlockResponseMessage,
     StatusResponseMessage,
     gadget_network_bridge::{
@@ -103,6 +105,75 @@ use etrid_p2p_dpeers::{PeerRegistry, DiscoveryProtocol, ConnectionState};
 
 /// Cap the number of tracked detrp2p peers to keep organic growth without unbounded memory.
 const DETR_P2P_MAX_TRACKED_PEERS: usize = 2048;
+/// Cap in-flight/orphan blocks to avoid unbounded memory growth during desyncs.
+const DETR_P2P_MAX_PENDING_BLOCKS: usize = 2048;
+
+#[derive(Clone)]
+struct PendingBlock {
+    source_peer: PeerId,
+    block_number: u64,
+    block_hash: sp_core::H256,
+    parent_hash: sp_core::H256,
+    encoded_block: Vec<u8>,
+}
+
+#[derive(Default)]
+struct PendingState {
+    by_parent: HashMap<sp_core::H256, Vec<PendingBlock>>,
+    hashes: HashSet<sp_core::H256>,
+}
+
+fn queue_pending_block(pending_state: &mut PendingState, pending: PendingBlock) -> bool {
+    if pending_state.hashes.contains(&pending.block_hash) {
+        return false;
+    }
+    if pending_state.hashes.len() >= DETR_P2P_MAX_PENDING_BLOCKS {
+        log::warn!(
+            "⚠️ Pending block pool full ({}), dropping block #{}",
+            pending_state.hashes.len(),
+            pending.block_number
+        );
+        return false;
+    }
+    pending_state.hashes.insert(pending.block_hash);
+    pending_state
+        .by_parent
+        .entry(pending.parent_hash)
+        .or_default()
+        .push(pending);
+    true
+}
+
+fn take_pending_children(pending_state: &mut PendingState, parent_hash: &sp_core::H256) -> Vec<PendingBlock> {
+    match pending_state.by_parent.remove(parent_hash) {
+        Some(children) => {
+            for child in &children {
+                pending_state.hashes.remove(&child.block_hash);
+            }
+            children
+        }
+        None => Vec::new(),
+    }
+}
+
+fn build_incoming_block(
+    block: Block,
+    justifications: Option<sp_runtime::Justifications>,
+) -> IncomingBlock<Block> {
+    let hash = block.header.hash();
+    IncomingBlock {
+        hash,
+        header: Some(block.header),
+        body: Some(block.extrinsics),
+        indexed_body: None,
+        justifications,
+        origin: None,
+        allow_missing_state: false,
+        skip_execution: false,
+        import_existing: false,
+        state: None,
+    }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -240,12 +311,16 @@ impl Detrp2PMetrics {
     }
 }
 
-/// Convert a libp2p peer ID string to DETR P2P peer ID bytes.
-/// Uses Blake2-256 hash to get a deterministic 32-byte identifier from any input string.
-/// This ensures all nodes generate the same peer ID for the same bootnode string.
-fn libp2p_peer_id_to_detr_bytes(peer_id_str: &str) -> [u8; 32] {
-    use sp_core::hashing::blake2_256;
-    blake2_256(peer_id_str.as_bytes())
+fn parse_detr_peer_id_hex(peer_id_hex: &str) -> Option<PeerId> {
+    if peer_id_hex.len() != 64 {
+        return None;
+    }
+    let mut peer_id_bytes = [0u8; 32];
+    if hex::decode_to_slice(peer_id_hex, &mut peer_id_bytes).is_ok() {
+        Some(PeerId::new(peer_id_bytes))
+    } else {
+        None
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -740,6 +815,7 @@ pub fn new_full_with_params(
         other: (block_import, mut telemetry, asf_finality_rx),
     } = new_partial(&config)?;
     let _select_chain = select_chain;
+    let import_queue_service = Arc::new(tokio::sync::Mutex::new(import_queue.service()));
 
     // V113: Store finality receiver - will be consumed by ASF block import finality handler
     // This channel receives finality notifications when blocks with justifications are imported
@@ -812,7 +888,9 @@ pub fn new_full_with_params(
     }
 
     // Fetch and log the current runtime committee to ensure wiring is healthy before proceeding.
+    let quorum_override = quorum_override_from_env();
     let best_hash = client.info().best_hash;
+    let mut initial_committee_size: u32 = asf_params.max_committee_size;
     match get_ppfa_committee(&client, best_hash) {
         Ok(committee) => {
             log::info!(
@@ -820,6 +898,9 @@ pub fn new_full_with_params(
                 best_hash,
                 committee.len()
             );
+            if !committee.is_empty() {
+                initial_committee_size = committee.len() as u32;
+            }
         }
         Err(e) => {
             log::warn!(
@@ -829,6 +910,7 @@ pub fn new_full_with_params(
             );
         }
     }
+    let initial_committee_size = apply_quorum_override(initial_committee_size, quorum_override);
 
     // Create PPFA channels for bridging ASF finality from DETR P2P to libp2p
     // V112: Remove underscore - ppfa_finality_rx is now used by the finality notification handler
@@ -2024,8 +2106,13 @@ pub fn new_full_with_params(
         // ═══════════════════════════════════════════════════════════════
 
         // Generate local peer ID from validator ID (now derived from actual validator identity)
-        // Use full 32-byte AccountId32 as peer ID
-        let peer_id_bytes: [u8; 32] = validator_id.0.clone().into();
+        // Observers derive a deterministic ID from host+chain to avoid collisions.
+        let observer_id = AccountId32::new([0xFFu8; 32]);
+        let peer_id_bytes: [u8; 32] = if validator_id.0 == observer_id {
+            derive_observer_peer_id(config.chain_spec.id(), &config.network.node_name)
+        } else {
+            validator_id.0.clone().into()
+        };
         let local_peer_id = PeerId::new(peer_id_bytes);
 
         // Get local listen address from config
@@ -2137,17 +2224,15 @@ pub fn new_full_with_params(
                         // Use DETR P2P port (30334) instead of Substrate port (30333)
                         let peer_socket = SocketAddr::new(ip, detr_p2p_port);
 
-                        // Parse peer ID from base58 (libp2p format) to DETR P2P format
-                        // libp2p peer IDs are base58btc encoded with multicodec prefix
-                        // We hash the peer ID string to get a deterministic 32-byte DETR P2P peer ID
-                        let peer_id_bytes = libp2p_peer_id_to_detr_bytes(peer_id_str);
-                        log::info!("  ✓ Adding bootstrap peer: {} -> {:?} (from Substrate bootnode)",
-                            peer_socket, hex::encode(&peer_id_bytes[..8]));
+                        let peer_id = parse_detr_peer_id_hex(peer_id_str)
+                            .unwrap_or_else(|| PeerId::from_socket_addr(peer_socket));
+                        log::info!(
+                            "  ✓ Adding bootstrap peer: {} -> {:?} (from Substrate bootnode)",
+                            peer_socket,
+                            hex::encode(&peer_id.as_bytes()[..8])
+                        );
 
-                        let peer_addr = PeerAddr {
-                            id: PeerId::new(peer_id_bytes),
-                            address: peer_socket,
-                        };
+                        let peer_addr = PeerAddr { id: peer_id, address: peer_socket };
 
                         bootstrap_peers.push(peer_addr);
                     }
@@ -2158,22 +2243,58 @@ pub fn new_full_with_params(
         // Also check for DETR_P2P_BOOTSTRAP environment variable
         if let Ok(bootstrap_env) = std::env::var("DETR_P2P_BOOTSTRAP") {
             log::info!("🔍 Parsing bootstrap peers from DETR_P2P_BOOTSTRAP:");
-            for addr_str in bootstrap_env.split(',') {
-                if let Ok(addr) = addr_str.trim().parse::<SocketAddr>() {
-                    // For env bootstrap, we generate a deterministic peer ID from IP:port
-                    // This is used when no libp2p peer ID is available in the env string
-                    let env_peer_id_str = format!("{}:{}", addr.ip(), addr.port());
-                    let peer_id_bytes = libp2p_peer_id_to_detr_bytes(&env_peer_id_str);
-                    log::info!("  ✓ Adding bootstrap peer: {} -> {:?} (from env)",
-                        addr, hex::encode(&peer_id_bytes[..8]));
-
-                    let peer_addr = PeerAddr {
-                        id: PeerId::new(peer_id_bytes),
-                        address: addr,
-                    };
-
-                    bootstrap_peers.push(peer_addr);
+            for entry in bootstrap_env.split(',') {
+                let entry = entry.trim();
+                if entry.is_empty() {
+                    continue;
                 }
+
+                let mut peer_id: Option<PeerId> = None;
+                let addr = if entry.contains('@') {
+                    let parts: Vec<&str> = entry.split('@').collect();
+                    if parts.len() != 2 {
+                        log::warn!("⚠️ Invalid DETR_P2P_BOOTSTRAP entry '{}'", entry);
+                        continue;
+                    }
+                    let left = parts[0].trim();
+                    let right = parts[1].trim();
+                    if let Ok(addr) = left.parse::<SocketAddr>() {
+                        peer_id = parse_detr_peer_id_hex(right);
+                        addr
+                    } else if let Ok(addr) = right.parse::<SocketAddr>() {
+                        peer_id = parse_detr_peer_id_hex(left);
+                        addr
+                    } else {
+                        log::warn!("⚠️ Invalid DETR_P2P_BOOTSTRAP address '{}'", entry);
+                        continue;
+                    }
+                } else {
+                    match entry.parse::<SocketAddr>() {
+                        Ok(addr) => addr,
+                        Err(e) => {
+                            log::warn!("⚠️ Invalid DETR_P2P_BOOTSTRAP address '{}': {:?}", entry, e);
+                            continue;
+                        }
+                    }
+                };
+
+                let peer_id = peer_id.unwrap_or_else(|| {
+                    if entry.contains('@') {
+                        log::warn!(
+                            "⚠️ DETR_P2P_BOOTSTRAP peer ID not hex ({}), using socket-derived ID",
+                            entry
+                        );
+                    }
+                    PeerId::from_socket_addr(addr)
+                });
+
+                log::info!(
+                    "  ✓ Adding bootstrap peer: {} -> {:?} (from env)",
+                    addr,
+                    hex::encode(&peer_id.as_bytes()[..8])
+                );
+
+                bootstrap_peers.push(PeerAddr { id: peer_id, address: addr });
             }
         }
 
@@ -2253,6 +2374,51 @@ pub fn new_full_with_params(
 
         log::info!("🌐 DETR P2P network initialization spawned");
 
+        // Bridge libp2p peer discovery into DETR P2P to keep overlays segmented but aligned.
+        let libp2p_network = network.clone();
+        let detrp2p_network = p2p_network.clone();
+        let detr_listen_addr = local_address.address;
+        task_manager.spawn_handle().spawn(
+            "detrp2p-libp2p-bridge",
+            Some("networking"),
+            async move {
+                let mut seen_addrs: HashSet<SocketAddr> = HashSet::new();
+                let mut interval = tokio::time::interval(Duration::from_secs(15));
+
+                loop {
+                    interval.tick().await;
+
+                    if let Ok(state) = libp2p_network.network_state().await {
+                        for peer in state.connected_peers.values() {
+                            for addr in &peer.known_addresses {
+                                let addr_str = addr.to_string();
+                                let ip = match addr_str.split('/').nth(2) {
+                                    Some(ip_str) => match ip_str.parse::<IpAddr>() {
+                                        Ok(ip) if !ip.is_loopback() && !ip.is_unspecified() => ip,
+                                        _ => continue,
+                                    },
+                                    _ => continue,
+                                };
+
+                                let socket = SocketAddr::new(ip, detr_p2p_port);
+                                if socket == detr_listen_addr || !seen_addrs.insert(socket) {
+                                    continue;
+                                }
+
+                                let peer_addr = PeerAddr {
+                                    id: PeerId::from_socket_addr(socket),
+                                    address: socket,
+                                };
+                                if let Err(e) = detrp2p_network.add_peer(peer_addr).await {
+                                    log::debug!("DETR P2P peer add failed for {}: {:?}", socket, e);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        );
+
         // Create gadget network bridge
         let gadget_bridge = Arc::new(tokio::sync::Mutex::new(GadgetNetworkBridge::new()));
 
@@ -2287,6 +2453,11 @@ pub fn new_full_with_params(
             max_validators
         );
         log::info!("ASF Finality: 3-level consensus (Pre-commit → Commit → Finalized)");
+
+        {
+            let mut gadget = block_on(finality_gadget.lock());
+            gadget.set_committee_size(initial_committee_size);
+        }
 
         // ═══════════════════════════════════════════════════════════════════════════════
         // ASF FINALITY COMPONENTS INITIALIZATION (Phases 3-9)
@@ -2443,6 +2614,13 @@ pub fn new_full_with_params(
         let block_import_implicit_tracker = implicit_finality_tracker.clone();
         let block_import_indexer_tx = indexer_tx.clone();
         let block_import_asf_state = asf_finality_state.clone();
+        let pending_state = Arc::new(tokio::sync::Mutex::new(PendingState::default()));
+        let block_import_queue = import_queue_service.clone();
+        let block_import_pending_state = pending_state.clone();
+        let block_request_counter = Arc::new(AtomicU64::new(1));
+        let block_import_request_counter = block_request_counter.clone();
+        let block_import_epoch_duration = asf_params.epoch_duration;
+        let block_import_quorum_override = quorum_override;
 
         task_manager.spawn_essential_handle().spawn(
             "asf-block-import-finality",
@@ -2507,6 +2685,29 @@ pub fn new_full_with_params(
                                 "⚠️ Finality gadget locked for >3s - skipping block #{} (possible deadlock)",
                                 block_number
                             );
+                        }
+                    }
+
+                    if block_import_epoch_duration > 0
+                        && block_number_u32 > 0
+                        && block_number_u32 % block_import_epoch_duration == 0
+                    {
+                        match get_ppfa_committee(&block_import_client, substrate_hash) {
+                            Ok(committee) => {
+                                let committee_size = apply_quorum_override(
+                                    committee.len() as u32,
+                                    block_import_quorum_override,
+                                );
+                                let mut gadget = block_import_finality_gadget.lock().await;
+                                gadget.set_committee_size(committee_size);
+                            }
+                            Err(e) => {
+                                log::warn!(
+                                    "⚠️ Failed to refresh committee size at block #{}: {:?}",
+                                    block_number,
+                                    e
+                                );
+                            }
                         }
                     }
 
@@ -2610,6 +2811,81 @@ pub fn new_full_with_params(
                             "📢 V118: Skipping BlockAnnounce #{} (no full block)",
                             block_number
                         );
+                    }
+
+                    // Drain pending children now that this parent is imported.
+                    let pending_children = {
+                        let mut pending_guard = block_import_pending_state.lock().await;
+                        take_pending_children(&mut pending_guard, &substrate_hash)
+                    };
+
+                    if !pending_children.is_empty() {
+                        use sp_runtime::generic::SignedBlock;
+
+                        for pending in pending_children {
+                            let pending_number = pending.block_number;
+                            let pending_hash = pending.block_hash;
+                            let pending_parent = pending.parent_hash;
+                            match SignedBlock::<Block>::decode(&mut &pending.encoded_block[..]) {
+                                Ok(signed_block) => {
+                                    let SignedBlock { block, justifications } = signed_block;
+                                    let decoded_hash = block.header.hash();
+                                    let parent_hash = *block.header.parent_hash();
+
+                                    if decoded_hash != pending_hash {
+                                        log::warn!(
+                                            "📦 Pending block hash mismatch (expected {:?}, decoded {:?})",
+                                            hex::encode(pending_hash.as_ref().get(..8).unwrap_or(&[])),
+                                            hex::encode(decoded_hash.as_ref().get(..8).unwrap_or(&[]))
+                                        );
+                                    }
+
+                                    if block_import_client.header(decoded_hash).ok().flatten().is_some() {
+                                        continue;
+                                    }
+
+                                    if block_import_client.header(parent_hash).ok().flatten().is_none() {
+                                        log::warn!(
+                                            "⚠️ Pending block #{} still missing parent/state, re-queueing",
+                                            pending_number
+                                        );
+                                        let mut pending_guard = block_import_pending_state.lock().await;
+                                        if queue_pending_block(&mut pending_guard, pending.clone()) {
+                                            let request_id = block_import_request_counter.fetch_add(1, Ordering::Relaxed);
+                                            let mut parent_bytes = [0u8; 32];
+                                            parent_bytes.copy_from_slice(pending_parent.as_ref());
+                                            let request = BlockRequestMessage {
+                                                request_id,
+                                                by_number: None,
+                                                by_hash: Some(parent_bytes),
+                                            };
+                                            let request: P2PMessage = request.into();
+                                            if let Err(e) = block_import_p2p_network.unicast(pending.source_peer, request).await {
+                                                log::warn!(
+                                                    "⚠️ Failed to request parent for pending block #{}: {:?}",
+                                                    pending_number,
+                                                    e
+                                                );
+                                            }
+                                        }
+                                        continue;
+                                    }
+
+                                    let incoming = build_incoming_block(block, justifications);
+                                    block_import_queue
+                                        .lock()
+                                        .await
+                                        .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
+                                }
+                                Err(e) => {
+                                    log::warn!(
+                                        "📦 Failed to decode pending block #{}: {:?}",
+                                        pending_number,
+                                        e
+                                    );
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -2776,9 +3052,11 @@ pub fn new_full_with_params(
         let bridge_ppfa_tx = ppfa_asf_tx_for_bridge.clone();
         // V119: Clone client for block import in BlockAnnounce handler
         let bridge_block_client = client.clone();
-        // V119: Clone block_import for importing received blocks
-        let bridge_block_import = block_import.clone();
+        // V119: Import queue service for DETR P2P block sync
+        let bridge_import_queue = import_queue_service.clone();
         let indexer_tx = indexer_tx.clone();
+        let bridge_pending_state = pending_state.clone();
+        let bridge_request_counter = block_request_counter.clone();
         // Basic guardrails to prevent oversized finality messages from blocking the bridge
         const DETR_P2P_MAX_FINALITY_MSG: usize = 64 * 1024;
         const DETR_P2P_RATE_WINDOW_SECS: u64 = 10;
@@ -2806,6 +3084,8 @@ pub fn new_full_with_params(
                     trusted: bool,
                 }
                 let mut peer_quota: HashMap<PeerId, PeerQuota> = HashMap::new();
+                let pending_state = bridge_pending_state;
+                let request_counter = bridge_request_counter;
 
                 fn check_quota(
                     peer_quota: &mut HashMap<PeerId, PeerQuota>,
@@ -3116,83 +3396,94 @@ pub fn new_full_with_params(
                                     encoded_block.len()
                                 );
 
-                                // V119: Decode and verify the received full block
+                                if encoded_block.is_empty() {
+                                    log::warn!("⚠️ V119: Empty BlockAnnounce for #{}", block_number);
+                                    continue;
+                                }
+
                                 use sp_runtime::generic::SignedBlock;
                                 match SignedBlock::<Block>::decode(&mut &encoded_block[..]) {
                                     Ok(signed_block) => {
-                                        let decoded_hash = signed_block.block.header.hash();
-                                        let decoded_number = *signed_block.block.header.number();
+                                        let SignedBlock { block, justifications } = signed_block;
+                                        let decoded_hash = block.header.hash();
+                                        let decoded_number = *block.header.number();
+                                        let block_number_u64: u64 = decoded_number.saturated_into();
+                                        let parent_hash_h256 = sp_core::H256::from_slice(block.header.parent_hash().as_ref());
+                                        if block.header.parent_hash().as_ref() != parent_hash.as_ref() {
+                                            log::warn!(
+                                                "📦 V118: BlockResponse parent hash mismatch (expected {:?}, decoded {:?})",
+                                                hex::encode(&parent_hash[..8]),
+                                                hex::encode(block.header.parent_hash().as_ref().get(..8).unwrap_or(&[]))
+                                            );
+                                        }
+                                        if block.header.parent_hash().as_ref() != parent_hash.as_ref() {
+                                            log::warn!(
+                                                "📦 V119: BlockAnnounce parent hash mismatch (expected {:?}, decoded {:?})",
+                                                hex::encode(&parent_hash[..8]),
+                                                hex::encode(block.header.parent_hash().as_ref().get(..8).unwrap_or(&[]))
+                                            );
+                                        }
 
-                                        log::info!(
-                                            "📦 V119: Successfully decoded block #{} (hash: {:?})",
-                                            decoded_number,
-                                            hex::encode(&decoded_hash.as_ref()[..8])
-                                        );
+                                        if decoded_hash.as_ref() != block_hash.as_ref() {
+                                            log::warn!(
+                                                "📦 V119: BlockAnnounce hash mismatch (expected {:?}, decoded {:?})",
+                                                hex::encode(&block_hash[..8]),
+                                                hex::encode(decoded_hash.as_ref().get(..8).unwrap_or(&[]))
+                                            );
+                                        }
 
-                                        // Check if we already have this block
-                                        let substrate_hash = sp_core::H256::from_slice(&block_hash);
-                                        match bridge_block_client.block(substrate_hash) {
-                                            Ok(Some(_)) => {
-                                                log::debug!(
-                                                    "📦 V119: Block #{} already exists locally, skipping import",
-                                                    block_number
-                                                );
-                                            }
-                                            Ok(None) => {
-                                                // Block not found locally - this is the key sync case
-                                                log::info!(
-                                                    "📦 V119: Block #{} NOT found locally - importing via BlockImportParams",
-                                                    block_number
-                                                );
+                                        if bridge_block_client.header(decoded_hash).ok().flatten().is_some() {
+                                            log::debug!(
+                                                "📦 V119: Block #{} already exists locally, skipping import",
+                                                decoded_number
+                                            );
+                                            continue;
+                                        }
 
-                                                // V119: Import the received block using BlockImportParams
-                                                use sc_consensus::BlockImportParams;
-                                                use sc_consensus::BlockImport;
-
-                                                let block = signed_block.block;
-                                                let mut import_params = BlockImportParams::new(
-                                                    sp_consensus::BlockOrigin::NetworkBroadcast, // Block came from network
-                                                    block.header.clone(),
-                                                );
-                                                import_params.body = Some(block.extrinsics.to_vec());
-                                                import_params.finalized = false;
-                                                import_params.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
-
-                                                // Import the block using our cloned block_import
-                                                match bridge_block_import.import_block(import_params).await {
-                                                    Ok(result) => {
-                                                        log::info!(
-                                                            "✅ V119: Block #{} imported successfully from DETR P2P: {:?}",
-                                                            block_number, result
-                                                        );
-                                                        // Index block import for observability
-                                                        let timestamp = SystemTime::now()
-                                                            .duration_since(UNIX_EPOCH)
-                                                            .unwrap_or_default()
-                                                            .as_millis() as u64;
-                                                        let _ = indexer_tx.send(FinalityEvent::BlockImported {
-                                                            hash: block_hash,
-                                                            number: block_number as u32,
-                                                            parent_hash,
-                                                            timestamp,
-                                                        }).ok();
-                                                    }
-                                                    Err(e) => {
-                                                        log::warn!(
-                                                            "❌ V119: Failed to import block #{} from DETR P2P: {:?}",
-                                                            block_number, e
-                                                        );
-                                                    }
+                                        if bridge_block_client
+                                            .header(parent_hash_h256)
+                                            .ok()
+                                            .flatten()
+                                            .is_none()
+                                        {
+                                            log::warn!(
+                                                "⚠️ V119: Block #{} missing parent/state, queuing for retry",
+                                                decoded_number
+                                            );
+                                            let pending = PendingBlock {
+                                                source_peer: peer_id.clone(),
+                                                block_number: block_number_u64,
+                                                block_hash: sp_core::H256::from_slice(decoded_hash.as_ref()),
+                                                parent_hash: parent_hash_h256,
+                                                encoded_block: encoded_block.clone(),
+                                            };
+                                            let mut pending_guard = pending_state.lock().await;
+                                            if queue_pending_block(&mut pending_guard, pending) {
+                                                let request_id = request_counter.fetch_add(1, Ordering::Relaxed);
+                                                let mut parent_bytes = [0u8; 32];
+                                                parent_bytes.copy_from_slice(parent_hash_h256.as_ref());
+                                                let request = BlockRequestMessage {
+                                                    request_id,
+                                                    by_number: None,
+                                                    by_hash: Some(parent_bytes),
+                                                };
+                                                let request: P2PMessage = request.into();
+                                                if let Err(e) = bridge_p2p_network.unicast(peer_id, request).await {
+                                                    log::warn!(
+                                                        "⚠️ V119: Failed to request parent for block #{}: {:?}",
+                                                        decoded_number,
+                                                        e
+                                                    );
                                                 }
                                             }
-                                            Err(e) => {
-                                                log::warn!(
-                                                    "📦 V119: Error checking block #{} existence: {:?}",
-                                                    block_number,
-                                                    e
-                                                );
-                                            }
+                                            continue;
                                         }
+
+                                        let incoming = build_incoming_block(block, justifications);
+                                        bridge_import_queue
+                                            .lock()
+                                            .await
+                                            .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
                                     }
                                     Err(e) => {
                                         log::warn!(
@@ -3268,21 +3559,29 @@ pub fn new_full_with_params(
                                     log::debug!("No valid hash/number provided in BlockRequest {:?}", request_id);
                                 }
                             }
-                            P2PMessage::BlockResponse { request_id, block_number, block_hash, encoded_block, .. } => {
+                            P2PMessage::BlockResponse { request_id, block_number, block_hash, parent_hash, encoded_block } => {
                                 log::debug!(
                                     "📥 V118: Received BlockResponse from {:?} (id: {}, block #{})",
                                     peer_id,
                                     request_id,
                                     block_number
                                 );
+
+                                if encoded_block.is_empty() {
+                                    log::warn!("⚠️ V118: Empty BlockResponse for #{}", block_number);
+                                    continue;
+                                }
+
                                 use sp_runtime::generic::SignedBlock;
                                 match SignedBlock::<Block>::decode(&mut &encoded_block[..]) {
                                     Ok(signed_block) => {
-                                        let decoded_hash = signed_block.block.header.hash();
-                                        let decoded_number = *signed_block.block.header.number();
-                                        let expected_hash = sp_core::H256::from_slice(&block_hash);
+                                        let SignedBlock { block, justifications } = signed_block;
+                                        let decoded_hash = block.header.hash();
+                                        let decoded_number = *block.header.number();
+                                        let block_number_u64: u64 = decoded_number.saturated_into();
+                                        let parent_hash_h256 = sp_core::H256::from_slice(block.header.parent_hash().as_ref());
 
-                                        if decoded_hash != expected_hash {
+                                        if decoded_hash.as_ref() != block_hash.as_ref() {
                                             log::warn!(
                                                 "BlockResponse hash mismatch: expected {:?}, got {:?}",
                                                 hex::encode(&block_hash[..8]),
@@ -3290,47 +3589,62 @@ pub fn new_full_with_params(
                                             );
                                         }
 
-                                        match bridge_block_client.block(decoded_hash) {
-                                            Ok(Some(_)) => {
-                                                log::trace!("Block #{} already present locally, skipping import", decoded_number);
-                                            }
-                                            Ok(None) => {
-                                                use sc_consensus::BlockImportParams;
-                                                use sc_consensus::BlockImport;
+                                        if bridge_block_client.header(decoded_hash).ok().flatten().is_some() {
+                                            continue;
+                                        }
 
-                                                let block = signed_block.block;
-                                                let mut import_params = BlockImportParams::new(
-                                                    sp_consensus::BlockOrigin::NetworkBroadcast,
-                                                    block.header.clone(),
-                                                );
-                                                import_params.body = Some(block.extrinsics.to_vec());
-                                                import_params.finalized = false;
-                                                import_params.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
-
-                                                match bridge_block_import.import_block(import_params).await {
-                                                    Ok(result) => {
-                                                        log::info!(
-                                                            "✅ Imported block #{} from BlockResponse: {:?}",
-                                                            decoded_number,
-                                                            result
-                                                        );
-                                                    }
-                                                    Err(e) => {
-                                                        log::warn!(
-                                                            "❌ Failed to import block #{} from BlockResponse: {:?}",
-                                                            decoded_number,
-                                                            e
-                                                        );
-                                                    }
+                                        if bridge_block_client
+                                            .header(parent_hash_h256)
+                                            .ok()
+                                            .flatten()
+                                            .is_none()
+                                        {
+                                            log::warn!(
+                                                "⚠️ BlockResponse block #{} missing parent/state, queuing for retry",
+                                                decoded_number
+                                            );
+                                            let pending = PendingBlock {
+                                                source_peer: peer_id.clone(),
+                                                block_number: block_number_u64,
+                                                block_hash: sp_core::H256::from_slice(decoded_hash.as_ref()),
+                                                parent_hash: parent_hash_h256,
+                                                encoded_block: encoded_block.clone(),
+                                            };
+                                            let mut pending_guard = pending_state.lock().await;
+                                            if queue_pending_block(&mut pending_guard, pending) {
+                                                let request_id = request_counter.fetch_add(1, Ordering::Relaxed);
+                                                let mut parent_bytes = [0u8; 32];
+                                                parent_bytes.copy_from_slice(parent_hash_h256.as_ref());
+                                                let request = BlockRequestMessage {
+                                                    request_id,
+                                                    by_number: None,
+                                                    by_hash: Some(parent_bytes),
+                                                };
+                                                let request: P2PMessage = request.into();
+                                                if let Err(e) = bridge_p2p_network.unicast(peer_id, request).await {
+                                                    log::warn!(
+                                                        "⚠️ Failed to request parent for block #{}: {:?}",
+                                                        decoded_number,
+                                                        e
+                                                    );
                                                 }
                                             }
-                                            Err(e) => {
-                                                log::warn!("Error checking block existence: {:?}", e);
-                                            }
+                                            continue;
                                         }
+
+                                        let incoming = build_incoming_block(block, justifications);
+                                        bridge_import_queue
+                                            .lock()
+                                            .await
+                                            .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
                                     }
                                     Err(e) => {
-                                        log::warn!("Failed to decode BlockResponse block #{}, err: {:?}", block_number, e);
+                                        log::warn!(
+                                            "📦 V118: Failed to decode BlockResponse #{} from {:?}: {:?}",
+                                            block_number,
+                                            peer_id,
+                                            e
+                                        );
                                     }
                                 }
                             }
@@ -3721,6 +4035,45 @@ where
         .collect();
 
     Ok(accounts)
+}
+
+fn quorum_override_from_env() -> Option<u32> {
+    match std::env::var("ASF_QUORUM_OVERRIDE") {
+        Ok(value) => match value.parse::<u32>() {
+            Ok(parsed) => {
+                log::warn!(
+                    "⚠️ ASF quorum override enabled via ASF_QUORUM_OVERRIDE={}",
+                    parsed
+                );
+                Some(parsed)
+            }
+            Err(e) => {
+                log::warn!(
+                    "⚠️ Invalid ASF_QUORUM_OVERRIDE '{}': {:?}",
+                    value,
+                    e
+                );
+                None
+            }
+        },
+        Err(_) => None,
+    }
+}
+
+fn apply_quorum_override(base: u32, override_opt: Option<u32>) -> u32 {
+    let base = base.max(1);
+    match override_opt {
+        Some(value) => value.max(1).min(base),
+        None => base,
+    }
+}
+
+fn derive_observer_peer_id(chain_id: &str, node_name: &str) -> [u8; 32] {
+    let hostname = std::env::var("HOSTNAME")
+        .or_else(|_| std::env::var("HOST"))
+        .unwrap_or_else(|_| node_name.to_string());
+    let seed = format!("detrp2p-observer:{}:{}:{}", chain_id, node_name, hostname);
+    sp_core::hashing::blake2_256(seed.as_bytes())
 }
 
 #[cfg(test)]

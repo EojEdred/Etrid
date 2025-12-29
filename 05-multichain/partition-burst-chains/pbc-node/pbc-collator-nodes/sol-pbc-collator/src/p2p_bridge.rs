@@ -21,9 +21,13 @@ use etrid_protocol::gadget_network_bridge::{
 };
 use finality_gadget::{Certificate as FinalityCertificate, NetworkBridge, Vote as FinalityVote};
 use sc_client_api::{BlockBackend, HeaderBackend};
+use sc_consensus::import_queue::{ImportQueueService, IncomingBlock};
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::generic::SignedBlock;
 use sp_runtime::traits::{Header as HeaderT, NumberFor, SaturatedConversion, Zero};
+use sp_consensus::BlockOrigin;
+use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -31,12 +35,80 @@ use crate::service::FullClient;
 
 type Block = sol_pbc_runtime::opaque::Block;
 
+const DETR_P2P_MAX_PENDING_BLOCKS: usize = 2048;
+
+#[derive(Clone)]
+pub(crate) struct PendingBlock {
+    pub source_peer: PeerId,
+    pub block_number: u64,
+    pub block_hash: H256,
+    pub parent_hash: H256,
+    pub encoded_block: Vec<u8>,
+}
+
+#[derive(Default)]
+pub(crate) struct PendingState {
+    pub by_parent: HashMap<H256, Vec<PendingBlock>>,
+    pub hashes: HashSet<H256>,
+}
+
+pub(crate) fn queue_pending_block(state: &mut PendingState, pending: PendingBlock) -> bool {
+    if state.hashes.contains(&pending.block_hash) {
+        return false;
+    }
+    if state.hashes.len() >= DETR_P2P_MAX_PENDING_BLOCKS {
+        log::warn!(
+            "⚠️ Pending block pool full ({}), dropping block #{}",
+            state.hashes.len(),
+            pending.block_number
+        );
+        return false;
+    }
+    state.hashes.insert(pending.block_hash);
+    state.by_parent.entry(pending.parent_hash).or_default().push(pending);
+    true
+}
+
+pub(crate) fn take_pending_children(state: &mut PendingState, parent_hash: &H256) -> Vec<PendingBlock> {
+    match state.by_parent.remove(parent_hash) {
+        Some(children) => {
+            for child in &children {
+                state.hashes.remove(&child.block_hash);
+            }
+            children
+        }
+        None => Vec::new(),
+    }
+}
+
+pub(crate) fn build_incoming_block(
+    block: Block,
+    justifications: Option<sp_runtime::Justifications>,
+) -> IncomingBlock<Block> {
+    let hash = block.header.hash();
+    IncomingBlock {
+        hash,
+        header: Some(block.header),
+        body: Some(block.extrinsics),
+        indexed_body: None,
+        justifications,
+        origin: None,
+        allow_missing_state: false,
+        skip_execution: false,
+        import_existing: false,
+        state: None,
+    }
+}
+
 /// P2P Bridge manages the interaction between DETR P2P and Substrate
 pub struct P2PBridge {
     network: Arc<P2PNetwork>,
     client: Arc<FullClient>,
     gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
     finality_gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
+    import_queue: Arc<tokio::sync::Mutex<Box<dyn ImportQueueService<Block>>>>,
+    pending_state: Arc<tokio::sync::Mutex<PendingState>>,
+    request_counter: Arc<AtomicU64>,
     running: Arc<tokio::sync::Mutex<bool>>,
 }
 
@@ -163,12 +235,18 @@ impl P2PBridge {
         client: Arc<FullClient>,
         gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
         finality_gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
+        import_queue: Arc<tokio::sync::Mutex<Box<dyn ImportQueueService<Block>>>>,
+        pending_state: Arc<tokio::sync::Mutex<PendingState>>,
+        request_counter: Arc<AtomicU64>,
     ) -> Self {
         Self {
             network,
             client,
             gadget_bridge,
             finality_gadget,
+            import_queue,
+            pending_state,
+            request_counter,
             running: Arc::new(tokio::sync::Mutex::new(false)),
         }
     }
@@ -188,6 +266,9 @@ impl P2PBridge {
 
         // Start incoming message handler
         self.start_message_handler();
+
+        // Periodically retry pending blocks once parents arrive
+        self.start_pending_processor();
 
         *running = true;
         log::info!("✅ P2P Bridge started successfully");
@@ -289,6 +370,9 @@ impl P2PBridge {
         let client = self.client.clone();
         let gadget_bridge = self.gadget_bridge.clone();
         let finality_gadget = self.finality_gadget.clone();
+        let import_queue = self.import_queue.clone();
+        let pending_state = self.pending_state.clone();
+        let request_counter = self.request_counter.clone();
 
         tokio::spawn(async move {
             log::info!("📥 Incoming message handler started");
@@ -303,10 +387,72 @@ impl P2PBridge {
                         &client,
                         &gadget_bridge,
                         &finality_gadget,
+                        &import_queue,
+                        &pending_state,
+                        &request_counter,
                         peer_id,
                         message,
                     )
                     .await;
+                }
+            }
+        });
+    }
+
+    fn start_pending_processor(&self) {
+        let network = self.network.clone();
+        let client = self.client.clone();
+        let import_queue = self.import_queue.clone();
+        let pending_state = self.pending_state.clone();
+        let request_counter = self.request_counter.clone();
+
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(2));
+
+            loop {
+                interval.tick().await;
+
+                let mut ready: Vec<PendingBlock> = Vec::new();
+                {
+                    let mut guard = pending_state.lock().await;
+                    let parents: Vec<H256> = guard.by_parent.keys().cloned().collect();
+                    for parent_hash in parents {
+                        if client.header(parent_hash).ok().flatten().is_some() {
+                            let mut children = take_pending_children(&mut guard, &parent_hash);
+                            ready.append(&mut children);
+                        }
+                    }
+                }
+
+                for pending in ready {
+                    if let Ok(signed_block) = <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(
+                        &mut &pending.encoded_block[..],
+                    ) {
+                        let SignedBlock { block, justifications } = signed_block;
+                        let parent_hash = H256::from_slice(block.header.parent_hash().as_ref());
+                        if client.header(parent_hash).ok().flatten().is_none() {
+                            let mut guard = pending_state.lock().await;
+                            if queue_pending_block(&mut guard, pending.clone()) {
+                                let request_id = request_counter.fetch_add(1, Ordering::Relaxed);
+                                let mut parent_bytes = [0u8; 32];
+                                parent_bytes.copy_from_slice(parent_hash.as_ref());
+                                let request = BlockRequestMessage {
+                                    request_id,
+                                    by_number: None,
+                                    by_hash: Some(parent_bytes),
+                                };
+                                let request: Message = request.into();
+                                let _ = network.unicast(pending.source_peer.clone(), request).await;
+                            }
+                            continue;
+                        }
+
+                        let incoming = build_incoming_block(block, justifications);
+                        import_queue
+                            .lock()
+                            .await
+                            .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
+                    }
                 }
             }
         });
@@ -318,6 +464,9 @@ impl P2PBridge {
         client: &Arc<FullClient>,
         gadget_bridge: &Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
         finality_gadget: &Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
+        import_queue: &Arc<tokio::sync::Mutex<Box<dyn ImportQueueService<Block>>>>,
+        pending_state: &Arc<tokio::sync::Mutex<PendingState>>,
+        request_counter: &Arc<AtomicU64>,
         peer_id: PeerId,
         message: Message,
     ) {
@@ -329,17 +478,75 @@ impl P2PBridge {
                         msg.block_number,
                         peer_id
                     );
-                    log::debug!("  Block hash: {}", hex::encode(msg.block_hash));
-                    log::debug!("  Parent hash: {}", hex::encode(msg.parent_hash));
+
+                    if msg.encoded_block.is_empty() {
+                        log::warn!("⚠️ Skipping BlockAnnounce #{} (empty block)", msg.block_number);
+                        return;
+                    }
 
                     match <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &msg.encoded_block[..]) {
                         Ok(signed_block) => {
-                            let decoded_hash = signed_block.block.header.hash();
-                            log::debug!(
-                                "  Decoded block #{} (hash: {})",
-                                msg.block_number,
-                                hex::encode(decoded_hash.as_ref())
-                            );
+                            let SignedBlock { block, justifications } = signed_block;
+                            let decoded_hash = block.header.hash();
+                            let decoded_number = *block.header.number();
+                            let block_number_u64: u64 = decoded_number.saturated_into();
+                            let parent_hash_h256 = H256::from_slice(block.header.parent_hash().as_ref());
+
+                            if block.header.parent_hash().as_ref() != msg.parent_hash.as_ref() {
+                                log::warn!(
+                                    "⚠️ BlockAnnounce parent hash mismatch (expected {}, decoded {})",
+                                    hex::encode(msg.parent_hash),
+                                    hex::encode(block.header.parent_hash().as_ref())
+                                );
+                            }
+
+                            if decoded_hash.as_ref() != msg.block_hash.as_ref() {
+                                log::warn!(
+                                    "⚠️ BlockAnnounce hash mismatch (expected {}, got {})",
+                                    hex::encode(msg.block_hash),
+                                    hex::encode(decoded_hash.as_ref())
+                                );
+                            }
+
+                            if client.header(decoded_hash).ok().flatten().is_some() {
+                                return;
+                            }
+
+                            if client.header(parent_hash_h256).ok().flatten().is_none() {
+                                log::warn!(
+                                    "⚠️ BlockAnnounce block #{} missing parent/state, queuing for retry",
+                                    decoded_number
+                                );
+                                let pending = PendingBlock {
+                                    source_peer: peer_id.clone(),
+                                    block_number: block_number_u64,
+                                    block_hash: H256::from_slice(decoded_hash.as_ref()),
+                                    parent_hash: parent_hash_h256,
+                                    encoded_block: msg.encoded_block.clone(),
+                                };
+                                let mut pending_guard = pending_state.lock().await;
+                                if queue_pending_block(&mut pending_guard, pending) {
+                                    let request_id = request_counter.fetch_add(1, Ordering::Relaxed);
+                                    let mut parent_bytes = [0u8; 32];
+                                    parent_bytes.copy_from_slice(parent_hash_h256.as_ref());
+                                    let request = BlockRequestMessage {
+                                        request_id,
+                                        by_number: None,
+                                        by_hash: Some(parent_bytes),
+                                    };
+                                    let request: Message = request.into();
+                                    if let Err(e) = network.unicast(peer_id, request).await {
+                                        log::warn!("⚠️ Failed to request parent for block #{}: {}", decoded_number, e);
+                                    }
+                                }
+                                return;
+                            }
+
+                            let incoming = build_incoming_block(block, justifications);
+                            import_queue
+                                .lock()
+                                .await
+                                .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
                         }
                         Err(e) => {
                             log::warn!(
@@ -365,9 +572,28 @@ impl P2PBridge {
                         resp.block_number,
                         peer_id
                     );
+
+                    if resp.encoded_block.is_empty() {
+                        log::warn!("⚠️ Skipping BlockResponse #{} (empty block)", resp.block_number);
+                        return;
+                    }
+
                     match <SignedBlock<Block> as sp_runtime::codec::Decode>::decode(&mut &resp.encoded_block[..]) {
                         Ok(signed_block) => {
-                            let decoded_hash = signed_block.block.header.hash();
+                            let SignedBlock { block, justifications } = signed_block;
+                            let decoded_hash = block.header.hash();
+                            let decoded_number = *block.header.number();
+                            let block_number_u64: u64 = decoded_number.saturated_into();
+                            let parent_hash_h256 = H256::from_slice(block.header.parent_hash().as_ref());
+
+                            if block.header.parent_hash().as_ref() != resp.parent_hash.as_ref() {
+                                log::warn!(
+                                    "⚠️ BlockResponse parent hash mismatch (expected {}, decoded {})",
+                                    hex::encode(resp.parent_hash),
+                                    hex::encode(block.header.parent_hash().as_ref())
+                                );
+                            }
+
                             if decoded_hash.as_ref() != resp.block_hash.as_ref() {
                                 log::warn!(
                                     "⚠️ BlockResponse hash mismatch (expected {}, got {})",
@@ -375,6 +601,46 @@ impl P2PBridge {
                                     hex::encode(decoded_hash.as_ref())
                                 );
                             }
+
+                            if client.header(decoded_hash).ok().flatten().is_some() {
+                                return;
+                            }
+
+                            if client.header(parent_hash_h256).ok().flatten().is_none() {
+                                log::warn!(
+                                    "⚠️ BlockResponse block #{} missing parent/state, queuing for retry",
+                                    decoded_number
+                                );
+                                let pending = PendingBlock {
+                                    source_peer: peer_id.clone(),
+                                    block_number: block_number_u64,
+                                    block_hash: H256::from_slice(decoded_hash.as_ref()),
+                                    parent_hash: parent_hash_h256,
+                                    encoded_block: resp.encoded_block.clone(),
+                                };
+                                let mut pending_guard = pending_state.lock().await;
+                                if queue_pending_block(&mut pending_guard, pending) {
+                                    let request_id = request_counter.fetch_add(1, Ordering::Relaxed);
+                                    let mut parent_bytes = [0u8; 32];
+                                    parent_bytes.copy_from_slice(parent_hash_h256.as_ref());
+                                    let request = BlockRequestMessage {
+                                        request_id,
+                                        by_number: None,
+                                        by_hash: Some(parent_bytes),
+                                    };
+                                    let request: Message = request.into();
+                                    if let Err(e) = network.unicast(peer_id, request).await {
+                                        log::warn!("⚠️ Failed to request parent for block #{}: {}", decoded_number, e);
+                                    }
+                                }
+                                return;
+                            }
+
+                            let incoming = build_incoming_block(block, justifications);
+                            import_queue
+                                .lock()
+                                .await
+                                .import_blocks(BlockOrigin::NetworkBroadcast, vec![incoming]);
                         }
                         Err(e) => {
                             log::warn!(
@@ -386,7 +652,7 @@ impl P2PBridge {
                         }
                     }
                 }
-                BlockSyncMessage::StatusRequest(req) => {
+BlockSyncMessage::StatusRequest(req) => {
                     let info = client.info();
                     let best_number: u64 = info.best_number.saturated_into();
                     let best_hash = info.best_hash;

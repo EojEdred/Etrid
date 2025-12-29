@@ -114,32 +114,40 @@ impl P2PConfig {
 /// Parse a bootstrap peer from string format "peer_id@ip:port"
 /// Example: "a1b2c3d4...@192.168.1.100:30333"
 pub fn parse_bootstrap_peer(s: &str) -> Result<PeerAddr, String> {
-    let parts: Vec<&str> = s.split('@').collect();
-    if parts.len() != 2 {
-        return Err(format!("Invalid bootstrap peer format: {}. Expected: peer_id@ip:port", s));
+    let (mut left, mut right) = match s.split_once('@') {
+        Some((a, b)) => (a.trim(), b.trim()),
+        None => ("", s.trim()),
+    };
+
+    if right.is_empty() {
+        return Err(format!("Invalid bootstrap peer format: {}", s));
     }
 
-    // Parse peer ID from hex
-    let peer_id_hex = parts[0];
-    if peer_id_hex.len() != 64 {
-        return Err(format!("Invalid peer ID length: {}. Expected 64 hex chars (32 bytes)", peer_id_hex.len()));
+    if left.contains(':') && !right.contains(':') {
+        std::mem::swap(&mut left, &mut right);
     }
 
-    let mut peer_id_bytes = [0u8; 32];
-    hex::decode_to_slice(peer_id_hex, &mut peer_id_bytes)
-        .map_err(|e| format!("Invalid peer ID hex: {}", e))?;
-
-    let peer_id = PeerId::new(peer_id_bytes);
-
-    // Parse socket address
-    let address: SocketAddr = parts[1]
+    let address: SocketAddr = right
         .parse()
         .map_err(|e| format!("Invalid socket address: {}", e))?;
 
-    Ok(PeerAddr {
-        id: peer_id,
-        address,
-    })
+    let peer_id = if left.is_empty() {
+        PeerId::from_socket_addr(address)
+    } else {
+        if left.len() != 64 {
+            return Err(format!(
+                "Invalid peer ID length: {}. Expected 64 hex chars (32 bytes)",
+                left.len()
+            ));
+        }
+
+        let mut peer_id_bytes = [0u8; 32];
+        hex::decode_to_slice(left, &mut peer_id_bytes)
+            .map_err(|e| format!("Invalid peer ID hex: {}", e))?;
+        PeerId::new(peer_id_bytes)
+    };
+
+    Ok(PeerAddr { id: peer_id, address })
 }
 
 /// Load P2P configuration from environment variables

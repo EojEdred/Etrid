@@ -289,14 +289,39 @@ pub fn parse_bootstrap_peers(peers_str: &str) -> Result<Vec<PeerAddr>, String> {
     let mut peers = Vec::new();
 
     for peer_str in peers_str.split(',') {
-        let parts: Vec<&str> = peer_str.trim().split('@').collect();
-        if parts.len() != 2 {
-            return Err(format!("Invalid peer format: {}", peer_str));
+        let peer_str = peer_str.trim();
+        if peer_str.is_empty() {
+            continue;
         }
 
-        // Parse node ID (hex)
-        let node_id_hex = parts[0];
-        let node_id_bytes = hex::decode(node_id_hex)
+        peers.push(parse_bootstrap_peer(peer_str)?);
+    }
+
+    Ok(peers)
+}
+
+fn parse_bootstrap_peer(peer_str: &str) -> Result<PeerAddr, String> {
+    let (mut left, mut right) = match peer_str.split_once('@') {
+        Some((a, b)) => (a.trim(), b.trim()),
+        None => ("", peer_str.trim()),
+    };
+
+    if right.is_empty() {
+        return Err(format!("Invalid peer format: {}", peer_str));
+    }
+
+    if left.contains(':') && !right.contains(':') {
+        std::mem::swap(&mut left, &mut right);
+    }
+
+    let address = right
+        .parse::<SocketAddr>()
+        .map_err(|e| format!("Invalid socket address: {}", e))?;
+
+    let peer_id = if left.is_empty() {
+        PeerId::from_socket_addr(address)
+    } else {
+        let node_id_bytes = hex::decode(left)
             .map_err(|e| format!("Invalid node ID hex: {}", e))?;
 
         if node_id_bytes.len() != 32 {
@@ -305,18 +330,10 @@ pub fn parse_bootstrap_peers(peers_str: &str) -> Result<Vec<PeerAddr>, String> {
 
         let mut node_id = [0u8; 32];
         node_id.copy_from_slice(&node_id_bytes);
+        PeerId::new(node_id)
+    };
 
-        // Parse address
-        let address = parts[1].parse::<SocketAddr>()
-            .map_err(|e| format!("Invalid socket address: {}", e))?;
-
-        peers.push(PeerAddr {
-            id: PeerId::new(node_id),
-            address,
-        });
-    }
-
-    Ok(peers)
+    Ok(PeerAddr { id: peer_id, address })
 }
 
 #[cfg(test)]

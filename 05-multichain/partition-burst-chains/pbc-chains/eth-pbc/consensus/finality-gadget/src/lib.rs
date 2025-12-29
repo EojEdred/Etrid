@@ -320,6 +320,12 @@ impl VoteCollector {
         }
     }
 
+    pub fn update_committee_size(&mut self, committee_size: u32) {
+        let safe_size = committee_size.max(1);
+        self.max_validators = safe_size;
+        self.quorum_threshold = (2 * safe_size / 3) + 1;
+    }
+
     pub fn add_vote(&mut self, vote: Vote, block_number: u32) -> Result<bool, String> {
         if vote.signature.is_empty() {
             return Err("Empty signature".to_string());
@@ -488,8 +494,12 @@ impl CertificateGossip {
         let cert1 = &self.certificates[len - 2];
         let cert2 = &self.certificates[len - 1];
 
-        // Check if all 3 are consecutive views
-        if cert0.view.0 + 1 == cert1.view.0 && cert1.view.0 + 1 == cert2.view.0 {
+        // Check if all 3 are consecutive views and for the same block hash.
+        if cert0.view.0 + 1 == cert1.view.0
+            && cert1.view.0 + 1 == cert2.view.0
+            && cert0.block_hash == cert1.block_hash
+            && cert1.block_hash == cert2.block_hash
+        {
             // Return block that achieved finality
             Some(cert2.block_hash)
         } else {
@@ -717,6 +727,8 @@ impl FinalityGadget {
         keystore: KeystorePtr,
         network_bridge: Arc<dyn NetworkBridge>,
     ) -> Self {
+        let max_validators = apply_quorum_override(max_validators, quorum_override_from_env());
+
         Self {
             validator_id,
             max_validators,
@@ -732,6 +744,20 @@ impl FinalityGadget {
             pending_votes: VecDeque::new(),
             pending_certificates: VecDeque::new(),
             certificates_created: HashSet::new(),
+        }
+    }
+
+    /// Update the committee size used for quorum checks (safe when derived from on-chain committee).
+    pub fn set_committee_size(&mut self, committee_size: u32) {
+        let safe_size = committee_size.max(1);
+        if safe_size != self.max_validators {
+            tracing::info!(
+                "🔧 Updating ASF quorum committee size: {} -> {}",
+                self.max_validators,
+                safe_size
+            );
+            self.max_validators = safe_size;
+            self.vote_collector.update_committee_size(safe_size);
         }
     }
 
@@ -914,6 +940,43 @@ impl FinalityGadget {
                 }
             }
         }
+    }
+}
+
+fn quorum_override_from_env() -> Option<u32> {
+    match std::env::var("ASF_QUORUM_OVERRIDE") {
+        Ok(value) => match value.parse::<u32>() {
+            Ok(parsed) => {
+                tracing::warn!(
+                    "ASF quorum override enabled via ASF_QUORUM_OVERRIDE={}",
+                    parsed
+                );
+                Some(parsed)
+            }
+            Err(e) => {
+                tracing::warn!("Invalid ASF_QUORUM_OVERRIDE '{}': {:?}", value, e);
+                None
+            }
+        },
+        Err(_) => None,
+    }
+}
+
+fn apply_quorum_override(base: u32, override_opt: Option<u32>) -> u32 {
+    let base = base.max(1);
+    match override_opt {
+        Some(value) => {
+            let effective = value.max(1).min(base);
+            if effective != base {
+                tracing::warn!(
+                    "ASF quorum override applied: {} -> {}",
+                    base,
+                    effective
+                );
+            }
+            effective
+        }
+        None => base,
     }
 }
 

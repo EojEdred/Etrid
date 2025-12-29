@@ -20,9 +20,9 @@ use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::codec::Decode;
 use sp_runtime::traits::{Get, Header as HeaderT, SaturatedConversion};
-use std::{marker::PhantomData, sync::Arc, time::Duration};
+use std::{collections::HashSet, marker::PhantomData, net::{IpAddr, SocketAddr}, sync::Arc, time::Duration};
 
-use crate::p2p_config::{P2PConfig, P2PNetworkService, parse_bootstrap_peers};
+use crate::p2p_config::{P2PConfig, P2PNetworkService, parse_bootstrap_peers, peer_id_from_public_key};
 use detrp2p::PeerId;
 
 use ai_compute_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
@@ -323,13 +323,11 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
     // Initialize DETR P2P Network
     log::info!("🌐 AI-COMPUTE-PBC: Initializing DETR P2P Network...");
 
-    // Create P2P configuration with default port for AI-Compute PBC (30346)
-    let p2p_config = P2PConfig::default();
+    let mut p2p_config = build_p2p_config(&config, &keystore_container)?;
 
     // Initialize and start P2P network
-    let p2p_network = {
-        let mut config = p2p_config;
-        match config.initialize().await {
+    let p2p_network = if p2p_config.enabled {
+        match p2p_config.initialize().await {
             Ok(network) => {
                 log::info!("✅ AI-COMPUTE-PBC: DETR P2P Network initialized");
                 Some(network)
@@ -339,11 +337,14 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
                 None
             }
         }
+    } else {
+        log::info!("⚠️ AI-COMPUTE-PBC: DETR P2P disabled via DETR_P2P_ENABLE");
+        None
     };
 
     // Start P2P network service if initialized
-    if let Some(network) = p2p_network {
-        let p2p_service = P2PNetworkService::new(network.clone());
+    if let Some(detrp2p_network) = p2p_network {
+        let p2p_service = P2PNetworkService::new(detrp2p_network.clone());
 
         task_manager.spawn_handle().spawn(
             "detr-p2p-service",
@@ -356,6 +357,52 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
                 // Keep service running
                 loop {
                     tokio::time::sleep(Duration::from_secs(60)).await;
+                }
+            },
+        );
+
+        // Bridge libp2p peer discovery into DETR P2P to keep overlays segmented but aligned.
+        let libp2p_network = network.clone();
+        let detrp2p_network = detrp2p_network.clone();
+        let detr_listen_addr = p2p_config.announce_address.unwrap_or(p2p_config.bind_address);
+        let detr_p2p_port = p2p_config.bind_address.port();
+        task_manager.spawn_handle().spawn(
+            "detrp2p-libp2p-bridge",
+            None,
+            async move {
+                let mut seen_addrs: HashSet<SocketAddr> = HashSet::new();
+                let mut interval = tokio::time::interval(Duration::from_secs(15));
+
+                loop {
+                    interval.tick().await;
+
+                    if let Ok(state) = libp2p_network.network_state().await {
+                        for peer in state.connected_peers.values() {
+                            for addr in &peer.known_addresses {
+                                let addr_str = addr.to_string();
+                                let ip = match addr_str.split('/').nth(2) {
+                                    Some(ip_str) => match ip_str.parse::<IpAddr>() {
+                                        Ok(ip) if !ip.is_loopback() && !ip.is_unspecified() => ip,
+                                        _ => continue,
+                                    },
+                                    _ => continue,
+                                };
+
+                                let socket = SocketAddr::new(ip, detr_p2p_port);
+                                if socket == detr_listen_addr || !seen_addrs.insert(socket) {
+                                    continue;
+                                }
+
+                                let peer_addr = detrp2p::PeerAddr {
+                                    id: detrp2p::PeerId::from_socket_addr(socket),
+                                    address: socket,
+                                };
+                                if let Err(e) = detrp2p_network.add_peer(peer_addr).await {
+                                    log::debug!("DETR P2P peer add failed for {}: {:?}", socket, e);
+                                }
+                            }
+                        }
+                    }
                 }
             },
         );
@@ -393,7 +440,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         let max_validators = ai_compute_pbc_runtime::asf_config::AsfMaxCommitteeSize::get();
         let finality_keystore = keystore_container.keystore();
         let network_bridge = Arc::new(DetrP2PNetworkBridge::new(
-            network.clone(),
+            detrp2p_network.clone(),
             gadget_bridge.clone(),
         ));
         let finality_gadget = Arc::new(tokio::sync::Mutex::new(
@@ -468,7 +515,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         );
 
         // Spawn P2P message processor for finality gossip
-        let p2p_network_clone = network.clone();
+        let p2p_network_clone = detrp2p_network.clone();
         let client_clone = client.clone();
         let gadget_bridge_clone = gadget_bridge.clone();
         let finality_gadget_clone = finality_gadget.clone();
@@ -653,6 +700,85 @@ async fn process_p2p_messages(
     }
 }
 
+fn build_p2p_config(
+    config: &Configuration,
+    keystore_container: &sc_service::KeystoreContainer,
+) -> Result<P2PConfig, ServiceError> {
+    let local_node_id = derive_detrp2p_peer_id(
+        keystore_container,
+        config.chain_spec.id(),
+        &config.network.node_name,
+    );
+
+    let bind_address_str = std::env::var("DETR_P2P_BIND_ADDRESS")
+        .or_else(|_| std::env::var("DETR_P2P_BIND"))
+        .unwrap_or_else(|_| "0.0.0.0:30333".to_string());
+    let bind_address = bind_address_str
+        .parse()
+        .map_err(|e| ServiceError::Other(format!(
+            "Invalid DETR P2P bind address '{}': {}",
+            bind_address_str,
+            e
+        )))?;
+
+    let bootstrap_peers = bootstrap_peers_from_env();
+
+    let mut p2p_config = P2PConfig::new(local_node_id, bind_address, bootstrap_peers);
+    p2p_config.enabled = std::env::var("DETR_P2P_ENABLE")
+        .map(|v| v != "0")
+        .unwrap_or(true);
+
+    if let Ok(announce_str) = std::env::var("DETR_P2P_ANNOUNCE") {
+        match announce_str.parse::<SocketAddr>() {
+            Ok(addr) => {
+                p2p_config = p2p_config.with_announce_address(addr);
+            }
+            Err(e) => {
+                log::warn!("Invalid DETR_P2P_ANNOUNCE '{}': {}", announce_str, e);
+            }
+        }
+    }
+
+    Ok(p2p_config)
+}
+
+fn bootstrap_peers_from_env() -> Vec<detrp2p::PeerAddr> {
+    let env = std::env::var("DETR_P2P_BOOTSTRAP")
+        .or_else(|_| std::env::var("DETR_P2P_BOOTSTRAP_PEERS"))
+        .ok();
+
+    match env {
+        Some(value) => match parse_bootstrap_peers(&value) {
+            Ok(peers) => peers,
+            Err(e) => {
+                log::warn!("Failed to parse DETR P2P bootstrap peers '{}': {}", value, e);
+                Vec::new()
+            }
+        },
+        None => Vec::new(),
+    }
+}
+
+fn derive_detrp2p_peer_id(
+    keystore_container: &sc_service::KeystoreContainer,
+    chain_id: &str,
+    node_name: &str,
+) -> detrp2p::PeerId {
+    use sp_core::crypto::KeyTypeId;
+
+    const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
+    let keystore = keystore_container.keystore();
+    if let Some(public_key) = keystore.sr25519_public_keys(ASF_KEY_TYPE).first() {
+        return peer_id_from_public_key(public_key.as_ref());
+    }
+
+    let hostname = std::env::var("HOSTNAME")
+        .or_else(|_| std::env::var("HOST"))
+        .unwrap_or_else(|_| node_name.to_string());
+    let seed = format!("detrp2p-observer:{}:{}:{}", chain_id, node_name, hostname);
+    detrp2p::PeerId::new(sp_core::hashing::blake2_256(seed.as_bytes()))
+}
+
 fn convert_vote_from_bridge(vote_data: VoteData) -> finality_gadget::Vote {
     finality_gadget::Vote {
         validator_id: finality_gadget::ValidatorId(AccountId32::new(vote_data.validator_id)),
@@ -691,4 +817,3 @@ fn convert_certificate_from_bridge(cert_data: CertificateData) -> finality_gadge
 fn view_from_header<H: HeaderT>(header: &H) -> finality_gadget::View {
     finality_gadget::View((*header.number()).saturated_into())
 }
-

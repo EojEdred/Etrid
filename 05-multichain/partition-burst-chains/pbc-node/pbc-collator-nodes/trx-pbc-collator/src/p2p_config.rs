@@ -219,33 +219,47 @@ pub fn parse_bootstrap_peers(input: &str) -> Result<Vec<PeerAddr>, String> {
             continue;
         }
 
-        // Parse format: peer_id@ip:port
-        let parts: Vec<&str> = peer_str.split('@').collect();
-        if parts.len() != 2 {
-            return Err(format!("Invalid peer format: {}. Expected: peer_id@ip:port", peer_str));
-        }
-
-        // Parse peer ID (hex string)
-        let peer_id_hex = parts[0].trim();
-        let peer_id_bytes = hex::decode(peer_id_hex)
-            .map_err(|e| format!("Invalid peer ID hex: {}", e))?;
-
-        if peer_id_bytes.len() != 32 {
-            return Err(format!("Peer ID must be 32 bytes, got {}", peer_id_bytes.len()));
-        }
-
-        let mut peer_id_array = [0u8; 32];
-        peer_id_array.copy_from_slice(&peer_id_bytes);
-        let peer_id = PeerId::new(peer_id_array);
-
-        // Parse socket address
-        let address = parts[1].trim().parse::<SocketAddr>()
-            .map_err(|e| format!("Invalid socket address: {}", e))?;
-
-        peers.push(PeerAddr { id: peer_id, address });
+        peers.push(parse_bootstrap_peer(peer_str)?);
     }
 
     Ok(peers)
+}
+
+fn parse_bootstrap_peer(peer_str: &str) -> Result<PeerAddr, String> {
+    let (mut left, mut right) = match peer_str.split_once('@') {
+        Some((a, b)) => (a.trim(), b.trim()),
+        None => ("", peer_str.trim()),
+    };
+
+    if right.is_empty() {
+        return Err(format!("Invalid peer format: {}", peer_str));
+    }
+
+    if left.contains(':') && !right.contains(':') {
+        std::mem::swap(&mut left, &mut right);
+    }
+
+    let address = right
+        .parse::<SocketAddr>()
+        .map_err(|e| format!("Invalid socket address: {}", e))?;
+
+    let peer_id = if left.is_empty() {
+        PeerId::from_socket_addr(address)
+    } else {
+        if left.len() != 64 {
+            return Err(format!(
+                "Invalid peer ID length: {}. Expected 64 hex chars (32 bytes)",
+                left.len()
+            ));
+        }
+
+        let mut peer_id_bytes = [0u8; 32];
+        hex::decode_to_slice(left, &mut peer_id_bytes)
+            .map_err(|e| format!("Invalid peer ID hex: {}", e))?;
+        PeerId::new(peer_id_bytes)
+    };
+
+    Ok(PeerAddr { id: peer_id, address })
 }
 
 #[cfg(test)]
