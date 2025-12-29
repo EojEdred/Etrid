@@ -49,6 +49,7 @@ use codec::Decode;
 use sp_runtime::traits::{Header, IdentifyAccount, NumberFor, Zero};
 use sp_runtime::MultiSigner;
 use sp_core::crypto::AccountId32;
+use sp_core::crypto::Ss58Codec;
 use sp_timestamp;
 use std::{collections::HashMap, sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 use detrp2p_peerstored::PeerStore;
@@ -114,6 +115,40 @@ struct PeerSyncMetrics {
     dpeers_authenticated: Option<Gauge<U64>>,
     dpeers_total: Option<Gauge<U64>>,
     best_block: Option<Gauge<U64>>,
+}
+
+#[derive(serde::Deserialize)]
+struct CommitteeOverrideFile {
+    validators: Vec<(String, u128, String)>,
+}
+
+fn load_committee_override(
+    bytes: &[u8],
+) -> Result<Vec<validator_management::ValidatorInfo>, String> {
+    let override_file: CommitteeOverrideFile = serde_json::from_slice(bytes)
+        .map_err(|e| format!("committee override decode: {e}"))?;
+
+    let mut validators = Vec::with_capacity(override_file.validators.len());
+    for (ss58, stake, peer_type_str) in override_file.validators {
+        let account_id = AccountId32::from_string(&ss58)
+            .map_err(|e| format!("invalid ss58 {ss58}: {e}"))?;
+        let peer_type = match peer_type_str.as_str() {
+            "Common" => validator_management::PeerType::Common,
+            "StakingCommon" => validator_management::PeerType::StakingCommon,
+            "ValidityNode" => validator_management::PeerType::ValidityNode,
+            "FlareNode" => validator_management::PeerType::FlareNode,
+            "DecentralizedDirector" => validator_management::PeerType::DecentralizedDirector,
+            other => return Err(format!("unknown peer_type {other}")),
+        };
+
+        validators.push(validator_management::ValidatorInfo::new(
+            account_id,
+            stake,
+            peer_type,
+        ));
+    }
+
+    Ok(validators)
 }
 
 impl PeerSyncMetrics {
@@ -1117,6 +1152,7 @@ pub fn new_full_with_params(
     let data_base_path = config.base_path.clone();
     let base_path = data_base_path.config_dir(chain_id.as_str());
     let committee_cache_path = base_path.join("ppfa").join("committee_cache.json");
+    let committee_override_path = base_path.join("ppfa").join("committee_override.json");
 
     // Clone network data before moving config (needed for DETR P2P setup)
     let boot_nodes = config.network.boot_nodes.clone();
@@ -1226,6 +1262,33 @@ pub fn new_full_with_params(
                             );
                             retries += 1;
                             tokio::time::sleep(Duration::from_secs(1)).await;
+                        }
+                    }
+                }
+
+                if runtime_committee.is_empty() {
+                    log::warn!(
+                        "⚠️  Runtime committee empty; checking override at {:?}",
+                        committee_override_path
+                    );
+                    match fs::read(&committee_override_path).await {
+                        Ok(bytes) => match load_committee_override(&bytes) {
+                            Ok(override_committee) => {
+                                log::info!(
+                                    "✅ Loaded {} validators from committee override",
+                                    override_committee.len()
+                                );
+                                runtime_committee = override_committee;
+                            }
+                            Err(e) => {
+                                log::warn!("⚠️  Failed to parse committee override: {}", e);
+                            }
+                        },
+                        Err(e) => {
+                            log::warn!(
+                                "⚠️  Committee override not available ({}); continuing without it",
+                                e
+                            );
                         }
                     }
                 }
