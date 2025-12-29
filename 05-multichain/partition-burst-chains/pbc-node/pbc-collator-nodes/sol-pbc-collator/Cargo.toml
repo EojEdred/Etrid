@@ -48,6 +48,7 @@ sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stab
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 codec = { package = "parity-scale-codec", version = "3.0", default-features = false }
 sp-consensus-asf = { path = "../../../../../09-consensus/primitives/consensus-asf" }
+sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-timestamp = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-keyring = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }

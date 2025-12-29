@@ -115,6 +115,10 @@ pub async fn start_collator_with_p2p(
         other: (mut telemetry,),
     } = new_partial(&config)?;
 
+    let import_queue_service = Arc::new(tokio::sync::Mutex::new(import_queue.service()));
+    let pending_state = Arc::new(tokio::sync::Mutex::new(PendingState::default()));
+    let request_counter = Arc::new(AtomicU64::new(1));
+
     let net_config = sc_network::config::FullNetworkConfiguration::<
         Block,
         <Block as sp_runtime::traits::Block>::Hash,
@@ -424,11 +428,6 @@ pub async fn start_collator_with_p2p(
         } else {
             log::info!("ℹ️ P2P networking is disabled");
         }
-    } else {
-        log::info!("ℹ️ No P2P configuration provided - running without DETR P2P");
-    }
-
-
     // ═══════════════════════════════════════════════════════════════════════════
     // RPC SERVER INITIALIZATION - CRITICAL FIX
     // ═══════════════════════════════════════════════════════════════════════════
@@ -590,4 +589,3 @@ fn derive_detrp2p_peer_id(
 fn view_from_header<H: HeaderT>(header: &H) -> finality_gadget::View {
     finality_gadget::View((*header.number()).saturated_into())
 }
-

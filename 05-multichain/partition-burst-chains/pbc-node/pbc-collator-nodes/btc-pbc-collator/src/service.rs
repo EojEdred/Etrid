@@ -428,10 +428,6 @@ pub async fn start_collator_with_p2p(
         } else {
             log::info!("ℹ️ P2P networking is disabled");
         }
-    } else {
-        log::info!("ℹ️ No P2P configuration provided - running without DETR P2P");
-    }
-
     // ═══════════════════════════════════════════════════════════════════════════
     // RPC SERVER INITIALIZATION - CRITICAL FIX
     // ═══════════════════════════════════════════════════════════════════════════
