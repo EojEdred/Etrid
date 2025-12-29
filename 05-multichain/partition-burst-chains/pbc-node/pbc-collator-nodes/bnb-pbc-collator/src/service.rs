@@ -733,15 +733,6 @@ fn convert_certificate_from_bridge(cert_data: CertificateData) -> finality_gadge
 }
 
 fn view_from_header<H: HeaderT>(header: &H) -> finality_gadget::View {
-    let view_from_digest = header.digest().logs().iter().find_map(|digest_item| {
-        if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
-            if engine_id == b"asf0" {
-                return u64::decode(&mut &data[..]).ok();
-            }
-        }
-        None
-    });
-
-    let fallback: u64 = (*header.number()).saturated_into();
-    finality_gadget::View(view_from_digest.unwrap_or(fallback))
+    finality_gadget::View((*header.number()).saturated_into())
 }
+

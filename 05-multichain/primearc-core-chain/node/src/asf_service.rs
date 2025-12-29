@@ -2460,22 +2460,7 @@ pub fn new_full_with_params(
 
                     // Convert Substrate H256 to finality_gadget::BlockHash
                     let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
-                    let view_from_digest = notification
-                        .header
-                        .digest()
-                        .logs()
-                        .iter()
-                        .find_map(|digest_item| {
-                            if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
-                                if engine_id == b"asf0" {
-                                    return u64::decode(&mut &data[..]).ok();
-                                }
-                            }
-                            None
-                        });
-                    let view = finality_gadget::View(
-                        view_from_digest.unwrap_or_else(|| block_number.saturated_into())
-                    );
+                    let view = finality_gadget::View(block_number.saturated_into());
 
                     log::debug!(
                         "📦 Block imported #{} ({:?}), proposing to finality gadget",
