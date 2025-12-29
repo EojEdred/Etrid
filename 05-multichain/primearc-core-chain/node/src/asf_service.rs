@@ -1811,6 +1811,7 @@ pub fn new_full_with_params(
                         hash.copy_from_slice(&encoded[0..32]);
                         hash
                     },
+                    block_number: cert.block_number,
                     signatures,
                 }
             }
@@ -1959,6 +1960,7 @@ pub fn new_full_with_params(
             finality_gadget::Certificate {
                 view: finality_gadget::View(cert_data.view),
                 block_hash: finality_gadget::BlockHash::from_bytes(cert_data.block_hash),
+                block_number: cert_data.block_number,
                 signatures: cert_data.signatures.into_iter()
                     .map(|(id, sig)| (finality_gadget::ValidatorId(id.into()), sig))  // V9: Convert [u8; 32] to AccountId32
                     .collect(),
@@ -2267,12 +2269,14 @@ pub fn new_full_with_params(
 
         // Calculate max validators from committee size
         let max_validators = asf_params.max_committee_size;
+        let finality_keystore = keystore_container.keystore();
 
         // Create finality gadget instance
         let finality_gadget = Arc::new(tokio::sync::Mutex::new(
             finality_gadget::FinalityGadget::new(
                 validator_id.clone(),
                 max_validators,
+                finality_keystore,
                 network_bridge.clone(),
             )
         ));
@@ -2456,6 +2460,22 @@ pub fn new_full_with_params(
 
                     // Convert Substrate H256 to finality_gadget::BlockHash
                     let block_hash = finality_gadget::BlockHash::from_bytes(substrate_hash.into());
+                    let view_from_digest = notification
+                        .header
+                        .digest()
+                        .logs()
+                        .iter()
+                        .find_map(|digest_item| {
+                            if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
+                                if engine_id == b"asf0" {
+                                    return u64::decode(&mut &data[..]).ok();
+                                }
+                            }
+                            None
+                        });
+                    let view = finality_gadget::View(
+                        view_from_digest.unwrap_or_else(|| block_number.saturated_into())
+                    );
 
                     log::debug!(
                         "📦 Block imported #{} ({:?}), proposing to finality gadget",
@@ -2471,12 +2491,13 @@ pub fn new_full_with_params(
                     // V4 FIX: Use lock().await with timeout to ensure votes are created
                     // while preventing indefinite blocking. This fixes the deadlock where
                     // try_lock() silently failed for 800+ blocks with no warning logs.
+                    let block_number_u32: u32 = block_number.saturated_into();
                     match timeout(
                         Duration::from_secs(3),
                         block_import_finality_gadget.lock()
                     ).await {
                         Ok(mut gadget) => {
-                            match gadget.propose_block(block_hash).await {
+                            match gadget.propose_block(block_hash, block_number_u32, view).await {
                                 Ok(vote) => {
                                     log::info!(
                                         "✅ Created finality vote for block #{} ({:?}) at view {:?}",
@@ -2937,9 +2958,32 @@ pub fn new_full_with_params(
 
                                             drop(bridge); // Release bridge lock
 
+                                            let vote_block_hash = sp_core::H256::from_slice(
+                                                finality_vote.block_hash.as_bytes()
+                                            );
+                                            let vote_block_number: u32 = match bridge_block_client.number(vote_block_hash) {
+                                                Ok(Some(number)) => number.saturated_into(),
+                                                Ok(None) => {
+                                                    log::warn!(
+                                                        "⚠️ Vote for unknown block {:?} (view: {}), skipping",
+                                                        vote_block_hash,
+                                                        view
+                                                    );
+                                                    continue;
+                                                }
+                                                Err(e) => {
+                                                    log::warn!(
+                                                        "⚠️ Failed to resolve block number for vote {:?}: {:?}",
+                                                        vote_block_hash,
+                                                        e
+                                                    );
+                                                    continue;
+                                                }
+                                            };
+
                                             // Process in finality gadget
                                             let mut gadget = bridge_finality_gadget.lock().await;
-                                            match gadget.handle_vote(finality_vote.clone()).await {
+                                            match gadget.handle_vote(finality_vote.clone(), vote_block_number).await {
                                                 Ok(_) => {
                                                     log::info!(
                                                         "✅ Vote ACCEPTED by finality gadget (validator: {}, view: {}, block: {:?})",

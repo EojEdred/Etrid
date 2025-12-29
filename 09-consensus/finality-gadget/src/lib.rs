@@ -10,6 +10,7 @@ use tokio::time::{Instant, Duration, interval};
 use serde::{Serialize, Deserialize};
 use codec::{Encode, Decode};
 use sp_core::crypto::AccountId32;
+use sp_keystore::{Keystore, KeystorePtr};
 
 // ============================================================================
 // MODULES: ASF Finality Phases 3, 4, 5, 6, & 7
@@ -80,6 +81,89 @@ impl BlockHash {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Encode, Decode)]
 pub struct View(pub u64);
 
+// ============================================================================
+// ASF VOTE SIGNING MODULE
+// ============================================================================
+
+/// ASF vote signing using Sr25519 keys stored in the keystore.
+pub mod signing {
+    use super::*;
+    use sp_core::crypto::KeyTypeId;
+    use sp_core::sr25519::{Public, Signature};
+    use codec::Encode;
+
+    /// Key type for ASF consensus keys in the keystore ("asfk").
+    pub const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
+
+    /// Data that gets signed for a vote.
+    #[derive(Clone, Debug, Encode)]
+    pub struct VoteSigningData {
+        pub view: u64,
+        pub block_hash: [u8; 32],
+        pub block_number: u32,
+        pub validator_id: [u8; 32],
+    }
+
+    impl VoteSigningData {
+        pub fn new(view: u64, block_hash: [u8; 32], block_number: u32, validator_id: [u8; 32]) -> Self {
+            Self { view, block_hash, block_number, validator_id }
+        }
+
+        pub fn to_sign_bytes(&self) -> Vec<u8> {
+            let mut bytes = b"ASF-VOTE-V1:".to_vec();
+            bytes.extend(self.encode());
+            bytes
+        }
+    }
+
+    pub fn sign_vote(
+        keystore: &KeystorePtr,
+        validator_public: &[u8; 32],
+        signing_data: &VoteSigningData,
+    ) -> Result<[u8; 64], SigningError> {
+        let public = Public::from_raw(*validator_public);
+        let message = signing_data.to_sign_bytes();
+
+        let signature = keystore
+            .sr25519_sign(ASF_KEY_TYPE, &public, &message)
+            .map_err(|e| SigningError::KeystoreError(format!("{:?}", e)))?
+            .ok_or(SigningError::KeyNotFound)?;
+
+        Ok(signature.0)
+    }
+
+    pub fn verify_vote_signature(
+        validator_public: &[u8; 32],
+        signing_data: &VoteSigningData,
+        signature: &[u8; 64],
+    ) -> bool {
+        let public = Public::from_raw(*validator_public);
+        let sig = Signature::from_raw(*signature);
+        let message = signing_data.to_sign_bytes();
+
+        sp_core::sr25519::Pair::verify(&sig, &message, &public)
+    }
+
+    #[derive(Debug, Clone)]
+    pub enum SigningError {
+        KeystoreError(String),
+        KeyNotFound,
+        InvalidSignature,
+    }
+
+    impl std::fmt::Display for SigningError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                SigningError::KeystoreError(e) => write!(f, "Keystore error: {}", e),
+                SigningError::KeyNotFound => write!(f, "Validator key not found in keystore"),
+                SigningError::InvalidSignature => write!(f, "Invalid signature"),
+            }
+        }
+    }
+
+    impl std::error::Error for SigningError {}
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Vote {
     pub validator_id: ValidatorId,
@@ -89,12 +173,100 @@ pub struct Vote {
     pub timestamp: u64,
 }
 
+impl Vote {
+    /// Create and sign a new vote.
+    pub fn new(
+        keystore: &KeystorePtr,
+        validator_id: ValidatorId,
+        view: View,
+        block_hash: BlockHash,
+        block_number: u32,
+    ) -> Result<Self, signing::SigningError> {
+        let validator_bytes: &[u8; 32] = validator_id.0.as_ref();
+        let signing_data = signing::VoteSigningData::new(
+            view.0,
+            *block_hash.as_bytes(),
+            block_number,
+            *validator_bytes,
+        );
+        let signature = signing::sign_vote(keystore, validator_bytes, &signing_data)?;
+
+        Ok(Self {
+            validator_id,
+            view,
+            block_hash,
+            signature: signature.to_vec(),
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        })
+    }
+
+    /// Verify this vote's signature.
+    pub fn verify(&self, block_number: u32) -> bool {
+        if self.signature.len() != 64 {
+            return false;
+        }
+
+        let validator_bytes: &[u8; 32] = self.validator_id.0.as_ref();
+        let signing_data = signing::VoteSigningData::new(
+            self.view.0,
+            *self.block_hash.as_bytes(),
+            block_number,
+            *validator_bytes,
+        );
+
+        let mut sig_array = [0u8; 64];
+        sig_array.copy_from_slice(&self.signature[..64]);
+        signing::verify_vote_signature(validator_bytes, &signing_data, &sig_array)
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Encode, Decode)]
 pub struct Certificate {
     pub view: View,
     pub block_hash: BlockHash,
+    pub block_number: u32,
     pub signatures: Vec<(ValidatorId, Vec<u8>)>,
     pub timestamp: u64,
+}
+
+impl Certificate {
+    /// Verify all signatures in this certificate.
+    pub fn verify_all_signatures(&self) -> bool {
+        for (validator_id, signature) in &self.signatures {
+            if signature.len() != 64 {
+                return false;
+            }
+
+            let validator_bytes: &[u8; 32] = validator_id.0.as_ref();
+            let signing_data = signing::VoteSigningData::new(
+                self.view.0,
+                *self.block_hash.as_bytes(),
+                self.block_number,
+                *validator_bytes,
+            );
+
+            let mut sig_array = [0u8; 64];
+            sig_array.copy_from_slice(&signature[..64]);
+
+            if !signing::verify_vote_signature(validator_bytes, &signing_data, &sig_array) {
+                tracing::warn!(
+                    "Certificate has invalid signature from validator {:?}",
+                    hex::encode(validator_bytes)
+                );
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Check if certificate has enough signatures (2f+1).
+    pub fn has_quorum(&self, committee_size: usize) -> bool {
+        let threshold = (2 * committee_size / 3) + 1;
+        self.signatures.len() >= threshold
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -183,6 +355,7 @@ impl PeerReputation {
 
 pub struct VoteCollector {
     votes: HashMap<View, HashMap<BlockHash, Vec<(ValidatorId, Vec<u8>)>>>,
+    block_numbers: HashMap<BlockHash, u32>,
     quorum_threshold: u32,
     max_validators: u32,
     // V122 FIX 3: Single-block-per-view lock - first block seen wins
@@ -194,15 +367,28 @@ impl VoteCollector {
         let quorum_threshold = (2 * max_validators / 3) + 1;
         Self {
             votes: HashMap::new(),
+            block_numbers: HashMap::new(),
             quorum_threshold,
             max_validators,
             view_locked_block: HashMap::new(),
         }
     }
 
-    pub fn add_vote(&mut self, vote: Vote) -> Result<bool, String> {
+    pub fn add_vote(&mut self, vote: Vote, block_number: u32) -> Result<bool, String> {
         if vote.signature.is_empty() {
             return Err("Empty signature".to_string());
+        }
+
+        if !vote.verify(block_number) {
+            return Err("Invalid vote signature".to_string());
+        }
+
+        if let Some(existing) = self.block_numbers.get(&vote.block_hash) {
+            if *existing != block_number {
+                return Err("Conflicting block number for hash".to_string());
+            }
+        } else {
+            self.block_numbers.insert(vote.block_hash, block_number);
         }
 
         // V122 FIX 3: Single-block-per-view enforcement
@@ -311,6 +497,10 @@ impl VoteCollector {
             .and_then(|view_votes| view_votes.get(&block_hash))
             .filter(|sigs| sigs.len() as u32 >= self.quorum_threshold)
             .cloned()
+    }
+
+    pub fn get_block_number(&self, block_hash: &BlockHash) -> Option<u32> {
+        self.block_numbers.get(block_hash).copied()
     }
 }
 
@@ -576,6 +766,7 @@ pub trait NetworkBridge: Send + Sync {
 pub struct FinalityGadget {
     validator_id: ValidatorId,
     max_validators: u32,
+    keystore: KeystorePtr,
     vote_collector: VoteCollector,
     certificate_gossip: CertificateGossip,
     view_timer: ViewChangeTimer,
@@ -596,11 +787,13 @@ impl FinalityGadget {
     pub fn new(
         validator_id: ValidatorId,
         max_validators: u32,
+        keystore: KeystorePtr,
         network_bridge: Arc<dyn NetworkBridge>,
     ) -> Self {
         Self {
             validator_id,
             max_validators,
+            keystore,
             vote_collector: VoteCollector::new(max_validators),
             certificate_gossip: CertificateGossip::new(100),
             view_timer: ViewChangeTimer::new(Duration::from_secs(18)), // 3x block time for network latency
@@ -617,7 +810,7 @@ impl FinalityGadget {
 
     // ========== INBOUND MESSAGE HANDLING ==========
 
-    pub async fn handle_vote(&mut self, vote: Vote) -> Result<(), String> {
+    pub async fn handle_vote(&mut self, vote: Vote, block_number: u32) -> Result<(), String> {
         // V121 FIX: Accept votes from ANY view during initial consensus sync
         // Previously only allowed 1-view lag which caused votes to be rejected when
         // validators started at different times and had divergent view numbers.
@@ -638,10 +831,10 @@ impl FinalityGadget {
         }
 
         // Add to collector
-        let reached_quorum = self.vote_collector.add_vote(vote.clone())?;
+        let reached_quorum = self.vote_collector.add_vote(vote.clone(), block_number)?;
 
         // Update reputation
-        let rep = self.peer_reputation.entry(vote.validator_id).or_insert_with(PeerReputation::new);
+        let rep = self.peer_reputation.entry(vote.validator_id.clone()).or_insert_with(PeerReputation::new);
         rep.record_valid();
 
         // If quorum reached, create certificate (ONLY ONCE per view+block)
@@ -665,12 +858,22 @@ impl FinalityGadget {
                 let cert = Certificate {
                     view: vote.view,
                     block_hash: vote.block_hash,
+                    block_number,
                     signatures: signatures.clone(),
                     timestamp: std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
                         .as_secs(),
                 };
+
+                if !cert.verify_all_signatures() {
+                    tracing::error!("Certificate verification failed! Invalid signatures detected.");
+                    return Err("Certificate verification failed".to_string());
+                }
+
+                if !cert.has_quorum(self.max_validators as usize) {
+                    return Err("Certificate does not have quorum".to_string());
+                }
 
                 // V8 DIAGNOSTIC: Log certificate creation
                 let block_hash_short = format!("{:02x}{:02x}..{:02x}{:02x}",
@@ -695,6 +898,14 @@ impl FinalityGadget {
     }
 
     pub async fn handle_certificate(&mut self, cert: Certificate) -> Result<(), String> {
+        if !cert.verify_all_signatures() {
+            return Err("Certificate has invalid signatures".to_string());
+        }
+
+        if !cert.has_quorum(self.max_validators as usize) {
+            return Err("Certificate does not have quorum".to_string());
+        }
+
         self.certificate_gossip.add_certificate(cert.clone())?;
 
         // Check for finality
@@ -728,27 +939,35 @@ impl FinalityGadget {
 
     // ========== CONSENSUS OPERATIONS ==========
 
-    pub async fn propose_block(&mut self, block_hash: BlockHash) -> Result<Vote, String> {
-        // V9 TEMPORARY FIX: Use dummy signature to unblock finality
-        // TODO: Implement proper Sr25519 signing with validator keystore
-        let dummy_signature = {
-            let mut sig = Vec::with_capacity(64);
-            // V9: Create deterministic signature from full AccountId32 + block_hash for uniqueness
-            sig.extend_from_slice(self.validator_id.0.as_ref()); // 32 bytes from AccountId32
-            sig.extend_from_slice(&block_hash.0[0..32]); // + 32 bytes from block_hash = 64 bytes total
-            sig
-        };
-
-        let vote = Vote {
-            validator_id: self.validator_id.clone(),
-            view: self.view_timer.get_current_view(),
+    pub async fn propose_block(
+        &mut self,
+        block_hash: BlockHash,
+        block_number: u32,
+        view: View,
+    ) -> Result<Vote, String> {
+        let vote = Vote::new(
+            &self.keystore,
+            self.validator_id.clone(),
+            view,
             block_hash,
-            signature: dummy_signature,  // V7: Dummy signature for testing BFT consensus
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-        };
+            block_number,
+        ).map_err(|e| format!("Failed to sign vote: {}", e))?;
+
+        if !vote.verify(block_number) {
+            tracing::error!("Self-verification of vote signature failed");
+            return Err("Self-verification failed".to_string());
+        }
+
+        tracing::info!(
+            "🗳️ Created signed vote for block #{} ({:02x}{:02x}..{:02x}{:02x}) in view {}",
+            block_number,
+            block_hash.0[0], block_hash.0[1],
+            block_hash.0[30], block_hash.0[31],
+            view.0
+        );
+
+        // Sync view timer to the explicit view used for this block.
+        self.view_timer.set_view(view);
 
         // Reset view timer when proposing - blocks are progressing, don't change view
         self.view_timer.reset();
@@ -832,6 +1051,7 @@ impl FinalityGadget {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sp_keystore::testing::MemoryKeystore;
 
     struct MockNetworkBridge;
 
@@ -853,25 +1073,36 @@ mod tests {
     #[test]
     fn test_vote_accumulation() {
         let mut collector = VoteCollector::new(3);
+        let keystore: KeystorePtr = Arc::new(MemoryKeystore::new());
 
-        let vote1 = Vote {
-            validator_id: ValidatorId(AccountId32::new([0u8; 32])),
-            view: View(0),
-            block_hash: BlockHash([0u8; 32]),
-            signature: vec![1, 2, 3],
-            timestamp: 0,
-        };
+        let public1 = keystore
+            .sr25519_generate_new(signing::ASF_KEY_TYPE, None)
+            .unwrap();
+        let public2 = keystore
+            .sr25519_generate_new(signing::ASF_KEY_TYPE, None)
+            .unwrap();
 
-        let vote2 = Vote {
-            validator_id: ValidatorId(AccountId32::new([1u8; 32])),
-            view: View(0),
-            block_hash: BlockHash([0u8; 32]),
-            signature: vec![4, 5, 6],
-            timestamp: 0,
-        };
+        let validator_id1 = ValidatorId(AccountId32::from(public1));
+        let validator_id2 = ValidatorId(AccountId32::from(public2));
 
-        assert!(!collector.add_vote(vote1).unwrap());
-        assert!(collector.add_vote(vote2).unwrap());
+        let vote1 = Vote::new(
+            &keystore,
+            validator_id1,
+            View(0),
+            BlockHash([0u8; 32]),
+            1,
+        ).unwrap();
+
+        let vote2 = Vote::new(
+            &keystore,
+            validator_id2,
+            View(0),
+            BlockHash([0u8; 32]),
+            1,
+        ).unwrap();
+
+        assert!(!collector.add_vote(vote1, 1).unwrap());
+        assert!(collector.add_vote(vote2, 1).unwrap());
     }
 
     #[test]
@@ -881,6 +1112,7 @@ mod tests {
         let cert1 = Certificate {
             view: View(0),
             block_hash: BlockHash([0u8; 32]),
+            block_number: 1,
             signatures: vec![],
             timestamp: 0,
         };
@@ -888,6 +1120,7 @@ mod tests {
         let cert2 = Certificate {
             view: View(1),
             block_hash: BlockHash([0u8; 32]),
+            block_number: 2,
             signatures: vec![],
             timestamp: 0,
         };
@@ -895,6 +1128,7 @@ mod tests {
         let cert3 = Certificate {
             view: View(2),
             block_hash: BlockHash([0u8; 32]),
+            block_number: 3,
             signatures: vec![],
             timestamp: 0,
         };
@@ -938,17 +1172,27 @@ mod tests {
     #[tokio::test]
     async fn test_finality_gadget_vote_flow() {
         let bridge = Arc::new(MockNetworkBridge);
-        let mut gadget = FinalityGadget::new(ValidatorId(AccountId32::new([0u8; 32])), 3, bridge);
+        let keystore: KeystorePtr = Arc::new(MemoryKeystore::new());
+        let public0 = keystore
+            .sr25519_generate_new(signing::ASF_KEY_TYPE, None)
+            .unwrap();
+        let public1 = keystore
+            .sr25519_generate_new(signing::ASF_KEY_TYPE, None)
+            .unwrap();
 
-        let vote = Vote {
-            validator_id: ValidatorId(AccountId32::new([1u8; 32])),
-            view: View(0),
-            block_hash: BlockHash([0u8; 32]),
-            signature: vec![1, 2, 3],
-            timestamp: 0,
-        };
+        let validator0 = ValidatorId(AccountId32::from(public0));
+        let validator1 = ValidatorId(AccountId32::from(public1));
+        let mut gadget = FinalityGadget::new(validator0, 3, keystore.clone(), bridge);
 
-        gadget.handle_vote(vote).await.unwrap();
+        let vote = Vote::new(
+            &keystore,
+            validator1,
+            View(0),
+            BlockHash([0u8; 32]),
+            1,
+        ).unwrap();
+
+        gadget.handle_vote(vote, 1).await.unwrap();
         assert_eq!(gadget.get_current_view(), View(0));
     }
 }

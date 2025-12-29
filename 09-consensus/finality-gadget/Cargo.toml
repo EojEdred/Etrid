@@ -44,6 +44,8 @@ std = [
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-keystore/std",
+    "sp-application-crypto/std",
     "codec/std",
     "scale-info/std",
 ]

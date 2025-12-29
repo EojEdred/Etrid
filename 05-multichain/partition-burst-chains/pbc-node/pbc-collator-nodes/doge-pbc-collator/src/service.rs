@@ -1,19 +1,145 @@
 //! Service implementation for BTC-PBC Collator
 
-use futures::FutureExt;
+use async_trait::async_trait;
+use futures::{FutureExt, StreamExt};
+use etrid_protocol::gadget_network_bridge::{
+    CertificateData,
+    ConsensusBridgeMessage,
+    GadgetNetworkBridge,
+    VoteData,
+};
+use finality_gadget::{Certificate as FinalityCertificate, NetworkBridge, Vote as FinalityVote};
 use sc_client_api::{Backend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
-use sp_runtime::traits::Header as HeaderT;
-use std::{marker::PhantomData, sync::Arc, time::Duration};
+use sp_core::{crypto::AccountId32, H256};
+use sp_runtime::codec::Decode;
+use sp_runtime::traits::{Get, Header as HeaderT, SaturatedConversion};
+use std::{marker::PhantomData, net::SocketAddr, sync::Arc, time::Duration};
 
 use doge_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
 
 pub type FullClient = TFullClient<Block, RuntimeApi, sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>>;
 pub type FullBackend = TFullBackend<Block>;
+
+/// NetworkBridge implementation using DETR P2P for ASF finality gossip
+pub struct DetrP2PNetworkBridge {
+    p2p_network: Arc<detrp2p::P2PNetwork>,
+    gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+}
+
+impl DetrP2PNetworkBridge {
+    pub fn new(
+        p2p_network: Arc<detrp2p::P2PNetwork>,
+        gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+    ) -> Self {
+        Self {
+            p2p_network,
+            gadget_bridge,
+        }
+    }
+
+    fn convert_vote_to_bridge(vote: &FinalityVote) -> VoteData {
+        VoteData {
+            validator_id: vote.validator_id.0.clone().into(),
+            view: vote.view.0,
+            block_hash: {
+                let mut hash = [0u8; 32];
+                hash.copy_from_slice(vote.block_hash.as_bytes());
+                hash
+            },
+            signature: vote.signature.clone(),
+        }
+    }
+
+    fn convert_certificate_to_bridge(cert: &FinalityCertificate) -> CertificateData {
+        let signatures: Vec<([u8; 32], Vec<u8>)> = cert
+            .signatures
+            .iter()
+            .map(|(validator_id, sig)| {
+                let bytes: [u8; 32] = validator_id.0.clone().into();
+                (bytes, sig.clone())
+            })
+            .collect();
+
+        CertificateData {
+            view: cert.view.0,
+            block_hash: {
+                let mut hash = [0u8; 32];
+                hash.copy_from_slice(cert.block_hash.as_bytes());
+                hash
+            },
+            block_number: cert.block_number,
+            signatures,
+        }
+    }
+}
+
+#[async_trait]
+impl NetworkBridge for DetrP2PNetworkBridge {
+    async fn broadcast_vote(&self, vote: FinalityVote) -> Result<(), String> {
+        let vote_data = Self::convert_vote_to_bridge(&vote);
+
+        let bridge = self.gadget_bridge.lock().await;
+        bridge
+            .send_vote(vote_data.clone())
+            .await
+            .map_err(|e| format!("Failed to queue vote: {:?}", e))?;
+        let messages = bridge.get_outbound_messages().await;
+        drop(bridge);
+
+        for (msg, _priority) in messages {
+            if let ConsensusBridgeMessage::Vote(vote_data) = msg {
+                let payload = bincode::serialize(&vote_data)
+                    .map_err(|e| format!("Failed to serialize vote: {:?}", e))?;
+                let p2p_msg = detrp2p::Message::Vote { data: payload };
+                self.p2p_network
+                    .broadcast(p2p_msg)
+                    .await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn broadcast_certificate(&self, cert: FinalityCertificate) -> Result<(), String> {
+        let cert_data = Self::convert_certificate_to_bridge(&cert);
+
+        let bridge = self.gadget_bridge.lock().await;
+        bridge
+            .send_certificate(cert_data.clone())
+            .await
+            .map_err(|e| format!("Failed to queue certificate: {:?}", e))?;
+        let messages = bridge.get_outbound_messages().await;
+        drop(bridge);
+
+        for (msg, _priority) in messages {
+            if let ConsensusBridgeMessage::Certificate(cert_data) = msg {
+                let payload = bincode::serialize(&cert_data)
+                    .map_err(|e| format!("Failed to serialize certificate: {:?}", e))?;
+                let p2p_msg = detrp2p::Message::Certificate { data: payload };
+                self.p2p_network
+                    .broadcast(p2p_msg)
+                    .await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_connected_peers(&self) -> Vec<String> {
+        let peers = self.p2p_network.get_connected_peers().await;
+        peers
+            .into_iter()
+            .map(|peer_id| hex::encode(peer_id.as_bytes()))
+            .collect()
+    }
+}
 
 pub fn new_partial(
     config: &Configuration,
@@ -189,6 +315,182 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
         submit_state_roots(client.clone()),
     );
 
+    // Initialize DETR P2P Network for finality gossip
+    let node_id = if let Some(local_key) = keystore_container
+        .keystore()
+        .sr25519_public_keys(sp_core::crypto::KeyTypeId(*b"asfk"))
+        .first()
+    {
+        peer_id_from_public_key(local_key.as_ref())
+    } else {
+        log::warn!("⚠️ No validator key found, using random node ID");
+        detrp2p::PeerId::new(rand::random())
+    };
+
+    let p2p_bind_addr = std::env::var("DETR_P2P_BIND")
+        .unwrap_or_else(|_| "0.0.0.0:30333".to_string())
+        .parse()
+        .map_err(|e| ServiceError::Other(format!("Invalid P2P bind address: {}", e)))?;
+
+    let p2p_announce_addr = std::env::var("DETR_P2P_ANNOUNCE")
+        .ok()
+        .and_then(|s| s.parse().ok());
+
+    let bootstrap_peers = std::env::var("DETR_P2P_BOOTSTRAP")
+        .ok()
+        .and_then(|s| parse_bootstrap_peers(&s).ok())
+        .unwrap_or_default();
+
+    let p2p_network = Arc::new(detrp2p::P2PNetwork::new_with_announce(
+        node_id,
+        p2p_bind_addr,
+        p2p_announce_addr,
+        bootstrap_peers.clone(),
+    ));
+
+    let p2p_for_start = p2p_network.clone();
+    let bootstrap_for_start = bootstrap_peers.clone();
+    task_manager.spawn_handle().spawn(
+        "detr-p2p-network",
+        None,
+        async move {
+            match p2p_for_start.start().await {
+                Ok(()) => {
+                    p2p_for_start.start_all_maintenance();
+                    for peer in bootstrap_for_start {
+                        let _ = p2p_for_start.add_peer(peer).await;
+                    }
+                }
+                Err(e) => {
+                    log::warn!("⚠️ Failed to start DETR P2P network: {}", e);
+                }
+            }
+        },
+    );
+
+    // Initialize finality gadget bridge components
+    let gadget_bridge = Arc::new(tokio::sync::Mutex::new(GadgetNetworkBridge::new()));
+
+    let validator_id = {
+        if config.role.is_authority() {
+            use sp_core::crypto::{AccountId32, KeyTypeId};
+            const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
+
+            let keystore = keystore_container.keystore();
+            let asf_keys = keystore.sr25519_public_keys(ASF_KEY_TYPE);
+
+            match asf_keys.first() {
+                Some(public_key) => {
+                    let account_id = AccountId32::from(public_key.clone());
+                    log::info!(
+                        "🔑 ASF Finality Gadget using validator key: {}",
+                        hex::encode(public_key.as_ref())
+                    );
+                    finality_gadget::ValidatorId(account_id)
+                }
+                None => {
+                    log::warn!("⚠️ No ASF key found in keystore; running as observer");
+                    finality_gadget::ValidatorId(AccountId32::new([0xFFu8; 32]))
+                }
+            }
+        } else {
+            finality_gadget::ValidatorId(sp_core::crypto::AccountId32::new([0xFFu8; 32]))
+        }
+    };
+
+    let max_validators = doge_pbc_runtime::asf_config::AsfMaxCommitteeSize::get();
+    let finality_keystore = keystore_container.keystore();
+    let network_bridge = Arc::new(DetrP2PNetworkBridge::new(
+        p2p_network.clone(),
+        gadget_bridge.clone(),
+    ));
+    let finality_gadget = Arc::new(tokio::sync::Mutex::new(
+        finality_gadget::FinalityGadget::new(
+            validator_id.clone(),
+            max_validators,
+            finality_keystore,
+            network_bridge.clone(),
+        ),
+    ));
+
+    // Finality gossip + timeout loop
+    let gadget_loop = finality_gadget.clone();
+    let network_loop = network_bridge.clone();
+    task_manager.spawn_handle().spawn(
+        "asf-finality-gadget-loop",
+        None,
+        async move {
+            let mut tick = tokio::time::interval(Duration::from_secs(2));
+            loop {
+                tick.tick().await;
+                let (votes, certs) = {
+                    let mut gadget = gadget_loop.lock().await;
+                    gadget.get_ready_gossip_messages()
+                };
+
+                for vote in votes {
+                    let _ = network_loop.broadcast_vote(vote).await;
+                }
+                for cert in certs {
+                    let _ = network_loop.broadcast_certificate(cert).await;
+                }
+
+                let mut gadget = gadget_loop.lock().await;
+                let _ = gadget.handle_timeout().await;
+            }
+        },
+    );
+
+    // Block import -> finality voting
+    let block_import_gadget = finality_gadget.clone();
+    let import_notifications = client.import_notification_stream();
+    task_manager.spawn_handle().spawn(
+        "asf-block-import-finality",
+        None,
+        async move {
+            let mut stream = import_notifications;
+            while let Some(notification) = stream.next().await {
+                let block_number = *notification.header.number();
+                let block_hash_bytes: [u8; 32] = notification.hash.into();
+                let block_hash = finality_gadget::BlockHash::from_bytes(block_hash_bytes);
+                let view = view_from_header(&notification.header);
+                let block_number_u32: u32 = block_number.saturated_into();
+
+                match tokio::time::timeout(
+                    Duration::from_secs(3),
+                    block_import_gadget.lock(),
+                )
+                .await
+                {
+                    Ok(mut gadget) => {
+                        let _ = gadget
+                            .propose_block(block_hash, block_number_u32, view)
+                            .await;
+                    }
+                    Err(_) => {
+                        log::warn!("⚠️ Finality gadget lock timeout for block #{}", block_number);
+                    }
+                }
+            }
+        },
+    );
+
+    // Spawn P2P message processor for finality gossip
+    let p2p_network_clone = p2p_network.clone();
+    let client_clone = client.clone();
+    let gadget_bridge_clone = gadget_bridge.clone();
+    let finality_gadget_clone = finality_gadget.clone();
+    task_manager.spawn_handle().spawn(
+        "detr-p2p-message-processor",
+        None,
+        process_p2p_messages(
+            p2p_network_clone,
+            client_clone,
+            gadget_bridge_clone,
+            finality_gadget_clone,
+        ),
+    );
+
 
     // ═══════════════════════════════════════════════════════════════════════════
     // RPC SERVER INITIALIZATION - CRITICAL FIX
@@ -265,4 +567,189 @@ async fn submit_state_roots(client: Arc<FullClient>) {
             }
         }
     }
+}
+
+async fn process_p2p_messages(
+    p2p_network: Arc<detrp2p::P2PNetwork>,
+    client: Arc<FullClient>,
+    gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+    finality_gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
+) {
+    log::info!("📨 DOGE-PBC: P2P message processor started");
+
+    loop {
+        if let Some((peer_id, message)) = p2p_network.receive_message().await {
+            match message {
+                detrp2p::Message::Vote { data } => {
+                    match bincode::deserialize::<VoteData>(&data) {
+                        Ok(vote_data) => {
+                            let bridge = gadget_bridge.lock().await;
+                            if let Err(e) = bridge.on_vote_received(vote_data.clone()).await {
+                                log::warn!("Failed to route vote: {:?}", e);
+                            }
+                            drop(bridge);
+
+                            let finality_vote = convert_vote_from_bridge(vote_data);
+                            let vote_block_hash = H256::from_slice(finality_vote.block_hash.as_bytes());
+                            let vote_block_number: u32 = match client.header(vote_block_hash) {
+                                Ok(Some(header)) => (*header.number()).saturated_into(),
+                                Ok(None) => {
+                                    log::warn!(
+                                        "⚠️ Vote for unknown block {:?}, skipping",
+                                        vote_block_hash
+                                    );
+                                    continue;
+                                }
+                                Err(e) => {
+                                    log::warn!(
+                                        "⚠️ Failed to resolve block number for vote {:?}: {:?}",
+                                        vote_block_hash,
+                                        e
+                                    );
+                                    continue;
+                                }
+                            };
+
+                            let mut gadget = finality_gadget.lock().await;
+                            if let Err(e) = gadget.handle_vote(finality_vote, vote_block_number).await {
+                                log::warn!("❌ Vote rejected by finality gadget: {:?}", e);
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!("Failed to deserialize vote from {:?}: {:?}", peer_id, e);
+                        }
+                    }
+                }
+                detrp2p::Message::Certificate { data } => {
+                    match bincode::deserialize::<CertificateData>(&data) {
+                        Ok(cert_data) => {
+                            let bridge = gadget_bridge.lock().await;
+                            if let Err(e) = bridge.on_certificate_received(cert_data.clone()).await {
+                                log::warn!("Failed to route certificate: {:?}", e);
+                            }
+                            drop(bridge);
+
+                            let finality_cert = convert_certificate_from_bridge(cert_data);
+                            let mut gadget = finality_gadget.lock().await;
+                            if let Err(e) = gadget.handle_certificate(finality_cert).await {
+                                log::warn!("❌ Certificate rejected by finality gadget: {:?}", e);
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to deserialize certificate from {:?}: {:?}",
+                                peer_id,
+                                e
+                            );
+                        }
+                    }
+                }
+                detrp2p::Message::Ping { nonce } => {
+                    let pong = detrp2p::Message::Pong { nonce };
+                    let _ = p2p_network.unicast(peer_id, pong).await;
+                }
+                _ => {
+                    log::debug!("📬 P2P message from {:?}: {:?}", peer_id, message);
+                }
+            }
+        }
+
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+}
+
+fn convert_vote_from_bridge(vote_data: VoteData) -> finality_gadget::Vote {
+    finality_gadget::Vote {
+        validator_id: finality_gadget::ValidatorId(AccountId32::new(vote_data.validator_id)),
+        view: finality_gadget::View(vote_data.view),
+        block_hash: finality_gadget::BlockHash::from_bytes(vote_data.block_hash),
+        signature: vote_data.signature,
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    }
+}
+
+fn convert_certificate_from_bridge(cert_data: CertificateData) -> finality_gadget::Certificate {
+    finality_gadget::Certificate {
+        view: finality_gadget::View(cert_data.view),
+        block_hash: finality_gadget::BlockHash::from_bytes(cert_data.block_hash),
+        block_number: cert_data.block_number,
+        signatures: cert_data
+            .signatures
+            .into_iter()
+            .map(|(id, sig)| {
+                (
+                    finality_gadget::ValidatorId(AccountId32::new(id)),
+                    sig,
+                )
+            })
+            .collect(),
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    }
+}
+
+fn view_from_header<H: HeaderT>(header: &H) -> finality_gadget::View {
+    let view_from_digest = header.digest().logs().iter().find_map(|digest_item| {
+        if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
+            if engine_id == b"asf0" {
+                return u64::decode(&mut &data[..]).ok();
+            }
+        }
+        None
+    });
+
+    let fallback: u64 = (*header.number()).saturated_into();
+    finality_gadget::View(view_from_digest.unwrap_or(fallback))
+}
+
+fn peer_id_from_public_key(public_key: &[u8]) -> detrp2p::PeerId {
+    let mut peer_id_bytes = [0u8; 32];
+    let len = std::cmp::min(public_key.len(), 32);
+    peer_id_bytes[..len].copy_from_slice(&public_key[..len]);
+    detrp2p::PeerId::new(peer_id_bytes)
+}
+
+fn parse_bootstrap_peers(input: &str) -> Result<Vec<detrp2p::PeerAddr>, String> {
+    if input.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let mut peers = Vec::new();
+    for peer_str in input.split(',') {
+        let peer_str = peer_str.trim();
+        if peer_str.is_empty() {
+            continue;
+        }
+
+        let parts: Vec<&str> = peer_str.split('@').collect();
+        if parts.len() != 2 {
+            return Err(format!("Invalid peer format: {}. Expected: peer_id@ip:port", peer_str));
+        }
+
+        let peer_id_hex = parts[0].trim();
+        let peer_id_bytes = hex::decode(peer_id_hex)
+            .map_err(|e| format!("Invalid peer ID hex: {}", e))?;
+
+        if peer_id_bytes.len() != 32 {
+            return Err(format!("Peer ID must be 32 bytes, got {}", peer_id_bytes.len()));
+        }
+
+        let mut peer_id_array = [0u8; 32];
+        peer_id_array.copy_from_slice(&peer_id_bytes);
+        let peer_id = detrp2p::PeerId::new(peer_id_array);
+
+        let address = parts[1]
+            .trim()
+            .parse::<SocketAddr>()
+            .map_err(|e| format!("Invalid socket address: {}", e))?;
+
+        peers.push(detrp2p::PeerAddr { id: peer_id, address });
+    }
+
+    Ok(peers)
 }

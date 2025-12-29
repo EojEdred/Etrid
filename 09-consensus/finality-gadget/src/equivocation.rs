@@ -13,7 +13,7 @@
 //! of equivocation.
 
 use codec::{Decode, Encode};
-use sp_core::sr25519::{Public, Signature};
+use crate::signing;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -74,27 +74,14 @@ impl EquivocationProof {
     }
 
     fn verify_vote_signature(&self, vote: &EquivocationVote) -> bool {
-        // Create the message that was signed
-        // Format: view || block_hash || block_number || validator_id
-        let mut message = Vec::new();
-        message.extend_from_slice(&self.view.to_le_bytes());
-        message.extend_from_slice(&vote.block_hash);
-        message.extend_from_slice(&vote.block_number.to_le_bytes());
-        message.extend_from_slice(&self.validator_id);
+        let signing_data = signing::VoteSigningData::new(
+            self.view,
+            vote.block_hash,
+            vote.block_number,
+            self.validator_id,
+        );
 
-        // Hash the message
-        let message_hash = sp_core::hashing::blake2_256(&message);
-
-        // For now, we use a simplified verification since the current implementation
-        // uses dummy signatures. In production, this would verify Sr25519 signatures:
-        //
-        // let public = Public::from_raw(self.validator_id);
-        // let signature = Signature::from_raw(vote.signature);
-        // sp_core::sr25519::Pair::verify(&signature, &message_hash, &public)
-
-        // Temporary: Accept all signatures as valid (consistent with dummy signatures in lib.rs)
-        // This will be replaced with actual Sr25519 verification when proper signing is implemented
-        true
+        signing::verify_vote_signature(&self.validator_id, &signing_data, &vote.signature)
     }
 
     /// Get a unique identifier for this equivocation
@@ -350,14 +337,28 @@ impl Clone for EquivocationDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::signing;
+    use sp_core::{sr25519, Pair};
+
+    fn sign_vote(
+        pair: &sr25519::Pair,
+        view: u64,
+        block_hash: [u8; 32],
+        block_number: u32,
+    ) -> [u8; 64] {
+        let validator_id = pair.public().0;
+        let signing_data = signing::VoteSigningData::new(view, block_hash, block_number, validator_id);
+        pair.sign(&signing_data.to_sign_bytes()).0
+    }
 
     #[tokio::test]
     async fn test_no_equivocation_same_vote() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash = [2u8; 32];
-        let signature = [3u8; 64];
+        let signature = sign_vote(&pair, 1, block_hash, 100);
 
         // First vote
         let result = detector.check_vote(1, validator, block_hash, 100, signature).await;
@@ -372,11 +373,12 @@ mod tests {
     async fn test_equivocation_detected() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash_2, 101);
 
         // First vote
         let result = detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;
@@ -397,17 +399,19 @@ mod tests {
     async fn test_different_views_not_equivocation() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature = [4u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 2, block_hash_2, 101);
 
         // Vote in view 1
-        let result = detector.check_vote(1, validator, block_hash_1, 100, signature).await;
+        let result = detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;
         assert!(result.is_none());
 
         // Different vote in view 2 - NOT equivocation
-        let result = detector.check_vote(2, validator, block_hash_2, 101, signature).await;
+        let result = detector.check_vote(2, validator, block_hash_2, 101, signature_2).await;
         assert!(result.is_none());
     }
 
@@ -415,18 +419,21 @@ mod tests {
     async fn test_different_validators_not_equivocation() {
         let detector = EquivocationDetector::new(None);
 
-        let validator_1 = [1u8; 32];
-        let validator_2 = [2u8; 32];
+        let pair_1 = sr25519::Pair::from_seed(&[1u8; 32]);
+        let pair_2 = sr25519::Pair::from_seed(&[2u8; 32]);
+        let validator_1 = pair_1.public().0;
+        let validator_2 = pair_2.public().0;
         let block_hash_1 = [3u8; 32];
         let block_hash_2 = [4u8; 32];
-        let signature = [5u8; 64];
+        let signature_1 = sign_vote(&pair_1, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair_2, 1, block_hash_2, 101);
 
         // Vote from validator 1
-        let result = detector.check_vote(1, validator_1, block_hash_1, 100, signature).await;
+        let result = detector.check_vote(1, validator_1, block_hash_1, 100, signature_1).await;
         assert!(result.is_none());
 
         // Different vote from validator 2 in same view - NOT equivocation
-        let result = detector.check_vote(1, validator_2, block_hash_2, 101, signature).await;
+        let result = detector.check_vote(1, validator_2, block_hash_2, 101, signature_2).await;
         assert!(result.is_none());
     }
 
@@ -434,11 +441,12 @@ mod tests {
     async fn test_pending_proofs() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash_2, 101);
 
         // Create equivocation
         detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;
@@ -462,11 +470,12 @@ mod tests {
     async fn test_duplicate_reporting_prevention() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash_2, 101);
 
         // Create equivocation twice
         detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;
@@ -483,12 +492,13 @@ mod tests {
     async fn test_cleanup_old_views() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash = [2u8; 32];
-        let signature = [3u8; 64];
 
         // Add votes in old views
         for view in 0..10 {
+            let signature = sign_vote(&pair, view, block_hash, 100);
             detector.check_vote(view, validator, block_hash, 100, signature).await;
         }
 
@@ -496,6 +506,7 @@ mod tests {
         assert_eq!(stats.votes_tracked, 10);
 
         // Simulate advancing to view 1005
+        let signature = sign_vote(&pair, 1005, block_hash, 100);
         detector.check_vote(1005, validator, block_hash, 100, signature).await;
 
         // Clean up old views
@@ -508,11 +519,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_equivocation_proof_verification() {
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash_2, 101);
 
         let proof = EquivocationProof {
             validator_id: validator,
@@ -532,16 +544,17 @@ mod tests {
             detected_at: 1001,
         };
 
-        // Should verify successfully (with dummy signatures)
+        // Should verify successfully with valid signatures
         assert!(proof.verify().is_ok());
     }
 
     #[tokio::test]
     async fn test_equivocation_proof_same_block_fails() {
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash = [2u8; 32]; // Same block hash
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash, 101);
 
         let proof = EquivocationProof {
             validator_id: validator,
@@ -571,14 +584,16 @@ mod tests {
     async fn test_stats() {
         let detector = EquivocationDetector::new(None);
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature = [4u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 2, block_hash_2, 101);
 
         // Add some votes
-        detector.check_vote(1, validator, block_hash_1, 100, signature).await;
-        detector.check_vote(2, validator, block_hash_2, 101, signature).await;
+        detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;
+        detector.check_vote(2, validator, block_hash_2, 101, signature_2).await;
 
         let stats = detector.stats().await;
         assert_eq!(stats.votes_tracked, 2);
@@ -592,11 +607,12 @@ mod tests {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let detector = EquivocationDetector::new(Some(tx));
 
-        let validator = [1u8; 32];
+        let pair = sr25519::Pair::from_seed(&[1u8; 32]);
+        let validator = pair.public().0;
         let block_hash_1 = [2u8; 32];
         let block_hash_2 = [3u8; 32];
-        let signature_1 = [4u8; 64];
-        let signature_2 = [5u8; 64];
+        let signature_1 = sign_vote(&pair, 1, block_hash_1, 100);
+        let signature_2 = sign_vote(&pair, 1, block_hash_2, 101);
 
         // Create equivocation
         detector.check_vote(1, validator, block_hash_1, 100, signature_1).await;

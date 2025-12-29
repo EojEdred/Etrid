@@ -81,6 +81,10 @@ etrid-protocol = { workspace = true }
 # TRX-PBC Runtime
 trx-pbc-runtime = { path = "../../../pbc-chains/trx-pbc/runtime" }
 
+finality-gadget = { package = "etrid-finality-gadget", path = "../../../../../09-consensus/finality-gadget" }
+async-trait = "0.1"
+bincode = "1.3"
+
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 

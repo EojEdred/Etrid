@@ -446,12 +446,13 @@ where
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
 
-    // For locally authored blocks, apply the storage changes computed by the proposer.
-    // The proposer executed all extrinsics and computed the resulting state changes.
-    // We wrap the storage changes in StorageChanges::Changes for the block import.
-    block_import_params.state_action = StateAction::ApplyChanges(
-        StorageChanges::Changes(proposal.storage_changes)
-    );
+    // For locally authored blocks, default to Execute for a complete import pipeline.
+    // ApplyChanges can be enabled explicitly if the import queue supports it.
+    let state_action = match std::env::var("ASF_IMPORT_STATE_ACTION").as_deref() {
+        Ok("apply") => StateAction::ApplyChanges(StorageChanges::Changes(proposal.storage_changes)),
+        _ => StateAction::Execute,
+    };
+    block_import_params.state_action = state_action;
     block_import_params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 
     log::debug!(

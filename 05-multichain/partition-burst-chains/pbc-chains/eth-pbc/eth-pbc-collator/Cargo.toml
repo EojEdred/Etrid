@@ -23,6 +23,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 jsonrpsee = { workspace = true }
 tokio = { workspace = true }
+hex = "0.4"
+rand = "0.8"
+async-trait = "0.1"
+bincode = "1.3"
 
 # Substrate Client
 sc-cli = { workspace = true }
@@ -77,6 +81,11 @@ cumulus-relay-chain-interface = { workspace = true }
 # ASF Consensus (Ëtrid custom consensus)
 sc-consensus-asf-pbc = { path = "../consensus/client/consensus-asf" }
 sp-consensus-asf-pbc = { path = "../consensus/primitives/consensus-asf" }
+finality-gadget = { package = "etrid-finality-gadget-pbc", path = "../consensus/finality-gadget" }
+
+# DETR P2P Networking
+detrp2p = { path = "../../../../../01-detr-p2p/detrp2p" }
+etrid-protocol = { path = "../../../../../01-detr-p2p/etrid-protocol" }
 
 # ETH-PBC Runtime
 eth-pbc-runtime = { path = "../eth-pbc-runtime" }

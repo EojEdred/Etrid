@@ -81,6 +81,10 @@ detrp2p = { workspace = true }
 etrid-aecomms = { workspace = true }
 etrid-protocol = { workspace = true }
 
+finality-gadget = { package = "etrid-finality-gadget", path = "../../../../../09-consensus/finality-gadget" }
+async-trait = "0.1"
+bincode = "1.3"
+
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 

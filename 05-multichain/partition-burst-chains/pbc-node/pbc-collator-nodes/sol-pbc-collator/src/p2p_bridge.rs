@@ -3,7 +3,8 @@
 //! This module bridges DETR P2P networking with Substrate's block sync
 //! and provides message handling for distributed consensus.
 
-use detrp2p::{P2PNetwork, Message, PeerId};
+use async_trait::async_trait;
+use detrp2p::{Message, P2PNetwork, PeerId};
 use etrid_protocol::{
     BlockAnnounceMessage,
     BlockRequestMessage,
@@ -12,7 +13,15 @@ use etrid_protocol::{
     StatusRequestMessage,
     StatusResponseMessage,
 };
+use etrid_protocol::gadget_network_bridge::{
+    CertificateData,
+    ConsensusBridgeMessage,
+    GadgetNetworkBridge,
+    VoteData,
+};
+use finality_gadget::{Certificate as FinalityCertificate, NetworkBridge, Vote as FinalityVote};
 use sc_client_api::{BlockBackend, HeaderBackend};
+use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::generic::SignedBlock;
 use sp_runtime::traits::{Header as HeaderT, NumberFor, SaturatedConversion, Zero};
 use std::sync::Arc;
@@ -26,15 +35,140 @@ type Block = sol_pbc_runtime::opaque::Block;
 pub struct P2PBridge {
     network: Arc<P2PNetwork>,
     client: Arc<FullClient>,
+    gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+    finality_gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
     running: Arc<tokio::sync::Mutex<bool>>,
+}
+
+/// NetworkBridge implementation using DETR P2P for ASF finality gossip
+pub struct DetrP2PNetworkBridge {
+    p2p_network: Arc<P2PNetwork>,
+    gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+}
+
+impl DetrP2PNetworkBridge {
+    pub fn new(
+        p2p_network: Arc<P2PNetwork>,
+        gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+    ) -> Self {
+        Self {
+            p2p_network,
+            gadget_bridge,
+        }
+    }
+
+    fn convert_vote_to_bridge(vote: &FinalityVote) -> VoteData {
+        VoteData {
+            validator_id: vote.validator_id.0.clone().into(),
+            view: vote.view.0,
+            block_hash: {
+                let mut hash = [0u8; 32];
+                hash.copy_from_slice(vote.block_hash.as_bytes());
+                hash
+            },
+            signature: vote.signature.clone(),
+        }
+    }
+
+    fn convert_certificate_to_bridge(cert: &FinalityCertificate) -> CertificateData {
+        let signatures: Vec<([u8; 32], Vec<u8>)> = cert
+            .signatures
+            .iter()
+            .map(|(validator_id, sig)| {
+                let bytes: [u8; 32] = validator_id.0.clone().into();
+                (bytes, sig.clone())
+            })
+            .collect();
+
+        CertificateData {
+            view: cert.view.0,
+            block_hash: {
+                let mut hash = [0u8; 32];
+                hash.copy_from_slice(cert.block_hash.as_bytes());
+                hash
+            },
+            block_number: cert.block_number,
+            signatures,
+        }
+    }
+}
+
+#[async_trait]
+impl NetworkBridge for DetrP2PNetworkBridge {
+    async fn broadcast_vote(&self, vote: FinalityVote) -> Result<(), String> {
+        let vote_data = Self::convert_vote_to_bridge(&vote);
+
+        let bridge = self.gadget_bridge.lock().await;
+        bridge
+            .send_vote(vote_data.clone())
+            .await
+            .map_err(|e| format!("Failed to queue vote: {:?}", e))?;
+        let messages = bridge.get_outbound_messages().await;
+        drop(bridge);
+
+        for (msg, _priority) in messages {
+            if let ConsensusBridgeMessage::Vote(vote_data) = msg {
+                let payload = bincode::serialize(&vote_data)
+                    .map_err(|e| format!("Failed to serialize vote: {:?}", e))?;
+                let p2p_msg = Message::Vote { data: payload };
+                self.p2p_network
+                    .broadcast(p2p_msg)
+                    .await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn broadcast_certificate(&self, cert: FinalityCertificate) -> Result<(), String> {
+        let cert_data = Self::convert_certificate_to_bridge(&cert);
+
+        let bridge = self.gadget_bridge.lock().await;
+        bridge
+            .send_certificate(cert_data.clone())
+            .await
+            .map_err(|e| format!("Failed to queue certificate: {:?}", e))?;
+        let messages = bridge.get_outbound_messages().await;
+        drop(bridge);
+
+        for (msg, _priority) in messages {
+            if let ConsensusBridgeMessage::Certificate(cert_data) = msg {
+                let payload = bincode::serialize(&cert_data)
+                    .map_err(|e| format!("Failed to serialize certificate: {:?}", e))?;
+                let p2p_msg = Message::Certificate { data: payload };
+                self.p2p_network
+                    .broadcast(p2p_msg)
+                    .await
+                    .map_err(|e| format!("P2P broadcast failed: {:?}", e))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_connected_peers(&self) -> Vec<String> {
+        let peers = self.p2p_network.get_connected_peers().await;
+        peers
+            .into_iter()
+            .map(|peer_id| hex::encode(peer_id.as_bytes()))
+            .collect()
+    }
 }
 
 impl P2PBridge {
     /// Create a new P2P bridge
-    pub fn new(network: Arc<P2PNetwork>, client: Arc<FullClient>) -> Self {
+    pub fn new(
+        network: Arc<P2PNetwork>,
+        client: Arc<FullClient>,
+        gadget_bridge: Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+        finality_gadget: Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
+    ) -> Self {
         Self {
             network,
             client,
+            gadget_bridge,
+            finality_gadget,
             running: Arc::new(tokio::sync::Mutex::new(false)),
         }
     }
@@ -153,6 +287,8 @@ impl P2PBridge {
     fn start_message_handler(&self) {
         let network = self.network.clone();
         let client = self.client.clone();
+        let gadget_bridge = self.gadget_bridge.clone();
+        let finality_gadget = self.finality_gadget.clone();
 
         tokio::spawn(async move {
             log::info!("📥 Incoming message handler started");
@@ -162,7 +298,15 @@ impl P2PBridge {
 
                 // Retrieve messages from inbox (one at a time)
                 while let Some((peer_id, message)) = network.receive_message().await {
-                    Self::handle_message(&network, &client, peer_id, message).await;
+                    Self::handle_message(
+                        &network,
+                        &client,
+                        &gadget_bridge,
+                        &finality_gadget,
+                        peer_id,
+                        message,
+                    )
+                    .await;
                 }
             }
         });
@@ -172,6 +316,8 @@ impl P2PBridge {
     async fn handle_message(
         network: &Arc<P2PNetwork>,
         client: &Arc<FullClient>,
+        gadget_bridge: &Arc<tokio::sync::Mutex<GadgetNetworkBridge>>,
+        finality_gadget: &Arc<tokio::sync::Mutex<finality_gadget::FinalityGadget>>,
         peer_id: PeerId,
         message: Message,
     ) {
@@ -283,7 +429,44 @@ impl P2PBridge {
                     peer_id,
                     data.len()
                 );
-                // Forward to consensus module
+                match bincode::deserialize::<VoteData>(&data) {
+                    Ok(vote_data) => {
+                        let bridge = gadget_bridge.lock().await;
+                        if let Err(e) = bridge.on_vote_received(vote_data.clone()).await {
+                            log::warn!("Failed to route vote: {:?}", e);
+                        }
+                        drop(bridge);
+
+                        let finality_vote = convert_vote_from_bridge(vote_data);
+                        let vote_block_hash = H256::from_slice(finality_vote.block_hash.as_bytes());
+                        let vote_block_number: u32 = match client.header(vote_block_hash) {
+                            Ok(Some(header)) => (*header.number()).saturated_into(),
+                            Ok(None) => {
+                                log::warn!(
+                                    "⚠️ Vote for unknown block {:?}, skipping",
+                                    vote_block_hash
+                                );
+                                return;
+                            }
+                            Err(e) => {
+                                log::warn!(
+                                    "⚠️ Failed to resolve block number for vote {:?}: {:?}",
+                                    vote_block_hash,
+                                    e
+                                );
+                                return;
+                            }
+                        };
+
+                        let mut gadget = finality_gadget.lock().await;
+                        if let Err(e) = gadget.handle_vote(finality_vote, vote_block_number).await {
+                            log::warn!("❌ Vote rejected by finality gadget: {:?}", e);
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to deserialize vote from {:?}: {:?}", peer_id, e);
+                    }
+                }
             }
 
             Message::Certificate { data } => {
@@ -292,7 +475,28 @@ impl P2PBridge {
                     peer_id,
                     data.len()
                 );
-                // Forward to consensus module
+                match bincode::deserialize::<CertificateData>(&data) {
+                    Ok(cert_data) => {
+                        let bridge = gadget_bridge.lock().await;
+                        if let Err(e) = bridge.on_certificate_received(cert_data.clone()).await {
+                            log::warn!("Failed to route certificate: {:?}", e);
+                        }
+                        drop(bridge);
+
+                        let finality_cert = convert_certificate_from_bridge(cert_data);
+                        let mut gadget = finality_gadget.lock().await;
+                        if let Err(e) = gadget.handle_certificate(finality_cert).await {
+                            log::warn!("❌ Certificate rejected by finality gadget: {:?}", e);
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!(
+                            "Failed to deserialize certificate from {:?}: {:?}",
+                            peer_id,
+                            e
+                        );
+                    }
+                }
             }
 
             Message::Ping { nonce } => {
@@ -436,5 +640,40 @@ impl P2PBridge {
         log::info!("🛑 Stopping P2P Bridge...");
         *running = false;
         log::info!("✅ P2P Bridge stopped");
+    }
+}
+
+fn convert_vote_from_bridge(vote_data: VoteData) -> finality_gadget::Vote {
+    finality_gadget::Vote {
+        validator_id: finality_gadget::ValidatorId(AccountId32::new(vote_data.validator_id)),
+        view: finality_gadget::View(vote_data.view),
+        block_hash: finality_gadget::BlockHash::from_bytes(vote_data.block_hash),
+        signature: vote_data.signature,
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    }
+}
+
+fn convert_certificate_from_bridge(cert_data: CertificateData) -> finality_gadget::Certificate {
+    finality_gadget::Certificate {
+        view: finality_gadget::View(cert_data.view),
+        block_hash: finality_gadget::BlockHash::from_bytes(cert_data.block_hash),
+        block_number: cert_data.block_number,
+        signatures: cert_data
+            .signatures
+            .into_iter()
+            .map(|(id, sig)| {
+                (
+                    finality_gadget::ValidatorId(AccountId32::new(id)),
+                    sig,
+                )
+            })
+            .collect(),
+        timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
     }
 }

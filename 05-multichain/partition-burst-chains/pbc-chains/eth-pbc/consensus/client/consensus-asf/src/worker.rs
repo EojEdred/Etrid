@@ -522,9 +522,12 @@ where
 
     let mut block_import_params = BlockImportParams::new(sp_consensus::BlockOrigin::Own, header);
     block_import_params.body = Some(body);
-    block_import_params.state_action = StateAction::ApplyChanges(
-        StorageChanges::Changes(proposal.storage_changes),
-    );
+    // Default to Execute for full import pipeline; allow ApplyChanges via env override.
+    let state_action = match std::env::var("ASF_IMPORT_STATE_ACTION").as_deref() {
+        Ok("apply") => StateAction::ApplyChanges(StorageChanges::Changes(proposal.storage_changes)),
+        _ => StateAction::Execute,
+    };
+    block_import_params.state_action = state_action;
     block_import_params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 
     log::debug!(

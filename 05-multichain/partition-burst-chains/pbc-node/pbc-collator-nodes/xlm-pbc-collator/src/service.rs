@@ -1,19 +1,22 @@
 //! Service implementation for XLM-PBC Collator
 
-use futures::FutureExt;
+use futures::{FutureExt, StreamExt};
+use etrid_protocol::gadget_network_bridge::GadgetNetworkBridge;
+use finality_gadget::NetworkBridge;
 use sc_client_api::{Backend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
-use sp_runtime::traits::Header as HeaderT;
+use sp_runtime::codec::Decode;
+use sp_runtime::traits::{Get, Header as HeaderT, SaturatedConversion};
 use std::{marker::PhantomData, sync::Arc, time::Duration};
 
 use xlm_pbc_runtime::{self, opaque::Block, RuntimeApi, AccountId};
 
 use crate::p2p_config::{P2PConfig, P2PNetworkService, peer_id_from_public_key, parse_bootstrap_peers};
-use crate::p2p_bridge::P2PBridge;
+use crate::p2p_bridge::{DetrP2PNetworkBridge, P2PBridge};
 
 pub type FullClient = TFullClient<Block, RuntimeApi, sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>>;
 pub type FullBackend = TFullBackend<Block>;
@@ -220,8 +223,125 @@ pub async fn start_collator_with_p2p(
                     } else {
                         log::info!("✅ P2P network service started with all maintenance tasks");
 
-                        // Create and start P2P bridge for block sync
-                        let p2p_bridge = P2PBridge::new(p2p_network.clone(), client.clone());
+                        // Initialize finality gadget bridge components
+                        let gadget_bridge = Arc::new(tokio::sync::Mutex::new(GadgetNetworkBridge::new()));
+
+                        let validator_id = {
+                            if config.role.is_authority() {
+                                use sp_core::crypto::{AccountId32, KeyTypeId};
+                                const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
+
+                                let keystore = keystore_container.keystore();
+                                let asf_keys = keystore.sr25519_public_keys(ASF_KEY_TYPE);
+
+                                match asf_keys.first() {
+                                    Some(public_key) => {
+                                        let account_id = AccountId32::from(public_key.clone());
+                                        log::info!(
+                                            "🔑 ASF Finality Gadget using validator key: {}",
+                                            hex::encode(public_key.as_ref())
+                                        );
+                                        finality_gadget::ValidatorId(account_id)
+                                    }
+                                    None => {
+                                        log::warn!(
+                                            "⚠️ No ASF key found in keystore; running as observer"
+                                        );
+                                        finality_gadget::ValidatorId(AccountId32::new([0xFFu8; 32]))
+                                    }
+                                }
+                            } else {
+                                finality_gadget::ValidatorId(sp_core::crypto::AccountId32::new([0xFFu8; 32]))
+                            }
+                        };
+
+                        let max_validators = xlm_pbc_runtime::asf_config::AsfMaxCommitteeSize::get();
+                        let finality_keystore = keystore_container.keystore();
+                        let network_bridge = Arc::new(DetrP2PNetworkBridge::new(
+                            p2p_network.clone(),
+                            gadget_bridge.clone(),
+                        ));
+                        let finality_gadget = Arc::new(tokio::sync::Mutex::new(
+                            finality_gadget::FinalityGadget::new(
+                                validator_id.clone(),
+                                max_validators,
+                                finality_keystore,
+                                network_bridge.clone(),
+                            ),
+                        ));
+
+                        // Finality gossip + timeout loop
+                        let gadget_loop = finality_gadget.clone();
+                        let network_loop = network_bridge.clone();
+                        task_manager.spawn_handle().spawn(
+                            "asf-finality-gadget-loop",
+                            None,
+                            async move {
+                                let mut tick = tokio::time::interval(Duration::from_secs(2));
+                                loop {
+                                    tick.tick().await;
+                                    let (votes, certs) = {
+                                        let mut gadget = gadget_loop.lock().await;
+                                        gadget.get_ready_gossip_messages()
+                                    };
+
+                                    for vote in votes {
+                                        let _ = network_loop.broadcast_vote(vote).await;
+                                    }
+                                    for cert in certs {
+                                        let _ = network_loop.broadcast_certificate(cert).await;
+                                    }
+
+                                    let mut gadget = gadget_loop.lock().await;
+                                    let _ = gadget.handle_timeout().await;
+                                }
+                            },
+                        );
+
+                        // Block import -> finality voting
+                        let block_import_gadget = finality_gadget.clone();
+                        let import_notifications = client.import_notification_stream();
+                        task_manager.spawn_handle().spawn(
+                            "asf-block-import-finality",
+                            None,
+                            async move {
+                                let mut stream = import_notifications;
+                                while let Some(notification) = stream.next().await {
+                                    let block_number = *notification.header.number();
+                                    let block_hash_bytes: [u8; 32] = notification.hash.into();
+                                    let block_hash = finality_gadget::BlockHash::from_bytes(block_hash_bytes);
+                                    let view = view_from_header(&notification.header);
+                                    let block_number_u32: u32 = block_number.saturated_into();
+
+                                    match tokio::time::timeout(
+                                        Duration::from_secs(3),
+                                        block_import_gadget.lock(),
+                                    )
+                                    .await
+                                    {
+                                        Ok(mut gadget) => {
+                                            let _ = gadget
+                                                .propose_block(block_hash, block_number_u32, view)
+                                                .await;
+                                        }
+                                        Err(_) => {
+                                            log::warn!(
+                                                "⚠️ Finality gadget lock timeout for block #{}",
+                                                block_number
+                                            );
+                                        }
+                                    }
+                                }
+                            },
+                        );
+
+                        // Create and start P2P bridge for block sync + finality
+                        let p2p_bridge = P2PBridge::new(
+                            p2p_network.clone(),
+                            client.clone(),
+                            gadget_bridge.clone(),
+                            finality_gadget.clone(),
+                        );
                         p2p_bridge.start().await;
                         log::info!("✅ P2P bridge started for block announcements and sync");
 
@@ -330,4 +450,18 @@ async fn submit_state_roots(client: Arc<FullClient>) {
             }
         }
     }
+}
+
+fn view_from_header<H: HeaderT>(header: &H) -> finality_gadget::View {
+    let view_from_digest = header.digest().logs().iter().find_map(|digest_item| {
+        if let sp_runtime::DigestItem::PreRuntime(engine_id, data) = digest_item {
+            if engine_id == b"asf0" {
+                return u64::decode(&mut &data[..]).ok();
+            }
+        }
+        None
+    });
+
+    let fallback: u64 = (*header.number()).saturated_into();
+    finality_gadget::View(view_from_digest.unwrap_or(fallback))
 }

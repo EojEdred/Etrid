@@ -33,6 +33,7 @@ pub struct VoteData {
 pub struct CertificateData {
     pub view: u64,
     pub block_hash: [u8; 32],
+    pub block_number: u32,
     pub signatures: Vec<([u8; 32], Vec<u8>)>,  // V9: Full 32-byte AccountId32
 }
 
@@ -747,6 +748,7 @@ mod tests {
         let cert = CertificateData {
             view: 20,
             block_hash: [0x02; 32],
+            block_number: 20,
             signatures: vec![([1u8; 32], vec![0xCC]), ([2u8; 32], vec![0xDD])],  // V9: Full 32-byte validator IDs
         };
         bridge.on_certificate_received(cert).await.unwrap();
