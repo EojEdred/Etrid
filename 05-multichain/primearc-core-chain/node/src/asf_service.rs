@@ -1196,6 +1196,7 @@ pub fn new_full_with_params(
 
     // Capture identifiers/paths before moving config (used later for detrp2p peer store)
     let chain_id = config.chain_spec.id().to_string();
+    let node_name = config.network.node_name.clone();
     let data_base_path = config.base_path.clone();
     let base_path = data_base_path.config_dir(chain_id.as_str());
     let committee_cache_path = base_path.join("ppfa").join("committee_cache.json");
@@ -2109,7 +2110,7 @@ pub fn new_full_with_params(
         // Observers derive a deterministic ID from host+chain to avoid collisions.
         let observer_id = AccountId32::new([0xFFu8; 32]);
         let peer_id_bytes: [u8; 32] = if validator_id.0 == observer_id {
-            derive_observer_peer_id(config.chain_spec.id(), &config.network.node_name)
+            derive_observer_peer_id(chain_id.as_str(), node_name.as_str())
         } else {
             validator_id.0.clone().into()
         };
