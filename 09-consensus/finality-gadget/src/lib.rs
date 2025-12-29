@@ -10,6 +10,7 @@ use tokio::time::{Instant, Duration, interval};
 use serde::{Serialize, Deserialize};
 use codec::{Encode, Decode};
 use sp_core::crypto::AccountId32;
+use sp_core::Pair;
 use sp_keystore::{Keystore, KeystorePtr};
 
 // ============================================================================
