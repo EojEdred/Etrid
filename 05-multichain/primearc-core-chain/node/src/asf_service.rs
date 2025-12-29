@@ -2471,19 +2471,15 @@ pub fn new_full_with_params(
                     // V4 FIX: Use lock().await with timeout to ensure votes are created
                     // while preventing indefinite blocking. This fixes the deadlock where
                     // try_lock() silently failed for 800+ blocks with no warning logs.
-                    // V123 FIX: Pass block_number to propose_block to use as View
-                    // This prevents the "first block wins" race condition at View(0)
-                    let block_num_u64: u64 = block_number.try_into().unwrap_or(0);
-
                     match timeout(
                         Duration::from_secs(3),
                         block_import_finality_gadget.lock()
                     ).await {
                         Ok(mut gadget) => {
-                            match gadget.propose_block(block_hash, block_num_u64).await {
+                            match gadget.propose_block(block_hash).await {
                                 Ok(vote) => {
                                     log::info!(
-                                        "✅ V123: Created finality vote for block #{} ({:?}) at view {:?}",
+                                        "✅ Created finality vote for block #{} ({:?}) at view {:?}",
                                         block_number,
                                         substrate_hash,
                                         vote.view
