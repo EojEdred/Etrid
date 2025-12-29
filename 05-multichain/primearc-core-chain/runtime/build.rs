@@ -12,5 +12,5 @@ fn main() {
     println!("cargo:rerun-if-changed=presets/development.json");
     println!("cargo:rerun-if-changed=presets/local_testnet.json");
     println!("cargo:rerun-if-changed=presets/ember_testnet.json");
-    println!("cargo:rerun-if-changed=presets/primearc_core_mainnet_v1_pure_asf.json");
+    println!("cargo:rerun-if-changed=presets/mainnet.json");
 }
