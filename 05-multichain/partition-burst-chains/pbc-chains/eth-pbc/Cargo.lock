@@ -3148,6 +3148,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "detrp2p"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "ecies",
+ "etrid-aecomms",
+ "etrid-protocol",
+ "futures",
+ "hex",
+ "log",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tokio",
+]
+
+[[package]]
 name = "digest"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3330,6 +3347,24 @@ dependencies = [
  "serdect",
  "signature",
  "spki",
+]
+
+[[package]]
+name = "ecies"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "011318cc6f4f1906c1dae015013fd381e92deac290a29ddcd9f2e0dd14786037"
+dependencies = [
+ "aes-gcm",
+ "getrandom 0.2.16",
+ "hkdf",
+ "libsecp256k1",
+ "once_cell",
+ "parking_lot 0.12.5",
+ "rand_core 0.6.4",
+ "sha2 0.10.9",
+ "typenum",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -3529,6 +3564,8 @@ dependencies = [
 name = "eth-pbc-collator"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bincode",
  "clap",
  "cumulus-client-cli",
  "cumulus-client-collator",
@@ -3537,7 +3574,10 @@ dependencies = [
  "cumulus-client-service",
  "cumulus-primitives-core",
  "cumulus-relay-chain-interface",
+ "detrp2p",
  "eth-pbc-runtime",
+ "etrid-finality-gadget-pbc",
+ "etrid-protocol",
  "fc-consensus",
  "fc-db",
  "fc-mapping-sync",
@@ -3546,10 +3586,12 @@ dependencies = [
  "fp-rpc",
  "frame-system",
  "futures",
+ "hex",
  "jsonrpsee",
  "log",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "rand 0.8.5",
  "sc-basic-authorship",
  "sc-cli",
  "sc-client-api",
@@ -3752,6 +3794,54 @@ dependencies = [
  "primitive-types 0.13.1",
  "scale-info",
  "uint 0.10.0",
+]
+
+[[package]]
+name = "etrid-aecomms"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "chacha20poly1305",
+ "futures",
+ "rand 0.8.5",
+ "serde",
+ "sha2 0.10.9",
+ "tokio",
+ "x25519-dalek",
+]
+
+[[package]]
+name = "etrid-finality-gadget-pbc"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "hex",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-io",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-std",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "etrid-protocol"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "rand 0.8.5",
+ "serde",
+ "sha2 0.10.9",
+ "tokio",
 ]
 
 [[package]]
