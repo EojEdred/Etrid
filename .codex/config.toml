@@ -1,0 +1,8 @@
+# Project-local Codex MCP configuration
+[mcp_servers.mcp_agent_mail]
+transport = "http"
+url = "http://127.0.0.1:8765/mcp/"
+
+# Hooks for agent notifications
+[hooks]
+agent-turn-complete = ["/Users/macbook/Desktop/etrid-workspace/etrid/.codex/hooks/notify_wrapper.sh"]
