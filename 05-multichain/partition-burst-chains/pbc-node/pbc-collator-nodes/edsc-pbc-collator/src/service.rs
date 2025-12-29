@@ -9,7 +9,7 @@
 
 use async_trait::async_trait;
 use futures::{FutureExt, StreamExt};
-use sc_client_api::{Backend, BlockBackend, HeaderBackend};
+use sc_client_api::{Backend, BlockchainEvents, BlockBackend, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
@@ -412,7 +412,7 @@ pub async fn start_collator(config: Configuration, cli: Cli) -> Result<TaskManag
                     let account_id = AccountId32::from(public_key.clone());
                     log::info!(
                         "🔑 ASF Finality Gadget using validator key: {}",
-                        hex::encode(public_key.as_ref())
+                        hex::encode(public_key.as_ref() as &[u8])
                     );
                     finality_gadget::ValidatorId(account_id)
                 }

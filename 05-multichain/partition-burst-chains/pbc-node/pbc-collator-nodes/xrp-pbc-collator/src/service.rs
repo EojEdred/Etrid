@@ -9,7 +9,7 @@ use etrid_protocol::gadget_network_bridge::{
     VoteData,
 };
 use finality_gadget::{Certificate as FinalityCertificate, NetworkBridge, Vote as FinalityVote};
-use sc_client_api::{Backend, HeaderBackend};
+use sc_client_api::{Backend, BlockchainEvents, HeaderBackend};
 use sc_consensus_asf::{import_queue as asf_import_queue, run_asf_worker, AsfWorkerParams};
 use sc_consensus_slots::BackoffAuthoringOnFinalizedHeadLagging;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, TFullBackend, TFullClient};
@@ -373,7 +373,7 @@ pub async fn start_collator(
                             let account_id = AccountId32::from(public_key.clone());
                             log::info!(
                                 "🔑 ASF Finality Gadget using validator key: {}",
-                                hex::encode(public_key.as_ref())
+                                hex::encode(public_key.as_ref() as &[u8])
                             );
                             finality_gadget::ValidatorId(account_id)
                         }

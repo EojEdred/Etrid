@@ -66,7 +66,7 @@ pub use pallet_validator_rewards;
 pub use pallet_etrid_staking;
 
 /// Opaque types for block + opaque_keys
-mod asf_config;
+pub mod asf_config;
 use asf_config::*;
 
 pub mod opaque {

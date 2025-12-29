@@ -94,7 +94,7 @@ pub type Executive = frame_executive::Executive<
 >;
 
 /// Opaque types.
-mod asf_config;
+pub mod asf_config;
 use asf_config::*;
 
 pub mod opaque {

@@ -12,7 +12,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-mod asf_config;
+pub mod asf_config;
 mod constants;
 use sp_core::crypto::KeyTypeId;
 use pallet_session::disabling::UpToLimitDisablingStrategy;

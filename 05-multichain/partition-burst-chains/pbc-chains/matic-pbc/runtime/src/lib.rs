@@ -99,7 +99,7 @@ pub type Executive = frame_executive::Executive<
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
 /// to even the core data structures.
-mod asf_config;
+pub mod asf_config;
 use asf_config::*;
 
 pub mod opaque {
