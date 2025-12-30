@@ -1257,6 +1257,8 @@ pub fn new_full_with_params(
         let mut ppfa_proposer_factory = proposer_factory;
         let ppfa_keystore = keystore_container.keystore();
         let genesis_props = config_genesis_props.clone();
+        // V120 FIX: Pass sync service to checking syncing status before authoring
+        let ppfa_sync_service = sync_service.clone();
 
         task_manager.spawn_essential_handle().spawn_blocking(
             "asf-ppfa-proposer",
@@ -1479,6 +1481,13 @@ pub fn new_full_with_params(
                     if slot_timer.is_next_slot(current_time) {
                         slot_count += 1;
                         let slot_number = slot_timer.current_slot();
+
+                        // V120 FIX: Check if we are syncing before attempting to author
+                        if ppfa_sync_service.is_major_syncing() {
+                            log::info!("⏳ Node is currently syncing (major sync active). Skipping block production for slot #{}", slot_number);
+                            slot_timer.advance_slot(current_time);
+                            continue;
+                        }
 
                         // Get current PPFA index and proposer
                         let ppfa_index = proposer_selector.current_ppfa_index();
