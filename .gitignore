@@ -283,3 +283,9 @@ infrastructure/
 .secrets/
 **/.secrets/
 BUILD_WORKFLOW.md
+.beads/issues/etrid-1uc.jsonl
+.beads/issues/*sensitive*
+.beads/issues/*ssh*
+.beads/issues/*vm*
+scripts/vm_health_check.sh
+scripts/VM_HEALTH_CHECK_README.md
