@@ -1640,7 +1640,7 @@ pub fn new_full_with_params(
                         let at_hash = chain_info.best_hash;
                         let parent_number = chain_info.best_number;
 
-                        let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(&our_validator_id);
+                        let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(our_validator_id.as_ref());
 
                         match ppfa_client.runtime_api().is_proposer_authorized(
                             at_hash,
