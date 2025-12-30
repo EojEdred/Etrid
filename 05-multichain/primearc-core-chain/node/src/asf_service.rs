@@ -1363,12 +1363,12 @@ pub fn new_full_with_params(
                     runtime_committee.len()
                 );
 
-                 // CRITICAL: Call rotate_committee() to move validators from pool into active committee
-                 log::info!("🔄 Rotating committee to populate active members from validator pool...");
-                 if let Err(e) = committee.rotate_committee(0) {
-                     log::error!("❌ Failed to rotate committee: {:?}", e);
-                 } else {
-                     log::info!("✅ Committee rotated successfully");
+                // CRITICAL: Call rotate_committee() to move validators from pool into active committee
+                log::info!("🔄 Rotating committee to populate active members from validator pool...");
+                if let Err(e) = committee.rotate_committee(0) {
+                    log::error!("❌ Failed to rotate committee: {:?}", e);
+                } else {
+                    log::info!("✅ Committee rotated successfully");
 
                     // LAYER 4 FIX: Calculate initial committee hash
                     use sp_core::hashing::blake2_256;
@@ -1387,32 +1387,11 @@ pub fn new_full_with_params(
                         hex::encode(&initial_committee_hash[..8]),
                         runtime_committee.len()
                     );
-                 }
 
-                 log::info!(
-                     "🔗 PPFA committee initialized (size: {}/{}, mode: production)",
-                     committee.committee_size(),
-                     ppfa_params.max_committee_size
-                 );
-
-                     // LAYER4 FIX: Calculate initial committee hash
-                     use sp_core::hashing::blake2_256;
-                     let initial_committee_hash = {
-                         let mut encoded = Vec::new();
-                         for validator_info in &runtime_committee {
-                             encoded.extend_from_slice(validator_info.validator_id().as_ref());
-                         }
-                         blake2_256(&encoded)
-                     };
-
-                     last_committee_hash = Some(initial_committee_hash);
-
-                     log::info!(
-                         "✅ Initial committee hash: {:?} (size: {})",
-                         hex::encode(&initial_committee_hash[..8]),
-                         runtime_committee.len()
-                     );
-                 }
+                // Initialize committee hash tracking for Layer 4 fix
+                use sp_core::hashing::blake2_256;
+                let mut last_committee_hash: Option<[u8; 32]> = None;
+                }
 
                 log::info!(
                     "🔗 PPFA committee initialized (size: {}/{}, mode: production)",
@@ -1533,11 +1512,6 @@ pub fn new_full_with_params(
                     }
                 };
 
-                // LAYER 4 FIX: Initialize committee hash tracking
-                use sp_core::hashing::blake2_256;
-                let mut last_committee_hash: Option<[u8; 32]> = None;
-
-                let mut last_rotated_epoch: u32 = 1;
                 // Main proposer loop
                 let mut slot_count = 0u64;
                 loop {
