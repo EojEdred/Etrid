@@ -53,6 +53,7 @@ sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "sta
 sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 sp-genesis-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
+sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
 
 # Frame
 frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2506" }
