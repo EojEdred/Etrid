@@ -1380,17 +1380,14 @@ pub fn new_full_with_params(
                         blake2_256(&encoded)
                     };
 
-                    last_committee_hash = Some(initial_committee_hash);
+                    // Initialize committee hash tracking for Layer 4 fix
+                    let mut last_committee_hash: Option<[u8; 32]> = Some(initial_committee_hash);
 
                     log::info!(
                         "✅ Initial committee hash: {:?} (size: {})",
                         hex::encode(&initial_committee_hash[..8]),
                         runtime_committee.len()
                     );
-
-                // Initialize committee hash tracking for Layer 4 fix
-                use sp_core::hashing::blake2_256;
-                let mut last_committee_hash: Option<[u8; 32]> = None;
                 }
 
                 log::info!(
@@ -1640,7 +1637,7 @@ pub fn new_full_with_params(
                         let at_hash = chain_info.best_hash;
                         let parent_number = chain_info.best_number;
 
-                        let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(our_validator_id.as_ref());
+                        let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(our_validator_id.clone());
 
                         match ppfa_client.runtime_api().is_proposer_authorized(
                             at_hash,
@@ -1914,12 +1911,11 @@ pub fn new_full_with_params(
                                 // This prevents committee divergence that could cause proposer selection mismatches
                                 // ═════════════════════════════════════════════════════════════
                                 let new_committee_hash = {
-                                    use sp_core::hashing::blake2_256;
                                     let mut encoded = Vec::new();
                                     for validator_info in &next_committee {
                                         encoded.extend_from_slice(validator_info.validator_id().as_ref());
                                     }
-                                    blake2_256(&encoded)
+                                    sp_core::hashing::blake2_256(&encoded)
                                 };
 
                                 log::debug!(
