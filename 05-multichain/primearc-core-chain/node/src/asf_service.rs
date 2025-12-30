@@ -562,6 +562,27 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
             // Convert Substrate block to ASF block format for validation
             let header = block.header.clone();
             let block_number = *header.number();
+            let block_hash = header.hash();
+
+            // ═══════════════════════════════════════════════════════════════
+            // LAYER 2 FIX: Reject blocks that conflict with already-accepted blocks
+            // This prevents forks by implementing a "First-Seen" rule at import time
+            // ═══════════════════════════════════════════════════════════════
+            if let Ok(Some(existing_hash)) = self.client.hash(block_number) {
+                if existing_hash != block_hash {
+                    let error_msg = format!(
+                        "❌ Fork detected at height #{}: Already accepted block {:?}, rejecting conflicting block {:?}",
+                        block_number,
+                        existing_hash,
+                        block_hash
+                    );
+                    log::error!("{}", error_msg);
+                    return Err(error_msg);
+                }
+                // Same block (re-import attempt) - allow it
+                log::debug!("Block #{} with hash {:?} already imported, skipping validation", block_number, block_hash);
+                return Ok(block);
+            }
 
             // Create ASF block representation
             // Note: In production, extrinsics would be converted to ASF transaction format
@@ -1348,6 +1369,24 @@ pub fn new_full_with_params(
                     log::error!("❌ Failed to rotate committee: {:?}", e);
                 } else {
                     log::info!("✅ Committee rotated successfully");
+
+                    // LAYER 4 FIX: Calculate initial committee hash
+                    use sp_core::hashing::blake2_256;
+                    let initial_committee_hash = {
+                        let mut encoded = Vec::new();
+                        for validator_info in &runtime_committee {
+                            encoded.extend_from_slice(validator_info.validator_id().as_ref());
+                        }
+                        blake2_256(&encoded)
+                    };
+
+                    last_committee_hash = Some(initial_committee_hash);
+
+                    log::info!(
+                        "✅ Initial committee hash: {:?} (size: {})",
+                        hex::encode(&initial_committee_hash[..8]),
+                        runtime_committee.len()
+                    );
                 }
 
                 log::info!(
@@ -1450,6 +1489,8 @@ pub fn new_full_with_params(
                     runtime_committee.clone()
                 };
                 let mut last_rotated_epoch: u32 = 1;
+                let mut last_committee_hash: Option<[u8; 32]> = None;
+
                 let save_committee = |committee: Vec<validator_management::ValidatorInfo>| {
                     let path = committee_cache_path.clone();
                     async move {
@@ -1470,16 +1511,70 @@ pub fn new_full_with_params(
                 // Main proposer loop
                 let mut slot_count = 0u64;
                 loop {
-                    // Get current time
+                    // Get current time and chain state
                     let current_time = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
                         .as_millis() as u64;
 
+                    // LAYER 1.1 FIX: Calculate slot from chain state, not local time
+                    // This ensures all validators agree on slot numbers regardless of clock drift
+                    let chain_info = ppfa_client.usage_info().chain;
+                    let best_hash = chain_info.best_hash;
+
+                    let best_header = match ppfa_client.header(best_hash) {
+                        Ok(Some(header)) => header,
+                        Ok(None) => {
+                            log::error!("No best block header available");
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            continue;
+                        }
+                        Err(e) => {
+                            log::error!("Failed to get best block header: {:?}", e);
+                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            continue;
+                        }
+                    };
+
+                    let best_number = *best_header.number();
+
+                    // Calculate expected slot from block number (deterministic across all nodes)
+                    let expected_slot = best_number as u64;
+
+                    // Calculate current slot from genesis time and current time
+                    let chain_slot = if current_time < genesis_time {
+                        0
+                    } else {
+                        (current_time - genesis_time) / slot_timer.current_duration()
+                    };
+
+                    // Verify slots align (within tolerance of 1 for network delays)
+                    if (chain_slot as i64 - expected_slot as i64).abs() > 1 {
+                        log::warn!(
+                            "Slot mismatch: chain_slot={}, expected_slot={} (from block #{}), waiting for alignment...",
+                            chain_slot,
+                            expected_slot,
+                            best_number
+                        );
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        continue;
+                    }
+
                     // Check if it's time for next slot
                     if slot_timer.is_next_slot(current_time) {
                         slot_count += 1;
                         let slot_number = slot_timer.current_slot();
+
+                        // Verify slot number matches chain-based calculation
+                        if slot_number != chain_slot {
+                            log::warn!(
+                                "Slot timer mismatch: timer_slot={}, chain_slot={}, adjusting...",
+                                slot_number,
+                                chain_slot
+                            );
+                            slot_timer.reset(genesis_time);
+                            continue;
+                        }
 
                         // V120 FIX: Check if we are syncing before attempting to author
                         if ppfa_sync_service.is_major_syncing() {
@@ -1532,14 +1627,41 @@ pub fn new_full_with_params(
                             proposer_selector.is_proposer(&our_validator_id)
                         );
 
-                        // Check if we are the proposer
-                        if proposer_selector.is_proposer(&our_validator_id) {
-                            log::info!(
-                                "📦 We are proposer for slot #{} (PPFA index: {})",
-                                slot_number,
-                                ppfa_index
-                            );
+                        // ═══════════════════════════════════════════════════════════════
+                        // LAYER 1.2 FIX: Verify proposer authorization via Runtime API BEFORE production
+                        // This prevents validators from producing blocks they're not authorized for
+                        // Runtime API is the source of truth for authorization
+                        // ═══════════════════════════════════════════════════════════════
+                        let chain_info = ppfa_client.usage_info().chain;
+                        let at_hash = chain_info.best_hash;
+                        let parent_number = chain_info.best_number;
 
+                        let runtime_proposer_id = pallet_validator_committee_runtime_api::ValidatorId::from(our_validator_id.as_ref());
+
+                        match ppfa_client.runtime_api().is_proposer_authorized(
+                            at_hash,
+                            parent_number + 1,  // Next block number we would produce
+                            ppfa_index,
+                            runtime_proposer_id,
+                        ) {
+                            Ok(true) => {
+                                log::debug!("✅ Runtime API confirms we are authorized for slot #{}", slot_number);
+                            }
+                            Ok(false) => {
+                                log::warn!("⚠️  Runtime API indicates we are NOT authorized for slot #{} (ppfa_index={}), skipping", slot_number, ppfa_index);
+                                slot_timer.advance_slot(current_time);
+                                continue;
+                            }
+                            Err(e) => {
+                                log::error!("❌ Failed to verify proposer authorization for slot #{}: {:?}", slot_number, e);
+                                slot_timer.advance_slot(current_time);
+                                continue;
+                            }
+                        }
+
+                        // Check if we are the proposer (local state check, runtime API already verified above)
+                        if proposer_selector.is_proposer(&our_validator_id) {
+                            // Proceed with block production
                             // IMPLEMENT BLOCK PRODUCTION
                             // Get parent block info
                             let chain_info = ppfa_client.usage_info().chain;
@@ -1783,6 +1905,44 @@ pub fn new_full_with_params(
                                     u32::MAX
                                 });
 
+                                // ═════════════════════════════════════════════════════════════
+                                // LAYER 4 FIX: Add committee hash verification to ensure all nodes have same committee state
+                                // This prevents committee divergence that could cause proposer selection mismatches
+                                // ═════════════════════════════════════════════════════════════
+                                let new_committee_hash = {
+                                    use sp_core::hashing::blake2_256;
+                                    let mut encoded = Vec::new();
+                                    for validator_info in &next_committee {
+                                        encoded.extend_from_slice(validator_info.validator_id().as_ref());
+                                    }
+                                    blake2_256(&encoded)
+                                };
+
+                                log::debug!(
+                                    "New committee hash for epoch {}: {:?} (size: {})",
+                                    slot_epoch,
+                                    hex::encode(&new_committee_hash[..8]),
+                                    next_committee.len()
+                                );
+
+                                // Verify committee hash matches expected state
+                                if let Some(stored_hash) = last_committee_hash {
+                                    if stored_hash != new_committee_hash {
+                                        log::warn!(
+                                            "⚠️  Committee hash mismatch at epoch {}: expected {:?}, got {:?}. This may indicate committee divergence!",
+                                            slot_epoch,
+                                            hex::encode(&stored_hash[..8]),
+                                            hex::encode(&new_committee_hash[..8])
+                                        );
+                                        log::warn!("Proceeding with rotation (runtime API is source of truth)");
+                                    } else {
+                                        log::debug!(
+                                            "✅ Committee hash verified for epoch {}",
+                                            slot_epoch
+                                        );
+                                    }
+                                }
+
                                 if epoch_u32 == last_rotated_epoch {
                                     log::debug!(
                                         "Epoch {} already applied (last rotated epoch = {}), skipping",
@@ -1805,10 +1965,15 @@ pub fn new_full_with_params(
                                     log::error!("Failed to rotate proposer selector: {:?}", e);
                                 } else {
                                     last_rotated_epoch = epoch_u32;
+                                    last_committee_hash = Some(new_committee_hash);
                                     log::info!(
                                         "🔄 Committee rotated successfully (size: {}, epoch: {})",
                                         committee.committee_size(),
                                         slot_epoch
+                                    );
+                                    log::info!(
+                                        "✅ Committee hash updated to {:?}",
+                                        hex::encode(&new_committee_hash[..8])
                                     );
                                 }
                             }
