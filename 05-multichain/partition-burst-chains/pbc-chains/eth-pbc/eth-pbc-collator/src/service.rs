@@ -261,6 +261,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
     let is_authority = config.role.is_authority();
     let prometheus_registry = config.prometheus_registry().cloned();
     let force_authoring = config.force_authoring;
+    let config_role = config.role.clone(); // Store role for later use
 
     // Build RPC extensions
     let rpc_extensions_builder = {
@@ -419,7 +420,7 @@ pub async fn start_collator(config: Configuration) -> Result<TaskManager, Servic
     let gadget_bridge = Arc::new(tokio::sync::Mutex::new(GadgetNetworkBridge::new()));
 
     let validator_id = {
-        if config.role.is_authority() {
+        if config_role.is_authority() {
             use sp_core::crypto::{AccountId32, KeyTypeId};
             const ASF_KEY_TYPE: KeyTypeId = KeyTypeId(*b"asfk");
 

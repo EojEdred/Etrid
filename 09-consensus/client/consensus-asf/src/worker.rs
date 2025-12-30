@@ -204,22 +204,18 @@ where
         // ADDITIONAL RUNTIME VERIFICATION: Query the runtime API to confirm
         // that we are authorized to propose for this slot according to the current chain state
         // This prevents multiple validators from producing blocks for the same slot when local states are out of sync
-        let is_authorized = client
+        let should_propose = client
             .runtime_api()
-            .is_proposer_authorized(
+            .should_propose(
                 best_hash,      // Use current best block hash for consistent state view
-                current_slot.into(),  // Current slot
-                ppfa_index,           // Current PPFA index
                 expected_proposer.clone(),  // Expected proposer ID
             )
             .map_err(|e| Error::RuntimeApi(format!("Failed to check proposer authorization: {}", e)))?;
 
-        if !is_authorized {
+        if !should_propose {
             log::warn!(
                 target: "asf",
-                "❌ Runtime API indicates we are NOT authorized for slot {:?} (PPFA index: {}). Skipping block production.",
-                current_slot,
-                ppfa_index
+                "❌ Runtime API indicates we are NOT authorized to propose. Skipping block production."
             );
             // Skip block production for this slot to prevent unauthorized block production
             Delay::new(slot_duration.as_duration()).await;
@@ -228,9 +224,7 @@ where
 
         log::debug!(
             target: "asf",
-            "✅ Runtime API confirms we are authorized for slot {:?} (PPFA index: {})",
-            current_slot,
-            ppfa_index
+            "✅ Runtime API confirms we are authorized to propose"
         );
 
         log::info!(
