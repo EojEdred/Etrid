@@ -201,38 +201,6 @@ where
             continue;
         }
 
-        // ADDITIONAL RUNTIME VERIFICATION: Query the runtime API to confirm
-        // that we are authorized to propose for this slot according to the current chain state
-        // This prevents multiple validators from producing blocks for the same slot when local states are out of sync
-        // Use a defensive approach with fallback to avoid stalling the consensus worker
-        let should_propose_result = client.runtime_api().should_propose(best_hash, expected_proposer.clone());
-        let should_propose = match should_propose_result {
-            Ok(authorized) => authorized,
-            Err(e) => {
-                log::warn!(
-                    target: "asf",
-                    "⚠️ Runtime API check failed for slot {:?} (PPFA index: {}): {}. Proceeding with caution.",
-                    current_slot,
-                    ppfa_index,
-                    e
-                );
-                // In case of runtime API failure, fall back to original logic
-                // This ensures we don't halt block production due to temporary API issues
-                true
-            }
-        };
-
-        if !should_propose {
-            log::warn!(
-                target: "asf",
-                "❌ Runtime API indicates we are NOT authorized to propose for slot {:?} (PPFA index: {}). Skipping block production.",
-                current_slot,
-                ppfa_index
-            );
-            // Skip block production for this slot to prevent unauthorized block production
-            Delay::new(slot_duration.as_duration()).await;
-            continue;
-        }
 
         log::info!(
             target: "asf",
@@ -317,9 +285,6 @@ where
 }
 
 /// Calculate the current slot based on slot duration
-///
-/// This function calculates the slot based on system time, but for better synchronization
-/// across nodes, we should consider using chain-based timing where possible.
 fn current_slot(slot_duration: SlotDuration) -> Slot {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

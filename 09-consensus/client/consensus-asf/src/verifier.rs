@@ -16,9 +16,10 @@ use sp_blockchain::HeaderBackend;
 use sp_consensus_asf::{AsfApi, SlotDuration};
 use sp_consensus_slots::Slot;
 use sp_runtime::{traits::{Block as BlockT, Header as HeaderT}, DigestItem};
-use std::{marker::PhantomData, sync::Arc};
+use std::{collections::HashSet, marker::PhantomData, sync::Arc};
 
 use crate::{Error, Result};
+
 
 /// ASF block verifier
 ///
