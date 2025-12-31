@@ -201,32 +201,6 @@ where
             continue;
         }
 
-        // ADDITIONAL RUNTIME VERIFICATION: Query the runtime API to confirm
-        // that we are authorized to propose for this slot according to the current chain state
-        // This prevents multiple validators from producing blocks for the same slot when local states are out of sync
-        let should_propose = client
-            .runtime_api()
-            .should_propose(
-                best_hash,      // Use current best block hash for consistent state view
-                expected_proposer.clone(),  // Expected proposer ID
-            )
-            .map_err(|e| Error::RuntimeApi(format!("Failed to check proposer authorization: {}", e)))?;
-
-        if !should_propose {
-            log::warn!(
-                target: "asf",
-                "❌ Runtime API indicates we are NOT authorized to propose. Skipping block production."
-            );
-            // Skip block production for this slot to prevent unauthorized block production
-            Delay::new(slot_duration.as_duration()).await;
-            continue;
-        }
-
-        log::debug!(
-            target: "asf",
-            "✅ Runtime API confirms we are authorized to propose"
-        );
-
         log::info!(
             target: "asf",
             "Our turn to propose! Slot: {:?}, PPFA index: {}",
@@ -310,6 +284,9 @@ where
 }
 
 /// Calculate the current slot based on slot duration
+///
+/// This function calculates the slot based on system time, but for better synchronization
+/// across nodes, we should consider using chain-based timing where possible.
 fn current_slot(slot_duration: SlotDuration) -> Slot {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -318,6 +295,7 @@ fn current_slot(slot_duration: SlotDuration) -> Slot {
     let slot_number = now.as_millis() as u64 / slot_duration.as_millis();
     Slot::from(slot_number)
 }
+
 
 /// Check if we have the authority key for the expected proposer
 ///
