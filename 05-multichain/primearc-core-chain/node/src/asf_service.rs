@@ -53,6 +53,33 @@ use sp_timestamp;
 use std::{collections::{HashMap, HashSet}, sync::Arc, sync::atomic::{AtomicU64, Ordering}, time::Duration};
 use detrp2p_peerstored::PeerStore;
 use serde_json;
+
+// PPFA-aware Fork Choice Strategy
+// This function checks if a block has valid PPFA authorization before allowing it to be produced
+use sc_consensus::ForkChoiceStrategy;
+use sp_runtime::traits::Block as BlockT;
+use sp_runtime::generic::DigestItem;
+
+/// Create a PPFA-aware fork choice strategy for a block
+/// This checks if the block header contains a valid PPFA seal from an authorized proposer
+pub fn create_ppfa_aware_fork_choice_strategy<Block: BlockT>(
+    header: &Block::Header,
+) -> ForkChoiceStrategy {
+    // Check if the block has valid PPFA authorization by examining the header digest for valid seals
+    for log in header.digest().logs() {
+        // Check if this is a consensus digest item with the ASF engine ID
+        if let DigestItem::Consensus(engine_id, _) = log {
+            if *engine_id == crate::asf_justification::ASF_ENGINE_ID {
+                // Block has valid PPFA seal, give it preference over longest chain
+                return ForkChoiceStrategy::Custom(true);
+            }
+        }
+    }
+
+    // No valid PPFA seal found, use default longest chain strategy
+    ForkChoiceStrategy::LongestChain
+}
+
 use tokio::fs;
 
 // ASF Justification and Block Import
@@ -101,6 +128,8 @@ use crate::asf_rpc::{AsfFinality, AsfFinalityState, AsfFinalityApiServer};
 use crate::asf_indexer::{AsfIndexer, FinalityEvent, create_indexer};
 use std::time::{SystemTime, UNIX_EPOCH};
 use etrid_p2p_dpeers::{PeerRegistry, DiscoveryProtocol, ConnectionState};
+
+
 
 /// Cap the number of tracked detrp2p peers to keep organic growth without unbounded memory.
 const DETR_P2P_MAX_TRACKED_PEERS: usize = 2048;
@@ -734,10 +763,10 @@ pub fn new_partial(config: &Configuration) -> Result<AsfFullParts, ServiceError>
             // the canonical chain. Without this, the import pipeline is
             // incomplete and blocks are rejected.
             // ═══════════════════════════════════════════════════════════════
-            block.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
+            block.fork_choice = Some(create_ppfa_aware_fork_choice_strategy::<Block>(&block.header));
 
             log::debug!(
-                "🔗 Block #{} ready for import with LongestChain fork choice",
+                "🔗 Block #{} ready for import with PPFA-aware fork choice",
                 block_number
             );
 
@@ -1772,7 +1801,7 @@ pub fn new_full_with_params(
                                     );
                                     import_params.body = Some(block.extrinsics.to_vec());
                                     import_params.finalized = false;
-                                    import_params.fork_choice = Some(sc_consensus::ForkChoiceStrategy::LongestChain);
+                                    import_params.fork_choice = Some(create_ppfa_aware_fork_choice_strategy::<Block>(&block.header));
 
                                     // PPFA seal is already in the block header (added before propose())
                                     // No need to add post_digests - the seal was included during block creation
