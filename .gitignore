@@ -289,3 +289,4 @@ BUILD_WORKFLOW.md
 .beads/issues/*vm*
 scripts/vm_health_check.sh
 scripts/VM_HEALTH_CHECK_README.md
+scripts/check_chain_health.sh
