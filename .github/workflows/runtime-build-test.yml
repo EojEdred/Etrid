@@ -137,14 +137,14 @@ jobs:
           fi
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: etrid-binary
           path: target/release/etrid
           retention-days: 7
 
       - name: Upload WASM runtime artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-runtime
           path: target/release/wbuild/**/primearc-core-chain_runtime.compact.compressed.wasm
@@ -198,7 +198,7 @@ jobs:
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: test-report
           path: test-report.md
