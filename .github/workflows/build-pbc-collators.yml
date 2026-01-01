@@ -115,7 +115,7 @@ jobs:
           ls -lh target/release/${{ matrix.collator }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.collator }}-linux-x86_64
           path: target/release/${{ matrix.collator }}
@@ -314,7 +314,7 @@ jobs:
           ls -lh pbc-collators-*.tar.gz
 
       - name: Upload deployment package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pbc-collators-deployment-package
           path: pbc-collators-*.tar.gz

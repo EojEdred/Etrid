@@ -185,7 +185,7 @@ jobs:
           ./scripts/build-all.sh --release
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: etrid-binaries
           path: |

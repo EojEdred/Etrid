@@ -35,7 +35,7 @@ jobs:
         file target/release/primearc-core-chain-node
 
     - name: Upload binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: primearc-core-chain-node-linux-x86_64
         path: target/release/primearc-core-chain-node
